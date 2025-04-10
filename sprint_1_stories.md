@@ -143,7 +143,7 @@
 
 | ID | Story | Points | Assignee | Status |
 |----|-------|--------|----------|--------|
-| 1  | Project Repository Setup | 2 | Jimmy | In Progress |
+| 1  | Project Repository Setup | 2 | Jimmy | Completed |
 | 2  | Development Environment Configuration | 5 | TBD | Not Started |
 | 3  | CI/CD Pipeline Configuration | 5 | TBD | Not Started |
 | 4  | App Architecture Definition | 5 | TBD | Not Started |
