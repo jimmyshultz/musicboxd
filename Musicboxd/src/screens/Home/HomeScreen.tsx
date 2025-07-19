@@ -16,7 +16,7 @@ import { RootStackParamList } from '../../types';
 import { RootState } from '../../store';
 import { setPopularAlbums, fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
-import { theme, spacing } from '../../utils/theme';
+import { colors, spacing } from '../../utils/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -134,17 +134,17 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
   },
   section: {
     padding: spacing.lg,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   sectionSubtitle: {
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
   },
   albumGrid: {
     flexDirection: 'row',
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
   },
   card: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: colors.card,
   },
   albumCover: {
     width: '100%',
@@ -188,23 +188,23 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   albumYear: {
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     fontSize: 12,
   },
   activityCard: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: colors.card,
     marginHorizontal: spacing.lg,
   },
   discoverCard: {
-    backgroundColor: theme.colors.card,
+    backgroundColor: colors.card,
     marginHorizontal: spacing.lg,
   },
   comingSoonText: {
-    color: theme.colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center',
     fontStyle: 'italic',
   },

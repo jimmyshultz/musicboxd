@@ -7,7 +7,7 @@ import { Text, useColorScheme } from 'react-native';
 import { RootStackParamList, MainTabParamList } from '../types';
 import { theme } from '../utils/theme';
 
-// Screens (we'll create these next)
+// Screens
 import HomeScreen from '../screens/Home/HomeScreen';
 import SearchScreen from '../screens/Search/SearchScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
@@ -47,7 +47,6 @@ function MainTabNavigator() {
         tabBarInactiveTintColor: isDark ? '#666' : '#999',
         tabBarStyle: {
           backgroundColor: currentTheme.colors.surface,
-          borderTopColor: isDark ? '#333' : '#E0E0E0',
         },
         headerStyle: {
           backgroundColor: currentTheme.colors.surface,
@@ -58,17 +57,17 @@ function MainTabNavigator() {
       <Tab.Screen 
         name="Home" 
         component={HomeScreen}
-        options={{ headerTitle: 'Musicboxd' }}
+        options={{ title: 'Musicboxd' }}
       />
       <Tab.Screen 
         name="Search" 
         component={SearchScreen}
-        options={{ headerTitle: 'Search' }}
+        options={{ title: 'Search' }}
       />
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}
-        options={{ headerTitle: 'Profile' }}
+        options={{ title: 'Profile' }}
       />
     </Tab.Navigator>
   );
@@ -79,19 +78,7 @@ export default function AppNavigator() {
   const currentTheme = isDark ? theme.dark : theme.light;
 
   return (
-    <NavigationContainer
-      theme={{
-        dark: isDark,
-        colors: {
-          primary: currentTheme.colors.primary,
-          background: currentTheme.colors.background,
-          card: currentTheme.colors.surface,
-          text: currentTheme.colors.onSurface,
-          border: isDark ? '#333' : '#E0E0E0',
-          notification: currentTheme.colors.primary,
-        },
-      }}
-    >
+    <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
@@ -109,8 +96,7 @@ export default function AppNavigator() {
           name="AlbumDetails"
           component={AlbumDetailsScreen}
           options={{
-            headerTitle: 'Album',
-            headerBackTitle: 'Back',
+            title: 'Album Details',
           }}
         />
         <Stack.Screen

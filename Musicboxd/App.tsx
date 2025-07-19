@@ -13,11 +13,11 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
-import { theme } from './src/utils/theme';
+import { lightTheme, darkTheme } from './src/utils/theme';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
-  const currentTheme = isDarkMode ? theme.dark : theme.light;
+  const currentTheme = isDarkMode ? darkTheme : lightTheme;
 
   return (
     <SafeAreaProvider>

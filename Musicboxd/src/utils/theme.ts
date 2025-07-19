@@ -35,6 +35,7 @@ export const lightTheme = {
     surface: colors.surface,
     background: colors.background,
     error: colors.error,
+    onSurface: colors.text,
   },
 };
 
@@ -47,6 +48,7 @@ export const darkTheme = {
     surface: colors.dark.surface,
     background: colors.dark.background,
     error: colors.dark.error,
+    onSurface: colors.dark.text,
   },
 };
 
