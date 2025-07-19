@@ -18,7 +18,6 @@ import {
 } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { RootStackParamList, Album, Track } from '../../types';
 import { RootState } from '../../store';
@@ -36,12 +35,14 @@ const StarRating = ({ rating, onRatingChange }: { rating: number; onRatingChange
     <View style={styles.starContainer}>
       {[1, 2, 3, 4, 5].map((star) => (
         <TouchableOpacity key={star} onPress={() => onRatingChange(star)}>
-          <Icon
-            name={star <= rating ? 'star' : 'star-border'}
-            size={32}
-            color={star <= rating ? theme.colors.primary : '#ccc'}
-            style={styles.star}
-          />
+          <Text
+            style={[
+              styles.star,
+              { color: star <= rating ? theme.colors.primary : '#ccc' }
+            ]}
+          >
+            {star <= rating ? '★' : '☆'}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -310,6 +311,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   star: {
+    fontSize: 32,
     marginHorizontal: spacing.xs,
   },
   ratingText: {

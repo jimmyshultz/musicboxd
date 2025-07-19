@@ -2,8 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useColorScheme } from 'react-native';
+import { Text, useColorScheme } from 'react-native';
 
 import { RootStackParamList, MainTabParamList } from '../types';
 import { theme } from '../utils/theme';
@@ -26,23 +25,23 @@ function MainTabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
+          let iconText: string;
 
           switch (route.name) {
             case 'Home':
-              iconName = 'home';
+              iconText = '🏠';
               break;
             case 'Search':
-              iconName = 'search';
+              iconText = '🔍';
               break;
             case 'Profile':
-              iconName = 'person';
+              iconText = '👤';
               break;
             default:
-              iconName = 'help';
+              iconText = '❓';
           }
 
-          return <Icon name={iconName} size={size} color={color} />;
+          return <Text style={{ fontSize: size, color }}>{iconText}</Text>;
         },
         tabBarActiveTintColor: currentTheme.colors.primary,
         tabBarInactiveTintColor: isDark ? '#666' : '#999',

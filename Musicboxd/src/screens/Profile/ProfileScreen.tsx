@@ -13,7 +13,6 @@ import {
   Divider,
   List,
 } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 
 import { theme, spacing } from '../../utils/theme';
 
