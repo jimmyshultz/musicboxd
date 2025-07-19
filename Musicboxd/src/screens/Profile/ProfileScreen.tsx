@@ -1,0 +1,251 @@
+import React from 'react';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  Image,
+} from 'react-native';
+import {
+  Text,
+  Card,
+  Button,
+  Avatar,
+  Divider,
+  List,
+} from 'react-native-paper';
+
+import { theme, spacing } from '../../utils/theme';
+
+export default function ProfileScreen() {
+  // Mock user data (in a real app, this would come from Redux/auth state)
+  const user = {
+    username: 'musiclover2024',
+    email: 'music@example.com',
+    profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
+    bio: 'Passionate about discovering new music across all genres 🎶',
+    joinedDate: 'January 2024',
+    stats: {
+      albumsListened: 127,
+      reviews: 23,
+      following: 45,
+      followers: 38,
+    },
+  };
+
+  return (
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Profile Header */}
+      <View style={styles.header}>
+        <Avatar.Image 
+          size={100} 
+          source={{ uri: user.profilePicture }} 
+          style={styles.avatar}
+        />
+        <Text variant="headlineSmall" style={styles.username}>
+          @{user.username}
+        </Text>
+        <Text variant="bodyMedium" style={styles.bio}>
+          {user.bio}
+        </Text>
+        <Text variant="bodySmall" style={styles.joinedDate}>
+          Member since {user.joinedDate}
+        </Text>
+      </View>
+
+      {/* Stats Cards */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statsRow}>
+          <Card style={styles.statCard} elevation={1}>
+            <Card.Content style={styles.statContent}>
+              <Text variant="headlineMedium" style={styles.statNumber}>
+                {user.stats.albumsListened}
+              </Text>
+              <Text variant="bodySmall" style={styles.statLabel}>
+                Albums Listened
+              </Text>
+            </Card.Content>
+          </Card>
+          
+          <Card style={styles.statCard} elevation={1}>
+            <Card.Content style={styles.statContent}>
+              <Text variant="headlineMedium" style={styles.statNumber}>
+                {user.stats.reviews}
+              </Text>
+              <Text variant="bodySmall" style={styles.statLabel}>
+                Reviews
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
+
+        <View style={styles.statsRow}>
+          <Card style={styles.statCard} elevation={1}>
+            <Card.Content style={styles.statContent}>
+              <Text variant="headlineMedium" style={styles.statNumber}>
+                {user.stats.following}
+              </Text>
+              <Text variant="bodySmall" style={styles.statLabel}>
+                Following
+              </Text>
+            </Card.Content>
+          </Card>
+          
+          <Card style={styles.statCard} elevation={1}>
+            <Card.Content style={styles.statContent}>
+              <Text variant="headlineMedium" style={styles.statNumber}>
+                {user.stats.followers}
+              </Text>
+              <Text variant="bodySmall" style={styles.statLabel}>
+                Followers
+              </Text>
+            </Card.Content>
+          </Card>
+        </View>
+      </View>
+
+      {/* Menu Options */}
+      <Card style={styles.menuCard} elevation={1}>
+        <List.Item
+          title="Recently Listened"
+          description="View your recent album listens"
+          left={(props) => <List.Icon {...props} icon="history" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+        <Divider />
+        <List.Item
+          title="My Reviews"
+          description="Manage your album reviews"
+          left={(props) => <List.Icon {...props} icon="rate-review" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+        <Divider />
+        <List.Item
+          title="My Lists"
+          description="Create and manage album lists"
+          left={(props) => <List.Icon {...props} icon="playlist-play" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+        <Divider />
+        <List.Item
+          title="Listening Stats"
+          description="View detailed listening statistics"
+          left={(props) => <List.Icon {...props} icon="bar-chart" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+      </Card>
+
+      {/* Settings */}
+      <Card style={styles.menuCard} elevation={1}>
+        <List.Item
+          title="Edit Profile"
+          description="Update your profile information"
+          left={(props) => <List.Icon {...props} icon="edit" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+        <Divider />
+        <List.Item
+          title="Settings"
+          description="App preferences and privacy"
+          left={(props) => <List.Icon {...props} icon="settings" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+        <Divider />
+        <List.Item
+          title="Help & Support"
+          description="Get help with using the app"
+          left={(props) => <List.Icon {...props} icon="help" />}
+          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          onPress={() => {}}
+        />
+      </Card>
+
+      {/* Logout Button */}
+      <View style={styles.logoutContainer}>
+        <Button
+          mode="outlined"
+          onPress={() => {}}
+          style={styles.logoutButton}
+          textColor={theme.colors.error}
+        >
+          Sign Out
+        </Button>
+      </View>
+
+      <View style={styles.bottomPadding} />
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  header: {
+    padding: spacing.lg,
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+  },
+  avatar: {
+    marginBottom: spacing.md,
+  },
+  username: {
+    fontWeight: 'bold',
+    marginBottom: spacing.sm,
+  },
+  bio: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  joinedDate: {
+    color: theme.colors.textSecondary,
+  },
+  statsContainer: {
+    padding: spacing.lg,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    marginHorizontal: spacing.xs,
+    backgroundColor: theme.colors.surface,
+  },
+  statContent: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  statNumber: {
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginBottom: spacing.xs,
+  },
+  statLabel: {
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  menuCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    backgroundColor: theme.colors.surface,
+  },
+  logoutContainer: {
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  logoutButton: {
+    borderColor: theme.colors.error,
+  },
+  bottomPadding: {
+    height: spacing.xl,
+  },
+});
