@@ -12,6 +12,7 @@ import HomeScreen from '../screens/Home/HomeScreen';
 import SearchScreen from '../screens/Search/SearchScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
+import FollowersScreen from '../screens/Profile/FollowersScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 
@@ -103,6 +104,13 @@ export default function AppNavigator() {
         <Stack.Screen
           name="UserProfile"
           component={UserProfileScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="Followers"
+          component={FollowersScreen}
           options={{
             headerShown: false,
           }}

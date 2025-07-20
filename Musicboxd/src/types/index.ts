@@ -107,6 +107,7 @@ export type RootStackParamList = {
   Main: undefined;
   AlbumDetails: { albumId: string };
   UserProfile: { userId: string };
+  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListDetails: { listId: string };
 };
 

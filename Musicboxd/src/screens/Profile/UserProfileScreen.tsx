@@ -3,6 +3,7 @@ import {
   View,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Text,
@@ -15,19 +16,21 @@ import {
   IconButton,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
-import { User, Activity } from '../../types';
+import { User, Activity, RootStackParamList } from '../../types';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 
-type UserProfileScreenRouteProp = RouteProp<{ UserProfile: { userId: string } }, 'UserProfile'>;
+type UserProfileScreenRouteProp = RouteProp<RootStackParamList, 'UserProfile'>;
+type UserProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
-  const navigation = useNavigation();
+  const navigation = useNavigation<UserProfileScreenNavigationProp>();
   const dispatch = useDispatch();
   
   const { userId } = route.params;
@@ -198,27 +201,43 @@ export default function UserProfileScreen() {
         </View>
 
         <View style={styles.statsRow}>
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {userStats.following}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Following
-              </Text>
-            </Card.Content>
-          </Card>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Followers', { 
+              userId: user.id, 
+              username: user.username,
+              initialTab: 'following'
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {userStats.following}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Following
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
           
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {userStats.followers}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Followers
-              </Text>
-            </Card.Content>
-          </Card>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Followers', { 
+              userId: user.id, 
+              username: user.username,
+              initialTab: 'followers'
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {userStats.followers}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Followers
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
         </View>
       </View>
 
