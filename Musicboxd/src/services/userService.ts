@@ -2,7 +2,32 @@ import { User, Activity, Follow } from '../types';
 
 class UserService {
   // Mock data for demonstration - in real app, these would be API calls
+  
+  // Track follow relationships
+  private followRelationships: Follow[] = [];
+  
   private mockUsers: User[] = [
+    {
+      id: 'current-user-id',
+      username: 'musiclover2024',
+      email: 'music@example.com',
+      profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
+      bio: 'Passionate about discovering new music across all genres 🎶',
+      joinedDate: new Date('2024-01-15'),
+      lastActiveDate: new Date(),
+      preferences: {
+        favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
+        notifications: {
+          newFollowers: true,
+          reviewLikes: true,
+          friendActivity: true,
+        },
+        privacy: {
+          profileVisibility: 'public',
+          activityVisibility: 'public',
+        },
+      },
+    },
     {
       id: 'user1',
       username: 'indierocklover',
@@ -151,12 +176,20 @@ class UserService {
   async followUser(userId: string): Promise<Follow> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // In real app, this would make an API call
     const follow: Follow = {
-      followerId: 'current-user-id', // Would be actual current user ID
+      followerId: 'current-user-id',
       followingId: userId,
       dateFollowed: new Date(),
     };
+    
+    // Add to our follow relationships tracking
+    const existingFollow = this.followRelationships.find(
+      f => f.followerId === follow.followerId && f.followingId === follow.followingId
+    );
+    
+    if (!existingFollow) {
+      this.followRelationships.push(follow);
+    }
     
     return follow;
   }
@@ -165,36 +198,36 @@ class UserService {
   async unfollowUser(userId: string): Promise<void> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // In real app, this would make an API call to remove the follow relationship
-    console.log(`Unfollowed user ${userId}`);
+    // Remove from our follow relationships tracking
+    this.followRelationships = this.followRelationships.filter(
+      f => !(f.followerId === 'current-user-id' && f.followingId === userId)
+    );
   }
 
   // Get user's followers
   async getUserFollowers(userId: string): Promise<User[]> {
     await new Promise(resolve => setTimeout(resolve, 400));
     
-    // Mock implementation - in real app, this would query the database
-    if (userId === 'user1') {
-      return [this.mockUsers[1], this.mockUsers[2]]; // user2 and user3 follow user1
-    } else if (userId === 'user2') {
-      return [this.mockUsers[0]]; // user1 follows user2
-    }
+    // Get all users who follow this user
+    const followerIds = this.followRelationships
+      .filter(f => f.followingId === userId)
+      .map(f => f.followerId);
     
-    return [];
+    // Return the user objects for those IDs
+    return this.mockUsers.filter(user => followerIds.includes(user.id));
   }
 
   // Get users that a user is following
   async getUserFollowing(userId: string): Promise<User[]> {
     await new Promise(resolve => setTimeout(resolve, 400));
     
-    // Mock implementation
-    if (userId === 'user1') {
-      return [this.mockUsers[1]]; // user1 follows user2
-    } else if (userId === 'user2') {
-      return [this.mockUsers[0], this.mockUsers[2]]; // user2 follows user1 and user3
-    }
+    // Get all users this user is following
+    const followingIds = this.followRelationships
+      .filter(f => f.followerId === userId)
+      .map(f => f.followingId);
     
-    return [];
+    // Return the user objects for those IDs
+    return this.mockUsers.filter(user => followingIds.includes(user.id));
   }
 
   // Get suggested users to follow
@@ -220,11 +253,32 @@ class UserService {
     return this.mockUsers[userIndex];
   }
 
+  // Get current user's follower count  
+  getCurrentUserFollowerCount(): number {
+    return this.followRelationships.filter(f => f.followingId === 'current-user-id').length;
+  }
+
+  // Get current user's following count
+  getCurrentUserFollowingCount(): number {
+    return this.followRelationships.filter(f => f.followerId === 'current-user-id').length;
+  }
+
   // Get user statistics
   async getUserStats(userId: string) {
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Mock statistics - in real app, this would aggregate from the database
+    // For the current user, use actual follow counts
+    if (userId === 'current-user-id') {
+      return {
+        albumsListened: 127,
+        reviews: 23,
+        following: this.getCurrentUserFollowingCount(),
+        followers: this.getCurrentUserFollowerCount(),
+        listsCreated: 3,
+      };
+    }
+    
+    // Mock statistics for other users - in real app, this would aggregate from the database
     const mockStats = {
       user1: {
         albumsListened: 89,

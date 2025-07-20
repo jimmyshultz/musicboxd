@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -13,24 +13,73 @@ import {
   Divider,
   List,
 } from 'react-native-paper';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
+import { RootState } from '../../store';
+import { loginSuccess } from '../../store/slices/authSlice';
+import { User } from '../../types';
+import { userService } from '../../services/userService';
 
 export default function ProfileScreen() {
-  // Mock user data (in a real app, this would come from Redux/auth state)
-  const user = {
-    username: 'musiclover2024',
-    email: 'music@example.com',
-    profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
-    bio: 'Passionate about discovering new music across all genres 🎶',
-    joinedDate: 'January 2024',
-    stats: {
-      albumsListened: 127,
-      reviews: 23,
-      following: 45,
-      followers: 38,
-    },
-  };
+  const dispatch = useDispatch();
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { following } = useSelector((state: RootState) => state.user);
+  
+  const [stats, setStats] = useState({
+    albumsListened: 127,
+    reviews: 23,
+    following: 0,
+    followers: 0,
+  });
+
+  // Initialize mock current user if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !user) {
+      const mockCurrentUser: User = {
+        id: 'current-user-id',
+        username: 'musiclover2024',
+        email: 'music@example.com',
+        profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
+        bio: 'Passionate about discovering new music across all genres 🎶',
+        joinedDate: new Date('2024-01-15'),
+        lastActiveDate: new Date(),
+        preferences: {
+          favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
+          notifications: {
+            newFollowers: true,
+            reviewLikes: true,
+            friendActivity: true,
+          },
+          privacy: {
+            profileVisibility: 'public',
+            activityVisibility: 'public',
+          },
+        },
+      };
+      dispatch(loginSuccess(mockCurrentUser));
+    }
+  }, [dispatch, isAuthenticated, user]);
+
+  // Load user stats from service (includes dynamic follow counts)
+  useEffect(() => {
+    const loadStats = async () => {
+      if (user) {
+        try {
+          const userStats = await userService.getUserStats(user.id);
+          setStats(userStats);
+        } catch (error) {
+          console.error('Error loading user stats:', error);
+        }
+      }
+    };
+    
+    loadStats();
+  }, [user, following]); // Reload when following state changes
+
+  if (!user) {
+    return null; // or loading spinner
+  }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -48,7 +97,7 @@ export default function ProfileScreen() {
           {user.bio}
         </Text>
         <Text variant="bodySmall" style={styles.joinedDate}>
-          Member since {user.joinedDate}
+          Member since {user.joinedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </Text>
       </View>
 
@@ -58,7 +107,7 @@ export default function ProfileScreen() {
           <Card style={styles.statCard} elevation={1}>
             <Card.Content style={styles.statContent}>
               <Text variant="headlineMedium" style={styles.statNumber}>
-                {user.stats.albumsListened}
+                {stats.albumsListened}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 Albums Listened
@@ -69,7 +118,7 @@ export default function ProfileScreen() {
           <Card style={styles.statCard} elevation={1}>
             <Card.Content style={styles.statContent}>
               <Text variant="headlineMedium" style={styles.statNumber}>
-                {user.stats.reviews}
+                {stats.reviews}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 Reviews
@@ -82,7 +131,7 @@ export default function ProfileScreen() {
           <Card style={styles.statCard} elevation={1}>
             <Card.Content style={styles.statContent}>
               <Text variant="headlineMedium" style={styles.statNumber}>
-                {user.stats.following}
+                {stats.following}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 Following
@@ -93,7 +142,7 @@ export default function ProfileScreen() {
           <Card style={styles.statCard} elevation={1}>
             <Card.Content style={styles.statContent}>
               <Text variant="headlineMedium" style={styles.statNumber}>
-                {user.stats.followers}
+                {stats.followers}
               </Text>
               <Text variant="bodySmall" style={styles.statLabel}>
                 Followers
