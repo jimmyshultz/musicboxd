@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     height: ALBUM_CARD_WIDTH,
     borderRadius: 8,
     marginBottom: spacing.sm,
+    resizeMode: 'cover',
   },
   albumTitle: {
     fontWeight: '600',
