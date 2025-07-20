@@ -285,6 +285,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 4,
+    resizeMode: 'cover',
   },
   albumDetailsContainer: {
     flex: 1,
@@ -352,6 +353,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 8,
     marginBottom: spacing.sm,
+    resizeMode: 'cover',
   },
   trendingTitle: {
     fontWeight: '600',

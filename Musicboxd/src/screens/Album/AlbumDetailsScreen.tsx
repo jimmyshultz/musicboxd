@@ -260,6 +260,7 @@ const styles = StyleSheet.create({
     height: COVER_SIZE,
     borderRadius: 12,
     marginBottom: spacing.lg,
+    resizeMode: 'cover',
     ...shadows.large,
   },
   albumInfoContainer: {

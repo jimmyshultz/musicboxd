@@ -21,7 +21,7 @@ import { colors, spacing } from '../../utils/theme';
 type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 3) / 2;
+const ALBUM_CARD_WIDTH = 120;
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
@@ -53,26 +53,16 @@ export default function HomeScreen() {
   const renderAlbumCard = (album: any, index: number) => (
     <TouchableOpacity
       key={album.id}
-      style={[
-        styles.albumCard,
-        index % 2 === 0 ? styles.leftCard : styles.rightCard,
-      ]}
+      style={styles.albumCard}
       onPress={() => navigateToAlbum(album.id)}
     >
-      <Card style={styles.card} elevation={2}>
-        <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
-        <View style={styles.albumInfo}>
-          <Text variant="titleSmall" numberOfLines={2} style={styles.albumTitle}>
-            {album.title}
-          </Text>
-          <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-            {album.artist}
-          </Text>
-          <Text variant="bodySmall" style={styles.albumYear}>
-            {AlbumService.getAlbumYear(album.releaseDate)}
-          </Text>
-        </View>
-      </Card>
+      <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+        {album.title}
+      </Text>
+      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+        {album.artist}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -98,9 +88,11 @@ export default function HomeScreen() {
         </Text>
       </View>
 
-      <View style={styles.albumGrid}>
-        {popularAlbums.map((album, index) => renderAlbumCard(album, index))}
-      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.albumGrid}>
+          {popularAlbums.map((album, index) => renderAlbumCard(album, index))}
+        </View>
+      </ScrollView>
 
       <View style={styles.section}>
         <Text variant="headlineSmall" style={styles.sectionTitle}>
@@ -159,29 +151,18 @@ const styles = StyleSheet.create({
   },
   albumGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
+    paddingLeft: spacing.lg,
   },
   albumCard: {
     width: ALBUM_CARD_WIDTH,
-    marginBottom: spacing.lg,
-  },
-  leftCard: {
     marginRight: spacing.md,
   },
-  rightCard: {
-    marginLeft: spacing.md,
-  },
-  card: {
-    backgroundColor: colors.card,
-  },
   albumCover: {
-    width: '100%',
+    width: ALBUM_CARD_WIDTH,
     height: ALBUM_CARD_WIDTH,
+    borderRadius: 8,
+    marginBottom: spacing.sm,
     resizeMode: 'cover',
-  },
-  albumInfo: {
-    padding: spacing.md,
   },
   albumTitle: {
     fontWeight: '600',
@@ -189,11 +170,6 @@ const styles = StyleSheet.create({
   },
   artistName: {
     color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  albumYear: {
-    color: colors.textSecondary,
-    fontSize: 12,
   },
   activityCard: {
     backgroundColor: colors.card,
