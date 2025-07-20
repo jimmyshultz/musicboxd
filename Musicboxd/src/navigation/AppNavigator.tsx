@@ -11,6 +11,7 @@ import { theme } from '../utils/theme';
 import HomeScreen from '../screens/Home/HomeScreen';
 import SearchScreen from '../screens/Search/SearchScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+import UserProfileScreen from '../screens/Profile/UserProfileScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 
@@ -97,6 +98,13 @@ export default function AppNavigator() {
           component={AlbumDetailsScreen}
           options={{
             title: 'Album Details',
+          }}
+        />
+        <Stack.Screen
+          name="UserProfile"
+          component={UserProfileScreen}
+          options={{
+            headerShown: false,
           }}
         />
         <Stack.Screen
