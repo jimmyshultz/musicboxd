@@ -190,7 +190,7 @@ class UserService {
   }
 
   // Follow a user
-  async followUser(userId: string): Promise<Follow> {
+  async followUser(userId: string): Promise<{ followerId: string; followingId: string; dateFollowed: string }> {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const follow: Follow = {
@@ -208,7 +208,12 @@ class UserService {
       this.followRelationships.push(follow);
     }
     
-    return follow;
+    // Return serialized version to avoid Redux serialization issues
+    return {
+      followerId: follow.followerId,
+      followingId: follow.followingId,
+      dateFollowed: follow.dateFollowed.toISOString(),
+    };
   }
 
   // Unfollow a user
@@ -284,38 +289,38 @@ class UserService {
   async getUserStats(userId: string) {
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // For the current user, use actual follow counts
-    if (userId === 'current-user-id') {
-      return {
-        albumsListened: 127,
-        reviews: 23,
-        following: this.getCurrentUserFollowingCount(),
-        followers: this.getCurrentUserFollowerCount(),
-        listsCreated: 3,
-      };
-    }
+    // Calculate real follower and following counts for all users
+    const followingCount = this.followRelationships.filter(f => f.followerId === userId).length;
+    const followersCount = this.followRelationships.filter(f => f.followingId === userId).length;
     
     // Mock statistics for other users - in real app, this would aggregate from the database
     const mockStats = {
+      'current-user-id': {
+        albumsListened: 127,
+        reviews: 23,
+        following: followingCount,
+        followers: followersCount,
+        listsCreated: 3,
+      },
       user1: {
         albumsListened: 89,
         reviews: 34,
-        following: 23,
-        followers: 28,
+        following: followingCount,
+        followers: followersCount,
         listsCreated: 5,
       },
       user2: {
         albumsListened: 156,
         reviews: 67,
-        following: 41,
-        followers: 52,
+        following: followingCount,
+        followers: followersCount,
         listsCreated: 12,
       },
       user3: {
         albumsListened: 203,
         reviews: 45,
-        following: 67,
-        followers: 89,
+        following: followingCount,
+        followers: followersCount,
         listsCreated: 8,
       },
     };
@@ -323,8 +328,8 @@ class UserService {
     return mockStats[userId as keyof typeof mockStats] || {
       albumsListened: 0,
       reviews: 0,
-      following: 0,
-      followers: 0,
+      following: followingCount,
+      followers: followersCount,
       listsCreated: 0,
     };
   }

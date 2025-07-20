@@ -10,6 +10,18 @@ export interface User {
   preferences: UserPreferences;
 }
 
+// Serialized user for Redux (with string dates)
+export interface SerializedUser {
+  id: string;
+  username: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string;
+  joinedDate: string;
+  lastActiveDate: string;
+  preferences: UserPreferences;
+}
+
 export interface UserPreferences {
   favoriteGenres: string[];
   notifications: NotificationSettings;

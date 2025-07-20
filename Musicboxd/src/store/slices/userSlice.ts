@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, Activity, Follow } from '../../types';
+import { User, SerializedUser, Activity, Follow } from '../../types';
 
 interface UserState {
-  following: User[];
+  following: SerializedUser[];
   followers: User[];
   activityFeed: Activity[];
   userProfile: User | null;
@@ -35,10 +35,10 @@ const userSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
-    setFollowing: (state, action: PayloadAction<User[]>) => {
+    setFollowing: (state, action: PayloadAction<SerializedUser[]>) => {
       state.following = action.payload;
     },
-    addFollowing: (state, action: PayloadAction<User>) => {
+    addFollowing: (state, action: PayloadAction<SerializedUser>) => {
       if (!state.following.find(user => user.id === action.payload.id)) {
         state.following.push(action.payload);
       }

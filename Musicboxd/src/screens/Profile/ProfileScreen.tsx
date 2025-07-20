@@ -21,7 +21,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
 import { loginSuccess } from '../../store/slices/authSlice';
-import { User, ProfileStackParamList } from '../../types';
+import { User, SerializedUser, ProfileStackParamList } from '../../types';
 import { userService } from '../../services/userService';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
@@ -42,14 +42,14 @@ export default function ProfileScreen() {
   // Initialize mock current user if not authenticated
   useEffect(() => {
     if (!isAuthenticated && !user) {
-      const mockCurrentUser: User = {
+      const mockCurrentUser: SerializedUser = {
         id: 'current-user-id',
         username: 'musiclover2024',
         email: 'music@example.com',
         profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
         bio: 'Passionate about discovering new music across all genres 🎶',
-        joinedDate: new Date('2024-01-15'),
-        lastActiveDate: new Date(),
+        joinedDate: new Date('2024-01-15').toISOString(),
+        lastActiveDate: new Date().toISOString(),
         preferences: {
           favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
           notifications: {
@@ -103,7 +103,7 @@ export default function ProfileScreen() {
           {user.bio}
         </Text>
         <Text variant="bodySmall" style={styles.joinedDate}>
-          Member since {user.joinedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+          Member since {new Date(user.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </Text>
       </View>
 

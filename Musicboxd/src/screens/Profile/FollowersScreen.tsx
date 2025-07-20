@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
-import { User, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
+import { User, SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 
@@ -71,7 +71,13 @@ export default function FollowersScreen() {
         dispatch(removeFollowing(user.id));
         await userService.unfollowUser(user.id);
       } else {
-        dispatch(addFollowing(user));
+        // Convert Date objects to strings to avoid Redux serialization issues
+        const serializedUser: SerializedUser = {
+          ...user,
+          joinedDate: user.joinedDate.toISOString(),
+          lastActiveDate: user.lastActiveDate.toISOString(),
+        };
+        dispatch(addFollowing(serializedUser));
         await userService.followUser(user.id);
       }
     } catch (error) {

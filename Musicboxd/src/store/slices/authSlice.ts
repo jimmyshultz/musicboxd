@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User } from '../../types';
+import { User, SerializedUser } from '../../types';
 
 interface AuthState {
-  user: User | null;
+  user: SerializedUser | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
@@ -23,10 +23,21 @@ const authSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    loginSuccess: (state, action: PayloadAction<User>) => {
+    loginSuccess: (state, action: PayloadAction<User | SerializedUser>) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.user = action.payload;
+      // Convert Date objects to strings to avoid Redux serialization issues
+      if (action.payload.joinedDate instanceof Date) {
+        const user = action.payload as User;
+        state.user = {
+          ...user,
+          joinedDate: user.joinedDate.toISOString(),
+          lastActiveDate: user.lastActiveDate.toISOString(),
+        };
+      } else {
+        // Already serialized
+        state.user = action.payload as SerializedUser;
+      }
       state.error = null;
     },
     loginFailure: (state, action: PayloadAction<string>) => {
@@ -46,7 +57,22 @@ const authSlice = createSlice({
     },
     updateProfile: (state, action: PayloadAction<Partial<User>>) => {
       if (state.user) {
-        state.user = { ...state.user, ...action.payload };
+        // Convert any Date objects to strings to avoid Redux serialization issues
+        const updates: Partial<SerializedUser> = {};
+        
+        // Copy all non-Date properties
+        Object.keys(action.payload).forEach(key => {
+          const value = action.payload[key as keyof User];
+          if (key === 'joinedDate' && value instanceof Date) {
+            updates.joinedDate = value.toISOString();
+          } else if (key === 'lastActiveDate' && value instanceof Date) {
+            updates.lastActiveDate = value.toISOString();
+          } else if (key !== 'joinedDate' && key !== 'lastActiveDate') {
+            (updates as any)[key] = value;
+          }
+        });
+        
+        state.user = { ...state.user, ...updates };
       }
     },
   },

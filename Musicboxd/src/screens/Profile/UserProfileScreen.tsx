@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
-import { User, Activity, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
+import { User, SerializedUser, Activity, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 
@@ -47,7 +47,7 @@ export default function UserProfileScreen() {
 
   useEffect(() => {
     loadUserProfile();
-  }, [userId]);
+  }, [userId, following]); // Reload when following state changes
 
   const loadUserProfile = async () => {
     setLoading(true);
@@ -66,13 +66,25 @@ export default function UserProfileScreen() {
     }
   };
 
-  const handleFollowToggle = () => {
+  const handleFollowToggle = async () => {
     if (!user) return;
     
-    if (isFollowing) {
-      dispatch(removeFollowing(userId));
-    } else {
-      dispatch(addFollowing(user));
+    try {
+      if (isFollowing) {
+        dispatch(removeFollowing(userId));
+        await userService.unfollowUser(userId);
+      } else {
+        // Convert Date objects to strings to avoid Redux serialization issues
+        const serializedUser: SerializedUser = {
+          ...user,
+          joinedDate: user.joinedDate.toISOString(),
+          lastActiveDate: user.lastActiveDate.toISOString(),
+        };
+        dispatch(addFollowing(serializedUser));
+        await userService.followUser(userId);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
     }
   };
 
