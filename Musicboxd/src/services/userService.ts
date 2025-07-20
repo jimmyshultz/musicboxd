@@ -3,8 +3,25 @@ import { User, Activity, Follow } from '../types';
 class UserService {
   // Mock data for demonstration - in real app, these would be API calls
   
-  // Track follow relationships
-  private followRelationships: Follow[] = [];
+  // Track follow relationships - initialize with some sample relationships
+  private followRelationships: Follow[] = [
+    // Some initial follows to make the social graph more interesting
+    {
+      followerId: 'user1',
+      followingId: 'user2',
+      dateFollowed: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
+    },
+    {
+      followerId: 'user2',
+      followingId: 'user3',
+      dateFollowed: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    },
+    {
+      followerId: 'user3',
+      followingId: 'user1',
+      dateFollowed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    },
+  ];
   
   private mockUsers: User[] = [
     {
