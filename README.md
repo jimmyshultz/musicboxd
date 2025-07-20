@@ -41,17 +41,26 @@ Detailed installation instructions coming soon.
 
 ## Development
 
+### Branch Strategy
+This project uses a **Feature Branch Workflow** strategy. See [Feature Branch Workflow Guide](docs/feature_branch_workflow.md) for detailed instructions.
+
+### Quick Start
+1. Create a feature branch from `main`: `git checkout -b feature/your-feature-name`
+2. Make your changes and commit frequently
+3. Create a pull request to `main`
+4. After review and merge, delete the feature branch
+
 ### Branch Structure
 - `main` - Production-ready code
-- `develop` - Integration branch for development work
 - `feature/*` - Feature branches for active development
 
 ### Contribution Guidelines
-1. Create a feature branch from `develop`
-2. Make your changes
-3. Submit a pull request to `develop`
+1. Create a feature branch from `main`
+2. Make your changes with clear commit messages
+3. Submit a pull request to `main`
 4. Ensure CI checks pass
 5. Request a code review
+6. Clean up branches after merge
 
 ## License
 
