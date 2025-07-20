@@ -105,17 +105,33 @@ export interface Activity {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
-  AlbumDetails: { albumId: string };
-  UserProfile: { userId: string };
-  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
-  ListDetails: { listId: string };
 };
 
 export type MainTabParamList = {
   Home: undefined;
   Search: undefined;
   Profile: undefined;
-  Discover: undefined;
+};
+
+// Stack navigator types for each tab
+export type HomeStackParamList = {
+  HomeMain: undefined;
+  AlbumDetails: { albumId: string };
+  UserProfile: { userId: string };
+  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+};
+
+export type SearchStackParamList = {
+  SearchMain: undefined;
+  AlbumDetails: { albumId: string };
+  UserProfile: { userId: string };
+  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+};
+
+export type ProfileStackParamList = {
+  ProfileMain: undefined;
+  UserProfile: { userId: string };
+  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
 };
 
 // Search types

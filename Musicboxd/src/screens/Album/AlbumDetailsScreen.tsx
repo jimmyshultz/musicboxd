@@ -19,13 +19,13 @@ import {
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { RootStackParamList, Album, Track } from '../../types';
+import { HomeStackParamList, SearchStackParamList, Album, Track } from '../../types';
 import { RootState } from '../../store';
 import { setCurrentAlbum, clearCurrentAlbum } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
-type AlbumDetailsRouteProp = RouteProp<RootStackParamList, 'AlbumDetails'>;
+type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
 
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;

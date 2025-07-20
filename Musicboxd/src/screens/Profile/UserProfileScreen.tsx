@@ -21,12 +21,12 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
-import { User, Activity, RootStackParamList } from '../../types';
+import { User, Activity, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 
-type UserProfileScreenRouteProp = RouteProp<RootStackParamList, 'UserProfile'>;
-type UserProfileScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
+type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
 export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();

@@ -12,14 +12,14 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { RootStackParamList, User } from '../../types';
+import { HomeStackParamList, User } from '../../types';
 import { RootState } from '../../store';
 import { setPopularAlbums, fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { colors, spacing } from '../../utils/theme';
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;

@@ -19,12 +19,12 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
-import { User, RootStackParamList } from '../../types';
+import { User, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 
-type FollowersScreenRouteProp = RouteProp<RootStackParamList, 'Followers'>;
-type FollowersScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
+type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
 export default function FollowersScreen() {
   const route = useRoute<FollowersScreenRouteProp>();

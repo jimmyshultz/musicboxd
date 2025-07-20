@@ -20,7 +20,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 
-import { RootStackParamList, Album } from '../../types';
+import { SearchStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import {
   setSearchQuery,
@@ -32,7 +32,7 @@ import {
 import { AlbumService } from '../../services/albumService';
 import { theme, spacing } from '../../utils/theme';
 
-type SearchScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
