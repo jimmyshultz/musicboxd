@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -12,26 +12,43 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { RootStackParamList } from '../../types';
+import { HomeStackParamList, User } from '../../types';
 import { RootState } from '../../store';
 import { setPopularAlbums, fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
+import { userService } from '../../services/userService';
 import { colors, spacing } from '../../utils/theme';
 
-type HomeScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
+const USER_CARD_WIDTH = 140;
 
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const dispatch = useDispatch();
   
   const { popularAlbums, loading } = useSelector((state: RootState) => state.albums);
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+
+  const loadSuggestedUsers = useCallback(async () => {
+    try {
+      // Use actual current user ID instead of hardcoded value
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 3);
+      setSuggestedUsers(users);
+    } catch (error) {
+      console.error('Error loading suggested users:', error);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     loadPopularAlbums();
-  }, []);
+    loadSuggestedUsers();
+  }, [loadSuggestedUsers]);
 
   const loadPopularAlbums = async () => {
     dispatch(fetchAlbumsStart());
@@ -50,6 +67,10 @@ export default function HomeScreen() {
     navigation.navigate('AlbumDetails', { albumId });
   };
 
+  const navigateToUserProfile = (userId: string) => {
+    navigation.navigate('UserProfile', { userId });
+  };
+
   const renderAlbumCard = (album: any, index: number) => (
     <TouchableOpacity
       key={album.id}
@@ -62,6 +83,25 @@ export default function HomeScreen() {
       </Text>
       <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
         {album.artist}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderUserCard = (user: User, index: number) => (
+    <TouchableOpacity
+      key={user.id}
+      style={styles.userCard}
+      onPress={() => navigateToUserProfile(user.id)}
+    >
+      <Image 
+        source={{ uri: user.profilePicture || 'https://via.placeholder.com/60x60/cccccc/999999?text=User' }} 
+        style={styles.userAvatar} 
+      />
+      <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
+        @{user.username}
+      </Text>
+      <Text variant="bodySmall" numberOfLines={2} style={styles.userBio}>
+        {user.bio || 'Music enthusiast'}
       </Text>
     </TouchableOpacity>
   );
@@ -96,15 +136,17 @@ export default function HomeScreen() {
 
       <View style={styles.section}>
         <Text variant="headlineSmall" style={styles.sectionTitle}>
-          Recent Activity
+          Discover Friends
         </Text>
-        <Card style={styles.activityCard} elevation={1}>
-          <Card.Content>
-            <Text variant="bodyMedium" style={styles.comingSoonText}>
-              Activity feed coming soon! Follow friends and see what they're listening to.
-            </Text>
-          </Card.Content>
-        </Card>
+        <Text variant="bodyMedium" style={styles.sectionSubtitle}>
+          Find users with similar music taste
+        </Text>
+        
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.userGrid}>
+            {suggestedUsers.map((user, index) => renderUserCard(user, index))}
+          </View>
+        </ScrollView>
       </View>
 
       <View style={styles.section}>
@@ -170,6 +212,34 @@ const styles = StyleSheet.create({
   },
   artistName: {
     color: colors.textSecondary,
+  },
+  userGrid: {
+    flexDirection: 'row',
+    paddingLeft: spacing.lg,
+  },
+  userCard: {
+    width: USER_CARD_WIDTH,
+    marginRight: spacing.md,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  userAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: spacing.sm,
+  },
+  username: {
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+    textAlign: 'center',
+  },
+  userBio: {
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontSize: 12,
   },
   activityCard: {
     backgroundColor: colors.card,

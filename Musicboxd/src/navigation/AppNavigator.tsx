@@ -11,11 +11,140 @@ import { theme } from '../utils/theme';
 import HomeScreen from '../screens/Home/HomeScreen';
 import SearchScreen from '../screens/Search/SearchScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
+import UserProfileScreen from '../screens/Profile/UserProfileScreen';
+import FollowersScreen from '../screens/Profile/FollowersScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Create stack navigators for each tab to handle nested navigation
+const HomeStack = createStackNavigator();
+const SearchStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
+
+function HomeStackNavigator() {
+  const isDark = useColorScheme() === 'dark';
+  const currentTheme = isDark ? theme.dark : theme.light;
+
+  return (
+    <HomeStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: currentTheme.colors.surface,
+        },
+        headerTintColor: currentTheme.colors.onSurface,
+      }}
+    >
+      <HomeStack.Screen
+        name="HomeMain"
+        component={HomeScreen}
+        options={{ title: 'Musicboxd' }}
+      />
+      <HomeStack.Screen
+        name="AlbumDetails"
+        component={AlbumDetailsScreen}
+        options={{
+          title: 'Album Details',
+        }}
+      />
+      <HomeStack.Screen
+        name="UserProfile"
+        component={UserProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <HomeStack.Screen
+        name="Followers"
+        component={FollowersScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+    </HomeStack.Navigator>
+  );
+}
+
+function SearchStackNavigator() {
+  const isDark = useColorScheme() === 'dark';
+  const currentTheme = isDark ? theme.dark : theme.light;
+
+  return (
+    <SearchStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: currentTheme.colors.surface,
+        },
+        headerTintColor: currentTheme.colors.onSurface,
+      }}
+    >
+      <SearchStack.Screen
+        name="SearchMain"
+        component={SearchScreen}
+        options={{ title: 'Search' }}
+      />
+      <SearchStack.Screen
+        name="AlbumDetails"
+        component={AlbumDetailsScreen}
+        options={{
+          title: 'Album Details',
+        }}
+      />
+      <SearchStack.Screen
+        name="UserProfile"
+        component={UserProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <SearchStack.Screen
+        name="Followers"
+        component={FollowersScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+    </SearchStack.Navigator>
+  );
+}
+
+function ProfileStackNavigator() {
+  const isDark = useColorScheme() === 'dark';
+  const currentTheme = isDark ? theme.dark : theme.light;
+
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: currentTheme.colors.surface,
+        },
+        headerTintColor: currentTheme.colors.onSurface,
+      }}
+    >
+      <ProfileStack.Screen
+        name="ProfileMain"
+        component={ProfileScreen}
+        options={{ title: 'Profile' }}
+      />
+      <ProfileStack.Screen
+        name="UserProfile"
+        component={UserProfileScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen
+        name="Followers"
+        component={FollowersScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+    </ProfileStack.Navigator>
+  );
+}
 
 function MainTabNavigator() {
   const isDark = useColorScheme() === 'dark';
@@ -48,26 +177,20 @@ function MainTabNavigator() {
         tabBarStyle: {
           backgroundColor: currentTheme.colors.surface,
         },
-        headerStyle: {
-          backgroundColor: currentTheme.colors.surface,
-        },
-        headerTintColor: currentTheme.colors.onSurface,
+        headerShown: false, // Hide headers since they're handled by stack navigators
       })}
     >
       <Tab.Screen 
         name="Home" 
-        component={HomeScreen}
-        options={{ title: 'Musicboxd' }}
+        component={HomeStackNavigator}
       />
       <Tab.Screen 
         name="Search" 
-        component={SearchScreen}
-        options={{ title: 'Search' }}
+        component={SearchStackNavigator}
       />
       <Tab.Screen 
         name="Profile" 
-        component={ProfileScreen}
-        options={{ title: 'Profile' }}
+        component={ProfileStackNavigator}
       />
     </Tab.Navigator>
   );
@@ -91,13 +214,6 @@ export default function AppNavigator() {
           name="Main"
           component={MainTabNavigator}
           options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="AlbumDetails"
-          component={AlbumDetailsScreen}
-          options={{
-            title: 'Album Details',
-          }}
         />
         <Stack.Screen
           name="Auth"
