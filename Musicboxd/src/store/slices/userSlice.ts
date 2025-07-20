@@ -3,7 +3,7 @@ import { User, SerializedUser, Activity, Follow } from '../../types';
 
 interface UserState {
   following: SerializedUser[];
-  followers: User[];
+  followers: SerializedUser[];
   activityFeed: Activity[];
   userProfile: User | null;
   loading: boolean;
@@ -46,7 +46,7 @@ const userSlice = createSlice({
     removeFollowing: (state, action: PayloadAction<string>) => {
       state.following = state.following.filter(user => user.id !== action.payload);
     },
-    setFollowers: (state, action: PayloadAction<User[]>) => {
+    setFollowers: (state, action: PayloadAction<SerializedUser[]>) => {
       state.followers = action.payload;
     },
     setActivityFeed: (state, action: PayloadAction<Activity[]>) => {
