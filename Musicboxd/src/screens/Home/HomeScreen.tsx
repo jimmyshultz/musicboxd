@@ -90,12 +90,15 @@ export default function HomeScreen() {
       style={styles.userCard}
       onPress={() => navigateToUserProfile(user.id)}
     >
-      <Image source={{ uri: user.profilePicture }} style={styles.userAvatar} />
+      <Image 
+        source={{ uri: user.profilePicture || 'https://via.placeholder.com/60x60/cccccc/999999?text=User' }} 
+        style={styles.userAvatar} 
+      />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{user.username}
       </Text>
       <Text variant="bodySmall" numberOfLines={2} style={styles.userBio}>
-        {user.bio}
+        {user.bio || 'Music enthusiast'}
       </Text>
     </TouchableOpacity>
   );

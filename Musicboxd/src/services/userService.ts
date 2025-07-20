@@ -289,49 +289,53 @@ class UserService {
   async getUserStats(userId: string) {
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Calculate real follower and following counts for all users
+    // Calculate real follower and following counts for the specific user
     const followingCount = this.followRelationships.filter(f => f.followerId === userId).length;
     const followersCount = this.followRelationships.filter(f => f.followingId === userId).length;
     
-    // Mock statistics for other users - in real app, this would aggregate from the database
-    const mockStats = {
-      'current-user-id': {
+    // Return stats with actual counts for the requested user
+    if (userId === 'current-user-id') {
+      return {
         albumsListened: 127,
         reviews: 23,
         following: followingCount,
         followers: followersCount,
         listsCreated: 3,
-      },
-      user1: {
+      };
+    } else if (userId === 'user1') {
+      return {
         albumsListened: 89,
         reviews: 34,
         following: followingCount,
         followers: followersCount,
         listsCreated: 5,
-      },
-      user2: {
+      };
+    } else if (userId === 'user2') {
+      return {
         albumsListened: 156,
         reviews: 67,
         following: followingCount,
         followers: followersCount,
         listsCreated: 12,
-      },
-      user3: {
+      };
+    } else if (userId === 'user3') {
+      return {
         albumsListened: 203,
         reviews: 45,
         following: followingCount,
         followers: followersCount,
         listsCreated: 8,
-      },
-    };
-    
-    return mockStats[userId as keyof typeof mockStats] || {
-      albumsListened: 0,
-      reviews: 0,
-      following: followingCount,
-      followers: followersCount,
-      listsCreated: 0,
-    };
+      };
+    } else {
+      // Default for unknown users
+      return {
+        albumsListened: 0,
+        reviews: 0,
+        following: followingCount,
+        followers: followersCount,
+        listsCreated: 0,
+      };
+    }
   }
 }
 

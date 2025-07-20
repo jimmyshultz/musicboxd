@@ -106,7 +106,7 @@ export default function FollowersScreen() {
         <View style={styles.userInfo}>
           <Avatar.Image
             size={50}
-            source={{ uri: user.profilePicture }}
+            source={{ uri: user.profilePicture || 'https://via.placeholder.com/50x50/cccccc/999999?text=User' }}
             style={styles.avatar}
           />
           <View style={styles.userDetails}>
@@ -114,7 +114,7 @@ export default function FollowersScreen() {
               @{user.username}
             </Text>
             <Text variant="bodyMedium" style={styles.bio} numberOfLines={2}>
-              {user.bio}
+              {user.bio || 'Music enthusiast'}
             </Text>
           </View>
         </View>

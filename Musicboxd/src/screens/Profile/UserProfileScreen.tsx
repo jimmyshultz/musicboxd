@@ -158,14 +158,14 @@ export default function UserProfileScreen() {
         <View style={styles.profileInfo}>
           <Avatar.Image 
             size={100} 
-            source={{ uri: user.profilePicture }} 
+            source={{ uri: user.profilePicture || 'https://via.placeholder.com/100x100/cccccc/999999?text=User' }} 
             style={styles.avatar}
           />
           <Text variant="headlineSmall" style={styles.username}>
             @{user.username}
           </Text>
           <Text variant="bodyMedium" style={styles.bio}>
-            {user.bio}
+            {user.bio || 'Music enthusiast'}
           </Text>
           <Text variant="bodySmall" style={styles.joinedDate}>
             Member since {user.joinedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
