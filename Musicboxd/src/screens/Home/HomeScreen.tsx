@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -30,22 +30,25 @@ export default function HomeScreen() {
   const dispatch = useDispatch();
   
   const { popularAlbums, loading } = useSelector((state: RootState) => state.albums);
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
 
-  useEffect(() => {
-    loadPopularAlbums();
-    loadSuggestedUsers();
-  }, []);
-
-  const loadSuggestedUsers = async () => {
+  const loadSuggestedUsers = useCallback(async () => {
     try {
-      const users = await userService.getSuggestedUsers('current-user-id', 3);
+      // Use actual current user ID instead of hardcoded value
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 3);
       setSuggestedUsers(users);
     } catch (error) {
       console.error('Error loading suggested users:', error);
     }
-  };
+  }, [currentUser]);
+
+  useEffect(() => {
+    loadPopularAlbums();
+    loadSuggestedUsers();
+  }, [loadSuggestedUsers]);
 
   const loadPopularAlbums = async () => {
     dispatch(fetchAlbumsStart());
