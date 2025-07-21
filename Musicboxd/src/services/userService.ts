@@ -298,11 +298,11 @@ class UserService {
     const albumStats = await AlbumService.getUserAlbumStats(userId);
     
     // Get static data for lists (would be from a lists service in real app)
-    const getListsCreated = (userId: string) => {
-      if (userId === 'current-user-id') return 3;
-      if (userId === 'user1') return 5;
-      if (userId === 'user2') return 12;
-      if (userId === 'user3') return 8;
+    const getListsCreated = (targetUserId: string) => {
+      if (targetUserId === 'current-user-id') return 3;
+      if (targetUserId === 'user1') return 5;
+      if (targetUserId === 'user2') return 12;
+      if (targetUserId === 'user3') return 8;
       return 0;
     };
     

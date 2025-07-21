@@ -356,7 +356,7 @@ export class AlbumService {
   // Get user's review for album
   static async getUserReview(userId: string, albumId: string): Promise<Review | null> {
     const review = this.userReviews.find(
-      review => review.userId === userId && review.albumId === albumId
+      r => r.userId === userId && r.albumId === albumId
     ) || null;
     return review ? serializeReview(review) : null;
   }
