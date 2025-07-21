@@ -4,6 +4,26 @@ import { mockAlbums, popularGenres } from './mockData';
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper to serialize a review
+function serializeReview(review: Review): any {
+  return {
+    ...review,
+    dateReviewed: review.dateReviewed instanceof Date
+      ? review.dateReviewed.toISOString()
+      : review.dateReviewed,
+  };
+}
+
+// Helper to serialize a listen
+function serializeListen(listen: Listen): any {
+  return {
+    ...listen,
+    dateListened: listen.dateListened instanceof Date
+      ? listen.dateListened.toISOString()
+      : listen.dateListened,
+  };
+}
+
 export class AlbumService {
   // Store user interactions in memory (in real app, this would be API calls)
   private static userListens: Listen[] = [
@@ -167,7 +187,7 @@ export class AlbumService {
     
     if (existingListen) {
       return {
-        data: existingListen,
+        data: serializeListen(existingListen),
         success: false,
         message: 'Album already marked as listened',
       };
@@ -184,7 +204,7 @@ export class AlbumService {
     this.userListens.push(newListen);
 
     return {
-      data: newListen,
+      data: serializeListen(newListen),
       success: true,
       message: 'Album marked as listened',
     };
@@ -248,7 +268,7 @@ export class AlbumService {
       this.userReviews[existingReviewIndex] = updatedReview;
       
       return {
-        data: updatedReview,
+        data: serializeReview(updatedReview),
         success: true,
         message: 'Review updated',
       };
@@ -268,7 +288,7 @@ export class AlbumService {
       this.userReviews.push(newReview);
 
       return {
-        data: newReview,
+        data: serializeReview(newReview),
         success: true,
         message: 'Review added',
       };
@@ -302,21 +322,26 @@ export class AlbumService {
 
   // Get user's review for album
   static async getUserReview(userId: string, albumId: string): Promise<Review | null> {
-    return this.userReviews.find(
+    const review = this.userReviews.find(
       review => review.userId === userId && review.albumId === albumId
     ) || null;
+    return review ? serializeReview(review) : null;
   }
 
   // Get user's listens
   static async getUserListens(userId: string): Promise<Listen[]> {
     await delay(300);
-    return this.userListens.filter(listen => listen.userId === userId);
+    return this.userListens
+      .filter(listen => listen.userId === userId)
+      .map(serializeListen);
   }
 
   // Get user's reviews
   static async getUserReviews(userId: string): Promise<Review[]> {
     await delay(300);
-    return this.userReviews.filter(review => review.userId === userId);
+    return this.userReviews
+      .filter(review => review.userId === userId)
+      .map(serializeReview);
   }
 
   // Get user stats
