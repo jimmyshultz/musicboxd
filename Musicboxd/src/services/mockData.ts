@@ -1,4 +1,4 @@
-import { Album, User, Review, Listen, Activity } from '../types';
+import { Album, User, Review, Activity } from '../types';
 
 // Mock album data with comprehensive track listings
 export const mockAlbums: Album[] = [

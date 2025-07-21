@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   FlatList,
@@ -26,6 +26,17 @@ import { userService } from '../../services/userService';
 type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
 type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
+const EmptyState = ({ activeTab, username }: { activeTab: string; username: string }) => (
+  <View style={styles.emptyContainer}>
+    <Text variant="bodyLarge" style={styles.emptyText}>
+      {activeTab === 'followers' 
+        ? `${username} has no followers yet`
+        : `${username} isn't following anyone yet`
+      }
+    </Text>
+  </View>
+);
+
 export default function FollowersScreen() {
   const route = useRoute<FollowersScreenRouteProp>();
   const navigation = useNavigation<FollowersScreenNavigationProp>();
@@ -42,9 +53,9 @@ export default function FollowersScreen() {
 
   useEffect(() => {
     loadData();
-  }, [userId, activeTab]);
+  }, [userId, activeTab, loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       if (activeTab === 'followers') {
@@ -59,7 +70,7 @@ export default function FollowersScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, activeTab]);
 
   const isFollowing = (targetUserId: string) => {
     return following.some(user => user.id === targetUserId);
@@ -133,16 +144,7 @@ export default function FollowersScreen() {
     );
   };
 
-  const EmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text variant="bodyLarge" style={styles.emptyText}>
-        {activeTab === 'followers' 
-          ? `${username} has no followers yet`
-          : `${username} isn't following anyone yet`
-        }
-      </Text>
-    </View>
-  );
+
 
   const currentData = activeTab === 'followers' ? followers : followingUsers;
 
@@ -192,7 +194,7 @@ export default function FollowersScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={EmptyState}
+          ListEmptyComponent={<EmptyState activeTab={activeTab} username={username} />}
         />
       )}
     </View>

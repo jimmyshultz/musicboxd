@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -28,6 +28,9 @@ import { userService } from '../../services/userService';
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
+// Icon component to avoid creating it during render
+const MusicIcon = (props: any) => <List.Icon {...props} icon="music-note" />;
+
 export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
   const navigation = useNavigation<UserProfileScreenNavigationProp>();
@@ -47,9 +50,9 @@ export default function UserProfileScreen() {
 
   useEffect(() => {
     loadUserProfile();
-  }, [userId, following]); // Reload when following state changes
+  }, [userId, following, loadUserProfile]); // Reload when following state changes
 
-  const loadUserProfile = async () => {
+  const loadUserProfile = useCallback(async () => {
     setLoading(true);
     try {
       const userData = await userService.getUserById(userId);
@@ -64,7 +67,7 @@ export default function UserProfileScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
   const handleFollowToggle = async () => {
     if (!user) return;
@@ -262,7 +265,7 @@ export default function UserProfileScreen() {
               <List.Item
                 title={getActivityDescription(activity)}
                 description={formatActivityTime(activity.timestamp)}
-                left={(props) => <List.Icon {...props} icon="music-note" />}
+                left={MusicIcon}
                 onPress={() => {
                   // Navigate to album details or other relevant screen
                   if (activity.albumId) {

@@ -3,7 +3,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
 } from 'react-native';
 import {
@@ -21,10 +20,20 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
 import { loginSuccess } from '../../store/slices/authSlice';
-import { User, SerializedUser, ProfileStackParamList } from '../../types';
+import { SerializedUser, ProfileStackParamList } from '../../types';
 import { userService } from '../../services/userService';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
+
+// Icon components to avoid creating them during render
+const HistoryIcon = (props: any) => <List.Icon {...props} icon="history" />;
+const ChevronRightIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+const ReviewIcon = (props: any) => <List.Icon {...props} icon="rate-review" />;
+const PlaylistIcon = (props: any) => <List.Icon {...props} icon="playlist-play" />;
+const ChartIcon = (props: any) => <List.Icon {...props} icon="bar-chart" />;
+const EditIcon = (props: any) => <List.Icon {...props} icon="edit" />;
+const SettingsIcon = (props: any) => <List.Icon {...props} icon="settings" />;
+const HelpIcon = (props: any) => <List.Icon {...props} icon="help" />;
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
@@ -179,32 +188,32 @@ export default function ProfileScreen() {
         <List.Item
           title="Recently Listened"
           description="View your recent album listens"
-          left={(props) => <List.Icon {...props} icon="history" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={HistoryIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="My Reviews"
           description="Manage your album reviews"
-          left={(props) => <List.Icon {...props} icon="rate-review" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={ReviewIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="My Lists"
           description="Create and manage album lists"
-          left={(props) => <List.Icon {...props} icon="playlist-play" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={PlaylistIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="Listening Stats"
           description="View detailed listening statistics"
-          left={(props) => <List.Icon {...props} icon="bar-chart" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={ChartIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
       </Card>
@@ -214,24 +223,24 @@ export default function ProfileScreen() {
         <List.Item
           title="Edit Profile"
           description="Update your profile information"
-          left={(props) => <List.Icon {...props} icon="edit" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={EditIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="Settings"
           description="App preferences and privacy"
-          left={(props) => <List.Icon {...props} icon="settings" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={SettingsIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
         <Divider />
         <List.Item
           title="Help & Support"
           description="Get help with using the app"
-          left={(props) => <List.Icon {...props} icon="help" />}
-          right={(props) => <List.Icon {...props} icon="chevron-right" />}
+          left={HelpIcon}
+          right={ChevronRightIcon}
           onPress={() => {}}
         />
       </Card>

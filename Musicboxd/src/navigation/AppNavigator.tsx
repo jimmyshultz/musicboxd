@@ -19,6 +19,32 @@ import AuthScreen from '../screens/Auth/AuthScreen';
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+// Tab icon component to avoid creating it during render
+const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
+  let iconText: string;
+
+  switch (routeName) {
+    case 'Home':
+      iconText = '🏠';
+      break;
+    case 'Search':
+      iconText = '🔍';
+      break;
+    case 'Profile':
+      iconText = '👤';
+      break;
+    default:
+      iconText = '❓';
+  }
+
+  return <Text style={{ fontSize: size, color }}>{iconText}</Text>;
+};
+
+// Create tab bar icon function outside component
+const createTabBarIcon = (routeName: string) => ({ color, size }: { color: string; size: number }) => (
+  <TabIcon routeName={routeName} color={color} size={size} />
+);
+
 // Create stack navigators for each tab to handle nested navigation
 const HomeStack = createStackNavigator();
 const SearchStack = createStackNavigator();
@@ -153,25 +179,7 @@ function MainTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconText: string;
-
-          switch (route.name) {
-            case 'Home':
-              iconText = '🏠';
-              break;
-            case 'Search':
-              iconText = '🔍';
-              break;
-            case 'Profile':
-              iconText = '👤';
-              break;
-            default:
-              iconText = '❓';
-          }
-
-          return <Text style={{ fontSize: size, color }}>{iconText}</Text>;
-        },
+        tabBarIcon: createTabBarIcon(route.name),
         tabBarActiveTintColor: currentTheme.colors.primary,
         tabBarInactiveTintColor: isDark ? '#666' : '#999',
         tabBarStyle: {
