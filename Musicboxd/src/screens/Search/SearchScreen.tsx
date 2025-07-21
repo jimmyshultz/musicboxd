@@ -47,10 +47,6 @@ export default function SearchScreen() {
 
   const [popularGenres, setPopularGenres] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
-
   const loadInitialData = useCallback(async () => {
     try {
       const [trendingResponse, genresResponse] = await Promise.all([
@@ -69,6 +65,10 @@ export default function SearchScreen() {
       console.error('Error loading initial data:', error);
     }
   }, [dispatch]);
+
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
 
   const performSearch = useCallback(async (query: string) => {
     if (query.trim()) {
@@ -244,7 +244,7 @@ export default function SearchScreen() {
             </Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.trendingContainer}>
-                {trendingAlbums.map((album, index) => renderTrendingAlbum(album, index))}
+                {trendingAlbums.map((album) => renderTrendingAlbum(album))}
               </View>
             </ScrollView>
           </View>

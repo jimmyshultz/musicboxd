@@ -40,10 +40,12 @@ export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { following } = useSelector((state: RootState) => state.user);
+  const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
   
   const [stats, setStats] = useState({
-    albumsListened: 127,
-    reviews: 23,
+    albumsListened: 0,
+    reviews: 0,
+    averageRating: 0,
     following: 0,
     followers: 0,
   });
@@ -90,7 +92,7 @@ export default function ProfileScreen() {
     };
     
     loadStats();
-  }, [user, following]); // Reload when following state changes
+  }, [user, following, userListens, userReviews]); // Reload when following state or user interactions change
 
   if (!user) {
     return null; // or loading spinner
@@ -116,34 +118,49 @@ export default function ProfileScreen() {
         </Text>
       </View>
 
-      {/* Stats Cards */}
+            {/* Stats Grid */}
       <View style={styles.statsContainer}>
-        <View style={styles.statsRow}>
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {stats.albumsListened}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Albums Listened
-              </Text>
-            </Card.Content>
-          </Card>
-          
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {stats.reviews}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Reviews
-              </Text>
-            </Card.Content>
-          </Card>
-        </View>
-
-        <View style={styles.statsRow}>
+        <View style={styles.statsGrid}>
           <TouchableOpacity
+            style={styles.statCardWrapper}
+            onPress={() => navigation.navigate('ListenedAlbums', { 
+              userId: user.id, 
+              username: user.username 
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {stats.albumsListened}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Albums Listened
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.statCardWrapper}
+            onPress={() => navigation.navigate('UserReviews', { 
+              userId: user.id, 
+              username: user.username 
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {stats.reviews}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Ratings
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
               userId: user.id, 
               username: user.username,
@@ -163,6 +180,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
               userId: user.id, 
               username: user.username,
@@ -291,13 +309,17 @@ const styles = StyleSheet.create({
   statsContainer: {
     padding: spacing.lg,
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCardWrapper: {
+    width: '48%',
     marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
-    marginHorizontal: spacing.xs,
     backgroundColor: theme.colors.surface,
   },
   statContent: {

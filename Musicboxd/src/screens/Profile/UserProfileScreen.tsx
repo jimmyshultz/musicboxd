@@ -48,10 +48,6 @@ export default function UserProfileScreen() {
   const isFollowing = following.some(followedUser => followedUser.id === userId);
   const isOwnProfile = currentUser?.id === userId;
 
-  useEffect(() => {
-    loadUserProfile();
-  }, [userId, following, loadUserProfile]); // Reload when following state changes
-
   const loadUserProfile = useCallback(async () => {
     setLoading(true);
     try {
@@ -68,6 +64,10 @@ export default function UserProfileScreen() {
       setLoading(false);
     }
   }, [userId]);
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [userId, following, loadUserProfile]); // Reload when userId changes, following state changes, or loadUserProfile changes
 
   const handleFollowToggle = async () => {
     if (!user) return;
@@ -189,34 +189,49 @@ export default function UserProfileScreen() {
         )}
       </View>
 
-      {/* Stats Cards */}
+            {/* Stats Grid */}
       <View style={styles.statsContainer}>
-        <View style={styles.statsRow}>
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {userStats.albumsListened}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Albums Listened
-              </Text>
-            </Card.Content>
-          </Card>
-          
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {userStats.reviews}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Reviews
-              </Text>
-            </Card.Content>
-          </Card>
-        </View>
-
-        <View style={styles.statsRow}>
+        <View style={styles.statsGrid}>
           <TouchableOpacity
+            style={styles.statCardWrapper}
+            onPress={() => navigation.navigate('ListenedAlbums', { 
+              userId: user.id, 
+              username: user.username 
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {userStats.albumsListened}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Albums Listened
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.statCardWrapper}
+            onPress={() => navigation.navigate('UserReviews', { 
+              userId: user.id, 
+              username: user.username 
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {userStats.reviews}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Ratings
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
               userId: user.id, 
               username: user.username,
@@ -236,6 +251,7 @@ export default function UserProfileScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
               userId: user.id, 
               username: user.username,
@@ -348,13 +364,17 @@ const styles = StyleSheet.create({
   statsContainer: {
     padding: spacing.lg,
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCardWrapper: {
+    width: '48%',
     marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
-    marginHorizontal: spacing.xs,
     backgroundColor: theme.colors.surface,
   },
   statContent: {
