@@ -18,7 +18,7 @@ export class AlbumService {
   // Get album by ID
   static async getAlbumById(id: string): Promise<ApiResponse<Album | null>> {
     await delay(300);
-    const album = mockAlbums.find(album => album.id === id);
+    const album = mockAlbums.find(a => a.id === id);
     return {
       data: album || null,
       success: !!album,

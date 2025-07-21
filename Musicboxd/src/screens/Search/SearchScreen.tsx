@@ -10,7 +10,6 @@ import {
 import {
   Text,
   Searchbar,
-  Card,
   Chip,
   ActivityIndicator,
   Divider,
@@ -50,9 +49,9 @@ export default function SearchScreen() {
 
   useEffect(() => {
     loadInitialData();
-  }, []);
+  }, [loadInitialData]);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       const [trendingResponse, genresResponse] = await Promise.all([
         AlbumService.getTrendingAlbums(),
@@ -69,24 +68,23 @@ export default function SearchScreen() {
     } catch (error) {
       console.error('Error loading initial data:', error);
     }
+  }, [dispatch]);
+
+  const performSearch = async (query: string) => {
+    if (query.trim()) {
+      dispatch(searchStart());
+      try {
+        const response = await AlbumService.searchAlbums(query);
+        if (response.success) {
+          dispatch(searchSuccess(response.data));
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+      }
+    }
   };
 
-  const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
-      if (query.trim()) {
-        dispatch(searchStart());
-        try {
-          const response = await AlbumService.searchAlbums(query);
-          if (response.success) {
-            dispatch(searchSuccess(response.data));
-          }
-        } catch (error) {
-          console.error('Search error:', error);
-        }
-      }
-    }, 300),
-    []
-  );
+  const debouncedSearch = debounce(performSearch, 300);
 
   const handleSearchChange = (query: string) => {
     dispatch(setSearchQuery(query));
@@ -135,7 +133,7 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
-  const renderTrendingAlbum = (album: Album, index: number) => (
+  const renderTrendingAlbum = (album: Album) => (
     <TouchableOpacity
       key={album.id}
       style={styles.trendingAlbum}

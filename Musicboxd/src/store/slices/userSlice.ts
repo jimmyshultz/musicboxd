@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { User, SerializedUser, Activity, Follow } from '../../types';
+import { User, SerializedUser, Activity } from '../../types';
 
 interface UserState {
   following: SerializedUser[];

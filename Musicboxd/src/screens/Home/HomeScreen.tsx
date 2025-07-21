@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { Text, Card, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +20,6 @@ import { colors, spacing } from '../../utils/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
-const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
 const USER_CARD_WIDTH = 140;
 
@@ -48,9 +46,9 @@ export default function HomeScreen() {
   useEffect(() => {
     loadPopularAlbums();
     loadSuggestedUsers();
-  }, [loadSuggestedUsers]);
+  }, [loadSuggestedUsers, loadPopularAlbums]);
 
-  const loadPopularAlbums = async () => {
+  const loadPopularAlbums = useCallback(async () => {
     dispatch(fetchAlbumsStart());
     try {
       const response = await AlbumService.getPopularAlbums();
@@ -61,7 +59,7 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error loading albums:', error);
     }
-  };
+  }, [dispatch]);
 
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
@@ -71,7 +69,7 @@ export default function HomeScreen() {
     navigation.navigate('UserProfile', { userId });
   };
 
-  const renderAlbumCard = (album: any, index: number) => (
+  const renderAlbumCard = (album: any) => (
     <TouchableOpacity
       key={album.id}
       style={styles.albumCard}
@@ -87,7 +85,7 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderUserCard = (user: User, index: number) => (
+  const renderUserCard = (user: User) => (
     <TouchableOpacity
       key={user.id}
       style={styles.userCard}

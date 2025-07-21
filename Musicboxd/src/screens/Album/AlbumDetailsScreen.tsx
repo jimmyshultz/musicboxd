@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -13,13 +13,12 @@ import {
   Button,
   ActivityIndicator,
   Chip,
-  IconButton,
   Divider,
 } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, Album, Track } from '../../types';
+import { HomeStackParamList, SearchStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
 import { setCurrentAlbum, clearCurrentAlbum } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
@@ -38,7 +37,7 @@ const StarRating = ({ rating, onRatingChange }: { rating: number; onRatingChange
           <Text
             style={[
               styles.star,
-              { color: star <= rating ? theme.colors.primary : '#ccc' }
+              star <= rating ? styles.starFilled : styles.starEmpty
             ]}
           >
             {star <= rating ? '★' : '☆'}
@@ -49,7 +48,7 @@ const StarRating = ({ rating, onRatingChange }: { rating: number; onRatingChange
   );
 };
 
-const TrackListItem = ({ track, albumArtist }: { track: Track; albumArtist: string }) => (
+const TrackListItem = ({ track }: { track: Track; albumArtist: string }) => (
   <View style={styles.trackItem}>
     <View style={styles.trackNumber}>
       <Text variant="bodySmall" style={styles.trackNumberText}>
@@ -82,14 +81,7 @@ export default function AlbumDetailsScreen() {
   const [userRating, setUserRating] = useState(0);
   const [isListened, setIsListened] = useState(false);
 
-  useEffect(() => {
-    loadAlbumDetails();
-    return () => {
-      dispatch(clearCurrentAlbum());
-    };
-  }, [albumId]);
-
-  const loadAlbumDetails = async () => {
+  const loadAlbumDetails = useCallback(async () => {
     setLoading(true);
     try {
       const response = await AlbumService.getAlbumById(albumId);
@@ -101,7 +93,14 @@ export default function AlbumDetailsScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [albumId, dispatch]);
+
+  useEffect(() => {
+    loadAlbumDetails();
+    return () => {
+      dispatch(clearCurrentAlbum());
+    };
+  }, [loadAlbumDetails, dispatch]);
 
   const handleRating = (rating: number) => {
     setUserRating(rating);
@@ -314,6 +313,12 @@ const styles = StyleSheet.create({
   star: {
     fontSize: 32,
     marginHorizontal: spacing.xs,
+  },
+  starFilled: {
+    color: theme.colors.primary,
+  },
+  starEmpty: {
+    color: '#ccc',
   },
   ratingText: {
     textAlign: 'center',
