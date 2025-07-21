@@ -189,10 +189,11 @@ export default function UserProfileScreen() {
         )}
       </View>
 
-      {/* Stats Cards */}
+            {/* Stats Grid */}
       <View style={styles.statsContainer}>
-        <View style={styles.statsRow}>
+        <View style={styles.statsGrid}>
           <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('ListenedAlbums', { 
               userId: user.id, 
               username: user.username 
@@ -211,6 +212,7 @@ export default function UserProfileScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('UserReviews', { 
               userId: user.id, 
               username: user.username 
@@ -221,31 +223,28 @@ export default function UserProfileScreen() {
                 <Text variant="headlineMedium" style={styles.statNumber}>
                   {userStats.reviews}
                 </Text>
-                               <Text variant="bodySmall" style={styles.statLabel}>
-                 Ratings
-               </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Ratings
+                </Text>
               </Card.Content>
             </Card>
           </TouchableOpacity>
-        </View>
 
-        <View style={styles.statsRow}>
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {userStats.averageRating > 0 ? `${userStats.averageRating}★` : '—'}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Average Rating
-              </Text>
-            </Card.Content>
-          </Card>
-          
-          <View style={styles.statCard} />
-        </View>
+          <View style={styles.statCardWrapper}>
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {userStats.averageRating > 0 ? `${userStats.averageRating}★` : '—'}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Average Rating
+                </Text>
+              </Card.Content>
+            </Card>
+          </View>
 
-        <View style={styles.statsRow}>
           <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
               userId: user.id, 
               username: user.username,
@@ -265,6 +264,7 @@ export default function UserProfileScreen() {
           </TouchableOpacity>
           
           <TouchableOpacity
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
               userId: user.id, 
               username: user.username,
@@ -282,6 +282,9 @@ export default function UserProfileScreen() {
               </Card.Content>
             </Card>
           </TouchableOpacity>
+
+          {/* Empty placeholder to maintain grid alignment */}
+          <View style={styles.statCardWrapper} />
         </View>
       </View>
 
@@ -377,13 +380,17 @@ const styles = StyleSheet.create({
   statsContainer: {
     padding: spacing.lg,
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  statCardWrapper: {
+    width: '48%',
     marginBottom: spacing.md,
   },
   statCard: {
     flex: 1,
-    marginHorizontal: spacing.xs,
     backgroundColor: theme.colors.surface,
   },
   statContent: {
