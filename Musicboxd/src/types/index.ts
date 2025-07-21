@@ -146,6 +146,7 @@ export type SearchStackParamList = {
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
+  AlbumDetails: { albumId: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };

@@ -185,6 +185,13 @@ function ProfileStackNavigator() {
         options={{ title: 'Profile' }}
       />
       <ProfileStack.Screen
+        name="AlbumDetails"
+        component={AlbumDetailsScreen}
+        options={{
+          title: 'Album Details',
+        }}
+      />
+      <ProfileStack.Screen
         name="UserProfile"
         component={UserProfileScreen}
         options={{

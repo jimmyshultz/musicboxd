@@ -24,9 +24,7 @@ type UserReviewsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
   'UserReviews'
 >;
-type UserReviewsScreenNavigationProp = StackNavigationProp<
-  HomeStackParamList & SearchStackParamList & ProfileStackParamList
->;
+type UserReviewsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
 
 

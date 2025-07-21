@@ -25,9 +25,7 @@ type ListenedAlbumsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
   'ListenedAlbums'
 >;
-type ListenedAlbumsScreenNavigationProp = StackNavigationProp<
-  HomeStackParamList & SearchStackParamList & ProfileStackParamList
->;
+type ListenedAlbumsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 3) / 2;
