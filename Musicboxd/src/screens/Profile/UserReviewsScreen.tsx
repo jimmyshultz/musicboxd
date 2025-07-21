@@ -13,10 +13,12 @@ import {
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
 import { Review, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { AlbumService } from '../../services/albumService';
+import { RootState } from '../../store';
 
 type UserReviewsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
@@ -53,6 +55,7 @@ export default function UserReviewsScreen() {
   const route = useRoute<UserReviewsScreenRouteProp>();
   const navigation = useNavigation<UserReviewsScreenNavigationProp>();
   const { userId, username } = route.params;
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,7 +174,7 @@ export default function UserReviewsScreen() {
             No Ratings Yet
           </Text>
           <Text variant="bodyMedium" style={styles.emptyText}>
-            {username === 'you' ? 'Start rating albums and they\'ll appear here!' : `${username} hasn't rated any albums yet.`}
+            {userId === currentUser?.id ? 'Start rating albums and they\'ll appear here!' : `${username} hasn't rated any albums yet.`}
           </Text>
         </View>
       ) : (

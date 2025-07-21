@@ -14,10 +14,12 @@ import {
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
 import { Listen, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { AlbumService } from '../../services/albumService';
+import { RootState } from '../../store';
 
 type ListenedAlbumsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
@@ -39,6 +41,7 @@ export default function ListenedAlbumsScreen() {
   const route = useRoute<ListenedAlbumsScreenRouteProp>();
   const navigation = useNavigation<ListenedAlbumsScreenNavigationProp>();
   const { userId, username } = route.params;
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
 
   const [listenedAlbums, setListenedAlbums] = useState<ListenedAlbumData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,7 +150,7 @@ export default function ListenedAlbumsScreen() {
             No Albums Yet
           </Text>
           <Text variant="bodyMedium" style={styles.emptyText}>
-            {username === 'you' ? 'Start listening to albums and they\'ll appear here!' : `${username} hasn't listened to any albums yet.`}
+            {userId === currentUser?.id ? 'Start listening to albums and they\'ll appear here!' : `${username} hasn't listened to any albums yet.`}
           </Text>
         </View>
       ) : (
