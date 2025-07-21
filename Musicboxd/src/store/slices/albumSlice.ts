@@ -64,6 +64,11 @@ const albumSlice = createSlice({
     addListen: (state, action: PayloadAction<Listen>) => {
       state.userListens.push(action.payload);
     },
+    removeListen: (state, action: PayloadAction<{ userId: string; albumId: string }>) => {
+      state.userListens = state.userListens.filter(
+        listen => !(listen.userId === action.payload.userId && listen.albumId === action.payload.albumId)
+      );
+    },
     setPopularAlbums: (state, action: PayloadAction<Album[]>) => {
       state.popularAlbums = action.payload;
     },
@@ -98,6 +103,7 @@ export const {
   updateReview,
   removeReview,
   addListen,
+  removeListen,
   setPopularAlbums,
   setCurrentAlbumUserReview,
   setCurrentAlbumIsListened,

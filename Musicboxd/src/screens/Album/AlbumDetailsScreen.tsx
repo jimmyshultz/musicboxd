@@ -25,7 +25,8 @@ import {
   clearCurrentAlbum, 
   setCurrentAlbumUserReview, 
   setCurrentAlbumIsListened,
-  addListen 
+  addListen,
+  removeListen
 } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { theme, spacing, shadows } from '../../utils/theme';
@@ -156,6 +157,7 @@ export default function AlbumDetailsScreen() {
         const response = await AlbumService.removeListened(user.id, currentAlbum.id);
         if (response.success) {
           dispatch(setCurrentAlbumIsListened(false));
+          dispatch(removeListen({ userId: user.id, albumId: currentAlbum.id }));
         }
       } else {
         // Add listen
