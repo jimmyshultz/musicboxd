@@ -26,7 +26,8 @@ import {
   setCurrentAlbumUserReview, 
   setCurrentAlbumIsListened,
   addListen,
-  removeListen
+  removeListen,
+  removeReview
 } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { theme, spacing, shadows } from '../../utils/theme';
@@ -45,12 +46,23 @@ const StarRating = ({
   onRatingChange: (rating: number) => void;
   disabled?: boolean;
 }) => {
+  const handleStarPress = (star: number) => {
+    if (disabled) return;
+    
+    // If clicking on the currently selected star (highest filled star), remove the rating
+    if (star === rating) {
+      onRatingChange(0); // Remove rating by setting to 0
+    } else {
+      onRatingChange(star); // Set new rating
+    }
+  };
+
   return (
     <View style={styles.starContainer}>
       {[1, 2, 3, 4, 5].map((star) => (
         <TouchableOpacity 
           key={star} 
-          onPress={() => !disabled && onRatingChange(star)}
+          onPress={() => handleStarPress(star)}
           disabled={disabled}
         >
           <Text
@@ -136,9 +148,22 @@ export default function AlbumDetailsScreen() {
     
     setSubmitting(true);
     try {
-      const response = await AlbumService.addReview(user.id, currentAlbum.id, rating);
-      if (response.success) {
-        dispatch(setCurrentAlbumUserReview(response.data));
+      if (rating === 0) {
+        // Remove rating
+        const response = await AlbumService.removeReview(user.id, currentAlbum.id);
+        if (response.success) {
+          dispatch(setCurrentAlbumUserReview(null));
+          // Also remove from userReviews array to update stats
+          if (currentAlbumUserReview) {
+            dispatch(removeReview(currentAlbumUserReview.id));
+          }
+        }
+      } else {
+        // Add or update rating
+        const response = await AlbumService.addReview(user.id, currentAlbum.id, rating);
+        if (response.success) {
+          dispatch(setCurrentAlbumUserReview(response.data));
+        }
       }
     } catch (error) {
       console.error('Error saving rating:', error);
