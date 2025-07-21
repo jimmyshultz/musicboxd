@@ -33,7 +33,6 @@ export class AlbumService {
       userId: 'current-user-id',
       albumId: '1',
       dateListened: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      notes: 'Amazing album!',
     },
     {
       id: 'listen_demo_2',
@@ -46,7 +45,6 @@ export class AlbumService {
       userId: 'current-user-id',
       albumId: '4',
       dateListened: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-      notes: 'Such a beautiful and emotional journey',
     },
     {
       id: 'listen_demo_4',
@@ -59,7 +57,6 @@ export class AlbumService {
       userId: 'current-user-id',
       albumId: '5',
       dateListened: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
-      notes: 'Classic hip-hop at its finest',
     },
   ];
   

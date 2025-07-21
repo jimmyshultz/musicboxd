@@ -107,11 +107,6 @@ export default function ListenedAlbumsScreen() {
         <Text variant="bodySmall" style={styles.listenDate}>
           {formatListenDate(new Date(data.listen.dateListened))}
         </Text>
-        {data.listen.notes && (
-          <Text variant="bodySmall" numberOfLines={2} style={styles.notes}>
-            "{data.listen.notes}"
-          </Text>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -242,12 +237,6 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 12,
     fontWeight: '500',
-    marginBottom: spacing.xs,
-  },
-  notes: {
-    color: theme.colors.textSecondary,
-    fontStyle: 'italic',
-    fontSize: 12,
   },
   emptyContainer: {
     flex: 1,
