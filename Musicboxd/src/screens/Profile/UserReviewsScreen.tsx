@@ -25,7 +25,7 @@ type UserReviewsScreenRouteProp = RouteProp<
   'UserReviews'
 >;
 type UserReviewsScreenNavigationProp = StackNavigationProp<
-  HomeStackParamList | SearchStackParamList | ProfileStackParamList
+  HomeStackParamList & SearchStackParamList & ProfileStackParamList
 >;
 
 
@@ -93,7 +93,7 @@ export default function UserReviewsScreen() {
   }, [loadUserReviews]);
 
   const navigateToAlbum = (albumId: string) => {
-    (navigation as any).navigate('AlbumDetails', { albumId });
+    navigation.navigate('AlbumDetails', { albumId });
   };
 
   const formatReviewDate = (date: Date) => {

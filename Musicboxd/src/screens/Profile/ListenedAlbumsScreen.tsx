@@ -26,7 +26,7 @@ type ListenedAlbumsScreenRouteProp = RouteProp<
   'ListenedAlbums'
 >;
 type ListenedAlbumsScreenNavigationProp = StackNavigationProp<
-  HomeStackParamList | SearchStackParamList | ProfileStackParamList
+  HomeStackParamList & SearchStackParamList & ProfileStackParamList
 >;
 
 const { width } = Dimensions.get('window');
@@ -79,7 +79,7 @@ export default function ListenedAlbumsScreen() {
   }, [loadListenedAlbums]);
 
   const navigateToAlbum = (albumId: string) => {
-    (navigation as any).navigate('AlbumDetails', { albumId });
+    navigation.navigate('AlbumDetails', { albumId });
   };
 
   const formatListenDate = (date: Date) => {
