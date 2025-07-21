@@ -230,19 +230,6 @@ export default function UserProfileScreen() {
             </Card>
           </TouchableOpacity>
 
-          <View style={styles.statCardWrapper}>
-            <Card style={styles.statCard} elevation={1}>
-              <Card.Content style={styles.statContent}>
-                <Text variant="headlineMedium" style={styles.statNumber}>
-                  {userStats.averageRating > 0 ? `${userStats.averageRating}★` : '—'}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Average Rating
-                </Text>
-              </Card.Content>
-            </Card>
-          </View>
-
           <TouchableOpacity
             style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Followers', { 
@@ -282,9 +269,6 @@ export default function UserProfileScreen() {
               </Card.Content>
             </Card>
           </TouchableOpacity>
-
-          {/* Empty placeholder to maintain grid alignment */}
-          <View style={styles.statCardWrapper} />
         </View>
       </View>
 
