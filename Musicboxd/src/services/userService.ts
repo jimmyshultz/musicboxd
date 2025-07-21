@@ -1,4 +1,5 @@
 import { User, Activity, Follow } from '../types';
+import { AlbumService } from './albumService';
 
 class UserService {
   // Mock data for demonstration - in real app, these would be API calls
@@ -293,49 +294,26 @@ class UserService {
     const followingCount = this.followRelationships.filter(f => f.followerId === userId).length;
     const followersCount = this.followRelationships.filter(f => f.followingId === userId).length;
     
-    // Return stats with actual counts for the requested user
-    if (userId === 'current-user-id') {
-      return {
-        albumsListened: 127,
-        reviews: 23,
-        following: followingCount,
-        followers: followersCount,
-        listsCreated: 3,
-      };
-    } else if (userId === 'user1') {
-      return {
-        albumsListened: 89,
-        reviews: 34,
-        following: followingCount,
-        followers: followersCount,
-        listsCreated: 5,
-      };
-    } else if (userId === 'user2') {
-      return {
-        albumsListened: 156,
-        reviews: 67,
-        following: followingCount,
-        followers: followersCount,
-        listsCreated: 12,
-      };
-    } else if (userId === 'user3') {
-      return {
-        albumsListened: 203,
-        reviews: 45,
-        following: followingCount,
-        followers: followersCount,
-        listsCreated: 8,
-      };
-    } else {
-      // Default for unknown users
-      return {
-        albumsListened: 0,
-        reviews: 0,
-        following: followingCount,
-        followers: followersCount,
-        listsCreated: 0,
-      };
-    }
+    // Get real album stats from AlbumService
+    const albumStats = await AlbumService.getUserAlbumStats(userId);
+    
+    // Get static data for lists (would be from a lists service in real app)
+    const getListsCreated = (userId: string) => {
+      if (userId === 'current-user-id') return 3;
+      if (userId === 'user1') return 5;
+      if (userId === 'user2') return 12;
+      if (userId === 'user3') return 8;
+      return 0;
+    };
+    
+    return {
+      albumsListened: albumStats.albumsListened,
+      reviews: albumStats.reviews,
+      averageRating: albumStats.averageRating,
+      following: followingCount,
+      followers: followersCount,
+      listsCreated: getListsCreated(userId),
+    };
   }
 }
 

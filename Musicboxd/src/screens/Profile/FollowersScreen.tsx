@@ -51,10 +51,6 @@ export default function FollowersScreen() {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [userId, activeTab, loadData]);
-
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -71,6 +67,10 @@ export default function FollowersScreen() {
       setLoading(false);
     }
   }, [userId, activeTab]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const isFollowing = (targetUserId: string) => {
     return following.some(user => user.id === targetUserId);

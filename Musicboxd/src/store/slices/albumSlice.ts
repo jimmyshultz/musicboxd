@@ -7,6 +7,8 @@ interface AlbumState {
   userReviews: Review[];
   userListens: Listen[];
   popularAlbums: Album[];
+  currentAlbumUserReview: Review | null;
+  currentAlbumIsListened: boolean;
   loading: boolean;
   error: string | null;
 }
@@ -17,6 +19,8 @@ const initialState: AlbumState = {
   userReviews: [],
   userListens: [],
   popularAlbums: [],
+  currentAlbumUserReview: null,
+  currentAlbumIsListened: false,
   loading: false,
   error: null,
 };
@@ -42,6 +46,8 @@ const albumSlice = createSlice({
     },
     clearCurrentAlbum: (state) => {
       state.currentAlbum = null;
+      state.currentAlbumUserReview = null;
+      state.currentAlbumIsListened = false;
     },
     addReview: (state, action: PayloadAction<Review>) => {
       state.userReviews.push(action.payload);
@@ -61,6 +67,21 @@ const albumSlice = createSlice({
     setPopularAlbums: (state, action: PayloadAction<Album[]>) => {
       state.popularAlbums = action.payload;
     },
+    setCurrentAlbumUserReview: (state, action: PayloadAction<Review | null>) => {
+      state.currentAlbumUserReview = action.payload;
+      // Update the review in userReviews array if it exists
+      if (action.payload) {
+        const index = state.userReviews.findIndex(r => r.id === action.payload!.id);
+        if (index !== -1) {
+          state.userReviews[index] = action.payload;
+        } else {
+          state.userReviews.push(action.payload);
+        }
+      }
+    },
+    setCurrentAlbumIsListened: (state, action: PayloadAction<boolean>) => {
+      state.currentAlbumIsListened = action.payload;
+    },
     clearError: (state) => {
       state.error = null;
     },
@@ -78,6 +99,8 @@ export const {
   removeReview,
   addListen,
   setPopularAlbums,
+  setCurrentAlbumUserReview,
+  setCurrentAlbumIsListened,
   clearError,
 } = albumSlice.actions;
 

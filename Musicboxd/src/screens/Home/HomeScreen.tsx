@@ -43,11 +43,6 @@ export default function HomeScreen() {
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    loadPopularAlbums();
-    loadSuggestedUsers();
-  }, [loadSuggestedUsers, loadPopularAlbums]);
-
   const loadPopularAlbums = useCallback(async () => {
     dispatch(fetchAlbumsStart());
     try {
@@ -60,6 +55,11 @@ export default function HomeScreen() {
       console.error('Error loading albums:', error);
     }
   }, [dispatch]);
+
+  useEffect(() => {
+    loadPopularAlbums();
+    loadSuggestedUsers();
+  }, [loadSuggestedUsers, loadPopularAlbums]);
 
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
@@ -128,7 +128,7 @@ export default function HomeScreen() {
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={styles.albumGrid}>
-          {popularAlbums.map((album, index) => renderAlbumCard(album, index))}
+          {popularAlbums.map((album) => renderAlbumCard(album))}
         </View>
       </ScrollView>
 
@@ -142,7 +142,7 @@ export default function HomeScreen() {
         
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.userGrid}>
-            {suggestedUsers.map((user, index) => renderUserCard(user, index))}
+            {suggestedUsers.map((user) => renderUserCard(user))}
           </View>
         </ScrollView>
       </View>

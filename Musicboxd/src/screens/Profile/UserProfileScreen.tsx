@@ -48,10 +48,6 @@ export default function UserProfileScreen() {
   const isFollowing = following.some(followedUser => followedUser.id === userId);
   const isOwnProfile = currentUser?.id === userId;
 
-  useEffect(() => {
-    loadUserProfile();
-  }, [userId, following, loadUserProfile]); // Reload when following state changes
-
   const loadUserProfile = useCallback(async () => {
     setLoading(true);
     try {
@@ -68,6 +64,10 @@ export default function UserProfileScreen() {
       setLoading(false);
     }
   }, [userId]);
+
+  useEffect(() => {
+    loadUserProfile();
+  }, [loadUserProfile]); // Reload when following state changes
 
   const handleFollowToggle = async () => {
     if (!user) return;
@@ -213,6 +213,21 @@ export default function UserProfileScreen() {
               </Text>
             </Card.Content>
           </Card>
+        </View>
+
+        <View style={styles.statsRow}>
+          <Card style={styles.statCard} elevation={1}>
+            <Card.Content style={styles.statContent}>
+              <Text variant="headlineMedium" style={styles.statNumber}>
+                {userStats.averageRating > 0 ? `${userStats.averageRating}★` : '—'}
+              </Text>
+              <Text variant="bodySmall" style={styles.statLabel}>
+                Average Rating
+              </Text>
+            </Card.Content>
+          </Card>
+          
+          <View style={styles.statCard} />
         </View>
 
         <View style={styles.statsRow}>

@@ -20,7 +20,13 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, SearchStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
-import { setCurrentAlbum, clearCurrentAlbum } from '../../store/slices/albumSlice';
+import { 
+  setCurrentAlbum, 
+  clearCurrentAlbum, 
+  setCurrentAlbumUserReview, 
+  setCurrentAlbumIsListened,
+  addListen 
+} from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
@@ -29,15 +35,28 @@ type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;
 
-const StarRating = ({ rating, onRatingChange }: { rating: number; onRatingChange: (rating: number) => void }) => {
+const StarRating = ({ 
+  rating, 
+  onRatingChange, 
+  disabled = false 
+}: { 
+  rating: number; 
+  onRatingChange: (rating: number) => void;
+  disabled?: boolean;
+}) => {
   return (
     <View style={styles.starContainer}>
       {[1, 2, 3, 4, 5].map((star) => (
-        <TouchableOpacity key={star} onPress={() => onRatingChange(star)}>
+        <TouchableOpacity 
+          key={star} 
+          onPress={() => !disabled && onRatingChange(star)}
+          disabled={disabled}
+        >
           <Text
             style={[
               styles.star,
-              star <= rating ? styles.starFilled : styles.starEmpty
+              star <= rating ? styles.starFilled : styles.starEmpty,
+              disabled && styles.starDisabled
             ]}
           >
             {star <= rating ? '★' : '☆'}
@@ -76,10 +95,10 @@ export default function AlbumDetailsScreen() {
   const dispatch = useDispatch();
   const { albumId } = route.params;
   
-  const { currentAlbum } = useSelector((state: RootState) => state.albums);
+  const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } = useSelector((state: RootState) => state.albums);
+  const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(true);
-  const [userRating, setUserRating] = useState(0);
-  const [isListened, setIsListened] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const loadAlbumDetails = useCallback(async () => {
     setLoading(true);
@@ -87,13 +106,22 @@ export default function AlbumDetailsScreen() {
       const response = await AlbumService.getAlbumById(albumId);
       if (response.success && response.data) {
         dispatch(setCurrentAlbum(response.data));
+        
+        // Load user's review and listen status if user is logged in
+        if (user) {
+          const userReview = await AlbumService.getUserReview(user.id, albumId);
+          dispatch(setCurrentAlbumUserReview(userReview));
+          
+          const hasListened = await AlbumService.hasUserListened(user.id, albumId);
+          dispatch(setCurrentAlbumIsListened(hasListened));
+        }
       }
     } catch (error) {
       console.error('Error loading album details:', error);
     } finally {
       setLoading(false);
     }
-  }, [albumId, dispatch]);
+  }, [albumId, dispatch, user]);
 
   useEffect(() => {
     loadAlbumDetails();
@@ -102,14 +130,46 @@ export default function AlbumDetailsScreen() {
     };
   }, [loadAlbumDetails, dispatch]);
 
-  const handleRating = (rating: number) => {
-    setUserRating(rating);
-    // TODO: Save rating to backend
+  const handleRating = async (rating: number) => {
+    if (!user || !currentAlbum || submitting) return;
+    
+    setSubmitting(true);
+    try {
+      const response = await AlbumService.addReview(user.id, currentAlbum.id, rating);
+      if (response.success) {
+        dispatch(setCurrentAlbumUserReview(response.data));
+      }
+    } catch (error) {
+      console.error('Error saving rating:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleMarkAsListened = () => {
-    setIsListened(!isListened);
-    // TODO: Save listen to backend
+  const handleMarkAsListened = async () => {
+    if (!user || !currentAlbum || submitting) return;
+    
+    setSubmitting(true);
+    try {
+      if (currentAlbumIsListened) {
+        // Remove listen
+        const response = await AlbumService.removeListened(user.id, currentAlbum.id);
+        if (response.success) {
+          dispatch(setCurrentAlbumIsListened(false));
+        }
+      } else {
+        // Add listen
+        const response = await AlbumService.markAsListened(user.id, currentAlbum.id);
+        if (response.success) {
+          dispatch(setCurrentAlbumIsListened(true));
+          dispatch(addListen(response.data));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating listen status:', error);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading || !currentAlbum) {
@@ -156,12 +216,14 @@ export default function AlbumDetailsScreen() {
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
         <Button
-          mode={isListened ? "contained" : "outlined"}
+          mode={currentAlbumIsListened ? "contained" : "outlined"}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
-          icon={isListened ? "check" : "plus"}
+          icon={currentAlbumIsListened ? "check" : "plus"}
+          disabled={submitting || !user}
+          loading={submitting}
         >
-          {isListened ? "Listened" : "Mark as Listened"}
+          {currentAlbumIsListened ? "Listened" : "Mark as Listened"}
         </Button>
       </View>
 
@@ -171,10 +233,19 @@ export default function AlbumDetailsScreen() {
           <Text variant="titleMedium" style={styles.ratingTitle}>
             Rate this Album
           </Text>
-          <StarRating rating={userRating} onRatingChange={handleRating} />
-          {userRating > 0 && (
+          <StarRating 
+            rating={currentAlbumUserReview?.rating || 0} 
+            onRatingChange={handleRating} 
+            disabled={submitting || !user}
+          />
+          {currentAlbumUserReview && currentAlbumUserReview.rating > 0 && (
             <Text variant="bodyMedium" style={styles.ratingText}>
-              You rated this {userRating} star{userRating !== 1 ? 's' : ''}
+              You rated this {currentAlbumUserReview.rating} star{currentAlbumUserReview.rating !== 1 ? 's' : ''}
+            </Text>
+          )}
+          {!user && (
+            <Text variant="bodySmall" style={styles.loginPrompt}>
+              Sign in to rate this album
             </Text>
           )}
         </Card.Content>
@@ -320,9 +391,18 @@ const styles = StyleSheet.create({
   starEmpty: {
     color: '#ccc',
   },
+  starDisabled: {
+    opacity: 0.5,
+  },
   ratingText: {
     textAlign: 'center',
     color: theme.colors.textSecondary,
+  },
+  loginPrompt: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+    marginTop: spacing.sm,
   },
   descriptionCard: {
     marginHorizontal: spacing.lg,

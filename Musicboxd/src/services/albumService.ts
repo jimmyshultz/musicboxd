@@ -1,10 +1,52 @@
-import { Album, SearchResult, ApiResponse } from '../types';
+import { Album, SearchResult, ApiResponse, Listen, Review } from '../types';
 import { mockAlbums, popularGenres } from './mockData';
 
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class AlbumService {
+  // Store user interactions in memory (in real app, this would be API calls)
+  private static userListens: Listen[] = [
+    // Add some demo data for testing
+    {
+      id: 'listen_demo_1',
+      userId: 'current-user-id',
+      albumId: '1',
+      dateListened: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      notes: 'Amazing album!',
+    },
+    {
+      id: 'listen_demo_2',
+      userId: 'current-user-id',
+      albumId: '3',
+      dateListened: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    },
+  ];
+  
+  private static userReviews: Review[] = [
+    // Add some demo data for testing
+    {
+      id: 'review_demo_1',
+      userId: 'current-user-id',
+      albumId: '1',
+      rating: 5,
+      reviewText: 'A masterpiece that defined a generation.',
+      dateReviewed: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      likesCount: 12,
+      commentsCount: 3,
+    },
+    {
+      id: 'review_demo_2',
+      userId: 'current-user-id',
+      albumId: '3',
+      rating: 4,
+      reviewText: 'Incredible work by Kendrick.',
+      dateReviewed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      likesCount: 8,
+      commentsCount: 2,
+    },
+  ];
+
   // Fetch popular/trending albums
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
     await delay(500);
@@ -111,6 +153,189 @@ export class AlbumService {
       data: popularGenres,
       success: true,
       message: 'Popular genres fetched',
+    };
+  }
+
+  // Mark album as listened
+  static async markAsListened(userId: string, albumId: string, notes?: string): Promise<ApiResponse<Listen>> {
+    await delay(300);
+    
+    // Check if already listened
+    const existingListen = this.userListens.find(
+      listen => listen.userId === userId && listen.albumId === albumId
+    );
+    
+    if (existingListen) {
+      return {
+        data: existingListen,
+        success: false,
+        message: 'Album already marked as listened',
+      };
+    }
+
+    const newListen: Listen = {
+      id: `listen_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      userId,
+      albumId,
+      dateListened: new Date(),
+      notes,
+    };
+
+    this.userListens.push(newListen);
+
+    return {
+      data: newListen,
+      success: true,
+      message: 'Album marked as listened',
+    };
+  }
+
+  // Remove listen
+  static async removeListened(userId: string, albumId: string): Promise<ApiResponse<void>> {
+    await delay(300);
+    
+    const index = this.userListens.findIndex(
+      listen => listen.userId === userId && listen.albumId === albumId
+    );
+    
+    if (index === -1) {
+      return {
+        data: undefined,
+        success: false,
+        message: 'Listen not found',
+      };
+    }
+
+    this.userListens.splice(index, 1);
+
+    return {
+      data: undefined,
+      success: true,
+      message: 'Listen removed',
+    };
+  }
+
+  // Check if user has listened to album
+  static async hasUserListened(userId: string, albumId: string): Promise<boolean> {
+    return this.userListens.some(
+      listen => listen.userId === userId && listen.albumId === albumId
+    );
+  }
+
+  // Add or update review
+  static async addReview(
+    userId: string, 
+    albumId: string, 
+    rating: number, 
+    reviewText?: string
+  ): Promise<ApiResponse<Review>> {
+    await delay(300);
+    
+    // Check if review already exists
+    const existingReviewIndex = this.userReviews.findIndex(
+      review => review.userId === userId && review.albumId === albumId
+    );
+
+    if (existingReviewIndex !== -1) {
+      // Update existing review
+      const updatedReview: Review = {
+        ...this.userReviews[existingReviewIndex],
+        rating,
+        reviewText,
+        dateReviewed: new Date(),
+      };
+      
+      this.userReviews[existingReviewIndex] = updatedReview;
+      
+      return {
+        data: updatedReview,
+        success: true,
+        message: 'Review updated',
+      };
+    } else {
+      // Create new review
+      const newReview: Review = {
+        id: `review_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId,
+        albumId,
+        rating,
+        reviewText,
+        dateReviewed: new Date(),
+        likesCount: 0,
+        commentsCount: 0,
+      };
+
+      this.userReviews.push(newReview);
+
+      return {
+        data: newReview,
+        success: true,
+        message: 'Review added',
+      };
+    }
+  }
+
+  // Remove review
+  static async removeReview(userId: string, albumId: string): Promise<ApiResponse<void>> {
+    await delay(300);
+    
+    const index = this.userReviews.findIndex(
+      review => review.userId === userId && review.albumId === albumId
+    );
+    
+    if (index === -1) {
+      return {
+        data: undefined,
+        success: false,
+        message: 'Review not found',
+      };
+    }
+
+    this.userReviews.splice(index, 1);
+
+    return {
+      data: undefined,
+      success: true,
+      message: 'Review removed',
+    };
+  }
+
+  // Get user's review for album
+  static async getUserReview(userId: string, albumId: string): Promise<Review | null> {
+    return this.userReviews.find(
+      review => review.userId === userId && review.albumId === albumId
+    ) || null;
+  }
+
+  // Get user's listens
+  static async getUserListens(userId: string): Promise<Listen[]> {
+    await delay(300);
+    return this.userListens.filter(listen => listen.userId === userId);
+  }
+
+  // Get user's reviews
+  static async getUserReviews(userId: string): Promise<Review[]> {
+    await delay(300);
+    return this.userReviews.filter(review => review.userId === userId);
+  }
+
+  // Get user stats
+  static async getUserAlbumStats(userId: string): Promise<{
+    albumsListened: number;
+    reviews: number;
+    averageRating: number;
+  }> {
+    const userListens = await this.getUserListens(userId);
+    const userReviews = await this.getUserReviews(userId);
+    
+    const averageRating = userReviews.length > 0 
+      ? userReviews.reduce((sum, review) => sum + review.rating, 0) / userReviews.length
+      : 0;
+
+    return {
+      albumsListened: userListens.length,
+      reviews: userReviews.length,
+      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal place
     };
   }
 

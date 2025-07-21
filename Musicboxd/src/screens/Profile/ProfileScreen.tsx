@@ -40,10 +40,12 @@ export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const { following } = useSelector((state: RootState) => state.user);
+  const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
   
   const [stats, setStats] = useState({
-    albumsListened: 127,
-    reviews: 23,
+    albumsListened: 0,
+    reviews: 0,
+    averageRating: 0,
     following: 0,
     followers: 0,
   });
@@ -90,7 +92,7 @@ export default function ProfileScreen() {
     };
     
     loadStats();
-  }, [user, following]); // Reload when following state changes
+  }, [user, following, userListens, userReviews]); // Reload when following state or user interactions change
 
   if (!user) {
     return null; // or loading spinner
@@ -140,6 +142,21 @@ export default function ProfileScreen() {
               </Text>
             </Card.Content>
           </Card>
+        </View>
+
+        <View style={styles.statsRow}>
+          <Card style={styles.statCard} elevation={1}>
+            <Card.Content style={styles.statContent}>
+              <Text variant="headlineMedium" style={styles.statNumber}>
+                {stats.averageRating > 0 ? `${stats.averageRating}★` : '—'}
+              </Text>
+              <Text variant="bodySmall" style={styles.statLabel}>
+                Average Rating
+              </Text>
+            </Card.Content>
+          </Card>
+          
+          <View style={styles.statCard} />
         </View>
 
         <View style={styles.statsRow}>
