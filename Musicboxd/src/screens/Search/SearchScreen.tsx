@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -70,7 +70,7 @@ export default function SearchScreen() {
     }
   }, [dispatch]);
 
-  const performSearch = async (query: string) => {
+  const performSearch = useCallback(async (query: string) => {
     if (query.trim()) {
       dispatch(searchStart());
       try {
@@ -82,9 +82,12 @@ export default function SearchScreen() {
         console.error('Search error:', error);
       }
     }
-  };
+  }, [dispatch]);
 
-  const debouncedSearch = debounce(performSearch, 300);
+  const debouncedSearch = useMemo(
+    () => debounce(performSearch, 300),
+    [performSearch]
+  );
 
   const handleSearchChange = (query: string) => {
     dispatch(setSearchQuery(query));
