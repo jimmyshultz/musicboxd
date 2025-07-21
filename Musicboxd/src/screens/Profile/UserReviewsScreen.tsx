@@ -127,27 +127,6 @@ export default function UserReviewsScreen() {
           </View>
         </View>
       </View>
-      
-      {data.review.reviewText && (
-        <View style={styles.reviewContent}>
-          <Text variant="bodyMedium" style={styles.reviewText}>
-            {data.review.reviewText}
-          </Text>
-        </View>
-      )}
-      
-      <View style={styles.reviewStats}>
-        <View style={styles.statItem}>
-          <Text variant="bodySmall" style={styles.statText}>
-            {data.review.likesCount} like{data.review.likesCount !== 1 ? 's' : ''}
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text variant="bodySmall" style={styles.statText}>
-            {data.review.commentsCount} comment{data.review.commentsCount !== 1 ? 's' : ''}
-          </Text>
-        </View>
-      </View>
     </TouchableOpacity>
   );
 
@@ -156,7 +135,7 @@ export default function UserReviewsScreen() {
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" />
         <Text variant="bodyLarge" style={styles.loadingText}>
-          Loading reviews...
+          Loading ratings...
         </Text>
       </View>
     );
@@ -177,10 +156,10 @@ export default function UserReviewsScreen() {
         />
         <View style={styles.headerContent}>
           <Text variant="headlineSmall" style={styles.headerTitle}>
-            Reviews
+            Ratings
           </Text>
           <Text variant="bodyMedium" style={styles.headerSubtitle}>
-            @{username} • {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+            @{username} • {reviews.length} rating{reviews.length !== 1 ? 's' : ''}
             {reviews.length > 0 && ` • ${averageRating.toFixed(1)}★ avg`}
           </Text>
         </View>
@@ -189,10 +168,10 @@ export default function UserReviewsScreen() {
       {reviews.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text variant="titleLarge" style={styles.emptyTitle}>
-            No Reviews Yet
+            No Ratings Yet
           </Text>
           <Text variant="bodyMedium" style={styles.emptyText}>
-            {username === 'you' ? 'Start rating albums and they\'ll appear here!' : `${username} hasn't reviewed any albums yet.`}
+            {username === 'you' ? 'Start rating albums and they\'ll appear here!' : `${username} hasn't rated any albums yet.`}
           </Text>
         </View>
       ) : (
@@ -296,28 +275,6 @@ const styles = StyleSheet.create({
     color: '#ccc',
   },
   reviewDate: {
-    color: theme.colors.textSecondary,
-    fontSize: 12,
-  },
-  reviewContent: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-  },
-  reviewText: {
-    lineHeight: 20,
-  },
-  reviewStats: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-    paddingTop: spacing.sm,
-  },
-  statItem: {
-    marginRight: spacing.lg,
-  },
-  statText: {
     color: theme.colors.textSecondary,
     fontSize: 12,
   },

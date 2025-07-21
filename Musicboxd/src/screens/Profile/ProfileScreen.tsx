@@ -150,9 +150,9 @@ export default function ProfileScreen() {
                 <Text variant="headlineMedium" style={styles.statNumber}>
                   {stats.reviews}
                 </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Reviews
-                </Text>
+                               <Text variant="bodySmall" style={styles.statLabel}>
+                 Ratings
+               </Text>
               </Card.Content>
             </Card>
           </TouchableOpacity>

@@ -64,46 +64,42 @@ export class AlbumService {
   ];
   
   private static userReviews: Review[] = [
-    // Add some demo data for testing
+    // Add some demo ratings data for testing
     {
       id: 'review_demo_1',
       userId: 'current-user-id',
       albumId: '1',
       rating: 5,
-      reviewText: 'A masterpiece that defined a generation. Every track flows perfectly into the next, creating an immersive experience that captures the alienation and technological anxiety of the late 90s.',
       dateReviewed: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      likesCount: 12,
-      commentsCount: 3,
+      likesCount: 0,
+      commentsCount: 0,
     },
     {
       id: 'review_demo_2',
       userId: 'current-user-id',
       albumId: '3',
       rating: 4,
-      reviewText: 'Incredible work by Kendrick. A bold and complex exploration of identity, race, and self-love. The jazz influences make it stand out from typical hip-hop.',
       dateReviewed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      likesCount: 8,
-      commentsCount: 2,
+      likesCount: 0,
+      commentsCount: 0,
     },
     {
       id: 'review_demo_3',
       userId: 'current-user-id',
       albumId: '4',
       rating: 5,
-      reviewText: 'Frank Ocean\'s most personal and vulnerable work. The production is gorgeous and his vocals are haunting.',
       dateReviewed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      likesCount: 15,
-      commentsCount: 5,
+      likesCount: 0,
+      commentsCount: 0,
     },
     {
       id: 'review_demo_4',
       userId: 'current-user-id',
       albumId: '2',
       rating: 5,
-      reviewText: 'Perfect follow-up to OK Computer. More experimental but equally compelling.',
       dateReviewed: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-      likesCount: 6,
-      commentsCount: 1,
+      likesCount: 0,
+      commentsCount: 0,
     },
   ];
 
@@ -282,7 +278,7 @@ export class AlbumService {
     );
   }
 
-  // Add or update review
+  // Add or update rating
   static async addReview(
     userId: string, 
     albumId: string, 

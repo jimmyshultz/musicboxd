@@ -221,9 +221,9 @@ export default function UserProfileScreen() {
                 <Text variant="headlineMedium" style={styles.statNumber}>
                   {userStats.reviews}
                 </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Reviews
-                </Text>
+                               <Text variant="bodySmall" style={styles.statLabel}>
+                 Ratings
+               </Text>
               </Card.Content>
             </Card>
           </TouchableOpacity>
