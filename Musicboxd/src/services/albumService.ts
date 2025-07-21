@@ -41,6 +41,26 @@ export class AlbumService {
       albumId: '3',
       dateListened: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
     },
+    {
+      id: 'listen_demo_3',
+      userId: 'current-user-id',
+      albumId: '4',
+      dateListened: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+      notes: 'Such a beautiful and emotional journey',
+    },
+    {
+      id: 'listen_demo_4',
+      userId: 'current-user-id',
+      albumId: '2',
+      dateListened: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+    },
+    {
+      id: 'listen_demo_5',
+      userId: 'current-user-id',
+      albumId: '5',
+      dateListened: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
+      notes: 'Classic hip-hop at its finest',
+    },
   ];
   
   private static userReviews: Review[] = [
@@ -50,7 +70,7 @@ export class AlbumService {
       userId: 'current-user-id',
       albumId: '1',
       rating: 5,
-      reviewText: 'A masterpiece that defined a generation.',
+      reviewText: 'A masterpiece that defined a generation. Every track flows perfectly into the next, creating an immersive experience that captures the alienation and technological anxiety of the late 90s.',
       dateReviewed: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       likesCount: 12,
       commentsCount: 3,
@@ -60,10 +80,30 @@ export class AlbumService {
       userId: 'current-user-id',
       albumId: '3',
       rating: 4,
-      reviewText: 'Incredible work by Kendrick.',
+      reviewText: 'Incredible work by Kendrick. A bold and complex exploration of identity, race, and self-love. The jazz influences make it stand out from typical hip-hop.',
       dateReviewed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       likesCount: 8,
       commentsCount: 2,
+    },
+    {
+      id: 'review_demo_3',
+      userId: 'current-user-id',
+      albumId: '4',
+      rating: 5,
+      reviewText: 'Frank Ocean\'s most personal and vulnerable work. The production is gorgeous and his vocals are haunting.',
+      dateReviewed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      likesCount: 15,
+      commentsCount: 5,
+    },
+    {
+      id: 'review_demo_4',
+      userId: 'current-user-id',
+      albumId: '2',
+      rating: 5,
+      reviewText: 'Perfect follow-up to OK Computer. More experimental but equally compelling.',
+      dateReviewed: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      likesCount: 6,
+      commentsCount: 1,
     },
   ];
 

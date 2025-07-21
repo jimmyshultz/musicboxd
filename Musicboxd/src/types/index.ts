@@ -131,6 +131,8 @@ export type HomeStackParamList = {
   AlbumDetails: { albumId: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+  ListenedAlbums: { userId: string; username: string };
+  UserReviews: { userId: string; username: string };
 };
 
 export type SearchStackParamList = {
@@ -138,12 +140,16 @@ export type SearchStackParamList = {
   AlbumDetails: { albumId: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+  ListenedAlbums: { userId: string; username: string };
+  UserReviews: { userId: string; username: string };
 };
 
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+  ListenedAlbums: { userId: string; username: string };
+  UserReviews: { userId: string; username: string };
 };
 
 // Search types

@@ -121,27 +121,41 @@ export default function ProfileScreen() {
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statsRow}>
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {stats.albumsListened}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Albums Listened
-              </Text>
-            </Card.Content>
-          </Card>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('ListenedAlbums', { 
+              userId: user.id, 
+              username: user.username 
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {stats.albumsListened}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Albums Listened
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
           
-          <Card style={styles.statCard} elevation={1}>
-            <Card.Content style={styles.statContent}>
-              <Text variant="headlineMedium" style={styles.statNumber}>
-                {stats.reviews}
-              </Text>
-              <Text variant="bodySmall" style={styles.statLabel}>
-                Reviews
-              </Text>
-            </Card.Content>
-          </Card>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('UserReviews', { 
+              userId: user.id, 
+              username: user.username 
+            })}
+          >
+            <Card style={styles.statCard} elevation={1}>
+              <Card.Content style={styles.statContent}>
+                <Text variant="headlineMedium" style={styles.statNumber}>
+                  {stats.reviews}
+                </Text>
+                <Text variant="bodySmall" style={styles.statLabel}>
+                  Reviews
+                </Text>
+              </Card.Content>
+            </Card>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.statsRow}>

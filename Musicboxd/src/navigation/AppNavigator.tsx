@@ -13,6 +13,8 @@ import SearchScreen from '../screens/Search/SearchScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
 import FollowersScreen from '../screens/Profile/FollowersScreen';
+import ListenedAlbumsScreen from '../screens/Profile/ListenedAlbumsScreen';
+import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 
@@ -89,6 +91,20 @@ function HomeStackNavigator() {
           headerShown: false,
         }}
       />
+      <HomeStack.Screen
+        name="ListenedAlbums"
+        component={ListenedAlbumsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <HomeStack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -132,6 +148,20 @@ function SearchStackNavigator() {
           headerShown: false,
         }}
       />
+      <SearchStack.Screen
+        name="ListenedAlbums"
+        component={ListenedAlbumsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <SearchStack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </SearchStack.Navigator>
   );
 }
@@ -164,6 +194,20 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="Followers"
         component={FollowersScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen
+        name="ListenedAlbums"
+        component={ListenedAlbumsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen
+        name="UserReviews"
+        component={UserReviewsScreen}
         options={{
           headerShown: false,
         }}
