@@ -70,7 +70,7 @@ export default function FollowersScreen() {
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+  }, [userId, activeTab, loadData]);
 
   const isFollowing = (targetUserId: string) => {
     return following.some(user => user.id === targetUserId);

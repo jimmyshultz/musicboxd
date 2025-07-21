@@ -67,7 +67,7 @@ export default function UserProfileScreen() {
 
   useEffect(() => {
     loadUserProfile();
-  }, [loadUserProfile]); // Reload when following state changes
+  }, [userId, following, loadUserProfile]); // Reload when userId changes, following state changes, or loadUserProfile changes
 
   const handleFollowToggle = async () => {
     if (!user) return;
