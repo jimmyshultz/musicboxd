@@ -25,17 +25,19 @@ import { userService } from '../../services/userService';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-// Minimalist text-based icons with proper alignment
+// Minimalist text-based icons with proper alignment and positioning
 const iconStyle = {
   fontSize: 18,
   color: '#666',
   width: 24,
   textAlign: 'center' as const,
   lineHeight: 24,
+  marginLeft: 8,  // Move slightly away from edge
+  marginTop: 8,   // Move down to center in row
 };
 
 const HistoryIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>◐</Text>;
-const ChevronRightIcon = (props: any) => <Text style={{fontSize: 14, color: props.color || '#666', lineHeight: 24}}>›</Text>;
+const ChevronRightIcon = (props: any) => <Text style={{fontSize: 14, color: props.color || '#666', lineHeight: 24, marginTop: 8}}>›</Text>;
 const ReviewIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>★</Text>;
 const PlaylistIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>≡</Text>;
 const ChartIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>⟆</Text>;
