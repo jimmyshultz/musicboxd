@@ -25,15 +25,15 @@ import { userService } from '../../services/userService';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-// Icon components to avoid creating them during render
-const HistoryIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const ChevronRightIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const ReviewIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const PlaylistIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const ChartIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const EditIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const SettingsIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const HelpIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+// Simple text-based icons that work everywhere
+const HistoryIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>📅</Text>;
+const ChevronRightIcon = (props: any) => <Text style={{ fontSize: 16, color: props.color || '#666' }}>›</Text>;
+const ReviewIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>⭐</Text>;
+const PlaylistIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>📊</Text>;
+const ChartIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>📈</Text>;
+const EditIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>✏️</Text>;
+const SettingsIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>⚙️</Text>;
+const HelpIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>❓</Text>;
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();

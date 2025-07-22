@@ -246,7 +246,7 @@ export default function AlbumDetailsScreen() {
           mode={currentAlbumIsListened ? "contained" : "outlined"}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
-          icon={currentAlbumIsListened ? "check" : "plus"}
+          icon={currentAlbumIsListened ? () => <Text style={{ fontSize: 16 }}>✓</Text> : () => <Text style={{ fontSize: 16 }}>+</Text>}
           disabled={submitting || !user}
           loading={submitting}
         >

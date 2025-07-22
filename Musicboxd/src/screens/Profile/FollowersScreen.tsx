@@ -153,7 +153,7 @@ export default function FollowersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <IconButton
-          icon="arrow-left"
+          icon={() => <Text style={{ fontSize: 20 }}>←</Text>}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         />

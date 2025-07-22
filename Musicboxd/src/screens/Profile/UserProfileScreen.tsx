@@ -29,7 +29,7 @@ type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackPara
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
 // Icon component to avoid creating it during render
-const MusicIcon = (props: any) => <List.Icon {...props} icon="music-note" />;
+const MusicIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>🎵</Text>;
 
 export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
@@ -145,13 +145,13 @@ export default function UserProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <IconButton
-            icon="arrow-left"
+            icon={() => <Text style={{ fontSize: 20 }}>←</Text>}
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           />
           {!isOwnProfile && (
             <IconButton
-              icon="dots-horizontal"
+              icon={() => <Text style={{ fontSize: 20 }}>⋯</Text>}
               onPress={() => {}}
               style={styles.menuButton}
             />
