@@ -10,7 +10,7 @@ import { StatusBar, useColorScheme } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -26,7 +26,7 @@ function App() {
         <PaperProvider 
           theme={currentTheme}
           settings={{
-            icon: (props) => <MaterialIcons {...props} />,
+            icon: (props) => <Icon {...props} />,
           }}
         >
           <StatusBar
