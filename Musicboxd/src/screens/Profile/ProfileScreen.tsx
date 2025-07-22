@@ -25,15 +25,23 @@ import { userService } from '../../services/userService';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-// Simple text-based icons that work everywhere
-const HistoryIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>📅</Text>;
-const ChevronRightIcon = (props: any) => <Text style={{ fontSize: 16, color: props.color || '#666' }}>›</Text>;
-const ReviewIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>⭐</Text>;
-const PlaylistIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>📊</Text>;
-const ChartIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>📈</Text>;
-const EditIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>✏️</Text>;
-const SettingsIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>⚙️</Text>;
-const HelpIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>❓</Text>;
+// Minimalist text-based icons with proper alignment
+const iconStyle = {
+  fontSize: 18,
+  color: '#666',
+  width: 24,
+  textAlign: 'center' as const,
+  lineHeight: 24,
+};
+
+const HistoryIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>◐</Text>;
+const ChevronRightIcon = (props: any) => <Text style={{fontSize: 14, color: props.color || '#666', lineHeight: 24}}>›</Text>;
+const ReviewIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>★</Text>;
+const PlaylistIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>≡</Text>;
+const ChartIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>⟆</Text>;
+const EditIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>✎</Text>;
+const SettingsIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>⚙</Text>;
+const HelpIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>?</Text>;
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
