@@ -26,14 +26,14 @@ import { userService } from '../../services/userService';
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
 // Icon components to avoid creating them during render
-const HistoryIcon = (props: any) => <List.Icon {...props} icon="history" />;
+const HistoryIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
 const ChevronRightIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
-const ReviewIcon = (props: any) => <List.Icon {...props} icon="rate-review" />;
-const PlaylistIcon = (props: any) => <List.Icon {...props} icon="playlist-play" />;
-const ChartIcon = (props: any) => <List.Icon {...props} icon="bar-chart" />;
-const EditIcon = (props: any) => <List.Icon {...props} icon="edit" />;
-const SettingsIcon = (props: any) => <List.Icon {...props} icon="settings" />;
-const HelpIcon = (props: any) => <List.Icon {...props} icon="help" />;
+const ReviewIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+const PlaylistIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+const ChartIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+const EditIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+const SettingsIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
+const HelpIcon = (props: any) => <List.Icon {...props} icon="chevron-right" />;
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
