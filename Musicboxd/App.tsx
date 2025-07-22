@@ -10,6 +10,7 @@ import { StatusBar, useColorScheme } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -22,7 +23,12 @@ function App() {
   return (
     <SafeAreaProvider>
       <ReduxProvider store={store}>
-        <PaperProvider theme={currentTheme}>
+        <PaperProvider 
+          theme={currentTheme}
+          settings={{
+            icon: (props) => <MaterialIcons {...props} />,
+          }}
+        >
           <StatusBar
             barStyle={isDarkMode ? 'light-content' : 'dark-content'}
             backgroundColor={currentTheme.colors.surface}
