@@ -145,13 +145,13 @@ export default function UserProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <IconButton
-            icon={() => <Text style={{ fontSize: 20 }}>←</Text>}
+            icon={(props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>←</Text>}
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           />
           {!isOwnProfile && (
             <IconButton
-              icon={() => <Text style={{ fontSize: 20 }}>⋯</Text>}
+              icon={(props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>⋯</Text>}
               onPress={() => {}}
               style={styles.menuButton}
             />

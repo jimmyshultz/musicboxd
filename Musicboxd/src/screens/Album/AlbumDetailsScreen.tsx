@@ -246,7 +246,7 @@ export default function AlbumDetailsScreen() {
           mode={currentAlbumIsListened ? "contained" : "outlined"}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
-          icon={currentAlbumIsListened ? () => <Text style={{ fontSize: 16 }}>✓</Text> : () => <Text style={{ fontSize: 16 }}>+</Text>}
+          icon={currentAlbumIsListened ? (props: any) => <Text style={{ fontSize: 16, color: props.color || '#666' }}>✓</Text> : (props: any) => <Text style={{ fontSize: 16, color: props.color || '#666' }}>+</Text>}
           disabled={submitting || !user}
           loading={submitting}
         >
