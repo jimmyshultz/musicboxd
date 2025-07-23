@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Chip,
   Divider,
+  List,
 } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,6 +34,10 @@ import { AlbumService } from '../../services/albumService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
 type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
+
+// Icon components to avoid creating them during render
+const CheckIcon = (props: any) => <List.Icon {...props} icon="check" />;
+const PlusIcon = (props: any) => <List.Icon {...props} icon="plus" />;
 
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;
@@ -98,7 +103,7 @@ const TrackListItem = ({ track }: { track: Track; albumArtist: string }) => (
       )}
     </View>
     <Text variant="bodySmall" style={styles.trackDuration}>
-      {AlbumService.formatDuration(track.duration)}
+              {AlbumService.formatDuration(track.duration)}
     </Text>
   </View>
 );
@@ -116,7 +121,7 @@ export default function AlbumDetailsScreen() {
   const loadAlbumDetails = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await AlbumService.getAlbumById(albumId);
+              const response = await AlbumService.getAlbumById(albumId);
       if (response.success && response.data) {
         dispatch(setCurrentAlbum(response.data));
         
@@ -150,7 +155,7 @@ export default function AlbumDetailsScreen() {
     try {
       if (rating === 0) {
         // Remove rating
-        const response = await AlbumService.removeReview(user.id, currentAlbum.id);
+                  const response = await AlbumService.removeReview(user.id, currentAlbum.id);
         if (response.success) {
           dispatch(setCurrentAlbumUserReview(null));
           // Also remove from userReviews array to update stats
@@ -160,7 +165,7 @@ export default function AlbumDetailsScreen() {
         }
       } else {
         // Add or update rating
-        const response = await AlbumService.addReview(user.id, currentAlbum.id, rating);
+                  const response = await AlbumService.addReview(user.id, currentAlbum.id, rating);
         if (response.success) {
           dispatch(setCurrentAlbumUserReview(response.data));
         }
@@ -179,14 +184,14 @@ export default function AlbumDetailsScreen() {
     try {
       if (currentAlbumIsListened) {
         // Remove listen
-        const response = await AlbumService.removeListened(user.id, currentAlbum.id);
+                  const response = await AlbumService.removeListened(user.id, currentAlbum.id);
         if (response.success) {
           dispatch(setCurrentAlbumIsListened(false));
           dispatch(removeListen({ userId: user.id, albumId: currentAlbum.id }));
         }
       } else {
         // Add listen
-        const response = await AlbumService.markAsListened(user.id, currentAlbum.id);
+                  const response = await AlbumService.markAsListened(user.id, currentAlbum.id);
         if (response.success) {
           dispatch(setCurrentAlbumIsListened(true));
           dispatch(addListen(response.data));
@@ -246,7 +251,7 @@ export default function AlbumDetailsScreen() {
           mode={currentAlbumIsListened ? "contained" : "outlined"}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
-          icon={currentAlbumIsListened ? "check" : "plus"}
+          icon={currentAlbumIsListened ? CheckIcon : PlusIcon}
           disabled={submitting || !user}
           loading={submitting}
         >
@@ -319,7 +324,7 @@ export default function AlbumDetailsScreen() {
           </View>
           <View style={styles.infoRow}>
             <Text variant="bodyMedium" style={styles.infoLabel}>Total Duration:</Text>
-            <Text variant="bodyMedium">{AlbumService.formatDuration(totalDuration)}</Text>
+                          <Text variant="bodyMedium">{AlbumService.formatDuration(totalDuration)}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text variant="bodyMedium" style={styles.infoLabel}>Number of Tracks:</Text>

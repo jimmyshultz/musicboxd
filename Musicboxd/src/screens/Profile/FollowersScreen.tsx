@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   IconButton,
   SegmentedButtons,
+  List,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -25,6 +26,9 @@ import { userService } from '../../services/userService';
 
 type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
 type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
+
+// Icon component to avoid creating it during render
+const ArrowLeftIcon = (props: any) => <List.Icon {...props} icon="arrow-left" />;
 
 const EmptyState = ({ activeTab, username }: { activeTab: string; username: string }) => (
   <View style={styles.emptyContainer}>
@@ -153,7 +157,7 @@ export default function FollowersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <IconButton
-          icon="arrow-left"
+          icon={ArrowLeftIcon}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         />

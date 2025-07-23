@@ -11,6 +11,7 @@ import {
   Text,
   ActivityIndicator,
   IconButton,
+  List,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -26,6 +27,9 @@ type ListenedAlbumsScreenRouteProp = RouteProp<
   'ListenedAlbums'
 >;
 type ListenedAlbumsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
+
+// Icon component to avoid creating it during render
+const ArrowLeftIcon = (props: any) => <List.Icon {...props} icon="arrow-left" />;
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 3) / 2;
@@ -128,7 +132,7 @@ export default function ListenedAlbumsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <IconButton
-          icon="arrow-left"
+          icon={ArrowLeftIcon}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         />

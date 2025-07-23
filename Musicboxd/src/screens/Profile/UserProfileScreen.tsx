@@ -28,8 +28,10 @@ import { userService } from '../../services/userService';
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
-// Icon component to avoid creating it during render
+// Icon components to avoid creating them during render
 const MusicIcon = (props: any) => <List.Icon {...props} icon="music-note" />;
+const ArrowLeftIcon = (props: any) => <List.Icon {...props} icon="arrow-left" />;
+const DotsHorizontalIcon = (props: any) => <List.Icon {...props} icon="dots-horizontal" />;
 
 export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
@@ -145,13 +147,13 @@ export default function UserProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <IconButton
-            icon="arrow-left"
+            icon={ArrowLeftIcon}
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           />
           {!isOwnProfile && (
             <IconButton
-              icon="dots-horizontal"
+              icon={DotsHorizontalIcon}
               onPress={() => {}}
               style={styles.menuButton}
             />

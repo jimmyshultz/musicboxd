@@ -10,6 +10,7 @@ import {
   Text,
   ActivityIndicator,
   IconButton,
+  List,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -26,6 +27,8 @@ type UserReviewsScreenRouteProp = RouteProp<
 >;
 type UserReviewsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
+// Icon component to avoid creating it during render
+const ArrowLeftIcon = (props: any) => <List.Icon {...props} icon="arrow-left" />;
 
 
 interface ReviewData {
@@ -151,7 +154,7 @@ export default function UserReviewsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <IconButton
-          icon="arrow-left"
+          icon={ArrowLeftIcon}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         />

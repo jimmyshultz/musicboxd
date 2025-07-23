@@ -43,7 +43,6 @@ Musicboxd is a mobile application inspired by Letterboxd, designed for music ent
 - `react-native-screens` - Native screen components
 - `react-native-safe-area-context` - Safe area handling
 - `react-native-paper` - Material Design 3 UI components
-- `react-native-vector-icons` - Icon library
 - `@reduxjs/toolkit` - Redux state management
 - `react-redux` - React Redux bindings
 - `lodash` - Utility functions (debounce for search)
