@@ -326,23 +326,37 @@ export default function ProfileScreen() {
       </View>
 
       {/* Favorite Albums */}
-      {favoriteAlbums.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text variant="headlineSmall" style={styles.sectionTitle}>
-              Favorite Albums
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Text variant="headlineSmall" style={styles.sectionTitle}>
+            Favorite Albums
+          </Text>
+          <TouchableOpacity onPress={navigateToFavoriteAlbumsManagement}>
+            <Text style={styles.editButton}>
+              {favoriteAlbums.length > 0 ? 'Edit' : 'Add'}
             </Text>
-            <TouchableOpacity onPress={navigateToFavoriteAlbumsManagement}>
-              <Text style={styles.editButton}>Edit</Text>
-            </TouchableOpacity>
-          </View>
+          </TouchableOpacity>
+        </View>
+        {favoriteAlbums.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.horizontalList}>
               {favoriteAlbums.map(renderFavoriteAlbum)}
             </View>
           </ScrollView>
-        </View>
-      )}
+        ) : (
+          <TouchableOpacity
+            style={styles.emptyFavoritesContainer}
+            onPress={navigateToFavoriteAlbumsManagement}
+          >
+            <Text variant="bodyLarge" style={styles.emptyFavoritesText}>
+              Add your five favorite albums
+            </Text>
+            <Text variant="bodyMedium" style={styles.emptyFavoritesSubtext}>
+              Tap to select albums that define your music taste
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Recent Activity */}
       {recentActivity.length > 0 && (
@@ -513,5 +527,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.sm,
     minHeight: 44, // Maintain touchable area
+  },
+  emptyFavoritesContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: theme.light.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.xl,
+    ...shadows.small,
+  },
+  emptyFavoritesText: {
+    fontWeight: 'bold',
+    marginBottom: spacing.xs,
+  },
+  emptyFavoritesSubtext: {
+    color: theme.light.colors.onSurfaceVariant,
+    textAlign: 'center',
+    fontSize: 14,
   },
 });
