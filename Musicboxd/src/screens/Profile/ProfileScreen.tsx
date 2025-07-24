@@ -68,12 +68,21 @@ export default function ProfileScreen() {
     }
 
     try {
-      // Mock: Get popular albums and use first few as favorites
-      const response = await AlbumService.getPopularAlbums();
-      if (response.success) {
-        const mockFavorites = response.data.slice(0, user.preferences.favoriteAlbumIds.length);
-        setFavoriteAlbums(mockFavorites);
-      }
+      // Get the actual albums matching the user's favorite IDs
+      const albumPromises = user.preferences.favoriteAlbumIds.map(albumId => 
+        AlbumService.getAlbumById(albumId)
+      );
+      
+      const albumResponses = await Promise.all(albumPromises);
+      const favorites: Album[] = [];
+      
+      albumResponses.forEach(response => {
+        if (response.success && response.data) {
+          favorites.push(response.data);
+        }
+      });
+      
+      setFavoriteAlbums(favorites);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }

@@ -10,10 +10,11 @@ import {
 import { Text, ActivityIndicator, IconButton, Searchbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
+import { updateProfile } from '../../store/slices/authSlice';
 import { AlbumService } from '../../services/albumService';
 import { colors, spacing } from '../../utils/theme';
 
@@ -29,6 +30,7 @@ const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: p
 export default function FavoriteAlbumsManagementScreen() {
   const navigation = useNavigation<FavoriteAlbumsManagementNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Album[]>([]);
@@ -45,14 +47,21 @@ export default function FavoriteAlbumsManagementScreen() {
     }
 
     try {
-      // In a real app, you'd have a service to get albums by IDs
-      // For now, we'll mock this by getting popular albums and filtering
-      const response = await AlbumService.getPopularAlbums();
-      if (response.success) {
-        // Mock: take first few albums as user's favorites
-        const mockFavorites = response.data.slice(0, currentFavoriteIds.length);
-        setFavoriteAlbums(mockFavorites);
-      }
+      // Get the actual albums matching the user's favorite IDs
+      const albumPromises = currentFavoriteIds.map(albumId => 
+        AlbumService.getAlbumById(albumId)
+      );
+      
+      const albumResponses = await Promise.all(albumPromises);
+      const favorites: Album[] = [];
+      
+      albumResponses.forEach(response => {
+        if (response.success && response.data) {
+          favorites.push(response.data);
+        }
+      });
+      
+      setFavoriteAlbums(favorites);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }
@@ -99,7 +108,15 @@ export default function FavoriteAlbumsManagementScreen() {
       const newFavorites = [...favoriteAlbums, album];
       setFavoriteAlbums(newFavorites);
       
-      // TODO: Update user preferences in Redux store
+      // Update user preferences in Redux store
+      const newFavoriteIds = newFavorites.map(fav => fav.id);
+      dispatch(updateProfile({
+        preferences: {
+          ...currentUser?.preferences,
+          favoriteAlbumIds: newFavoriteIds,
+        },
+      }));
+      
       console.log('Added to favorites:', album.title);
     }
   };
@@ -108,7 +125,15 @@ export default function FavoriteAlbumsManagementScreen() {
     const newFavorites = favoriteAlbums.filter(album => album.id !== albumId);
     setFavoriteAlbums(newFavorites);
     
-    // TODO: Update user preferences in Redux store
+    // Update user preferences in Redux store
+    const newFavoriteIds = newFavorites.map(fav => fav.id);
+    dispatch(updateProfile({
+      preferences: {
+        ...currentUser?.preferences,
+        favoriteAlbumIds: newFavoriteIds,
+      },
+    }));
+    
     console.log('Removed from favorites:', albumId);
   };
 

@@ -27,7 +27,7 @@ const mockUser = {
   lastActiveDate: new Date().toISOString(),
   preferences: {
     favoriteGenres: ['Rock', 'Electronic', 'Jazz'],
-    favoriteAlbumIds: ['album_001', 'album_002', 'album_003'],
+    favoriteAlbumIds: ['1', '3', '4'],
   },
   privacy: {
     profileVisibility: 'public' as const,
