@@ -133,6 +133,9 @@ export type HomeStackParamList = {
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };
   UserReviews: { userId: string; username: string };
+  PopularThisWeek: undefined;
+  NewFromFriends: undefined;
+  PopularWithFriends: undefined;
 };
 
 export type SearchStackParamList = {
@@ -142,6 +145,9 @@ export type SearchStackParamList = {
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };
   UserReviews: { userId: string; username: string };
+  PopularThisWeek: undefined;
+  NewFromFriends: undefined;
+  PopularWithFriends: undefined;
 };
 
 export type ProfileStackParamList = {
@@ -151,6 +157,9 @@ export type ProfileStackParamList = {
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };
   UserReviews: { userId: string; username: string };
+  PopularThisWeek: undefined;
+  NewFromFriends: undefined;
+  PopularWithFriends: undefined;
 };
 
 // Search types

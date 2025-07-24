@@ -6,14 +6,14 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { Text, Card, ActivityIndicator } from 'react-native-paper';
+import { Text, ActivityIndicator, Avatar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, User } from '../../types';
+import { HomeStackParamList, User, Album } from '../../types';
 import { RootState } from '../../store';
-import { setPopularAlbums, fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
+import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { colors, spacing } from '../../utils/theme';
@@ -23,43 +23,202 @@ type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 const ALBUM_CARD_WIDTH = 120;
 const USER_CARD_WIDTH = 140;
 
+interface FriendActivity {
+  album: Album;
+  friend: {
+    id: string;
+    username: string;
+    profilePicture?: string;
+  };
+  dateListened: Date;
+}
+
+interface FriendPopularAlbum {
+  album: Album;
+  friendsWhoListened: {
+    id: string;
+    username: string;
+    profilePicture?: string;
+  }[];
+  totalFriends: number;
+}
+
+interface PotentialFriend {
+  user: User;
+  mutualFollowers: number;
+}
+
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const dispatch = useDispatch();
   
-  const { popularAlbums, loading } = useSelector((state: RootState) => state.albums);
+  const { loading } = useSelector((state: RootState) => state.albums);
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   
-  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+  const [popularThisWeek, setPopularThisWeek] = useState<Album[]>([]);
+  const [newFromFriends, setNewFromFriends] = useState<FriendActivity[]>([]);
+  const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
+  const [discoverFriends, setDiscoverFriends] = useState<PotentialFriend[]>([]);
 
-  const loadSuggestedUsers = useCallback(async () => {
-    try {
-      // Use actual current user ID instead of hardcoded value
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 3);
-      setSuggestedUsers(users);
-    } catch (error) {
-      console.error('Error loading suggested users:', error);
-    }
-  }, [currentUser]);
-
-  const loadPopularAlbums = useCallback(async () => {
-    dispatch(fetchAlbumsStart());
+  const loadPopularThisWeek = useCallback(async () => {
     try {
       const response = await AlbumService.getPopularAlbums();
       if (response.success) {
-        dispatch(setPopularAlbums(response.data));
-        dispatch(fetchAlbumsSuccess(response.data));
+        // Create mock weekly popular data
+        const weeklyPopular = [
+          ...response.data,
+          ...response.data.map(album => ({
+            ...album,
+            id: album.id + '_weekly',
+            title: album.title + ' (Hot This Week)',
+          })),
+        ].slice(0, 20);
+        setPopularThisWeek(weeklyPopular);
       }
     } catch (error) {
-      console.error('Error loading albums:', error);
+      console.error('Error loading popular this week:', error);
     }
-  }, [dispatch]);
+  }, []);
+
+  const loadNewFromFriends = useCallback(async () => {
+    try {
+      const response = await AlbumService.getPopularAlbums();
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 8);
+      
+      if (response.success && response.data.length > 0) {
+        // Filter out current user from friends list
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const friendsOnly = users.filter(user => user.username !== currentUsername);
+        
+        // Early return if no friends or albums available
+        if (friendsOnly.length === 0 || response.data.length === 0) {
+          setNewFromFriends([]);
+          return;
+        }
+        
+        const friendActivities: FriendActivity[] = [];
+        
+        for (let i = 0; i < 20; i++) {
+          const album = response.data[i % response.data.length];
+          const friend = friendsOnly[i % friendsOnly.length];
+          
+          friendActivities.push({
+            album: {
+              ...album,
+              id: album.id + '_friend_activity_' + i,
+              title: i % 3 === 0 ? album.title + ' (New Discovery)' : album.title,
+            },
+            friend: {
+              id: friend.id,
+              username: friend.username,
+              profilePicture: friend.profilePicture,
+            },
+            dateListened: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Random date within last day
+          });
+        }
+        
+        friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
+        setNewFromFriends(friendActivities);
+      } else {
+        setNewFromFriends([]);
+      }
+    } catch (error) {
+      console.error('Error loading new from friends:', error);
+      setNewFromFriends([]);
+    }
+  }, [currentUser]);
+
+  const loadPopularWithFriends = useCallback(async () => {
+    try {
+      const response = await AlbumService.getPopularAlbums();
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      
+      if (response.success && response.data.length > 0) {
+        // Filter out current user from friends list
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const friendsOnly = users.filter(user => user.username !== currentUsername);
+        
+        // Early return if no friends or albums available
+        if (friendsOnly.length === 0 || response.data.length === 0) {
+          setPopularWithFriends([]);
+          return;
+        }
+        
+        const friendPopularAlbums: FriendPopularAlbum[] = [];
+        
+        for (let i = 0; i < 20; i++) {
+          const album = response.data[i % response.data.length];
+          const friendCount = Math.floor(Math.random() * 8) + 2; // 2-9 friends
+          const maxFriendsToShow = Math.min(friendCount, 3, friendsOnly.length);
+          const friendsWhoListened = friendsOnly.slice(0, maxFriendsToShow);
+          
+          friendPopularAlbums.push({
+            album: {
+              ...album,
+              id: album.id + '_friend_popular_' + i,
+              title: i % 4 === 0 ? album.title + ' (Friends Love This)' : album.title,
+            },
+            friendsWhoListened,
+            totalFriends: friendCount,
+          });
+        }
+        
+        friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
+        setPopularWithFriends(friendPopularAlbums);
+      } else {
+        setPopularWithFriends([]);
+      }
+    } catch (error) {
+      console.error('Error loading popular with friends:', error);
+      setPopularWithFriends([]);
+    }
+  }, [currentUser]);
+
+  const loadDiscoverFriends = useCallback(async () => {
+    try {
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 20);
+      
+      if (users.length > 0) {
+        // Filter out current user from potential friends
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const potentialUsers = users.filter(user => user.username !== currentUsername);
+        
+        if (potentialUsers.length === 0) {
+          setDiscoverFriends([]);
+          return;
+        }
+        
+        const potentialFriends: PotentialFriend[] = potentialUsers.map((user, _index) => ({
+          user,
+          mutualFollowers: Math.floor(Math.random() * 12) + 1, // 1-12 mutual followers
+        })).slice(0, 20);
+        
+        // Sort by mutual followers count (descending)
+        potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
+        setDiscoverFriends(potentialFriends);
+      } else {
+        setDiscoverFriends([]);
+      }
+    } catch (error) {
+      console.error('Error loading discover friends:', error);
+      setDiscoverFriends([]);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
-    loadPopularAlbums();
-    loadSuggestedUsers();
-  }, [loadSuggestedUsers, loadPopularAlbums]);
+    dispatch(fetchAlbumsStart());
+    Promise.all([
+      loadPopularThisWeek(),
+      loadNewFromFriends(),
+      loadPopularWithFriends(),
+      loadDiscoverFriends(),
+    ]).finally(() => {
+      dispatch(fetchAlbumsSuccess([]));
+    });
+  }, [dispatch, loadPopularThisWeek, loadNewFromFriends, loadPopularWithFriends, loadDiscoverFriends]);
 
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
@@ -69,7 +228,20 @@ export default function HomeScreen() {
     navigation.navigate('UserProfile', { userId });
   };
 
-  const renderAlbumCard = (album: any) => (
+  const renderSectionHeader = (title: string, onSeeAll?: () => void) => (
+    <View style={styles.sectionHeader}>
+      <Text variant="headlineSmall" style={styles.sectionTitle}>
+        {title}
+      </Text>
+      {onSeeAll && (
+        <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
+          <Text style={styles.seeAllText}>›</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderAlbumCard = (album: Album) => (
     <TouchableOpacity
       key={album.id}
       style={styles.albumCard}
@@ -85,21 +257,67 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderUserCard = (user: User) => (
+  const renderFriendActivityCard = (activity: FriendActivity) => (
     <TouchableOpacity
-      key={user.id}
-      style={styles.userCard}
-      onPress={() => navigateToUserProfile(user.id)}
+      key={activity.album.id}
+      style={styles.albumCard}
+      onPress={() => navigateToAlbum(activity.album.id)}
     >
-      <Image 
-        source={{ uri: user.profilePicture || 'https://via.placeholder.com/60x60/cccccc/999999?text=User' }} 
-        style={styles.userAvatar} 
+      <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
+      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+        {activity.album.title}
+      </Text>
+      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+        {activity.album.artist}
+      </Text>
+      <View style={styles.friendBadge}>
+        <Avatar.Image 
+          size={16} 
+          source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
+        />
+        <Text variant="bodySmall" style={styles.friendBadgeText}>
+          @{activity.friend.username}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderPopularWithFriendsCard = (popularAlbum: FriendPopularAlbum) => (
+    <TouchableOpacity
+      key={popularAlbum.album.id}
+      style={styles.albumCard}
+      onPress={() => navigateToAlbum(popularAlbum.album.id)}
+    >
+      <Image source={{ uri: popularAlbum.album.coverImageUrl }} style={styles.albumCover} />
+      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+        {popularAlbum.album.title}
+      </Text>
+      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+        {popularAlbum.album.artist}
+      </Text>
+      <View style={styles.friendsCounter}>
+        <Text variant="bodySmall" style={styles.friendsCountText}>
+          {popularAlbum.totalFriends} friends
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderPotentialFriendCard = (potentialFriend: PotentialFriend) => (
+    <TouchableOpacity
+      key={potentialFriend.user.id}
+      style={styles.userCard}
+      onPress={() => navigateToUserProfile(potentialFriend.user.id)}
+    >
+      <Avatar.Image 
+        size={60} 
+        source={{ uri: potentialFriend.user.profilePicture || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
       />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
-        @{user.username}
+        @{potentialFriend.user.username}
       </Text>
-      <Text variant="bodySmall" numberOfLines={2} style={styles.userBio}>
-        {user.bio || 'Music enthusiast'}
+      <Text variant="bodySmall" style={styles.mutualFollowers}>
+        {potentialFriend.mutualFollowers} mutual followers
       </Text>
     </TouchableOpacity>
   );
@@ -109,7 +327,7 @@ export default function HomeScreen() {
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" />
         <Text variant="bodyLarge" style={styles.loadingText}>
-          Loading albums...
+          Loading your feed...
         </Text>
       </View>
     );
@@ -117,47 +335,44 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Popular This Week */}
       <View style={styles.section}>
-        <Text variant="headlineMedium" style={styles.sectionTitle}>
-          Popular Albums
-        </Text>
-        <Text variant="bodyMedium" style={styles.sectionSubtitle}>
-          Discover what's trending in music
-        </Text>
-      </View>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.albumGrid}>
-          {popularAlbums.map((album) => renderAlbumCard(album))}
-        </View>
-      </ScrollView>
-
-      <View style={styles.section}>
-        <Text variant="headlineSmall" style={styles.sectionTitle}>
-          Discover Friends
-        </Text>
-        <Text variant="bodyMedium" style={styles.sectionSubtitle}>
-          Find users with similar music taste
-        </Text>
-        
+        {renderSectionHeader('Popular This Week', () => navigation.navigate('PopularThisWeek'))}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.userGrid}>
-            {suggestedUsers.map((user) => renderUserCard(user))}
+          <View style={styles.horizontalList}>
+            {popularThisWeek.map(renderAlbumCard)}
           </View>
         </ScrollView>
       </View>
 
+      {/* New From Friends */}
       <View style={styles.section}>
-        <Text variant="headlineSmall" style={styles.sectionTitle}>
-          Discover New Music
-        </Text>
-        <Card style={styles.discoverCard} elevation={1}>
-          <Card.Content>
-            <Text variant="bodyMedium" style={styles.comingSoonText}>
-              Personalized recommendations based on your listening history and preferences.
-            </Text>
-          </Card.Content>
-        </Card>
+        {renderSectionHeader('New From Friends', () => navigation.navigate('NewFromFriends'))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.horizontalList}>
+            {newFromFriends.map(renderFriendActivityCard)}
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* Popular With Friends */}
+      <View style={styles.section}>
+        {renderSectionHeader('Popular With Friends', () => navigation.navigate('PopularWithFriends'))}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.horizontalList}>
+            {popularWithFriends.map(renderPopularWithFriendsCard)}
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* Discover Friends */}
+      <View style={styles.section}>
+        {renderSectionHeader('Discover Friends')}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.horizontalList}>
+            {discoverFriends.map(renderPotentialFriendCard)}
+          </View>
+        </ScrollView>
       </View>
     </ScrollView>
   );
@@ -179,17 +394,28 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   section: {
-    padding: spacing.lg,
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
+    paddingTop: spacing.md,
   },
   sectionTitle: {
     fontWeight: 'bold',
-    marginBottom: spacing.xs,
   },
-  sectionSubtitle: {
+  seeAllButton: {
+    padding: spacing.sm,
+  },
+  seeAllText: {
+    fontSize: 20,
     color: colors.textSecondary,
+    fontWeight: 'bold',
   },
-  albumGrid: {
+  horizontalList: {
     flexDirection: 'row',
     paddingLeft: spacing.lg,
   },
@@ -207,13 +433,37 @@ const styles = StyleSheet.create({
   albumTitle: {
     fontWeight: '600',
     marginBottom: spacing.xs,
+    lineHeight: 16,
   },
   artistName: {
     color: colors.textSecondary,
+    lineHeight: 14,
   },
-  userGrid: {
+  friendBadge: {
     flexDirection: 'row',
-    paddingLeft: spacing.lg,
+    alignItems: 'center',
+    marginTop: spacing.xs,
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    padding: 4,
+  },
+  friendBadgeText: {
+    marginLeft: 4,
+    fontSize: 10,
+    color: colors.textSecondary,
+  },
+  friendsCounter: {
+    marginTop: spacing.xs,
+    backgroundColor: colors.primary,
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    alignSelf: 'flex-start',
+  },
+  friendsCountText: {
+    fontSize: 10,
+    color: 'white',
+    fontWeight: 'bold',
   },
   userCard: {
     width: USER_CARD_WIDTH,
@@ -223,33 +473,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     alignItems: 'center',
   },
-  userAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginBottom: spacing.sm,
-  },
   username: {
     fontWeight: '600',
+    marginTop: spacing.sm,
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
-  userBio: {
+  mutualFollowers: {
     color: colors.textSecondary,
     textAlign: 'center',
     fontSize: 12,
-  },
-  activityCard: {
-    backgroundColor: colors.card,
-    marginHorizontal: spacing.lg,
-  },
-  discoverCard: {
-    backgroundColor: colors.card,
-    marginHorizontal: spacing.lg,
-  },
-  comingSoonText: {
-    color: colors.textSecondary,
-    textAlign: 'center',
-    fontStyle: 'italic',
   },
 });
