@@ -24,12 +24,8 @@ const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
 
 // Icon components to avoid creating them during render
-const settingsIconStyle = { fontSize: 18, color: '#666', width: 24, textAlign: 'center' as const, lineHeight: 24, marginLeft: 8, marginTop: 8 };
 const chevronIconStyle = { fontSize: 14, color: '#666', lineHeight: 24, marginTop: 8 };
 
-const SettingsIcon = (_props: any) => <Text style={settingsIconStyle}>⚙</Text>;
-const HelpIcon = (_props: any) => <Text style={settingsIconStyle}>?</Text>;
-const LogoutIcon = (_props: any) => <Text style={settingsIconStyle}>↗</Text>;
 const ChevronIcon = (_props: any) => <Text style={chevronIconStyle}>›</Text>;
 
 interface UserStats {
@@ -343,19 +339,16 @@ export default function ProfileScreen() {
         <List.Section>
           <List.Item
             title="Account Settings"
-            left={SettingsIcon}
             right={ChevronIcon}
             onPress={() => {}}
           />
           <List.Item
             title="Help & Support"
-            left={HelpIcon}
             right={ChevronIcon}
             onPress={() => {}}
           />
           <List.Item
             title="Logout"
-            left={LogoutIcon}
             onPress={handleLogout}
           />
         </List.Section>
