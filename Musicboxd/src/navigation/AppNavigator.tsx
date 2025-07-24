@@ -18,6 +18,7 @@ import UserProfileScreen from '../screens/Profile/UserProfileScreen';
 import FollowersScreen from '../screens/Profile/FollowersScreen';
 import ListenedAlbumsScreen from '../screens/Profile/ListenedAlbumsScreen';
 import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
+import FavoriteAlbumsManagementScreen from '../screens/Profile/FavoriteAlbumsManagementScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 
@@ -129,6 +130,13 @@ function HomeStackNavigator() {
           headerShown: false,
         }}
       />
+      <HomeStack.Screen
+        name="FavoriteAlbumsManagement"
+        component={FavoriteAlbumsManagementScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -207,6 +215,13 @@ function SearchStackNavigator() {
           headerShown: false,
         }}
       />
+      <SearchStack.Screen
+        name="FavoriteAlbumsManagement"
+        component={FavoriteAlbumsManagementScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </SearchStack.Navigator>
   );
 }
@@ -281,6 +296,13 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen
+        name="FavoriteAlbumsManagement"
+        component={FavoriteAlbumsManagementScreen}
         options={{
           headerShown: false,
         }}

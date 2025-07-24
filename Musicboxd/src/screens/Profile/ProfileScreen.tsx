@@ -1,299 +1,365 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
+  Image,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
-import {
-  Text,
-  Card,
-  Button,
-  Avatar,
-  Divider,
-  List,
-} from 'react-native-paper';
-import { useDispatch, useSelector } from 'react-redux';
+import { Text, List, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { theme, spacing } from '../../utils/theme';
+import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
-import { loginSuccess } from '../../store/slices/authSlice';
-import { SerializedUser, ProfileStackParamList } from '../../types';
-import { userService } from '../../services/userService';
+import { logout } from '../../store/slices/authSlice';
+import { AlbumService } from '../../services/albumService';
+import { theme, spacing, shadows } from '../../utils/theme';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-// Style objects to avoid inline styles
-const iconStyle = {
-  fontSize: 18,
-  color: '#666',
-  width: 24,
-  textAlign: 'center' as const,
-  lineHeight: 24,
-  marginLeft: 8,
-  marginTop: 8,
-};
-
-const chevronStyle = {
-  fontSize: 14,
-  color: '#666',
-  lineHeight: 24,
-  marginTop: 8,
-};
+const { width } = Dimensions.get('window');
+const ALBUM_CARD_WIDTH = 120;
 
 // Icon components to avoid creating them during render
-const HistoryIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>◐</Text>;
-const ChevronRightIcon = (props: any) => <Text style={{...chevronStyle, color: props.color || '#666'}}>›</Text>;
-const ReviewIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>★</Text>;
-const PlaylistIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>≡</Text>;
-const ChartIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>⟆</Text>;
-const EditIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>✎</Text>;
-const SettingsIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>⚙</Text>;
-const HelpIcon = (props: any) => <Text style={{...iconStyle, color: props.color || '#666'}}>?</Text>;
+const settingsIconStyle = { fontSize: 18, color: '#666', width: 24, textAlign: 'center' as const, lineHeight: 24, marginLeft: 8, marginTop: 8 };
+const chevronIconStyle = { fontSize: 14, color: '#666', lineHeight: 24, marginTop: 8 };
+
+const SettingsIcon = (_props: any) => <Text style={settingsIconStyle}>⚙</Text>;
+const HelpIcon = (_props: any) => <Text style={settingsIconStyle}>?</Text>;
+const LogoutIcon = (_props: any) => <Text style={settingsIconStyle}>↗</Text>;
+const ChevronIcon = (_props: any) => <Text style={chevronIconStyle}>›</Text>;
+
+interface UserStats {
+  albumsThisYear: number;
+  albumsAllTime: number;
+  ratingsThisYear: number;
+  ratingsAllTime: number;
+  followers: number;
+  following: number;
+}
+
+interface RecentActivity {
+  album: Album;
+  listen: Listen;
+  review?: Review;
+}
 
 export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const { following } = useSelector((state: RootState) => state.user);
-  const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
-  
-  const [stats, setStats] = useState({
-    albumsListened: 0,
-    reviews: 0,
-    averageRating: 0,
-    following: 0,
+  const { user, isDarkMode } = useSelector((state: RootState) => state.auth);
+  const currentTheme = isDarkMode ? theme.dark : theme.light;
+
+  const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [userStats, setUserStats] = useState<UserStats>({
+    albumsThisYear: 0,
+    albumsAllTime: 0,
+    ratingsThisYear: 0,
+    ratingsAllTime: 0,
     followers: 0,
+    following: 0,
   });
+  const [loading, setLoading] = useState(true);
 
-  // Initialize mock current user if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated && !user) {
-      const mockCurrentUser: SerializedUser = {
-        id: 'current-user-id',
-        username: 'musiclover2024',
-        email: 'music@example.com',
-        profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
-        bio: 'Passionate about discovering new music across all genres 🎶',
-        joinedDate: new Date('2024-01-15').toISOString(),
-        lastActiveDate: new Date().toISOString(),
-        preferences: {
-          favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
-          notifications: {
-            newFollowers: true,
-            reviewLikes: true,
-            friendActivity: true,
-          },
-          privacy: {
-            profileVisibility: 'public',
-            activityVisibility: 'public',
-          },
-        },
-      };
-      dispatch(loginSuccess(mockCurrentUser));
+  const loadFavoriteAlbums = useCallback(async () => {
+    if (!user?.preferences?.favoriteAlbumIds?.length) {
+      setFavoriteAlbums([]);
+      return;
     }
-  }, [dispatch, isAuthenticated, user]);
 
-  // Load user stats from service (includes dynamic follow counts)
-  useEffect(() => {
-    const loadStats = async () => {
-      if (user) {
-        try {
-          const userStats = await userService.getUserStats(user.id);
-          setStats(userStats);
-        } catch (error) {
-          console.error('Error loading user stats:', error);
-        }
+    try {
+      // Mock: Get popular albums and use first few as favorites
+      const response = await AlbumService.getPopularAlbums();
+      if (response.success) {
+        const mockFavorites = response.data.slice(0, user.preferences.favoriteAlbumIds.length);
+        setFavoriteAlbums(mockFavorites);
       }
-    };
-    
-    loadStats();
-  }, [user, following, userListens, userReviews]); // Reload when following state or user interactions change
+    } catch (error) {
+      console.error('Error loading favorite albums:', error);
+    }
+  }, [user?.preferences?.favoriteAlbumIds]);
 
-  if (!user) {
-    return null; // or loading spinner
+  const loadRecentActivity = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      // Mock: Get recent listens and reviews
+      const response = await AlbumService.getPopularAlbums();
+      if (response.success) {
+        // Create mock recent activity
+        const mockActivity: RecentActivity[] = response.data.slice(0, 5).map((album, index) => ({
+          album,
+          listen: {
+            id: `listen_${index}`,
+            userId: user.id,
+            albumId: album.id,
+            dateListened: new Date(Date.now() - (index * 24 * 60 * 60 * 1000)), // Spread over last 5 days
+            notes: undefined,
+          },
+          review: index % 2 === 0 ? {
+            id: `review_${index}`,
+            userId: user.id,
+            albumId: album.id,
+            rating: Math.floor(Math.random() * 5) + 1, // 1-5 stars
+            reviewText: undefined,
+            dateReviewed: new Date(Date.now() - (index * 24 * 60 * 60 * 1000)),
+            likesCount: 0,
+            commentsCount: 0,
+          } : undefined,
+        }));
+
+        setRecentActivity(mockActivity);
+      }
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+    }
+  }, [user?.id]);
+
+  const loadUserStats = useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      // Mock statistics
+      const mockStats: UserStats = {
+        albumsThisYear: Math.floor(Math.random() * 100) + 50,
+        albumsAllTime: Math.floor(Math.random() * 500) + 200,
+        ratingsThisYear: Math.floor(Math.random() * 80) + 30,
+        ratingsAllTime: Math.floor(Math.random() * 400) + 150,
+        followers: Math.floor(Math.random() * 200) + 50,
+        following: Math.floor(Math.random() * 150) + 25,
+      };
+      setUserStats(mockStats);
+    } catch (error) {
+      console.error('Error loading user stats:', error);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    const loadAllData = async () => {
+      setLoading(true);
+      await Promise.all([
+        loadFavoriteAlbums(),
+        loadRecentActivity(),
+        loadUserStats(),
+      ]);
+      setLoading(false);
+    };
+
+    loadAllData();
+  }, [loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+
+  const handleLogout = () => {
+    dispatch(logout());
+  };
+
+  const navigateToAlbum = (albumId: string) => {
+    navigation.navigate('AlbumDetails', { albumId });
+  };
+
+  const navigateToFavoriteAlbumsManagement = () => {
+    navigation.navigate('FavoriteAlbumsManagement');
+  };
+
+  const navigateToFollowers = () => {
+    if (user) {
+      navigation.navigate('Followers', { 
+        userId: user.id, 
+        username: user.username,
+        initialTab: 'followers'
+      });
+    }
+  };
+
+  const navigateToFollowing = () => {
+    if (user) {
+      navigation.navigate('Followers', { 
+        userId: user.id, 
+        username: user.username,
+        initialTab: 'following'
+      });
+    }
+  };
+
+  const navigateToListenedAlbums = (_timeframe: 'year' | 'alltime') => {
+    if (user) {
+      navigation.navigate('ListenedAlbums', { 
+        userId: user.id, 
+        username: user.username,
+      });
+    }
+  };
+
+  const navigateToUserReviews = (_timeframe: 'year' | 'alltime') => {
+    if (user) {
+      navigation.navigate('UserReviews', { 
+        userId: user.id, 
+        username: user.username,
+      });
+    }
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <Text key={index} style={styles.star}>
+        {index < rating ? '★' : '☆'}
+      </Text>
+    ));
+  };
+
+  const renderFavoriteAlbum = (album: Album) => (
+    <TouchableOpacity
+      key={album.id}
+      style={styles.albumCard}
+      onPress={() => navigateToAlbum(album.id)}
+    >
+      <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+        {album.title}
+      </Text>
+      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+        {album.artist}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const renderRecentActivityItem = (activity: RecentActivity) => (
+    <TouchableOpacity
+      key={activity.album.id}
+      style={styles.albumCard}
+      onPress={() => navigateToAlbum(activity.album.id)}
+    >
+      <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
+      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+        {activity.album.title}
+      </Text>
+      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+        {activity.album.artist}
+      </Text>
+      {activity.review && (
+        <View style={styles.ratingContainer}>
+          {renderStars(activity.review.rating)}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+
+  const renderStatCard = (title: string, value: number, onPress?: () => void) => (
+    <TouchableOpacity
+      style={[styles.statCard, { backgroundColor: currentTheme.colors.surface }]}
+      onPress={onPress}
+      disabled={!onPress}
+    >
+      <Text variant="headlineMedium" style={styles.statValue}>
+        {value.toLocaleString()}
+      </Text>
+      <Text variant="bodyMedium" style={styles.statLabel}>
+        {title}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  if (!user || loading) {
+    return (
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" />
+        <Text variant="bodyLarge" style={styles.loadingText}>
+          Loading profile...
+        </Text>
+      </View>
+    );
   }
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Profile Header */}
-      <View style={styles.header}>
+      <View style={styles.profileHeader}>
         <Avatar.Image 
-          size={100} 
-          source={{ uri: user.profilePicture }} 
-          style={styles.avatar}
+          size={80} 
+          source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
+          style={styles.profilePicture}
         />
-        <Text variant="headlineSmall" style={styles.username}>
+        <Text variant="headlineMedium" style={styles.username}>
           @{user.username}
-        </Text>
-        <Text variant="bodyMedium" style={styles.bio}>
-          {user.bio}
-        </Text>
-        <Text variant="bodySmall" style={styles.joinedDate}>
-          Member since {new Date(user.joinedDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </Text>
       </View>
 
-            {/* Stats Grid */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statsGrid}>
-          <TouchableOpacity
-            style={styles.statCardWrapper}
-            onPress={() => navigation.navigate('ListenedAlbums', { 
-              userId: user.id, 
-              username: user.username 
-            })}
-          >
-            <Card style={styles.statCard} elevation={1}>
-              <Card.Content style={styles.statContent}>
-                <Text variant="headlineMedium" style={styles.statNumber}>
-                  {stats.albumsListened}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Albums Listened
-                </Text>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.statCardWrapper}
-            onPress={() => navigation.navigate('UserReviews', { 
-              userId: user.id, 
-              username: user.username 
-            })}
-          >
-            <Card style={styles.statCard} elevation={1}>
-              <Card.Content style={styles.statContent}>
-                <Text variant="headlineMedium" style={styles.statNumber}>
-                  {stats.reviews}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Ratings
-                </Text>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
+      {/* Favorite Albums */}
+      {favoriteAlbums.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text variant="headlineSmall" style={styles.sectionTitle}>
+              Favorite Albums
+            </Text>
+            <TouchableOpacity onPress={navigateToFavoriteAlbumsManagement}>
+              <Text style={styles.editButton}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.horizontalList}>
+              {favoriteAlbums.map(renderFavoriteAlbum)}
+            </View>
+          </ScrollView>
+        </View>
+      )}
 
-          <TouchableOpacity
-            style={styles.statCardWrapper}
-            onPress={() => navigation.navigate('Followers', { 
-              userId: user.id, 
-              username: user.username,
-              initialTab: 'following'
-            })}
-          >
-            <Card style={styles.statCard} elevation={1}>
-              <Card.Content style={styles.statContent}>
-                <Text variant="headlineMedium" style={styles.statNumber}>
-                  {stats.following}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Following
-                </Text>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={styles.statCardWrapper}
-            onPress={() => navigation.navigate('Followers', { 
-              userId: user.id, 
-              username: user.username,
-              initialTab: 'followers'
-            })}
-          >
-            <Card style={styles.statCard} elevation={1}>
-              <Card.Content style={styles.statContent}>
-                <Text variant="headlineMedium" style={styles.statNumber}>
-                  {stats.followers}
-                </Text>
-                <Text variant="bodySmall" style={styles.statLabel}>
-                  Followers
-                </Text>
-              </Card.Content>
-            </Card>
-          </TouchableOpacity>
+      {/* Recent Activity */}
+      {recentActivity.length > 0 && (
+        <View style={styles.section}>
+          <Text variant="headlineSmall" style={styles.sectionTitle}>
+            Recent Activity
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.horizontalList}>
+              {recentActivity.map(renderRecentActivityItem)}
+            </View>
+          </ScrollView>
+        </View>
+      )}
+
+      {/* Stats Grid */}
+      <View style={styles.section}>
+        <Text variant="headlineSmall" style={styles.sectionTitle}>
+          Stats & Social
+        </Text>
+        <View style={styles.statsGrid}>
+          {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
+          {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
+          {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
+          {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
+          {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
+          {renderStatCard('Following', userStats.following, navigateToFollowing)}
         </View>
       </View>
 
-      {/* Menu Options */}
-      <Card style={styles.menuCard} elevation={1}>
-        <List.Item
-          title="Recently Listened"
-          description="View your recent album listens"
-          left={HistoryIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-        <Divider />
-        <List.Item
-          title="My Reviews"
-          description="Manage your album reviews"
-          left={ReviewIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-        <Divider />
-        <List.Item
-          title="My Lists"
-          description="Create and manage album lists"
-          left={PlaylistIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-        <Divider />
-        <List.Item
-          title="Listening Stats"
-          description="View detailed listening statistics"
-          left={ChartIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-      </Card>
-
       {/* Settings */}
-      <Card style={styles.menuCard} elevation={1}>
-        <List.Item
-          title="Edit Profile"
-          description="Update your profile information"
-          left={EditIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-        <Divider />
-        <List.Item
-          title="Settings"
-          description="App preferences and privacy"
-          left={SettingsIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-        <Divider />
-        <List.Item
-          title="Help & Support"
-          description="Get help with using the app"
-          left={HelpIcon}
-          right={ChevronRightIcon}
-          onPress={() => {}}
-        />
-      </Card>
-
-      {/* Logout Button */}
-      <View style={styles.logoutContainer}>
-        <Button
-          mode="outlined"
-          onPress={() => {}}
-          style={styles.logoutButton}
-          textColor={theme.colors.error}
-        >
-          Sign Out
-        </Button>
+      <View style={styles.section}>
+        <Text variant="headlineSmall" style={styles.sectionTitle}>
+          Settings
+        </Text>
+        <List.Section>
+          <List.Item
+            title="Account Settings"
+            left={SettingsIcon}
+            right={ChevronIcon}
+            onPress={() => {}}
+          />
+          <List.Item
+            title="Help & Support"
+            left={HelpIcon}
+            right={ChevronIcon}
+            onPress={() => {}}
+          />
+          <List.Item
+            title="Logout"
+            left={LogoutIcon}
+            onPress={handleLogout}
+          />
+        </List.Section>
       </View>
-
-      <View style={styles.bottomPadding} />
     </ScrollView>
   );
 }
@@ -301,71 +367,105 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.light.colors.background,
   },
-  header: {
-    padding: spacing.lg,
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.light.colors.background,
   },
-  avatar: {
+  loadingText: {
+    marginTop: spacing.md,
+    color: theme.light.colors.onSurfaceVariant,
+  },
+  profileHeader: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+  },
+  profilePicture: {
     marginBottom: spacing.md,
   },
   username: {
     fontWeight: 'bold',
-    marginBottom: spacing.sm,
   },
-  bio: {
-    textAlign: 'center',
-    color: theme.colors.textSecondary,
-    marginBottom: spacing.sm,
+  section: {
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
-  joinedDate: {
-    color: theme.colors.textSecondary,
+  sectionTitle: {
+    fontWeight: 'bold',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
-  statsContainer: {
-    padding: spacing.lg,
+  editButton: {
+    color: theme.light.colors.primary,
+    fontWeight: '600',
+  },
+  horizontalList: {
+    flexDirection: 'row',
+    paddingLeft: spacing.lg,
+  },
+  albumCard: {
+    width: ALBUM_CARD_WIDTH,
+    marginRight: spacing.md,
+  },
+  albumCover: {
+    width: ALBUM_CARD_WIDTH,
+    height: ALBUM_CARD_WIDTH,
+    borderRadius: 8,
+    marginBottom: spacing.sm,
+    resizeMode: 'cover',
+  },
+  albumTitle: {
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+    lineHeight: 16,
+  },
+  artistName: {
+    color: theme.light.colors.onSurfaceVariant,
+    lineHeight: 14,
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    marginTop: spacing.xs,
+    justifyContent: 'center',
+  },
+  star: {
+    fontSize: 12,
+    color: theme.light.colors.primary,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    paddingHorizontal: spacing.lg,
     justifyContent: 'space-between',
   },
-  statCardWrapper: {
-    width: '48%',
-    marginBottom: spacing.md,
-  },
   statCard: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  statContent: {
+    width: (width - spacing.lg * 3) / 3, // 3 columns with spacing
+    aspectRatio: 1.2,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    justifyContent: 'center',
+    ...shadows.small,
   },
-  statNumber: {
+  statValue: {
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    textAlign: 'center',
     marginBottom: spacing.xs,
   },
   statLabel: {
-    color: theme.colors.textSecondary,
     textAlign: 'center',
-  },
-  menuCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  logoutContainer: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  logoutButton: {
-    borderColor: theme.colors.error,
-  },
-  bottomPadding: {
-    height: spacing.xl,
+    color: theme.light.colors.onSurfaceVariant,
+    fontSize: 12,
   },
 });
