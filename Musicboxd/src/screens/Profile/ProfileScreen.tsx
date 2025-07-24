@@ -337,23 +337,17 @@ export default function ProfileScreen() {
           Settings
         </Text>
         <View style={styles.settingsContainer}>
-          <List.Item
-            title="Account Settings"
-            right={ChevronIcon}
-            onPress={() => {}}
-            titleStyle={styles.settingsText}
-          />
-          <List.Item
-            title="Help & Support"
-            right={ChevronIcon}
-            onPress={() => {}}
-            titleStyle={styles.settingsText}
-          />
-          <List.Item
-            title="Logout"
-            onPress={handleLogout}
-            titleStyle={styles.settingsText}
-          />
+          <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
+            <Text style={styles.settingsText}>Account Settings</Text>
+            <ChevronIcon />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
+            <Text style={styles.settingsText}>Help & Support</Text>
+            <ChevronIcon />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.settingsItem} onPress={handleLogout}>
+            <Text style={styles.settingsText}>Logout</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>
@@ -468,6 +462,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   settingsText: {
-    paddingLeft: spacing.md,
+    fontSize: 16,
+    color: theme.light.colors.onSurface,
+  },
+  settingsItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    minHeight: 44, // Maintain touchable area
   },
 });
