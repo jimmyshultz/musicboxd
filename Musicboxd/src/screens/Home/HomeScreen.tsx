@@ -83,21 +83,25 @@ export default function HomeScreen() {
   const loadNewFromFriends = useCallback(async () => {
     try {
       const response = await AlbumService.getPopularAlbums();
-      const users = await userService.getSuggestedUsers('current-user', 8);
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 8);
       
-      if (response.success) {
+      if (response.success && response.data.length > 0) {
         // Filter out current user from friends list
         const currentUsername = currentUser?.username || 'musiclover2024';
         const friendsOnly = users.filter(user => user.username !== currentUsername);
+        
+        // Early return if no friends or albums available
+        if (friendsOnly.length === 0 || response.data.length === 0) {
+          setNewFromFriends([]);
+          return;
+        }
         
         const friendActivities: FriendActivity[] = [];
         
         for (let i = 0; i < 20; i++) {
           const album = response.data[i % response.data.length];
           const friend = friendsOnly[i % friendsOnly.length];
-          
-          // Skip if no friends available (shouldn't happen with mock data)
-          if (!friend) continue;
           
           friendActivities.push({
             album: {
@@ -116,28 +120,39 @@ export default function HomeScreen() {
         
         friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
         setNewFromFriends(friendActivities);
+      } else {
+        setNewFromFriends([]);
       }
     } catch (error) {
       console.error('Error loading new from friends:', error);
+      setNewFromFriends([]);
     }
   }, [currentUser]);
 
   const loadPopularWithFriends = useCallback(async () => {
     try {
       const response = await AlbumService.getPopularAlbums();
-      const users = await userService.getSuggestedUsers('current-user', 10);
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 10);
       
-      if (response.success) {
+      if (response.success && response.data.length > 0) {
         // Filter out current user from friends list
         const currentUsername = currentUser?.username || 'musiclover2024';
         const friendsOnly = users.filter(user => user.username !== currentUsername);
+        
+        // Early return if no friends or albums available
+        if (friendsOnly.length === 0 || response.data.length === 0) {
+          setPopularWithFriends([]);
+          return;
+        }
         
         const friendPopularAlbums: FriendPopularAlbum[] = [];
         
         for (let i = 0; i < 20; i++) {
           const album = response.data[i % response.data.length];
           const friendCount = Math.floor(Math.random() * 8) + 2; // 2-9 friends
-          const friendsWhoListened = friendsOnly.slice(0, Math.min(friendCount, 3));
+          const maxFriendsToShow = Math.min(friendCount, 3, friendsOnly.length);
+          const friendsWhoListened = friendsOnly.slice(0, maxFriendsToShow);
           
           friendPopularAlbums.push({
             album: {
@@ -152,30 +167,44 @@ export default function HomeScreen() {
         
         friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
         setPopularWithFriends(friendPopularAlbums);
+      } else {
+        setPopularWithFriends([]);
       }
     } catch (error) {
       console.error('Error loading popular with friends:', error);
+      setPopularWithFriends([]);
     }
   }, [currentUser]);
 
   const loadDiscoverFriends = useCallback(async () => {
     try {
-      const users = await userService.getSuggestedUsers('current-user', 20);
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 20);
       
-      // Filter out current user from potential friends
-      const currentUsername = currentUser?.username || 'musiclover2024';
-      const potentialUsers = users.filter(user => user.username !== currentUsername);
-      
-      const potentialFriends: PotentialFriend[] = potentialUsers.map((user, _index) => ({
-        user,
-        mutualFollowers: Math.floor(Math.random() * 12) + 1, // 1-12 mutual followers
-      })).slice(0, 20);
-      
-      // Sort by mutual followers count (descending)
-      potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
-      setDiscoverFriends(potentialFriends);
+      if (users.length > 0) {
+        // Filter out current user from potential friends
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const potentialUsers = users.filter(user => user.username !== currentUsername);
+        
+        if (potentialUsers.length === 0) {
+          setDiscoverFriends([]);
+          return;
+        }
+        
+        const potentialFriends: PotentialFriend[] = potentialUsers.map((user, _index) => ({
+          user,
+          mutualFollowers: Math.floor(Math.random() * 12) + 1, // 1-12 mutual followers
+        })).slice(0, 20);
+        
+        // Sort by mutual followers count (descending)
+        potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
+        setDiscoverFriends(potentialFriends);
+      } else {
+        setDiscoverFriends([]);
+      }
     } catch (error) {
       console.error('Error loading discover friends:', error);
+      setDiscoverFriends([]);
     }
   }, [currentUser]);
 

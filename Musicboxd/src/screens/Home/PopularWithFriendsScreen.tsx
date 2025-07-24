@@ -10,8 +10,10 @@ import {
 import { Text, ActivityIndicator, IconButton, Avatar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSelector } from 'react-redux';
 
 import { HomeStackParamList, Album } from '../../types';
+import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { colors, spacing } from '../../utils/theme';
@@ -37,6 +39,7 @@ interface FriendPopularAlbum {
 
 export default function PopularWithFriendsScreen() {
   const navigation = useNavigation<PopularWithFriendsNavigationProp>();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [albums, setAlbums] = useState<FriendPopularAlbum[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,11 +48,19 @@ export default function PopularWithFriendsScreen() {
     try {
       // Mock data for now - replace with actual service call later
       const response = await AlbumService.getPopularAlbums();
-      const users = await userService.getSuggestedUsers('current-user', 15);
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 15);
       
-      if (response.success) {
+      if (response.success && response.data.length > 0) {
         // Filter out current user from friends list
-        const friendsOnly = users.filter(user => user.username !== 'musiclover2024');
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const friendsOnly = users.filter(user => user.username !== currentUsername);
+        
+        // Early return if no friends or albums available
+        if (friendsOnly.length === 0 || response.data.length === 0) {
+          setAlbums([]);
+          return;
+        }
         
         // Create mock popular with friends data
         const popularWithFriends: FriendPopularAlbum[] = [];
@@ -57,7 +68,8 @@ export default function PopularWithFriendsScreen() {
         for (let i = 0; i < 60; i++) {
           const album = response.data[i % response.data.length];
           const friendCount = Math.floor(Math.random() * 10) + 1; // 1-10 friends
-          const friendsWhoListened = friendsOnly.slice(0, Math.min(friendCount, 3)); // Show max 3 avatars
+          const maxFriendsToShow = Math.min(friendCount, 3, friendsOnly.length);
+          const friendsWhoListened = friendsOnly.slice(0, maxFriendsToShow); // Show max 3 avatars
           
           popularWithFriends.push({
             album: {
@@ -73,13 +85,16 @@ export default function PopularWithFriendsScreen() {
         // Sort by number of friends who listened (descending)
         popularWithFriends.sort((a, b) => b.totalFriends - a.totalFriends);
         setAlbums(popularWithFriends);
+      } else {
+        setAlbums([]);
       }
     } catch (error) {
       console.error('Error loading popular with friends:', error);
+      setAlbums([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     loadPopularWithFriends();

@@ -10,8 +10,10 @@ import {
 import { Text, ActivityIndicator, IconButton, Avatar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useSelector } from 'react-redux';
 
 import { HomeStackParamList, Album } from '../../types';
+import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { colors, spacing } from '../../utils/theme';
@@ -37,6 +39,7 @@ interface FriendActivity {
 
 export default function NewFromFriendsScreen() {
   const navigation = useNavigation<NewFromFriendsNavigationProp>();
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [activities, setActivities] = useState<FriendActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,11 +48,19 @@ export default function NewFromFriendsScreen() {
     try {
       // Mock data for now - replace with actual service call later
       const response = await AlbumService.getPopularAlbums();
-      const users = await userService.getSuggestedUsers('current-user', 10);
+      const currentUserId = currentUser?.id || 'current-user-id';
+      const users = await userService.getSuggestedUsers(currentUserId, 10);
       
-      if (response.success) {
+      if (response.success && response.data.length > 0) {
         // Filter out current user from friends list
-        const friendsOnly = users.filter(user => user.username !== 'musiclover2024');
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const friendsOnly = users.filter(user => user.username !== currentUsername);
+        
+        // Early return if no friends or albums available
+        if (friendsOnly.length === 0 || response.data.length === 0) {
+          setActivities([]);
+          return;
+        }
         
         // Create mock friend activity data
         const friendActivities: FriendActivity[] = [];
@@ -57,9 +68,6 @@ export default function NewFromFriendsScreen() {
         for (let i = 0; i < 60; i++) {
           const album = response.data[i % response.data.length];
           const friend = friendsOnly[i % friendsOnly.length];
-          
-          // Skip if no friends available
-          if (!friend) continue;
           
           friendActivities.push({
             album: {
@@ -79,13 +87,16 @@ export default function NewFromFriendsScreen() {
         // Sort by most recent first
         friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
         setActivities(friendActivities);
+      } else {
+        setActivities([]);
       }
     } catch (error) {
       console.error('Error loading friend activities:', error);
+      setActivities([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     loadFriendActivities();
