@@ -17,7 +17,7 @@ import { loginSuccess } from './src/store/slices/authSlice';
 
 // Mock user data
 const mockUser = {
-  id: 'user_001',
+  id: 'current-user-id',
   username: 'musiclover2024',
   email: 'user@example.com',
   fullName: 'Music Lover',

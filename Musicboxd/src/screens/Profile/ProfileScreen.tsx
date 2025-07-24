@@ -83,33 +83,42 @@ export default function ProfileScreen() {
     if (!user?.id) return;
 
     try {
-      // Mock: Get recent listens and reviews
-      const response = await AlbumService.getPopularAlbums();
-      if (response.success) {
-        // Create mock recent activity
-        const mockActivity: RecentActivity[] = response.data.slice(0, 5).map((album, index) => ({
-          album,
-          listen: {
-            id: `listen_${index}`,
-            userId: user.id,
-            albumId: album.id,
-            dateListened: new Date(Date.now() - (index * 24 * 60 * 60 * 1000)), // Spread over last 5 days
-            notes: undefined,
-          },
-          review: index % 2 === 0 ? {
-            id: `review_${index}`,
-            userId: user.id,
-            albumId: album.id,
-            rating: Math.floor(Math.random() * 5) + 1, // 1-5 stars
-            reviewText: undefined,
-            dateReviewed: new Date(Date.now() - (index * 24 * 60 * 60 * 1000)),
-            likesCount: 0,
-            commentsCount: 0,
-          } : undefined,
-        }));
+      // Get actual user listens and reviews
+      const [userListens, userReviews] = await Promise.all([
+        AlbumService.getUserListens(user.id),
+        AlbumService.getUserReviews(user.id),
+      ]);
 
-        setRecentActivity(mockActivity);
-      }
+      // Get albums for the recent listens
+      const recentListens = userListens
+        .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
+        .slice(0, 5); // Get 5 most recent
+
+      const albumPromises = recentListens.map(listen => 
+        AlbumService.getAlbumById(listen.albumId)
+      );
+      
+      const albumResponses = await Promise.all(albumPromises);
+      
+      // Create activity items with actual user data
+      const activity: RecentActivity[] = [];
+      
+      recentListens.forEach((listen, index) => {
+        const albumResponse = albumResponses[index];
+        if (albumResponse.success && albumResponse.data) {
+          const correspondingReview = userReviews.find(
+            review => review.albumId === listen.albumId
+          );
+          
+          activity.push({
+            album: albumResponse.data,
+            listen,
+            review: correspondingReview,
+          });
+        }
+      });
+
+      setRecentActivity(activity);
     } catch (error) {
       console.error('Error loading recent activity:', error);
     }
@@ -119,12 +128,19 @@ export default function ProfileScreen() {
     if (!user?.id) return;
 
     try {
-      // Mock statistics
+      // Get actual album stats
+      const albumStats = await AlbumService.getUserAlbumStats(user.id);
+      
+      // Calculate this year's stats (mock for now - in real app would filter by date)
+      const thisYearAlbums = Math.floor(albumStats.albumsListened * 0.6); // Assume 60% were this year
+      const thisYearRatings = Math.floor(albumStats.reviews * 0.6);
+      
       const mockStats: UserStats = {
-        albumsThisYear: Math.floor(Math.random() * 100) + 50,
-        albumsAllTime: Math.floor(Math.random() * 500) + 200,
-        ratingsThisYear: Math.floor(Math.random() * 80) + 30,
-        ratingsAllTime: Math.floor(Math.random() * 400) + 150,
+        albumsThisYear: thisYearAlbums,
+        albumsAllTime: albumStats.albumsListened,
+        ratingsThisYear: thisYearRatings,
+        ratingsAllTime: albumStats.reviews,
+        // Mock social stats (would come from user service in real app)
         followers: Math.floor(Math.random() * 200) + 50,
         following: Math.floor(Math.random() * 150) + 25,
       };
