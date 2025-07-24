@@ -3,8 +3,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, useColorScheme } from 'react-native';
+import { useSelector } from 'react-redux';
 
 import { RootStackParamList, MainTabParamList } from '../types';
+import { RootState } from '../store';
 import { theme } from '../utils/theme';
 
 // Screens
@@ -344,8 +346,9 @@ function MainTabNavigator() {
 }
 
 export default function AppNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const colorScheme = useColorScheme();
+  const currentTheme = colorScheme === 'dark' ? theme.dark : theme.light;
+  const { user } = useSelector((state: RootState) => state.auth);
 
   return (
     <NavigationContainer>
@@ -357,18 +360,21 @@ export default function AppNavigator() {
           headerTintColor: currentTheme.colors.onSurface,
         }}
       >
-        <Stack.Screen
-          name="Main"
-          component={MainTabNavigator}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Auth"
-          component={AuthScreen}
-          options={{
-            headerShown: false,
-          }}
-        />
+        {user ? (
+          <Stack.Screen
+            name="Main"
+            component={MainTabNavigator}
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <Stack.Screen
+            name="Auth"
+            component={AuthScreen}
+            options={{
+              headerShown: false,
+            }}
+          />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

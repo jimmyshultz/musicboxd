@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import { Text, List, Avatar, ActivityIndicator } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -136,6 +136,12 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const loadAllData = async () => {
+      // Only load data if user exists
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       await Promise.all([
         loadFavoriteAlbums(),
@@ -146,7 +152,7 @@ export default function ProfileScreen() {
     };
 
     loadAllData();
-  }, [loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+  }, [user, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -258,12 +264,23 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  if (!user || loading) {
+  if (loading && user) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" />
         <Text variant="bodyLarge" style={styles.loadingText}>
           Loading profile...
+        </Text>
+      </View>
+    );
+  }
+
+  // This case should never happen with proper auth flow, but just in case
+  if (!user) {
+    return (
+      <View style={styles.centerContainer}>
+        <Text variant="bodyLarge" style={styles.loadingText}>
+          Please log in to view your profile.
         </Text>
       </View>
     );
