@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   ratingContainer: {
     flexDirection: 'row',
     marginTop: spacing.xs,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   star: {
     fontSize: 12,
