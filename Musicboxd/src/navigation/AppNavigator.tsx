@@ -9,6 +9,9 @@ import { theme } from '../utils/theme';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
+import PopularThisWeekScreen from '../screens/Home/PopularThisWeekScreen';
+import NewFromFriendsScreen from '../screens/Home/NewFromFriendsScreen';
+import PopularWithFriendsScreen from '../screens/Home/PopularWithFriendsScreen';
 import SearchScreen from '../screens/Search/SearchScreen';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import UserProfileScreen from '../screens/Profile/UserProfileScreen';
@@ -71,6 +74,27 @@ function HomeStackNavigator() {
         options={{ title: 'Musicboxd' }}
       />
       <HomeStack.Screen
+        name="PopularThisWeek"
+        component={PopularThisWeekScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <HomeStack.Screen
+        name="NewFromFriends"
+        component={NewFromFriendsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <HomeStack.Screen
+        name="PopularWithFriends"
+        component={PopularWithFriendsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <HomeStack.Screen
         name="AlbumDetails"
         component={AlbumDetailsScreen}
         options={{
@@ -128,6 +152,27 @@ function SearchStackNavigator() {
         options={{ title: 'Search' }}
       />
       <SearchStack.Screen
+        name="PopularThisWeek"
+        component={PopularThisWeekScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <SearchStack.Screen
+        name="NewFromFriends"
+        component={NewFromFriendsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <SearchStack.Screen
+        name="PopularWithFriends"
+        component={PopularWithFriendsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <SearchStack.Screen
         name="AlbumDetails"
         component={AlbumDetailsScreen}
         options={{
@@ -183,6 +228,27 @@ function ProfileStackNavigator() {
         name="ProfileMain"
         component={ProfileScreen}
         options={{ title: 'Profile' }}
+      />
+      <ProfileStack.Screen
+        name="PopularThisWeek"
+        component={PopularThisWeekScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen
+        name="NewFromFriends"
+        component={NewFromFriendsScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <ProfileStack.Screen
+        name="PopularWithFriends"
+        component={PopularWithFriendsScreen}
+        options={{
+          headerShown: false,
+        }}
       />
       <ProfileStack.Screen
         name="AlbumDetails"
