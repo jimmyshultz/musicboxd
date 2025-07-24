@@ -26,6 +26,10 @@ import { userService } from '../../services/userService';
 type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
 type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
+// Icon component to avoid creating it during render
+const arrowIconStyle = { fontSize: 20, color: '#666' };
+const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
+
 const EmptyState = ({ activeTab, username }: { activeTab: string; username: string }) => (
   <View style={styles.emptyContainer}>
     <Text variant="bodyLarge" style={styles.emptyText}>
@@ -153,7 +157,7 @@ export default function FollowersScreen() {
       {/* Header */}
       <View style={styles.header}>
         <IconButton
-          icon={(props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>←</Text>}
+          icon={ArrowLeftIcon}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         />

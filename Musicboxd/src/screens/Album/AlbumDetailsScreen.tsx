@@ -34,6 +34,13 @@ import { theme, spacing, shadows } from '../../utils/theme';
 
 type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
 
+// Icon components to avoid creating them during render
+const checkIconStyle = { fontSize: 16, color: '#666' };
+const plusIconStyle = { fontSize: 16, color: '#666' };
+
+const CheckIcon = (props: any) => <Text style={{ ...checkIconStyle, color: props.color || '#666' }}>✓</Text>;
+const PlusIcon = (props: any) => <Text style={{ ...plusIconStyle, color: props.color || '#666' }}>+</Text>;
+
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;
 
@@ -246,7 +253,7 @@ export default function AlbumDetailsScreen() {
           mode={currentAlbumIsListened ? "contained" : "outlined"}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
-          icon={currentAlbumIsListened ? (props: any) => <Text style={{ fontSize: 16, color: props.color || '#666' }}>✓</Text> : (props: any) => <Text style={{ fontSize: 16, color: props.color || '#666' }}>+</Text>}
+          icon={currentAlbumIsListened ? CheckIcon : PlusIcon}
           disabled={submitting || !user}
           loading={submitting}
         >

@@ -28,8 +28,11 @@ import { userService } from '../../services/userService';
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
-// Icon component to avoid creating it during render
-const MusicIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>🎵</Text>;
+// Icon components to avoid creating them during render
+const iconStyle = { fontSize: 20, color: '#666' };
+const MusicIcon = (props: any) => <Text style={{ ...iconStyle, color: props.color || '#666' }}>🎵</Text>;
+const ArrowLeftIcon = (props: any) => <Text style={{ ...iconStyle, color: props.color || '#666' }}>←</Text>;
+const DotsHorizontalIcon = (props: any) => <Text style={{ ...iconStyle, color: props.color || '#666' }}>⋯</Text>;
 
 export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
@@ -145,13 +148,13 @@ export default function UserProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <IconButton
-            icon={(props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>←</Text>}
+            icon={ArrowLeftIcon}
             onPress={() => navigation.goBack()}
             style={styles.backButton}
           />
           {!isOwnProfile && (
             <IconButton
-              icon={(props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>⋯</Text>}
+              icon={DotsHorizontalIcon}
               onPress={() => {}}
               style={styles.menuButton}
             />
