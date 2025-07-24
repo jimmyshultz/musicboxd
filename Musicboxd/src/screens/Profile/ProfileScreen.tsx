@@ -336,22 +336,25 @@ export default function ProfileScreen() {
         <Text variant="headlineSmall" style={styles.sectionTitle}>
           Settings
         </Text>
-        <List.Section>
+        <View style={styles.settingsContainer}>
           <List.Item
             title="Account Settings"
             right={ChevronIcon}
             onPress={() => {}}
+            titleStyle={styles.settingsText}
           />
           <List.Item
             title="Help & Support"
             right={ChevronIcon}
             onPress={() => {}}
+            titleStyle={styles.settingsText}
           />
           <List.Item
             title="Logout"
             onPress={handleLogout}
+            titleStyle={styles.settingsText}
           />
-        </List.Section>
+        </View>
       </View>
     </ScrollView>
   );
@@ -460,5 +463,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: theme.light.colors.onSurfaceVariant,
     fontSize: 12,
+  },
+  settingsContainer: {
+    paddingHorizontal: spacing.lg,
+  },
+  settingsText: {
+    paddingLeft: spacing.md,
   },
 });
