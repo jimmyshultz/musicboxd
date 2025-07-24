@@ -14,6 +14,8 @@ import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { lightTheme, darkTheme } from './src/utils/theme';
 import { loginSuccess } from './src/store/slices/authSlice';
+import { addListen, addReview } from './src/store/slices/albumSlice';
+import { AlbumService } from './src/services/albumService';
 
 // Mock user data
 const mockUser = {
@@ -44,6 +46,30 @@ function AppContent() {
   useEffect(() => {
     // Auto-login mock user on app start (until real auth is implemented)
     dispatch(loginSuccess(mockUser));
+    
+    // Initialize user listens and reviews in Redux store
+    const initializeUserData = async () => {
+      try {
+        const [userListens, userReviews] = await Promise.all([
+          AlbumService.getUserListens(mockUser.id),
+          AlbumService.getUserReviews(mockUser.id),
+        ]);
+        
+        // Dispatch listens to Redux store
+        userListens.forEach(listen => {
+          dispatch(addListen(listen));
+        });
+        
+        // Dispatch reviews to Redux store
+        userReviews.forEach(review => {
+          dispatch(addReview(review));
+        });
+      } catch (error) {
+        console.error('Error initializing user data:', error);
+      }
+    };
+    
+    initializeUserData();
   }, [dispatch]);
 
   return (

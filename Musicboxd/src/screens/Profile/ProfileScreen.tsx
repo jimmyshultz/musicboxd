@@ -47,6 +47,7 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user, isDarkMode } = useSelector((state: RootState) => state.auth);
+  const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
   const currentTheme = isDarkMode ? theme.dark : theme.light;
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
@@ -92,17 +93,16 @@ export default function ProfileScreen() {
     if (!user?.id) return;
 
     try {
-      // Get actual user listens and reviews
-      const [userListens, userReviews] = await Promise.all([
-        AlbumService.getUserListens(user.id),
-        AlbumService.getUserReviews(user.id),
-      ]);
+      // Use Redux state for user listens and reviews
+      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
+      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
+
+      // Get 5 most recent listens
+      const recentListens = currentUserListens
+        .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
+        .slice(0, 5);
 
       // Get albums for the recent listens
-      const recentListens = userListens
-        .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
-        .slice(0, 5); // Get 5 most recent
-
       const albumPromises = recentListens.map(listen => 
         AlbumService.getAlbumById(listen.albumId)
       );
@@ -115,7 +115,7 @@ export default function ProfileScreen() {
       recentListens.forEach((listen, index) => {
         const albumResponse = albumResponses[index];
         if (albumResponse.success && albumResponse.data) {
-          const correspondingReview = userReviews.find(
+          const correspondingReview = currentUserReviews.find(
             review => review.albumId === listen.albumId
           );
           
@@ -131,24 +131,25 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error loading recent activity:', error);
     }
-  }, [user?.id]);
+  }, [user?.id, userListens, userReviews]);
 
   const loadUserStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Get actual album stats
-      const albumStats = await AlbumService.getUserAlbumStats(user.id);
+      // Use Redux state for user listens and reviews
+      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
+      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
       
       // Calculate this year's stats (mock for now - in real app would filter by date)
-      const thisYearAlbums = Math.floor(albumStats.albumsListened * 0.6); // Assume 60% were this year
-      const thisYearRatings = Math.floor(albumStats.reviews * 0.6);
+      const thisYearAlbums = Math.floor(currentUserListens.length * 0.6); // Assume 60% were this year
+      const thisYearRatings = Math.floor(currentUserReviews.length * 0.6);
       
       const mockStats: UserStats = {
         albumsThisYear: thisYearAlbums,
-        albumsAllTime: albumStats.albumsListened,
+        albumsAllTime: currentUserListens.length,
         ratingsThisYear: thisYearRatings,
-        ratingsAllTime: albumStats.reviews,
+        ratingsAllTime: currentUserReviews.length,
         // Mock social stats (would come from user service in real app)
         followers: Math.floor(Math.random() * 200) + 50,
         following: Math.floor(Math.random() * 150) + 25,
@@ -157,7 +158,7 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id]);
+  }, [user?.id, userListens, userReviews]);
 
   useEffect(() => {
     const loadAllData = async () => {
