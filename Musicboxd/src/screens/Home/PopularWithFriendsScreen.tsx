@@ -48,13 +48,16 @@ export default function PopularWithFriendsScreen() {
       const users = await userService.getSuggestedUsers('current-user', 15);
       
       if (response.success) {
+        // Filter out current user from friends list
+        const friendsOnly = users.filter(user => user.username !== 'musiclover2024');
+        
         // Create mock popular with friends data
         const popularWithFriends: FriendPopularAlbum[] = [];
         
         for (let i = 0; i < 60; i++) {
           const album = response.data[i % response.data.length];
           const friendCount = Math.floor(Math.random() * 10) + 1; // 1-10 friends
-          const friendsWhoListened = users.slice(0, Math.min(friendCount, 3)); // Show max 3 avatars
+          const friendsWhoListened = friendsOnly.slice(0, Math.min(friendCount, 3)); // Show max 3 avatars
           
           popularWithFriends.push({
             album: {

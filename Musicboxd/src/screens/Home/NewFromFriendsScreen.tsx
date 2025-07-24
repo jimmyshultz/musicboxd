@@ -48,12 +48,18 @@ export default function NewFromFriendsScreen() {
       const users = await userService.getSuggestedUsers('current-user', 10);
       
       if (response.success) {
+        // Filter out current user from friends list
+        const friendsOnly = users.filter(user => user.username !== 'musiclover2024');
+        
         // Create mock friend activity data
         const friendActivities: FriendActivity[] = [];
         
         for (let i = 0; i < 60; i++) {
           const album = response.data[i % response.data.length];
-          const friend = users[i % users.length];
+          const friend = friendsOnly[i % friendsOnly.length];
+          
+          // Skip if no friends available
+          if (!friend) continue;
           
           friendActivities.push({
             album: {
