@@ -45,7 +45,7 @@ interface FriendPopularAlbum {
 
 interface PotentialFriend {
   user: User;
-  mutualFriends: number;
+  mutualFollowers: number;
 }
 
 export default function HomeScreen() {
@@ -152,11 +152,11 @@ export default function HomeScreen() {
       
       const potentialFriends: PotentialFriend[] = users.map((user, _index) => ({
         user,
-        mutualFriends: Math.floor(Math.random() * 12) + 1, // 1-12 mutual friends
+        mutualFollowers: Math.floor(Math.random() * 12) + 1, // 1-12 mutual followers
       })).slice(0, 20);
       
-      // Sort by mutual friends count (descending)
-      potentialFriends.sort((a, b) => b.mutualFriends - a.mutualFriends);
+      // Sort by mutual followers count (descending)
+      potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
       setDiscoverFriends(potentialFriends);
     } catch (error) {
       console.error('Error loading discover friends:', error);
@@ -271,8 +271,8 @@ export default function HomeScreen() {
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{potentialFriend.user.username}
       </Text>
-      <Text variant="bodySmall" style={styles.mutualFriends}>
-        {potentialFriend.mutualFriends} mutual friends
+      <Text variant="bodySmall" style={styles.mutualFollowers}>
+        {potentialFriend.mutualFollowers} mutual followers
       </Text>
     </TouchableOpacity>
   );
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
     textAlign: 'center',
   },
-  mutualFriends: {
+  mutualFollowers: {
     color: colors.textSecondary,
     textAlign: 'center',
     fontSize: 12,
