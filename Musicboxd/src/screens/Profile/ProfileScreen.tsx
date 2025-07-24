@@ -327,8 +327,8 @@ export default function ProfileScreen() {
 
       {/* Favorite Albums */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text variant="headlineSmall" style={styles.sectionTitle}>
+        <View style={styles.sectionHeaderWithButton}>
+          <Text variant="headlineSmall" style={styles.sectionTitleInHeader}>
             Favorite Albums
           </Text>
           <TouchableOpacity onPress={navigateToFavoriteAlbumsManagement}>
@@ -446,10 +446,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
   },
+  sectionHeaderWithButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+  },
   sectionTitle: {
     fontWeight: 'bold',
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
+  },
+  sectionTitleInHeader: {
+    fontWeight: 'bold',
+    paddingBottom: 0, // Container handles bottom padding
   },
   editButton: {
     color: theme.light.colors.primary,
