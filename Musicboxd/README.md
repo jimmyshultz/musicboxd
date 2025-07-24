@@ -209,3 +209,67 @@ This project is licensed under the MIT License - see the [LICENSE](../LICENSE) f
 
 **Status**: ✅ Core features implemented and functional
 **Next Steps**: Backend integration and user authentication
+
+## Quick Start
+
+### Prerequisites
+- Node.js >= 18
+- npm or yarn
+- **For iOS development**: Xcode and CocoaPods
+- **For Android development**: Android Studio and Android SDK
+
+### Setup
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **iOS Setup (Required for iOS development):**
+   ```bash
+   # Install CocoaPods if not already installed
+   sudo gem install cocoapods
+   
+   # Install iOS dependencies
+   npm run ios:setup
+   # OR manually:
+   cd ios && pod install && cd ..
+   ```
+
+3. **Run the application:**
+   ```bash
+   # iOS (requires macOS with Xcode)
+   npm run ios
+   
+   # Android
+   npm run android
+   
+   # Start Metro bundler only
+   npm start
+   ```
+
+### Troubleshooting iOS Build Issues
+
+If you encounter iOS build errors related to missing Pods files:
+
+1. **Clean and reinstall CocoaPods dependencies:**
+   ```bash
+   cd ios
+   rm -rf Pods
+   rm Podfile.lock
+   pod install
+   cd ..
+   ```
+
+2. **If CocoaPods is not installed:**
+   ```bash
+   sudo gem install cocoapods
+   ```
+
+3. **For M1/M2 Macs, you may need:**
+   ```bash
+   sudo arch -x86_64 gem install ffi
+   arch -x86_64 pod install
+   ```
+
+## Architecture
