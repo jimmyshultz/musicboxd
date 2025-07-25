@@ -547,7 +547,6 @@ const styles = StyleSheet.create({
     backgroundColor: theme.light.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
-    marginBottom: spacing.xl,
     ...shadows.small,
   },
   emptyFavoritesText: {
