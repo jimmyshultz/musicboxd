@@ -209,8 +209,8 @@ export class AlbumService {
     };
   }
 
-  // Mark album as listened
-  static async markAsListened(userId: string, albumId: string, notes?: string): Promise<ApiResponse<Listen>> {
+  // Add listen
+  static async addListened(userId: string, albumId: string, notes?: string): Promise<ApiResponse<Listen>> {
     await delay(300);
     
     // Check if already listened
@@ -219,10 +219,14 @@ export class AlbumService {
     );
     
     if (existingListen) {
+      // Update the existing listen with new timestamp
+      existingListen.dateListened = new Date();
+      existingListen.notes = notes;
+      
       return {
         data: serializeListen(existingListen),
-        success: false,
-        message: 'Album already marked as listened',
+        success: true,
+        message: 'Album listen timestamp updated',
       };
     }
 

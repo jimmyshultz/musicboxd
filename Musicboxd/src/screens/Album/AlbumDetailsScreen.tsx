@@ -193,7 +193,7 @@ export default function AlbumDetailsScreen() {
         }
       } else {
         // Add listen
-        const response = await AlbumService.markAsListened(user.id, currentAlbum.id);
+        const response = await AlbumService.addListened(user.id, currentAlbum.id);
         if (response.success) {
           dispatch(setCurrentAlbumIsListened(true));
           dispatch(addListen(response.data));

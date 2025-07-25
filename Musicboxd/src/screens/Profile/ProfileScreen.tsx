@@ -141,14 +141,23 @@ export default function ProfileScreen() {
       const currentUserListens = userListens.filter(listen => listen.userId === user.id);
       const currentUserReviews = userReviews.filter(review => review.userId === user.id);
       
-      // Calculate this year's stats (mock for now - in real app would filter by date)
-      const thisYearAlbums = Math.floor(currentUserListens.length * 0.6); // Assume 60% were this year
-      const thisYearRatings = Math.floor(currentUserReviews.length * 0.6);
+      // Calculate this year's stats based on actual dates
+      const currentYear = new Date().getFullYear();
+      
+      const thisYearListens = currentUserListens.filter(listen => {
+        const listenYear = new Date(listen.dateListened).getFullYear();
+        return listenYear === currentYear;
+      });
+      
+      const thisYearReviews = currentUserReviews.filter(review => {
+        const reviewYear = new Date(review.dateReviewed).getFullYear();
+        return reviewYear === currentYear;
+      });
       
       const mockStats: UserStats = {
-        albumsThisYear: thisYearAlbums,
+        albumsThisYear: thisYearListens.length,
         albumsAllTime: currentUserListens.length,
-        ratingsThisYear: thisYearRatings,
+        ratingsThisYear: thisYearReviews.length,
         ratingsAllTime: currentUserReviews.length,
         // Mock social stats (would come from user service in real app)
         followers: Math.floor(Math.random() * 200) + 50,
