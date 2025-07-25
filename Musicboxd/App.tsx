@@ -22,7 +22,6 @@ const mockUser = {
   id: 'current-user-id',
   username: 'musiclover2024',
   email: 'user@example.com',
-  fullName: 'Music Lover',
   bio: 'Passionate about discovering new music',
   profilePicture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face',
   joinedDate: '2024-01-15T00:00:00.000Z',
@@ -30,11 +29,15 @@ const mockUser = {
   preferences: {
     favoriteGenres: ['Rock', 'Electronic', 'Jazz'],
     favoriteAlbumIds: [],
-  },
-  privacy: {
-    profileVisibility: 'public' as const,
-    listenHistoryVisibility: 'public' as const,
-    reviewsVisibility: 'public' as const,
+    notifications: {
+      newFollowers: true,
+      reviewLikes: true,
+      friendActivity: true,
+    },
+    privacy: {
+      profileVisibility: 'public' as const,
+      activityVisibility: 'public' as const,
+    },
   },
 };
 

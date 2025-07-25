@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  useColorScheme,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -48,8 +49,9 @@ interface RecentActivity {
 export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
-  const { user, isDarkMode } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
   const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
+  const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? theme.dark : theme.light;
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);

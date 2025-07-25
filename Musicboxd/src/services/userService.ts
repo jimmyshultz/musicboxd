@@ -56,6 +56,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
+        favoriteAlbumIds: ['1', '3'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: true,
@@ -77,6 +78,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Indie Rock', 'Alternative', 'Post-Rock'],
+        favoriteAlbumIds: ['2', '4'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: true,
@@ -98,6 +100,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Jazz', 'Fusion', 'Bebop'],
+        favoriteAlbumIds: ['5', '6'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: true,
@@ -119,6 +122,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Hip-Hop', 'Rap', 'R&B'],
+        favoriteAlbumIds: ['7', '8'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: false,

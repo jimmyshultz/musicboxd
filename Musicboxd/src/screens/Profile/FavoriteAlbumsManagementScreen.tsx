@@ -113,8 +113,17 @@ export default function FavoriteAlbumsManagementScreen() {
       const newFavoriteIds = newFavorites.map(fav => fav.id);
       dispatch(updateProfile({
         preferences: {
-          ...currentUser?.preferences,
+          favoriteGenres: currentUser?.preferences?.favoriteGenres || [],
           favoriteAlbumIds: newFavoriteIds,
+          notifications: currentUser?.preferences?.notifications || {
+            newFollowers: true,
+            reviewLikes: true,
+            friendActivity: true,
+          },
+          privacy: currentUser?.preferences?.privacy || {
+            profileVisibility: 'public',
+            activityVisibility: 'public',
+          },
         },
       }));
       
@@ -130,8 +139,17 @@ export default function FavoriteAlbumsManagementScreen() {
     const newFavoriteIds = newFavorites.map(fav => fav.id);
     dispatch(updateProfile({
       preferences: {
-        ...currentUser?.preferences,
+        favoriteGenres: currentUser?.preferences?.favoriteGenres || [],
         favoriteAlbumIds: newFavoriteIds,
+        notifications: currentUser?.preferences?.notifications || {
+          newFollowers: true,
+          reviewLikes: true,
+          friendActivity: true,
+        },
+        privacy: currentUser?.preferences?.privacy || {
+          profileVisibility: 'public',
+          activityVisibility: 'public',
+        },
       },
     }));
     
@@ -167,7 +185,7 @@ export default function FavoriteAlbumsManagementScreen() {
         key={album.id}
         style={[styles.searchResultCard, isAlreadyFavorite && styles.searchResultCardSelected]}
         onPress={() => canAddMore && !isAlreadyFavorite ? addToFavorites(album) : null}
-        disabled={isAlreadyFavorite || !canAddMore}
+        disabled={!!isAlreadyFavorite || !canAddMore}
       >
         <Image source={{ uri: album.coverImageUrl }} style={styles.searchAlbumCover} />
         <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
