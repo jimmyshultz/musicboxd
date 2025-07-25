@@ -265,7 +265,7 @@ export default function FavoriteAlbumsManagementScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
   },
   container: {
     flex: 1,
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
-    backgroundColor: colors.background,
+    backgroundColor: colors.surface,
   },
   backButton: {
     margin: 0,
