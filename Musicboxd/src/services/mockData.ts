@@ -153,6 +153,7 @@ export const mockUsers: User[] = [
     lastActiveDate: new Date(),
     preferences: {
       favoriteGenres: ['Alternative Rock', 'Hip Hop', 'Jazz'],
+      favoriteAlbumIds: ['1', '2'], // Add missing property
       notifications: {
         newFollowers: true,
         reviewLikes: true,
@@ -174,6 +175,7 @@ export const mockUsers: User[] = [
     lastActiveDate: new Date(Date.now() - 86400000), // Yesterday
     preferences: {
       favoriteGenres: ['Classic Rock', 'Blues', 'Soul'],
+      favoriteAlbumIds: [], // Add missing property
       notifications: {
         newFollowers: true,
         reviewLikes: false,

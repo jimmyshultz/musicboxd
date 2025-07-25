@@ -7,6 +7,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
   ActivityIndicator,
@@ -128,46 +129,52 @@ export default function ListenedAlbumsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <IconButton
-          icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        />
-        <View style={styles.headerContent}>
-          <Text variant="headlineSmall" style={styles.headerTitle}>
-            Albums Listened
-          </Text>
-          <Text variant="bodyMedium" style={styles.headerSubtitle}>
-            @{username} • {listenedAlbums.length} album{listenedAlbums.length !== 1 ? 's' : ''}
-          </Text>
-        </View>
-      </View>
-
-      {listenedAlbums.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text variant="titleLarge" style={styles.emptyTitle}>
-            No Albums Yet
-          </Text>
-          <Text variant="bodyMedium" style={styles.emptyText}>
-            {userId === currentUser?.id ? 'Start listening to albums and they\'ll appear here!' : `${username} hasn't listened to any albums yet.`}
-          </Text>
-        </View>
-      ) : (
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          <View style={styles.albumGrid}>
-            {listenedAlbums.map(renderAlbumCard)}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <IconButton
+            icon={ArrowLeftIcon}
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          />
+          <View style={styles.headerContent}>
+            <Text variant="headlineSmall" style={styles.headerTitle}>
+              Albums Listened
+            </Text>
+            <Text variant="bodyMedium" style={styles.headerSubtitle}>
+              @{username} • {listenedAlbums.length} album{listenedAlbums.length !== 1 ? 's' : ''}
+            </Text>
           </View>
-          <View style={styles.bottomPadding} />
-        </ScrollView>
-      )}
-    </View>
+        </View>
+
+        {listenedAlbums.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text variant="titleLarge" style={styles.emptyTitle}>
+              No Albums Yet
+            </Text>
+            <Text variant="bodyMedium" style={styles.emptyText}>
+              {userId === currentUser?.id ? 'Start listening to albums and they\'ll appear here!' : `${username} hasn't listened to any albums yet.`}
+            </Text>
+          </View>
+        ) : (
+          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+            <View style={styles.albumGrid}>
+              {listenedAlbums.map(renderAlbumCard)}
+            </View>
+            <View style={styles.bottomPadding} />
+          </ScrollView>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

@@ -24,6 +24,7 @@ export interface SerializedUser {
 
 export interface UserPreferences {
   favoriteGenres: string[];
+  favoriteAlbumIds: string[];
   notifications: NotificationSettings;
   privacy: PrivacySettings;
 }
@@ -136,6 +137,7 @@ export type HomeStackParamList = {
   PopularThisWeek: undefined;
   NewFromFriends: undefined;
   PopularWithFriends: undefined;
+  FavoriteAlbumsManagement: undefined;
 };
 
 export type SearchStackParamList = {
@@ -148,6 +150,7 @@ export type SearchStackParamList = {
   PopularThisWeek: undefined;
   NewFromFriends: undefined;
   PopularWithFriends: undefined;
+  FavoriteAlbumsManagement: undefined;
 };
 
 export type ProfileStackParamList = {
@@ -160,6 +163,7 @@ export type ProfileStackParamList = {
   PopularThisWeek: undefined;
   NewFromFriends: undefined;
   PopularWithFriends: undefined;
+  FavoriteAlbumsManagement: undefined;
 };
 
 // Search types

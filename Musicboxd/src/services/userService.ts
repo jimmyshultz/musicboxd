@@ -22,6 +22,27 @@ class UserService {
       followingId: 'user1',
       dateFollowed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
     },
+    // Add relationships for current user
+    {
+      followerId: 'current-user-id',
+      followingId: 'user1',
+      dateFollowed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+    },
+    {
+      followerId: 'current-user-id',
+      followingId: 'user2',
+      dateFollowed: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+    },
+    {
+      followerId: 'user1',
+      followingId: 'current-user-id',
+      dateFollowed: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+    },
+    {
+      followerId: 'user3',
+      followingId: 'current-user-id',
+      dateFollowed: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+    },
   ];
   
   private mockUsers: User[] = [
@@ -35,6 +56,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
+        favoriteAlbumIds: ['1', '3'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: true,
@@ -56,6 +78,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Indie Rock', 'Alternative', 'Post-Rock'],
+        favoriteAlbumIds: ['2', '4'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: true,
@@ -77,6 +100,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Jazz', 'Fusion', 'Bebop'],
+        favoriteAlbumIds: ['5', '6'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: true,
@@ -98,6 +122,7 @@ class UserService {
       lastActiveDate: new Date(),
       preferences: {
         favoriteGenres: ['Hip-Hop', 'Rap', 'R&B'],
+        favoriteAlbumIds: ['7', '8'], // Add missing property
         notifications: {
           newFollowers: true,
           reviewLikes: false,
