@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, ActivityIndicator, IconButton, Avatar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -166,30 +167,36 @@ export default function NewFromFriendsScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <IconButton
-          icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        />
-        <Text variant="headlineMedium" style={styles.headerTitle}>
-          New From Friends
-        </Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.grid}>
-          {activities.map((activity, index) => renderActivityCard(activity, index))}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <IconButton
+            icon={ArrowLeftIcon}
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+          />
+          <Text variant="headlineMedium" style={styles.headerTitle}>
+            New From Friends
+          </Text>
+          <View style={styles.placeholder} />
         </View>
-      </ScrollView>
-    </View>
+
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.grid}>
+            {activities.map((activity, index) => renderActivityCard(activity, index))}
+          </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
   ActivityIndicator,
@@ -150,7 +151,7 @@ export default function UserReviewsScreen() {
     : 0;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <IconButton
@@ -186,7 +187,7 @@ export default function UserReviewsScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -300,5 +301,9 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: spacing.xl,
+  },
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
   },
 });

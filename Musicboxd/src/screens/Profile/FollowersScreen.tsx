@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
   Avatar,
@@ -153,7 +154,7 @@ export default function FollowersScreen() {
   const currentData = activeTab === 'followers' ? followers : followingUsers;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <IconButton
@@ -201,11 +202,15 @@ export default function FollowersScreen() {
           ListEmptyComponent={<EmptyState activeTab={activeTab} username={username} />}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
