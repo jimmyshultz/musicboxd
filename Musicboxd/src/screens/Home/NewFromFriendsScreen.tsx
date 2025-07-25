@@ -63,7 +63,7 @@ export default function NewFromFriendsScreen() {
           return;
         }
         
-        // Create mock friend activity data
+        // Create friend activities allowing duplicates (multiple friends can listen to same album)
         const friendActivities: FriendActivity[] = [];
         
         for (let i = 0; i < 60; i++) {
@@ -71,11 +71,7 @@ export default function NewFromFriendsScreen() {
           const friend = friendsOnly[i % friendsOnly.length];
           
           friendActivities.push({
-            album: {
-              ...album,
-              id: album.id + '_friend_' + i,
-              title: i % 3 === 0 ? album.title + ' (Recently Discovered)' : album.title,
-            },
+            album: album, // Use original album without modifications
             friend: {
               id: friend.id,
               username: friend.username,
