@@ -22,6 +22,27 @@ class UserService {
       followingId: 'user1',
       dateFollowed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
     },
+    // Add relationships for current user
+    {
+      followerId: 'current-user-id',
+      followingId: 'user1',
+      dateFollowed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+    },
+    {
+      followerId: 'current-user-id',
+      followingId: 'user2',
+      dateFollowed: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+    },
+    {
+      followerId: 'user1',
+      followingId: 'current-user-id',
+      dateFollowed: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+    },
+    {
+      followerId: 'user3',
+      followingId: 'current-user-id',
+      dateFollowed: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+    },
   ];
   
   private mockUsers: User[] = [

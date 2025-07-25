@@ -10,12 +10,14 @@ import {
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { AlbumService } from '../../services/albumService';
+import { userService } from '../../services/userService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
@@ -154,20 +156,37 @@ export default function ProfileScreen() {
         return reviewYear === currentYear;
       });
       
-      const mockStats: UserStats = {
+      // Get actual social stats
+      const [followersData, followingData] = await Promise.all([
+        userService.getUserFollowers(user.id),
+        userService.getUserFollowing(user.id),
+      ]);
+      
+      // Update Redux store with social data
+      dispatch(setFollowers(followersData.map(follower => ({
+        ...follower,
+        joinedDate: follower.joinedDate.toISOString(),
+        lastActiveDate: follower.lastActiveDate.toISOString(),
+      }))));
+      dispatch(setFollowing(followingData.map(following => ({
+        ...following,
+        joinedDate: following.joinedDate.toISOString(),
+        lastActiveDate: following.lastActiveDate.toISOString(),
+      }))));
+      
+      const realStats: UserStats = {
         albumsThisYear: thisYearListens.length,
         albumsAllTime: currentUserListens.length,
         ratingsThisYear: thisYearReviews.length,
         ratingsAllTime: currentUserReviews.length,
-        // Mock social stats (would come from user service in real app)
-        followers: Math.floor(Math.random() * 200) + 50,
-        following: Math.floor(Math.random() * 150) + 25,
+        followers: followersData.length,
+        following: followingData.length,
       };
-      setUserStats(mockStats);
+      setUserStats(realStats);
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, userListens, userReviews]);
+  }, [user?.id, userListens, userReviews, dispatch]);
 
   useEffect(() => {
     const loadAllData = async () => {
