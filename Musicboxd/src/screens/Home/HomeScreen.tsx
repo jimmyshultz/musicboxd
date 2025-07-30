@@ -94,16 +94,15 @@ export default function HomeScreen() {
         
         const friendActivities: FriendActivity[] = [];
         
-        // Allow duplicates in New from Friends (multiple friends can listen to same album)
-        for (let i = 0; i < 20; i++) {
-          const album = response.data[i % response.data.length];
-          const friend = friendsOnly[i % friendsOnly.length];
+        // On home screen: show only most recent album from each friend (one per friend)
+        friendsOnly.forEach((friend, index) => {
+          const album = response.data[index % response.data.length];
           
           friendActivities.push({
             album: {
               ...album,
               // Use unique ID for each activity instance to allow duplicates
-              id: album.id + '_friend_activity_' + i,
+              id: album.id + '_friend_activity_' + index,
             },
             originalAlbumId: album.id, // Store original album ID for navigation
             friend: {
@@ -113,7 +112,7 @@ export default function HomeScreen() {
             },
             dateListened: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Random date within last day
           });
-        }
+        });
         
         friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
         setNewFromFriends(friendActivities);
