@@ -25,6 +25,7 @@ const USER_CARD_WIDTH = 140;
 
 interface FriendActivity {
   album: Album;
+  originalAlbumId: string; // Store original album ID for navigation
   friend: {
     id: string;
     username: string;
@@ -104,6 +105,7 @@ export default function HomeScreen() {
               // Use unique ID for each activity instance to allow duplicates
               id: album.id + '_friend_activity_' + i,
             },
+            originalAlbumId: album.id, // Store original album ID for navigation
             friend: {
               id: friend.id,
               username: friend.username,
@@ -260,7 +262,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={activity.album.id}
       style={styles.albumCard}
-      onPress={() => navigateToAlbum(activity.album.id)}
+      onPress={() => navigateToAlbum(activity.originalAlbumId)}
     >
       <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
