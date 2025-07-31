@@ -65,19 +65,24 @@ export default function PopularWithFriendsScreen() {
         
         // Create mock popular with friends data
         const popularWithFriends: FriendPopularAlbum[] = [];
+        const usedAlbumIds = new Set<string>(); // Track used albums to avoid duplicates
         
-        for (let i = 0; i < 60; i++) {
-          const album = response.data[i % response.data.length];
+        // No duplicates in Popular with Friends
+        for (let i = 0; i < response.data.length && popularWithFriends.length < 60; i++) {
+          const album = response.data[i];
+          
+          // Skip if album already used
+          if (usedAlbumIds.has(album.id)) {
+            continue;
+          }
+          
+          usedAlbumIds.add(album.id);
           const friendCount = Math.floor(Math.random() * 10) + 1; // 1-10 friends
           const maxFriendsToShow = Math.min(friendCount, 3, friendsOnly.length);
           const friendsWhoListened = friendsOnly.slice(0, maxFriendsToShow); // Show max 3 avatars
           
           popularWithFriends.push({
-            album: {
-              ...album,
-              id: album.id + '_popular_' + i,
-              title: i % 4 === 0 ? album.title + ' (Friends\' Choice)' : album.title,
-            },
+            album: album, // Use original album without modifications
             friendsWhoListened,
             totalFriends: friendCount,
           });

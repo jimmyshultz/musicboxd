@@ -25,6 +25,7 @@ const USER_CARD_WIDTH = 140;
 
 interface FriendActivity {
   album: Album;
+  originalAlbumId: string; // Store original album ID for navigation
   friend: {
     id: string;
     username: string;
@@ -62,18 +63,12 @@ export default function HomeScreen() {
 
   const loadPopularThisWeek = useCallback(async () => {
     try {
+      // Get popular albums for this week
       const response = await AlbumService.getPopularAlbums();
       if (response.success) {
-        // Create mock weekly popular data
-        const weeklyPopular = [
-          ...response.data,
-          ...response.data.map(album => ({
-            ...album,
-            id: album.id + '_weekly',
-            title: album.title + ' (Hot This Week)',
-          })),
-        ].slice(0, 20);
-        setPopularThisWeek(weeklyPopular);
+        // Get unique albums without modification
+        const uniqueAlbums = response.data.slice(0, 20);
+        setPopularThisWeek(uniqueAlbums);
       }
     } catch (error) {
       console.error('Error loading popular this week:', error);
@@ -84,7 +79,7 @@ export default function HomeScreen() {
     try {
       const response = await AlbumService.getPopularAlbums();
       const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 8);
+      const users = await userService.getSuggestedUsers(currentUserId, 10);
       
       if (response.success && response.data.length > 0) {
         // Filter out current user from friends list
@@ -99,16 +94,17 @@ export default function HomeScreen() {
         
         const friendActivities: FriendActivity[] = [];
         
-        for (let i = 0; i < 20; i++) {
-          const album = response.data[i % response.data.length];
-          const friend = friendsOnly[i % friendsOnly.length];
+        // On home screen: show only most recent album from each friend (one per friend)
+        friendsOnly.forEach((friend, index) => {
+          const album = response.data[index % response.data.length];
           
           friendActivities.push({
             album: {
               ...album,
-              id: album.id + '_friend_activity_' + i,
-              title: i % 3 === 0 ? album.title + ' (New Discovery)' : album.title,
+              // Use unique ID for each activity instance to allow duplicates
+              id: album.id + '_friend_activity_' + index,
             },
+            originalAlbumId: album.id, // Store original album ID for navigation
             friend: {
               id: friend.id,
               username: friend.username,
@@ -116,7 +112,7 @@ export default function HomeScreen() {
             },
             dateListened: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Random date within last day
           });
-        }
+        });
         
         friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
         setNewFromFriends(friendActivities);
@@ -147,24 +143,30 @@ export default function HomeScreen() {
         }
         
         const friendPopularAlbums: FriendPopularAlbum[] = [];
+        const usedAlbumIds = new Set<string>(); // Track used albums to avoid duplicates
         
-        for (let i = 0; i < 20; i++) {
-          const album = response.data[i % response.data.length];
+        // No duplicates in Popular with Friends
+        for (let i = 0; i < response.data.length && friendPopularAlbums.length < 20; i++) {
+          const album = response.data[i];
+          
+          // Skip if album already used
+          if (usedAlbumIds.has(album.id)) {
+            continue;
+          }
+          
+          usedAlbumIds.add(album.id);
           const friendCount = Math.floor(Math.random() * 8) + 2; // 2-9 friends
           const maxFriendsToShow = Math.min(friendCount, 3, friendsOnly.length);
           const friendsWhoListened = friendsOnly.slice(0, maxFriendsToShow);
           
           friendPopularAlbums.push({
-            album: {
-              ...album,
-              id: album.id + '_friend_popular_' + i,
-              title: i % 4 === 0 ? album.title + ' (Friends Love This)' : album.title,
-            },
+            album: album, // Use original album without modifications
             friendsWhoListened,
             totalFriends: friendCount,
           });
         }
         
+        // Sort by number of friends who listened (descending)
         friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
         setPopularWithFriends(friendPopularAlbums);
       } else {
@@ -261,7 +263,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={activity.album.id}
       style={styles.albumCard}
-      onPress={() => navigateToAlbum(activity.album.id)}
+      onPress={() => navigateToAlbum(activity.originalAlbumId)}
     >
       <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
