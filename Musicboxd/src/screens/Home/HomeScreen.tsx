@@ -166,6 +166,8 @@ export default function HomeScreen() {
           });
         }
         
+        // Sort by number of friends who listened (descending)
+        friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
         setPopularWithFriends(friendPopularAlbums);
       } else {
         setPopularWithFriends([]);
