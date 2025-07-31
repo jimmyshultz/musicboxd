@@ -33,25 +33,10 @@ export default function PopularThisWeekScreen() {
   const loadPopularAlbums = useCallback(async () => {
     setLoading(true);
     try {
-      // Mock data for now - replace with actual service call later
       const response = await AlbumService.getPopularAlbums();
       if (response.success) {
-        // Create mock weekly popular data by duplicating and modifying
-        const weeklyPopular = [
-          ...response.data,
-          ...response.data.map(album => ({
-            ...album,
-            id: album.id + '_2',
-            title: album.title + ' (Deluxe)',
-          })),
-          ...response.data.map(album => ({
-            ...album,
-            id: album.id + '_3',
-            title: 'Extended ' + album.title,
-          })),
-        ].slice(0, 60); // Limit to 60 albums
-        
-        setAlbums(weeklyPopular);
+        // Use original album data without duplicates or modifications
+        setAlbums(response.data);
       }
     } catch (error) {
       console.error('Error loading popular albums:', error);
