@@ -365,7 +365,7 @@ export default function UserProfileScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header with Back Button */}
-        <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
           <IconButton
             icon={ArrowLeftIcon}
             onPress={() => navigation.goBack()}
