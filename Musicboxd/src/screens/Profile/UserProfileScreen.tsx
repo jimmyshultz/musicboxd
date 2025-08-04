@@ -474,6 +474,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xs,
     backgroundColor: theme.light.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.light.colors.border,
   },
   backButton: {
     margin: 0,
