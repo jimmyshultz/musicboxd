@@ -20,6 +20,7 @@ import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
+import { userStatsService, UserStats as StatsServiceUserStats } from '../../services/userStatsService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
@@ -115,12 +116,26 @@ export default function UserProfileScreen() {
     if (!user?.id) return;
 
     try {
-      // Use Redux state for user listens and reviews
-      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
-      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
+      let targetUserListens: Listen[];
+      let targetUserReviews: Review[];
+      
+      // Check if this is the current user or another user
+      if (user.id === currentUser?.id) {
+        // For current user, use Redux state data
+        targetUserListens = userListens;
+        targetUserReviews = userReviews;
+      } else {
+        // For other users, fetch their data from the API
+        const [listens, reviews] = await Promise.all([
+          AlbumService.getUserListens(user.id),
+          AlbumService.getUserReviews(user.id),
+        ]);
+        targetUserListens = listens;
+        targetUserReviews = reviews;
+      }
 
       // Get 5 most recent listens
-      const recentListens = currentUserListens
+      const recentListens = targetUserListens
         .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
         .slice(0, 5);
 
@@ -137,7 +152,7 @@ export default function UserProfileScreen() {
       recentListens.forEach((listen, index) => {
         const albumResponse = albumResponses[index];
         if (albumResponse.success && albumResponse.data) {
-          const correspondingReview = currentUserReviews.find(
+          const correspondingReview = targetUserReviews.find(
             review => review.albumId === listen.albumId
           );
           
@@ -153,48 +168,38 @@ export default function UserProfileScreen() {
     } catch (error) {
       console.error('Error loading recent activity:', error);
     }
-  }, [user?.id, userListens, userReviews]);
+  }, [user?.id, currentUser?.id, userListens, userReviews]);
 
   const loadUserStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Use Redux state for user listens and reviews
-      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
-      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
+      let stats: UserStats;
       
-      // Calculate this year's stats based on actual dates
-      const currentYear = new Date().getFullYear();
+      // Check if this is the current user or another user
+      if (user.id === currentUser?.id) {
+        // For current user, use Redux state data for better performance
+        const [followersData, followingData] = await Promise.all([
+          userService.getUserFollowers(user.id),
+          userService.getUserFollowing(user.id),
+        ]);
+        
+        stats = userStatsService.calculateStatsFromRedux(
+          userListens,
+          userReviews,
+          followersData,
+          followingData
+        );
+      } else {
+        // For other users, fetch their data from the API
+        stats = await userStatsService.getUserStats(user.id);
+      }
       
-      const thisYearListens = currentUserListens.filter(listen => {
-        const listenYear = new Date(listen.dateListened).getFullYear();
-        return listenYear === currentYear;
-      });
-      
-      const thisYearReviews = currentUserReviews.filter(review => {
-        const reviewYear = new Date(review.dateReviewed).getFullYear();
-        return reviewYear === currentYear;
-      });
-      
-      // Get social stats
-      const [followersData, followingData] = await Promise.all([
-        userService.getUserFollowers(user.id),
-        userService.getUserFollowing(user.id),
-      ]);
-      
-      const realStats: UserStats = {
-        albumsThisYear: thisYearListens.length,
-        albumsAllTime: currentUserListens.length,
-        ratingsThisYear: thisYearReviews.length,
-        ratingsAllTime: currentUserReviews.length,
-        followers: followersData.length,
-        following: followingData.length,
-      };
-      setUserStats(realStats);
+      setUserStats(stats);
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, userListens, userReviews]);
+  }, [user?.id, currentUser?.id, userListens, userReviews]);
 
   useEffect(() => {
     const loadAllData = async () => {
