@@ -473,16 +473,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.sm,
-    backgroundColor: theme.light.colors.background,
+    backgroundColor: theme.light.colors.surface,
   },
   backButton: {
     margin: 0,
   },
   profileHeader: {
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.background,
   },
   profilePicture: {
     marginBottom: spacing.md,
