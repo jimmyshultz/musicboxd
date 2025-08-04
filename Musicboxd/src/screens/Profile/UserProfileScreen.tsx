@@ -363,16 +363,17 @@ export default function UserProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header with Back Button */}
-        <View style={[styles.header, { paddingTop: insets.top }]}>
-          <IconButton
-            icon={ArrowLeftIcon}
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          />
-        </View>
+    <View style={styles.container}>
+      {/* Header with Back Button */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <IconButton
+          icon={ArrowLeftIcon}
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+        />
+      </View>
 
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Avatar.Image 
@@ -450,11 +451,16 @@ export default function UserProfileScreen() {
           </View>
         </View>
       </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: theme.light.colors.background,
+  },
+  scrollContainer: {
     flex: 1,
     backgroundColor: theme.light.colors.background,
   },
