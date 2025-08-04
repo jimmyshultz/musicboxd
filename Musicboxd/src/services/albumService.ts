@@ -58,6 +58,51 @@ export class AlbumService {
       albumId: '5',
       dateListened: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
     },
+    // Add data for user1 (indierocklover)
+    {
+      id: 'listen_user1_1',
+      userId: 'user1',
+      albumId: '2',
+      dateListened: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    },
+    {
+      id: 'listen_user1_2',
+      userId: 'user1',
+      albumId: '4',
+      dateListened: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+    },
+    {
+      id: 'listen_user1_3',
+      userId: 'user1',
+      albumId: '1',
+      dateListened: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+    },
+    // Add data for user2 (jazzfanatic)
+    {
+      id: 'listen_user2_1',
+      userId: 'user2',
+      albumId: '5',
+      dateListened: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    },
+    {
+      id: 'listen_user2_2',
+      userId: 'user2',
+      albumId: '6',
+      dateListened: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
+    },
+    // Add data for user3 (hiphophead)
+    {
+      id: 'listen_user3_1',
+      userId: 'user3',
+      albumId: '7',
+      dateListened: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+    },
+    {
+      id: 'listen_user3_2',
+      userId: 'user3',
+      albumId: '8',
+      dateListened: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+    },
   ];
   
   private static userReviews: Review[] = [
@@ -97,6 +142,45 @@ export class AlbumService {
       dateReviewed: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
       likesCount: 0,
       commentsCount: 0,
+    },
+    // Add review data for user1 (indierocklover)
+    {
+      id: 'review_user1_1',
+      userId: 'user1',
+      albumId: '2',
+      rating: 4,
+      dateReviewed: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      likesCount: 2,
+      commentsCount: 1,
+    },
+    {
+      id: 'review_user1_2',
+      userId: 'user1',
+      albumId: '4',
+      rating: 5,
+      dateReviewed: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      likesCount: 5,
+      commentsCount: 2,
+    },
+    // Add review data for user2 (jazzfanatic)
+    {
+      id: 'review_user2_1',
+      userId: 'user2',
+      albumId: '5',
+      rating: 5,
+      dateReviewed: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      likesCount: 3,
+      commentsCount: 0,
+    },
+    // Add review data for user3 (hiphophead)
+    {
+      id: 'review_user3_1',
+      userId: 'user3',
+      albumId: '7',
+      rating: 4,
+      dateReviewed: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      likesCount: 8,
+      commentsCount: 3,
     },
   ];
 
