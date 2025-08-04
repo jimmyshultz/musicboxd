@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.xs,
     backgroundColor: theme.light.colors.surface,
   },
   backButton: {
