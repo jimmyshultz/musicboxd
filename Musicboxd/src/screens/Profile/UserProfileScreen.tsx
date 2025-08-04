@@ -460,7 +460,7 @@ export default function UserProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.light.colors.background,
   },
   container: {
     flex: 1,
@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.light.colors.background,
   },
   backButton: {
     margin: 0,
@@ -491,7 +491,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.light.colors.background,
   },
   profilePicture: {
     marginBottom: spacing.md,
