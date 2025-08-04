@@ -8,7 +8,7 @@ import {
   Dimensions,
   useColorScheme,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
 import { Text, Avatar, ActivityIndicator, IconButton, Button } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -341,32 +341,27 @@ export default function UserProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" />
-          <Text variant="bodyLarge" style={styles.loadingText}>
-            Loading profile...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.centerContainer}>
+        <ActivityIndicator size="large" />
+        <Text variant="bodyLarge" style={styles.loadingText}>
+          Loading profile...
+        </Text>
+      </View>
     );
   }
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centerContainer}>
-          <Text variant="bodyLarge" style={styles.loadingText}>
-            User not found.
-          </Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.centerContainer}>
+        <Text variant="bodyLarge" style={styles.loadingText}>
+          User not found.
+        </Text>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header with Back Button */}
         <View style={styles.header}>
           <IconButton
@@ -453,15 +448,10 @@ export default function UserProfileScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.light.colors.background,
-  },
   container: {
     flex: 1,
     backgroundColor: theme.light.colors.background,
