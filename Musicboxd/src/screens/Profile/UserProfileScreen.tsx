@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
     backgroundColor: theme.light.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.light.colors.border,
+    borderBottomColor: theme.colors.border,
   },
   backButton: {
     margin: 0,
