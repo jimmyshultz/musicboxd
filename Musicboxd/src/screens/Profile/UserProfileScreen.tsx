@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { Text, Avatar, ActivityIndicator, IconButton, Button } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -51,6 +52,7 @@ export default function UserProfileScreen() {
   const dispatch = useDispatch();
   const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? theme.dark : theme.light;
+  const insets = useSafeAreaInsets();
   
   const { userId } = route.params;
   const { following } = useSelector((state: RootState) => state.user);
@@ -341,7 +343,7 @@ export default function UserProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" />
         <Text variant="bodyLarge" style={styles.loadingText}>
           Loading profile...
@@ -352,7 +354,7 @@ export default function UserProfileScreen() {
 
   if (!user) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <Text variant="bodyLarge" style={styles.loadingText}>
           User not found.
         </Text>
@@ -363,7 +365,7 @@ export default function UserProfileScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Header with Back Button */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
           <IconButton
             icon={ArrowLeftIcon}
             onPress={() => navigation.goBack()}
@@ -470,7 +472,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
     backgroundColor: theme.light.colors.background,
   },
