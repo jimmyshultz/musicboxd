@@ -77,48 +77,62 @@ export default function HomeScreen() {
 
   const loadNewFromFriends = useCallback(async () => {
     try {
-      const response = await AlbumService.getPopularAlbums();
       const currentUserId = currentUser?.id || 'current-user-id';
       const users = await userService.getSuggestedUsers(currentUserId, 10);
       
-      if (response.success && response.data.length > 0) {
-        // Filter out current user from friends list
-        const currentUsername = currentUser?.username || 'musiclover2024';
-        const friendsOnly = users.filter(user => user.username !== currentUsername);
-        
-        // Early return if no friends or albums available
-        if (friendsOnly.length === 0 || response.data.length === 0) {
-          setNewFromFriends([]);
-          return;
-        }
-        
-        const friendActivities: FriendActivity[] = [];
-        
-        // On home screen: show only most recent album from each friend (one per friend)
-        friendsOnly.forEach((friend, index) => {
-          const album = response.data[index % response.data.length];
-          
-          friendActivities.push({
-            album: {
-              ...album,
-              // Use unique ID for each activity instance to allow duplicates
-              id: album.id + '_friend_activity_' + index,
-            },
-            originalAlbumId: album.id, // Store original album ID for navigation
-            friend: {
-              id: friend.id,
-              username: friend.username,
-              profilePicture: friend.profilePicture,
-            },
-            dateListened: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000), // Random date within last day
-          });
-        });
-        
-        friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
-        setNewFromFriends(friendActivities);
-      } else {
+      // Filter out current user from friends list
+      const currentUsername = currentUser?.username || 'musiclover2024';
+      const friendsOnly = users.filter(user => user.username !== currentUsername);
+      
+      // Early return if no friends available
+      if (friendsOnly.length === 0) {
         setNewFromFriends([]);
+        return;
       }
+      
+      const friendActivities: FriendActivity[] = [];
+      
+      // Get real listen data for each friend
+      for (const friend of friendsOnly) {
+        try {
+          const userListens = await AlbumService.getUserListens(friend.id);
+          
+          if (userListens.length > 0) {
+            // Get the 2 most recent listens for this friend (instead of just 1)
+            const recentListens = userListens
+              .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
+              .slice(0, 2);
+            
+            // Create activities for each recent listen
+            for (const listen of recentListens) {
+              const albumResponse = await AlbumService.getAlbumById(listen.albumId);
+              
+              if (albumResponse.success && albumResponse.data) {
+                friendActivities.push({
+                  album: {
+                    ...albumResponse.data,
+                    // Use unique ID for each activity instance to allow duplicates
+                    id: albumResponse.data.id + '_friend_activity_' + friend.id + '_' + listen.id,
+                  },
+                  originalAlbumId: albumResponse.data.id, // Store original album ID for navigation
+                  friend: {
+                    id: friend.id,
+                    username: friend.username,
+                    profilePicture: friend.profilePicture,
+                  },
+                  dateListened: new Date(listen.dateListened),
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error loading listens for friend ${friend.username}:`, error);
+        }
+      }
+      
+      // Sort by most recent first
+      friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
+      setNewFromFriends(friendActivities);
     } catch (error) {
       console.error('Error loading new from friends:', error);
       setNewFromFriends([]);
