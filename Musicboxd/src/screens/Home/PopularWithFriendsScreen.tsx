@@ -47,53 +47,79 @@ export default function PopularWithFriendsScreen() {
   const loadPopularWithFriends = useCallback(async () => {
     setLoading(true);
     try {
-      // Mock data for now - replace with actual service call later
-      const response = await AlbumService.getPopularAlbums();
       const currentUserId = currentUser?.id || 'current-user-id';
       const users = await userService.getSuggestedUsers(currentUserId, 15);
       
-      if (response.success && response.data.length > 0) {
-        // Filter out current user from friends list
-        const currentUsername = currentUser?.username || 'musiclover2024';
-        const friendsOnly = users.filter(user => user.username !== currentUsername);
-        
-        // Early return if no friends or albums available
-        if (friendsOnly.length === 0 || response.data.length === 0) {
-          setAlbums([]);
-          return;
-        }
-        
-        // Create mock popular with friends data
-        const popularWithFriends: FriendPopularAlbum[] = [];
-        const usedAlbumIds = new Set<string>(); // Track used albums to avoid duplicates
-        
-        // No duplicates in Popular with Friends
-        for (let i = 0; i < response.data.length && popularWithFriends.length < 60; i++) {
-          const album = response.data[i];
+      // Filter out current user from friends list
+      const currentUsername = currentUser?.username || 'musiclover2024';
+      const friendsOnly = users.filter(user => user.username !== currentUsername);
+      
+      // Early return if no friends available
+      if (friendsOnly.length === 0) {
+        setAlbums([]);
+        return;
+      }
+      
+      // Track album popularity: albumId -> { album, friendsWhoListened: Set<friendId> }
+      const albumPopularity = new Map<string, {
+        album: Album;
+        friendsWhoListened: Set<string>;
+        friendData: { id: string; username: string; profilePicture?: string; }[];
+      }>();
+      
+      // Collect listen data from all friends
+      for (const friend of friendsOnly) {
+        try {
+          const userListens = await AlbumService.getUserListens(friend.id);
           
-          // Skip if album already used
-          if (usedAlbumIds.has(album.id)) {
-            continue;
+          for (const listen of userListens) {
+            // Get or create album entry
+            if (!albumPopularity.has(listen.albumId)) {
+              const albumResponse = await AlbumService.getAlbumById(listen.albumId);
+              if (albumResponse.success && albumResponse.data) {
+                albumPopularity.set(listen.albumId, {
+                  album: albumResponse.data,
+                  friendsWhoListened: new Set(),
+                  friendData: [],
+                });
+              } else {
+                continue; // Skip if album not found
+              }
+            }
+            
+            const entry = albumPopularity.get(listen.albumId)!;
+            // Add friend to this album's listeners
+            if (!entry.friendsWhoListened.has(friend.id)) {
+              entry.friendsWhoListened.add(friend.id);
+              entry.friendData.push({
+                id: friend.id,
+                username: friend.username,
+                profilePicture: friend.profilePicture,
+              });
+            }
           }
-          
-          usedAlbumIds.add(album.id);
-          const friendCount = Math.floor(Math.random() * 10) + 1; // 1-10 friends
-          const maxFriendsToShow = Math.min(friendCount, 3, friendsOnly.length);
-          const friendsWhoListened = friendsOnly.slice(0, maxFriendsToShow); // Show max 3 avatars
-          
+        } catch (error) {
+          console.error(`Error loading listens for friend ${friend.username}:`, error);
+        }
+      }
+      
+      // Convert to FriendPopularAlbum array and filter albums with multiple listeners
+      const popularWithFriends: FriendPopularAlbum[] = [];
+      
+      albumPopularity.forEach((entry, albumId) => {
+        // Only include albums that have been listened to by 2+ friends
+        if (entry.friendsWhoListened.size >= 2) {
           popularWithFriends.push({
-            album: album, // Use original album without modifications
-            friendsWhoListened,
-            totalFriends: friendCount,
+            album: entry.album,
+            friendsWhoListened: entry.friendData.slice(0, 3), // Show max 3 for UI
+            totalFriends: entry.friendsWhoListened.size,
           });
         }
-        
-        // Sort by number of friends who listened (descending)
-        popularWithFriends.sort((a, b) => b.totalFriends - a.totalFriends);
-        setAlbums(popularWithFriends);
-      } else {
-        setAlbums([]);
-      }
+      });
+      
+      // Sort by number of friends who listened (descending) and limit to 60
+      popularWithFriends.sort((a, b) => b.totalFriends - a.totalFriends);
+      setAlbums(popularWithFriends.slice(0, 60));
     } catch (error) {
       console.error('Error loading popular with friends:', error);
       setAlbums([]);
