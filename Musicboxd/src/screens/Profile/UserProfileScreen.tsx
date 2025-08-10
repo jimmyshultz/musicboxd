@@ -20,7 +20,7 @@ import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { userStatsService, UserStats as StatsServiceUserStats } from '../../services/userStatsService';
+import { userStatsService } from '../../services/userStatsService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
@@ -30,7 +30,8 @@ const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
 
 // Icon component to avoid creating it during render
-const ArrowLeftIcon = (props: any) => <Text style={{ fontSize: 20, color: props.color || '#666' }}>←</Text>;
+const arrowIconStyle = { fontSize: 20, color: '#666' };
+const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
 
 interface UserStats {
   albumsThisYear: number;

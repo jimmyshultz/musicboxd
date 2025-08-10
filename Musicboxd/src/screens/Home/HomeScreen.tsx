@@ -200,7 +200,7 @@ export default function HomeScreen() {
       // Convert to FriendPopularAlbum array and filter albums with multiple listeners
       const friendPopularAlbums: FriendPopularAlbum[] = [];
       
-      albumPopularity.forEach((entry, albumId) => {
+      albumPopularity.forEach((entry, _albumId) => {
         // Only include albums that have been listened to by 1+ friends (lowered from 2+ for demo data)
         if (entry.friendsWhoListened.size >= 1) {
           friendPopularAlbums.push({
