@@ -77,6 +77,18 @@ export class AlbumService {
       albumId: '1',
       dateListened: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
     },
+    {
+      id: 'listen_user1_4',
+      userId: 'user1',
+      albumId: '5', // Same as user2 - creates overlap
+      dateListened: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+    },
+    {
+      id: 'listen_user1_5',
+      userId: 'user1',
+      albumId: '7', // Same as user3 - creates overlap
+      dateListened: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+    },
     // Add data for user2 (jazzfanatic)
     {
       id: 'listen_user2_1',
@@ -90,11 +102,23 @@ export class AlbumService {
       albumId: '6',
       dateListened: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4 days ago
     },
+    {
+      id: 'listen_user2_3',
+      userId: 'user2',
+      albumId: '1', // Same as user1 - creates overlap
+      dateListened: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000), // 9 days ago
+    },
+    {
+      id: 'listen_user2_4',
+      userId: 'user2',
+      albumId: '7', // Same as user1 & user3 - creates 3-way overlap
+      dateListened: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+    },
     // Add data for user3 (hiphophead)
     {
       id: 'listen_user3_1',
       userId: 'user3',
-      albumId: '7',
+      albumId: '7', // Same as user1 & user2 - creates 3-way overlap
       dateListened: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
     },
     {
@@ -102,6 +126,18 @@ export class AlbumService {
       userId: 'user3',
       albumId: '8',
       dateListened: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
+    },
+    {
+      id: 'listen_user3_3',
+      userId: 'user3',
+      albumId: '1', // Same as user1 & user2 - creates 3-way overlap
+      dateListened: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000), // 11 days ago
+    },
+    {
+      id: 'listen_user3_4',
+      userId: 'user3',
+      albumId: '4', // Same as user1 - creates overlap
+      dateListened: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
     },
   ];
   
@@ -172,15 +208,42 @@ export class AlbumService {
       likesCount: 3,
       commentsCount: 0,
     },
+    {
+      id: 'review_user2_2',
+      userId: 'user2',
+      albumId: '1', // Overlapping album with user1 & user3
+      rating: 4,
+      dateReviewed: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+      likesCount: 2,
+      commentsCount: 1,
+    },
+    {
+      id: 'review_user2_3',
+      userId: 'user2',
+      albumId: '7', // Overlapping album with user1 & user3
+      rating: 5,
+      dateReviewed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      likesCount: 6,
+      commentsCount: 2,
+    },
     // Add review data for user3 (hiphophead)
     {
       id: 'review_user3_1',
       userId: 'user3',
-      albumId: '7',
+      albumId: '7', // Overlapping album with user1 & user2
       rating: 4,
       dateReviewed: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       likesCount: 8,
       commentsCount: 3,
+    },
+    {
+      id: 'review_user3_2',
+      userId: 'user3',
+      albumId: '1', // Overlapping album with user1 & user2
+      rating: 3,
+      dateReviewed: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+      likesCount: 1,
+      commentsCount: 0,
     },
   ];
 

@@ -201,8 +201,8 @@ export default function HomeScreen() {
       const friendPopularAlbums: FriendPopularAlbum[] = [];
       
       albumPopularity.forEach((entry, albumId) => {
-        // Only include albums that have been listened to by 2+ friends
-        if (entry.friendsWhoListened.size >= 2) {
+        // Only include albums that have been listened to by 1+ friends (lowered from 2+ for demo data)
+        if (entry.friendsWhoListened.size >= 1) {
           friendPopularAlbums.push({
             album: entry.album,
             friendsWhoListened: entry.friendData.slice(0, 3), // Show max 3 for UI
