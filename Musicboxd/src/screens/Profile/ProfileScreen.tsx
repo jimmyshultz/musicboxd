@@ -19,6 +19,7 @@ import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
+import { userStatsService } from '../../services/userStatsService';
 import { theme, spacing, shadows } from '../../utils/theme';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
@@ -141,23 +142,6 @@ export default function ProfileScreen() {
     if (!user?.id) return;
 
     try {
-      // Use Redux state for user listens and reviews
-      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
-      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
-      
-      // Calculate this year's stats based on actual dates
-      const currentYear = new Date().getFullYear();
-      
-      const thisYearListens = currentUserListens.filter(listen => {
-        const listenYear = new Date(listen.dateListened).getFullYear();
-        return listenYear === currentYear;
-      });
-      
-      const thisYearReviews = currentUserReviews.filter(review => {
-        const reviewYear = new Date(review.dateReviewed).getFullYear();
-        return reviewYear === currentYear;
-      });
-      
       // Get actual social stats
       const [followersData, followingData] = await Promise.all([
         userService.getUserFollowers(user.id),
@@ -176,15 +160,15 @@ export default function ProfileScreen() {
         lastActiveDate: following.lastActiveDate.toISOString(),
       }))));
       
-      const realStats: UserStats = {
-        albumsThisYear: thisYearListens.length,
-        albumsAllTime: currentUserListens.length,
-        ratingsThisYear: thisYearReviews.length,
-        ratingsAllTime: currentUserReviews.length,
-        followers: followersData.length,
-        following: followingData.length,
-      };
-      setUserStats(realStats);
+      // Use centralized stats service for consistent calculation
+      const stats = userStatsService.calculateStatsFromRedux(
+        userListens,
+        userReviews,
+        followersData,
+        followingData
+      );
+      
+      setUserStats(stats);
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
