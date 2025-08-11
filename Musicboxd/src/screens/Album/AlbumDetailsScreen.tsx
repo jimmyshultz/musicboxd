@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  Modal,
 } from 'react-native';
 import {
   Text,
@@ -397,22 +398,9 @@ export default function AlbumDetailsScreen() {
             </View>
             <View style={styles.diaryDateContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
-              <Button mode="outlined" onPress={() => setShowDatePicker((v) => !v)}>
+              <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
                 {diaryDate.toLocaleDateString()}
               </Button>
-              {showDatePicker && (
-                <View style={styles.datePickerContainer}>
-                  <DateTimePicker
-                    value={diaryDate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    maximumDate={new Date()}
-                    onChange={(_: any, selected?: Date) => {
-                      if (selected) setDiaryDate(selected);
-                    }}
-                  />
-                </View>
-              )}
             </View>
             <View style={styles.diaryRatingContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
@@ -425,6 +413,29 @@ export default function AlbumDetailsScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
+
+      {/* Platform native date picker modal to avoid Dialog portal conflicts */}
+      {showDatePicker && (
+        <Modal visible transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalSheet}>
+              <View style={styles.modalHeader}>
+                <Button onPress={() => setShowDatePicker(false)}>Cancel</Button>
+                <Button onPress={() => setShowDatePicker(false)}>Done</Button>
+              </View>
+              <DateTimePicker
+                value={diaryDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                maximumDate={new Date()}
+                onChange={(_: any, selected?: Date) => {
+                  if (selected) setDiaryDate(selected);
+                }}
+              />
+            </View>
+          </View>
+        </Modal>
+      )}
     </ScrollView>
   );
 }
@@ -606,9 +617,20 @@ const styles = StyleSheet.create({
   diaryRatingContainer: {
     alignItems: 'center',
   },
-  datePickerContainer: {
-    marginTop: spacing.sm,
-    height: 200,
-    justifyContent: 'center',
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: theme.colors.surface,
+    paddingBottom: spacing.lg,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
 });
