@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from 'react-native';
 import {
   Text,
@@ -400,15 +401,17 @@ export default function AlbumDetailsScreen() {
                 {diaryDate.toLocaleDateString()}
               </Button>
               {showDatePicker && (
-                <DateTimePicker
-                  value={diaryDate}
-                  mode="date"
-                  display="spinner"
-                  maximumDate={new Date()}
-                  onChange={(_: any, selected?: Date) => {
-                    if (selected) setDiaryDate(selected);
-                  }}
-                />
+                <View style={styles.datePickerContainer}>
+                  <DateTimePicker
+                    value={diaryDate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    maximumDate={new Date()}
+                    onChange={(_: any, selected?: Date) => {
+                      if (selected) setDiaryDate(selected);
+                    }}
+                  />
+                </View>
               )}
             </View>
             <View style={styles.diaryRatingContainer}>
@@ -602,5 +605,10 @@ const styles = StyleSheet.create({
   },
   diaryRatingContainer: {
     alignItems: 'center',
+  },
+  datePickerContainer: {
+    marginTop: spacing.sm,
+    height: 200,
+    justifyContent: 'center',
   },
 });
