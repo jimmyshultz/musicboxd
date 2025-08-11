@@ -80,7 +80,7 @@ export class DiaryService {
     // Collect entries up to monthWindow months
     const result: DiaryEntry[] = [];
     const seenMonths: Set<string> = new Set();
-    let lastMonth: string | undefined = undefined;
+    let lastMonth: string | undefined;
 
     for (let i = startIndex; i < all.length; i++) {
       const entry = all[i];

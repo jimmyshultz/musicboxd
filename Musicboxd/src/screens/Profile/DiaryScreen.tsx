@@ -10,7 +10,7 @@ import { RootState } from '../../store';
 import { DiaryService } from '../../services/diaryService';
 import { AlbumService } from '../../services/albumService';
 import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../store/slices/diarySlice';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { theme, spacing } from '../../utils/theme';
 
  type DiaryScreenRouteProp = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'Diary'>;
  type DiaryScreenNavProp = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
@@ -19,7 +19,7 @@ import { theme, spacing, shadows } from '../../utils/theme';
   const route = useRoute<DiaryScreenRouteProp>();
   const navigation = useNavigation<DiaryScreenNavProp>();
   const dispatch = useDispatch();
-  const { userId, username } = route.params;
+  const { userId } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const diaryState = useSelector((state: RootState) => state.diary.byUserId[userId]);
   const loading = useSelector((state: RootState) => state.diary.loading);
