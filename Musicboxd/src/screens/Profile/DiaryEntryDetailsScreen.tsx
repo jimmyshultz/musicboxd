@@ -17,7 +17,7 @@ import { theme, spacing } from '../../utils/theme';
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
 
  const Star = ({ filled }: { filled: boolean }) => (
-  <Text style={{ fontSize: 20, color: filled ? theme.colors.primary : '#ccc' }}>{filled ? '★' : '☆'}</Text>
+  <Text style={filled ? styles.starFilled : styles.starEmpty}>{filled ? '★' : '☆'}</Text>
 );
 
  export default function DiaryEntryDetailsScreen() {
@@ -100,9 +100,9 @@ import { theme, spacing } from '../../utils/theme';
       {album && (
         <View style={styles.header}>
           <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
-          <View style={{ flex: 1, marginLeft: spacing.md }}>
+          <View style={styles.headerTextContainer}>
             <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.textSecondary }}>{album.artist}</Text>
+            <Text variant="bodyMedium" style={styles.subduedText}>{album.artist}</Text>
           </View>
         </View>
       )}
@@ -112,9 +112,9 @@ import { theme, spacing } from '../../utils/theme';
         <Text variant="bodyLarge">{d.toLocaleDateString()}</Text>
       </View>
 
-      <View style={[styles.row, { alignItems: 'center' }] }>
+      <View style={[styles.row, styles.rowAlignCenter] }>
         <Text variant="bodyLarge">Rating</Text>
-        <View style={{ flexDirection: 'row' }}>
+        <View style={styles.rowDirection}>
           {[1,2,3,4,5].map(star => (
             <Text key={star} onPress={() => canEdit && onChangeRating(star)}>
               <Star filled={!!entry.ratingAtTime && star <= entry.ratingAtTime} />
@@ -148,6 +148,12 @@ import { theme, spacing } from '../../utils/theme';
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', marginBottom: spacing.lg },
   cover: { width: 96, height: 96, borderRadius: 8 },
+  headerTextContainer: { flex: 1, marginLeft: spacing.md },
+  subduedText: { color: theme.colors.textSecondary },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  rowAlignCenter: { alignItems: 'center' },
+  rowDirection: { flexDirection: 'row' },
   actions: { flexDirection: 'row', marginTop: spacing.lg },
-});
+  starFilled: { fontSize: 20, color: theme.colors.primary },
+  starEmpty: { fontSize: 20, color: '#ccc' },
+ });

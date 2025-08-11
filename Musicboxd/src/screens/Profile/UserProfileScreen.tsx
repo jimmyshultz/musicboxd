@@ -380,7 +380,7 @@ export default function UserProfileScreen() {
       </View>
 
       {/* Segmented Control */}
-      <View style={{ padding: spacing.md, backgroundColor: currentTheme.colors.surface, borderBottomWidth: 1, borderBottomColor: currentTheme.colors.border }}>
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: currentTheme.colors.border }]}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -507,6 +507,10 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+  },
+  segmentHeader: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
   },
   profileHeader: {
     alignItems: 'center',

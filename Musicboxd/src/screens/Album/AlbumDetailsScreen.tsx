@@ -390,17 +390,17 @@ export default function AlbumDetailsScreen() {
         <Dialog visible={showDiaryModal} onDismiss={() => setShowDiaryModal(false)}>
           <Dialog.Title>Add to Diary</Dialog.Title>
           <Dialog.Content>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
+            <View style={styles.diaryToggleRow}>
               <Text>Add to diary?</Text>
               <Switch value={addToDiary} onValueChange={setAddToDiary} />
             </View>
-            <View style={{ marginBottom: spacing.md }}>
+            <View style={styles.diaryDateContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
               <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
                 {diaryDate.toLocaleDateString()}
               </Button>
             </View>
-            <View style={{ alignItems: 'center' }}>
+            <View style={styles.diaryRatingContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
               <StarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
             </View>
@@ -592,5 +592,17 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: spacing.xl,
+  },
+  diaryToggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  diaryDateContainer: {
+    marginBottom: spacing.md,
+  },
+  diaryRatingContainer: {
+    alignItems: 'center',
   },
 });

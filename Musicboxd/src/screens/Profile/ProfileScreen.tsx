@@ -330,7 +330,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Segmented Control */}
-      <View style={{ padding: spacing.md, backgroundColor: currentTheme.colors.surface, borderBottomWidth: 1, borderBottomColor: currentTheme.colors.border }}>
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: currentTheme.colors.border }]}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -443,19 +443,17 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
   container: {
     flex: 1,
-    backgroundColor: theme.light.colors.background,
+    backgroundColor: theme.colors.background,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.light.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.light.colors.onSurfaceVariant,
+  segmentHeader: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
   },
   profileHeader: {
     alignItems: 'center',
