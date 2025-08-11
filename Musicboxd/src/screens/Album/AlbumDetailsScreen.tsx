@@ -416,11 +416,11 @@ export default function AlbumDetailsScreen() {
         <DateTimePicker
           value={diaryDate}
           mode="date"
-          display="default"
+          display="inline"
           maximumDate={new Date()}
           onChange={(_: any, selected?: Date) => {
-            setShowDatePicker(false);
             if (selected) setDiaryDate(selected);
+            setShowDatePicker(false);
           }}
         />
       )}

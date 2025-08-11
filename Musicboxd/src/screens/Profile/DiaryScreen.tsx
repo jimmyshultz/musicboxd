@@ -4,6 +4,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
@@ -91,7 +92,11 @@ import { theme, spacing } from '../../utils/theme';
   }, [loadInitial]);
 
   const navigateToProfile = () => {
-    navigation.navigate('ProfileMain' as any);
+    if (currentUser?.id === userId) {
+      navigation.navigate('ProfileMain' as any);
+    } else {
+      navigation.navigate('UserProfile' as any, { userId });
+    }
   };
 
   const renderRow = ({ item }: { item: DiaryEntry }) => {
@@ -131,7 +136,7 @@ import { theme, spacing } from '../../utils/theme';
   const sections = groupIntoSections(entries);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.headerToggle}>
         <SegmentedButtons
           value={selectedTab}
@@ -172,7 +177,7 @@ import { theme, spacing } from '../../utils/theme';
           contentContainerStyle={styles.listContent}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
  }
 

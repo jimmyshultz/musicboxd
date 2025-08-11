@@ -134,7 +134,7 @@ import { theme, spacing } from '../../utils/theme';
         <DateTimePicker
           value={d}
           mode="date"
-          display="default"
+          display="inline"
           maximumDate={new Date()}
           onChange={onChangeDate}
         />
