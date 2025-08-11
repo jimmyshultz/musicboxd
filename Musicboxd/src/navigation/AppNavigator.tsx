@@ -23,6 +23,8 @@ import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
 import FavoriteAlbumsManagementScreen from '../screens/Profile/FavoriteAlbumsManagementScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
+import DiaryScreen from '../screens/Profile/DiaryScreen';
+import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -139,6 +141,16 @@ function HomeStackNavigator() {
           headerShown: false,
         }}
       />
+      <HomeStack.Screen
+        name="Diary"
+        component={DiaryScreen}
+        options={{ headerShown: false }}
+      />
+      <HomeStack.Screen
+        name="DiaryEntryDetails"
+        component={DiaryEntryDetailsScreen}
+        options={{ title: 'Diary Entry' }}
+      />
     </HomeStack.Navigator>
   );
 }
@@ -224,6 +236,16 @@ function SearchStackNavigator() {
           headerShown: false,
         }}
       />
+      <SearchStack.Screen
+        name="Diary"
+        component={DiaryScreen}
+        options={{ headerShown: false }}
+      />
+      <SearchStack.Screen
+        name="DiaryEntryDetails"
+        component={DiaryEntryDetailsScreen}
+        options={{ title: 'Diary Entry' }}
+      />
     </SearchStack.Navigator>
   );
 }
@@ -308,6 +330,16 @@ function ProfileStackNavigator() {
         options={{
           headerShown: false,
         }}
+      />
+      <ProfileStack.Screen
+        name="Diary"
+        component={DiaryScreen}
+        options={{ headerShown: false }}
+      />
+      <ProfileStack.Screen
+        name="DiaryEntryDetails"
+        component={DiaryEntryDetailsScreen}
+        options={{ title: 'Diary Entry' }}
       />
     </ProfileStack.Navigator>
   );

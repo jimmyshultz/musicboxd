@@ -9,7 +9,7 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { Text, Avatar, ActivityIndicator, IconButton, Button } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator, IconButton, Button, SegmentedButtons } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -376,6 +376,22 @@ export default function UserProfileScreen() {
           icon={ArrowLeftIcon}
           onPress={() => navigation.goBack()}
           style={styles.backButton}
+        />
+      </View>
+
+      {/* Segmented Control */}
+      <View style={{ padding: spacing.md, backgroundColor: currentTheme.colors.surface, borderBottomWidth: 1, borderBottomColor: currentTheme.colors.border }}>
+        <SegmentedButtons
+          value={'profile'}
+          onValueChange={(v: any) => {
+            if (v === 'diary' && user) {
+              navigation.navigate('Diary', { userId: user.id, username: user.username });
+            }
+          }}
+          buttons={[
+            { value: 'profile', label: 'Profile' },
+            { value: 'diary', label: 'Diary' },
+          ]}
         />
       </View>
 

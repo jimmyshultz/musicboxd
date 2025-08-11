@@ -21,6 +21,7 @@ import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { userStatsService } from '../../services/userStatsService';
 import { theme, spacing, shadows } from '../../utils/theme';
+import { SegmentedButtons } from 'react-native-paper';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -328,6 +329,22 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Segmented Control */}
+      <View style={{ padding: spacing.md, backgroundColor: currentTheme.colors.surface, borderBottomWidth: 1, borderBottomColor: currentTheme.colors.border }}>
+        <SegmentedButtons
+          value={'profile'}
+          onValueChange={(v: any) => {
+            if (v === 'diary') {
+              navigation.navigate('Diary', { userId: user.id, username: user.username });
+            }
+          }}
+          buttons={[
+            { value: 'profile', label: 'Profile' },
+            { value: 'diary', label: 'Diary' },
+          ]}
+        />
+      </View>
+
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <Avatar.Image 

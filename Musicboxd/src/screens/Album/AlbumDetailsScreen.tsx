@@ -31,6 +31,9 @@ import {
 } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { theme, spacing, shadows } from '../../utils/theme';
+import { DiaryService } from '../../services/diaryService';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Portal, Dialog, Switch } from 'react-native-paper';
 
 type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
 
@@ -119,6 +122,69 @@ export default function AlbumDetailsScreen() {
   const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showDiaryModal, setShowDiaryModal] = useState(false);
+  const [addToDiary, setAddToDiary] = useState(true);
+  const [diaryDate, setDiaryDate] = useState<Date>(new Date());
+  const [diaryRating, setDiaryRating] = useState<number | undefined>(undefined);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  const openDiaryModal = () => {
+    setAddToDiary(true);
+    setDiaryDate(new Date());
+    setDiaryRating(undefined);
+    setShowDiaryModal(true);
+  };
+
+  const handleConfirmDiaryModal = async () => {
+    if (!user || !currentAlbum) return;
+    setSubmitting(true);
+    try {
+      if (addToDiary) {
+        const iso = `${diaryDate.getFullYear()}-${String(diaryDate.getMonth()+1).padStart(2,'0')}-${String(diaryDate.getDate()).padStart(2,'0')}`;
+        const res = await DiaryService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating);
+        if (!res.success) {
+          console.warn(res.message);
+        }
+      }
+    } catch (e) {
+      console.error('Error creating diary entry', e);
+    } finally {
+      setShowDiaryModal(false);
+      setSubmitting(false);
+    }
+  };
+
+  const handleMarkAsListened = async () => {
+    if (!user || !currentAlbum || submitting) return;
+    setSubmitting(true);
+    try {
+      if (currentAlbumIsListened) {
+        // Remove listen
+        const response = await AlbumService.removeListened(user.id, currentAlbum.id);
+        if (response.success) {
+          dispatch(setCurrentAlbumIsListened(false));
+          dispatch(removeListen({ userId: user.id, albumId: currentAlbum.id }));
+        }
+      } else {
+        // Add listen then open diary modal
+        const response = await AlbumService.addListened(user.id, currentAlbum.id);
+        if (response.success) {
+          dispatch(setCurrentAlbumIsListened(true));
+          dispatch(addListen(response.data));
+          openDiaryModal();
+        }
+      }
+    } catch (error) {
+      console.error('Error updating listen status:', error);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAddDiaryOnly = () => {
+    if (!user || !currentAlbum) return;
+    openDiaryModal();
+  };
 
   const loadAlbumDetails = useCallback(async () => {
     setLoading(true);
@@ -179,33 +245,6 @@ export default function AlbumDetailsScreen() {
     }
   };
 
-  const handleMarkAsListened = async () => {
-    if (!user || !currentAlbum || submitting) return;
-    
-    setSubmitting(true);
-    try {
-      if (currentAlbumIsListened) {
-        // Remove listen
-        const response = await AlbumService.removeListened(user.id, currentAlbum.id);
-        if (response.success) {
-          dispatch(setCurrentAlbumIsListened(false));
-          dispatch(removeListen({ userId: user.id, albumId: currentAlbum.id }));
-        }
-      } else {
-        // Add listen
-        const response = await AlbumService.addListened(user.id, currentAlbum.id);
-        if (response.success) {
-          dispatch(setCurrentAlbumIsListened(true));
-          dispatch(addListen(response.data));
-        }
-      }
-    } catch (error) {
-      console.error('Error updating listen status:', error);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   if (loading || !currentAlbum) {
     return (
       <View style={styles.centerContainer}>
@@ -259,6 +298,16 @@ export default function AlbumDetailsScreen() {
         >
           {currentAlbumIsListened ? "Listened" : "Mark as Listened"}
         </Button>
+        {currentAlbumIsListened && (
+          <Button
+            mode="outlined"
+            onPress={handleAddDiaryOnly}
+            style={styles.actionButton}
+            disabled={submitting || !user}
+          >
+            Add to Diary
+          </Button>
+        )}
       </View>
 
       {/* Rating Section */}
@@ -336,6 +385,45 @@ export default function AlbumDetailsScreen() {
       </Card>
 
       <View style={styles.bottomPadding} />
+
+      <Portal>
+        <Dialog visible={showDiaryModal} onDismiss={() => setShowDiaryModal(false)}>
+          <Dialog.Title>Add to Diary</Dialog.Title>
+          <Dialog.Content>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
+              <Text>Add to diary?</Text>
+              <Switch value={addToDiary} onValueChange={setAddToDiary} />
+            </View>
+            <View style={{ marginBottom: spacing.md }}>
+              <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
+              <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
+                {diaryDate.toLocaleDateString()}
+              </Button>
+            </View>
+            <View style={{ alignItems: 'center' }}>
+              <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
+              <StarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
+            </View>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowDiaryModal(false)}>Cancel</Button>
+            <Button onPress={handleConfirmDiaryModal}>Save</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={diaryDate}
+          mode="date"
+          display="default"
+          maximumDate={new Date()}
+          onChange={(_: any, selected?: Date) => {
+            setShowDatePicker(false);
+            if (selected) setDiaryDate(selected);
+          }}
+        />
+      )}
     </ScrollView>
   );
 }

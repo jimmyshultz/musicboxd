@@ -1,0 +1,153 @@
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, StyleSheet, Image } from 'react-native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Button, Text, ActivityIndicator } from 'react-native-paper';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
+import { DiaryService } from '../../services/diaryService';
+import { AlbumService } from '../../services/albumService';
+import { useDispatch, useSelector } from 'react-redux';
+import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
+import { RootState } from '../../store';
+import { theme, spacing } from '../../utils/theme';
+
+ type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
+ type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
+
+ const Star = ({ filled }: { filled: boolean }) => (
+  <Text style={{ fontSize: 20, color: filled ? theme.colors.primary : '#ccc' }}>{filled ? '★' : '☆'}</Text>
+);
+
+ export default function DiaryEntryDetailsScreen() {
+  const route = useRoute<DetailsRoute>();
+  const navigation = useNavigation<DetailsNav>();
+  const dispatch = useDispatch();
+  const { entryId, userId } = route.params;
+  const { user: currentUser } = useSelector((s: RootState) => s.auth);
+
+  const [entry, setEntry] = useState<DiaryEntry | null>(null);
+  const [album, setAlbum] = useState<Album | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const e = await DiaryService.getDiaryEntryById(entryId);
+    if (e) {
+      setEntry(e);
+      const res = await AlbumService.getAlbumById(e.albumId);
+      if (res.success && res.data) setAlbum(res.data);
+    }
+    setLoading(false);
+  }, [entryId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const onChangeDate = async (_: any, selected?: Date) => {
+    setShowPicker(false);
+    if (!entry || !selected) return;
+    setSaving(true);
+    const iso = `${selected.getFullYear()}-${String(selected.getMonth()+1).padStart(2,'0')}-${String(selected.getDate()).padStart(2,'0')}`;
+    const res = await DiaryService.updateDiaryEntry(entry.id, { diaryDate: iso });
+    if (res.success && res.entry) {
+      setEntry(res.entry);
+      dispatch(upsertDiaryEntry(res.entry));
+    }
+    setSaving(false);
+  };
+
+  const onChangeRating = async (newRating: number) => {
+    if (!entry) return;
+    setSaving(true);
+    const res = await DiaryService.updateDiaryEntry(entry.id, { ratingAtTime: newRating });
+    if (res.success && res.entry) {
+      setEntry(res.entry);
+      dispatch(upsertDiaryEntry(res.entry));
+    }
+    setSaving(false);
+  };
+
+  const onDelete = async () => {
+    if (!entry) return;
+    setSaving(true);
+    const res = await DiaryService.deleteDiaryEntry(entry.id);
+    if (res.success) {
+      dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
+      navigation.goBack();
+    }
+    setSaving(false);
+  };
+
+  if (loading || !entry) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator />
+        <Text style={{ marginTop: spacing.sm }}>Loading diary entry…</Text>
+      </View>
+    );
+  }
+
+  const d = new Date(entry.diaryDate + 'T00:00:00');
+  const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
+
+  const canEdit = currentUser?.id === userId; // Only owner edits
+
+  return (
+    <View style={styles.container}>
+      {album && (
+        <View style={styles.header}>
+          <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
+          <View style={{ flex: 1, marginLeft: spacing.md }}>
+            <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
+            <Text variant="bodyMedium" style={{ color: theme.colors.textSecondary }}>{album.artist}</Text>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.row}>
+        <Text variant="bodyLarge">Diary date</Text>
+        <Text variant="bodyLarge">{d.toLocaleDateString()}</Text>
+      </View>
+
+      <View style={[styles.row, { alignItems: 'center' }] }>
+        <Text variant="bodyLarge">Rating</Text>
+        <View style={{ flexDirection: 'row' }}>
+          {[1,2,3,4,5].map(star => (
+            <Text key={star} onPress={() => canEdit && onChangeRating(star)}>
+              <Star filled={!!entry.ratingAtTime && star <= entry.ratingAtTime} />
+            </Text>
+          ))}
+        </View>
+      </View>
+
+      {canEdit && (
+        <View style={styles.actions}>
+          <Button mode="outlined" onPress={() => setShowPicker(true)} disabled={saving}>Edit date</Button>
+          <Button mode="contained" onPress={onDelete} disabled={saving} style={{ marginLeft: spacing.sm }}>Delete entry</Button>
+        </View>
+      )}
+
+      {showPicker && (
+        <DateTimePicker
+          value={d}
+          mode="date"
+          display="default"
+          maximumDate={new Date()}
+          onChange={onChangeDate}
+        />
+      )}
+    </View>
+  );
+ }
+
+ const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background, padding: spacing.lg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', marginBottom: spacing.lg },
+  cover: { width: 96, height: 96, borderRadius: 8 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  actions: { flexDirection: 'row', marginTop: spacing.lg },
+});
