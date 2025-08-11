@@ -416,7 +416,9 @@ export default function AlbumDetailsScreen() {
 
       {/* Platform native date picker modal to avoid Dialog portal conflicts */}
       {showDatePicker && (
-        <Modal visible transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}>
+        <Modal visible transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}
+               presentationStyle="overFullScreen"
+        >
           <View style={styles.modalBackdrop}>
             <View style={styles.modalSheet}>
               <View style={styles.modalHeader}>
@@ -427,6 +429,7 @@ export default function AlbumDetailsScreen() {
                 value={diaryDate}
                 mode="date"
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                themeVariant={Platform.OS === 'ios' ? 'light' : undefined}
                 maximumDate={new Date()}
                 onChange={(_: any, selected?: Date) => {
                   if (selected) setDiaryDate(selected);
@@ -625,6 +628,9 @@ const styles = StyleSheet.create({
   modalSheet: {
     backgroundColor: theme.colors.surface,
     paddingBottom: spacing.lg,
+    width: '100%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
   },
   modalHeader: {
     flexDirection: 'row',
