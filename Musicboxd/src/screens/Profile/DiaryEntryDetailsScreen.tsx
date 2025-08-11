@@ -125,19 +125,21 @@ import { theme, spacing } from '../../utils/theme';
 
       {canEdit && (
         <View style={styles.actions}>
-          <Button mode="outlined" onPress={() => setShowPicker(true)} disabled={saving}>Edit date</Button>
+          <Button mode="outlined" onPress={() => setShowPicker(v => !v)} disabled={saving}>Edit date</Button>
           <Button mode="contained" onPress={onDelete} disabled={saving} style={{ marginLeft: spacing.sm }}>Delete entry</Button>
         </View>
       )}
 
       {showPicker && (
-        <DateTimePicker
-          value={d}
-          mode="date"
-          display="inline"
-          maximumDate={new Date()}
-          onChange={onChangeDate}
-        />
+        <View style={{ marginTop: spacing.md }}>
+          <DateTimePicker
+            value={d}
+            mode="date"
+            display="spinner"
+            maximumDate={new Date()}
+            onChange={onChangeDate}
+          />
+        </View>
       )}
     </View>
   );

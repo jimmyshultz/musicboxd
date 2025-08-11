@@ -396,9 +396,20 @@ export default function AlbumDetailsScreen() {
             </View>
             <View style={styles.diaryDateContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
-              <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
+              <Button mode="outlined" onPress={() => setShowDatePicker((v) => !v)}>
                 {diaryDate.toLocaleDateString()}
               </Button>
+              {showDatePicker && (
+                <DateTimePicker
+                  value={diaryDate}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={new Date()}
+                  onChange={(_: any, selected?: Date) => {
+                    if (selected) setDiaryDate(selected);
+                  }}
+                />
+              )}
             </View>
             <View style={styles.diaryRatingContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
@@ -411,19 +422,6 @@ export default function AlbumDetailsScreen() {
           </Dialog.Actions>
         </Dialog>
       </Portal>
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={diaryDate}
-          mode="date"
-          display="inline"
-          maximumDate={new Date()}
-          onChange={(_: any, selected?: Date) => {
-            if (selected) setDiaryDate(selected);
-            setShowDatePicker(false);
-          }}
-        />
-      )}
     </ScrollView>
   );
 }
