@@ -330,7 +330,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: currentTheme.colors.border }]}>
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
