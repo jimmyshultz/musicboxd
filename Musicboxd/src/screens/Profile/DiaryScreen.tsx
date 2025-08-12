@@ -27,6 +27,13 @@ import { theme, spacing } from '../../utils/theme';
 
   const [albumsById, setAlbumsById] = useState<Record<string, Album>>({});
   const [selectedTab, setSelectedTab] = useState<'profile' | 'diary'>('diary');
+  const [initialReady, setInitialReady] = useState(false);
+
+  useEffect(() => {
+    // Reset readiness when switching users
+    setInitialReady(false);
+    setAlbumsById({});
+  }, [userId]);
 
   const canView = useMemo(() => {
     // For MVP: assume public; privacy enforcement can be expanded here when social graph is in place
@@ -48,19 +55,19 @@ import { theme, spacing } from '../../utils/theme';
     dispatch(fetchDiaryStart());
     try {
       const { entries, lastMonth, hasMore } = await DiaryService.getDiaryEntriesByUser(userId, { monthWindow: 3 });
-      // Fetch needed albums
       const albumIds = Array.from(new Set(entries.map(e => e.albumId)));
+      const responses = await Promise.all(albumIds.map(id => AlbumService.getAlbumById(id)));
       const fetched: Record<string, Album> = {};
-      for (const id of albumIds) {
-        if (!fetched[id]) {
-          const res = await AlbumService.getAlbumById(id);
-          if (res.success && res.data) fetched[id] = res.data;
+      responses.forEach((res, idx) => {
+        if (res.success && res.data) {
+          fetched[albumIds[idx]] = res.data;
         }
-      }
+      });
       if (Object.keys(fetched).length > 0) {
         setAlbumsById(prev => ({ ...prev, ...fetched }));
       }
       dispatch(fetchDiarySuccess({ userId, entries, lastMonth, hasMore, reset: true }));
+      setInitialReady(true);
     } catch (e: any) {
       dispatch(fetchDiaryFailure(e?.message || 'Failed to load diary'));
     }
@@ -75,15 +82,16 @@ import { theme, spacing } from '../../utils/theme';
         monthWindow: 3,
       });
       const albumIds = Array.from(new Set(entries.map(e => e.albumId)));
-      const fetched: Record<string, Album> = {};
-      for (const id of albumIds) {
-        if (!albumsById[id]) {
-          const res = await AlbumService.getAlbumById(id);
-          if (res.success && res.data) fetched[id] = res.data;
+      const missingIds = albumIds.filter(id => !albumsById[id]);
+      if (missingIds.length) {
+        const responses = await Promise.all(missingIds.map(id => AlbumService.getAlbumById(id)));
+        const fetched: Record<string, Album> = {};
+        responses.forEach((res, idx) => {
+          if (res.success && res.data) fetched[missingIds[idx]] = res.data;
+        });
+        if (Object.keys(fetched).length > 0) {
+          setAlbumsById(prev => ({ ...prev, ...fetched }));
         }
-      }
-      if (Object.keys(fetched).length > 0) {
-        setAlbumsById(prev => ({ ...prev, ...fetched }));
       }
       dispatch(fetchDiarySuccess({ userId, entries, lastMonth, hasMore }));
     } catch (e: any) {
@@ -118,7 +126,7 @@ import { theme, spacing } from '../../utils/theme';
         {album && <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />}
         <View style={styles.rowTextContainer}>
           <Text variant="bodyMedium" numberOfLines={1} style={styles.title}>
-            {album ? `${album.title} (${albumYear})` : 'Unknown Album'}
+            {album ? `${album.title} (${albumYear})` : ''}
           </Text>
           {!!item.ratingAtTime && (
             <Text variant="bodySmall" style={styles.rating}>{'★'.repeat(item.ratingAtTime)}{'☆'.repeat(5 - item.ratingAtTime)}</Text>
@@ -155,7 +163,7 @@ import { theme, spacing } from '../../utils/theme';
         />
       </View>
 
-      {loading && entries.length === 0 ? (
+      {(!initialReady && (loading || entries.length === 0)) ? (
         <View style={styles.center}> 
           <ActivityIndicator />
           <Text style={{ marginTop: spacing.sm }}>Loading diary…</Text>
