@@ -158,7 +158,7 @@ import { theme, spacing } from '../../utils/theme';
   const sections = groupIntoSections(entries);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
       <View style={styles.headerToggle}>
         <SegmentedButtons
           value={selectedTab}
@@ -205,7 +205,7 @@ import { theme, spacing } from '../../utils/theme';
 
  const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  headerToggle: { paddingHorizontal: spacing.md, paddingTop: 0, paddingBottom: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  headerToggle: { padding: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: spacing.xl },
   sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.surface },
