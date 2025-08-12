@@ -144,7 +144,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ title: 'Diary', headerBackVisible: false }}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
       />
       <HomeStack.Screen
         name="DiaryEntryDetails"
@@ -239,7 +239,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ title: 'Diary', headerBackVisible: false }}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
       />
       <SearchStack.Screen
         name="DiaryEntryDetails"
@@ -334,7 +334,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ title: 'Diary', headerBackVisible: false }}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
       />
       <ProfileStack.Screen
         name="DiaryEntryDetails"
