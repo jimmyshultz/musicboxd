@@ -208,7 +208,7 @@ import { theme, spacing } from '../../utils/theme';
   headerToggle: { paddingHorizontal: spacing.md, paddingTop: 0, paddingBottom: spacing.sm, backgroundColor: theme.colors.background },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: spacing.xl },
-  sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.surface },
+  sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.background },
   sectionHeaderText: { fontWeight: 'bold' },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.colors.background },
   dayNumber: { width: 32, textAlign: 'right', marginRight: spacing.md, color: theme.colors.textSecondary },
