@@ -205,10 +205,10 @@ import { theme, spacing } from '../../utils/theme';
 
  const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  headerToggle: { paddingHorizontal: spacing.md, paddingTop: 0, paddingBottom: spacing.sm, backgroundColor: theme.colors.background },
+  headerToggle: { paddingHorizontal: spacing.md, paddingTop: 0, paddingBottom: spacing.sm, backgroundColor: theme.colors.surface },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: spacing.xl },
-  sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.background },
+  sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.surface },
   sectionHeaderText: { fontWeight: 'bold' },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.colors.background },
   dayNumber: { width: 32, textAlign: 'right', marginRight: spacing.md, color: theme.colors.textSecondary },
