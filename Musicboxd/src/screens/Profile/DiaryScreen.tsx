@@ -205,7 +205,7 @@ import { theme, spacing } from '../../utils/theme';
 
  const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  headerToggle: { padding: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  headerToggle: { paddingHorizontal: spacing.md, paddingTop: 0, paddingBottom: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: spacing.xl },
   sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.surface },
