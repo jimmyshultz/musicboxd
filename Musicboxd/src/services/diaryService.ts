@@ -39,6 +39,34 @@ export class DiaryService {
       createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     },
+    // Demo entries for other users
+    {
+      id: 'diary_user1_1',
+      userId: 'user1',
+      albumId: '2',
+      diaryDate: toISODateOnly(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)),
+      ratingAtTime: 4,
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'diary_user2_1',
+      userId: 'user2',
+      albumId: '5',
+      diaryDate: toISODateOnly(new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)),
+      ratingAtTime: 5,
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'diary_user3_1',
+      userId: 'user3',
+      albumId: '7',
+      diaryDate: toISODateOnly(new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)),
+      ratingAtTime: 4,
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    },
   ];
 
   static async getDiaryEntryById(entryId: string): Promise<DiaryEntry | null> {

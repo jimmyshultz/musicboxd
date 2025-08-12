@@ -50,19 +50,21 @@ import { theme, spacing } from '../../utils/theme';
       const { entries, lastMonth, hasMore } = await DiaryService.getDiaryEntriesByUser(userId, { monthWindow: 3 });
       // Fetch needed albums
       const albumIds = Array.from(new Set(entries.map(e => e.albumId)));
-      const fetched: Record<string, Album> = { ...albumsById };
+      const fetched: Record<string, Album> = {};
       for (const id of albumIds) {
         if (!fetched[id]) {
           const res = await AlbumService.getAlbumById(id);
           if (res.success && res.data) fetched[id] = res.data;
         }
       }
-      setAlbumsById(fetched);
+      if (Object.keys(fetched).length > 0) {
+        setAlbumsById(prev => ({ ...prev, ...fetched }));
+      }
       dispatch(fetchDiarySuccess({ userId, entries, lastMonth, hasMore, reset: true }));
     } catch (e: any) {
       dispatch(fetchDiaryFailure(e?.message || 'Failed to load diary'));
     }
-  }, [dispatch, userId, albumsById]);
+  }, [dispatch, userId]);
 
   const loadMore = useCallback(async () => {
     if (!diaryState?.hasMore || loading) return;
@@ -73,14 +75,16 @@ import { theme, spacing } from '../../utils/theme';
         monthWindow: 3,
       });
       const albumIds = Array.from(new Set(entries.map(e => e.albumId)));
-      const fetched: Record<string, Album> = { ...albumsById };
+      const fetched: Record<string, Album> = {};
       for (const id of albumIds) {
-        if (!fetched[id]) {
+        if (!albumsById[id]) {
           const res = await AlbumService.getAlbumById(id);
           if (res.success && res.data) fetched[id] = res.data;
         }
       }
-      setAlbumsById(fetched);
+      if (Object.keys(fetched).length > 0) {
+        setAlbumsById(prev => ({ ...prev, ...fetched }));
+      }
       dispatch(fetchDiarySuccess({ userId, entries, lastMonth, hasMore }));
     } catch (e: any) {
       dispatch(fetchDiaryFailure(e?.message || 'Failed to load more diary'));
