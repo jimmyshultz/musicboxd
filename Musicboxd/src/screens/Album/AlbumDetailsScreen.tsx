@@ -146,6 +146,20 @@ export default function AlbumDetailsScreen() {
         const res = await DiaryService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating);
         if (!res.success) {
           console.warn(res.message);
+        } else {
+          // If user has not rated the album yet and provided a diary rating, set the overall album rating now
+          if (typeof diaryRating === 'number' && diaryRating > 0 && (!currentAlbumUserReview || currentAlbumUserReview.rating <= 0)) {
+            try {
+              const reviewRes = await AlbumService.addReview(user.id, currentAlbum.id, diaryRating);
+              if (reviewRes.success && reviewRes.data) {
+                dispatch(setCurrentAlbumUserReview(reviewRes.data));
+              }
+            } catch (e) {
+              console.error('Error applying diary rating to album rating:', e);
+            }
+          }
+          // Reload details so UI reflects any rating changes
+          await loadAlbumDetails();
         }
       }
     } catch (e) {
