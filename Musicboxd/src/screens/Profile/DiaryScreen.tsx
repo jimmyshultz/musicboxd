@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, SectionList, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute, CommonActions } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
@@ -105,9 +105,19 @@ import { theme, spacing } from '../../utils/theme';
 
   const navigateToProfile = () => {
     if (currentUser?.id === userId) {
-      navigation.navigate('ProfileMain' as any);
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'ProfileMain' as never }],
+        })
+      );
     } else {
-      navigation.navigate('UserProfile' as any, { userId });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'UserProfile' as never, params: { userId } as never }],
+        })
+      );
     }
   };
 
