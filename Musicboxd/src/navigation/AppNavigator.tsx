@@ -76,7 +76,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="HomeMain"
         component={HomeScreen}
-        options={{ title: 'Musicboxd' }}
+        options={{ title: 'Musicboxd', headerBackVisible: false }}
       />
       <HomeStack.Screen
         name="PopularThisWeek"
@@ -171,7 +171,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="SearchMain"
         component={SearchScreen}
-        options={{ title: 'Search' }}
+        options={{ title: 'Search', headerBackVisible: false }}
       />
       <SearchStack.Screen
         name="PopularThisWeek"
@@ -266,7 +266,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{ title: 'Profile' }}
+        options={{ title: 'Profile', headerBackVisible: false }}
       />
       <ProfileStack.Screen
         name="PopularThisWeek"
