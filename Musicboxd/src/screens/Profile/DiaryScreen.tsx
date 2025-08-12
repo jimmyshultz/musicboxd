@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, SectionList, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { RouteProp, useNavigation, useRoute, CommonActions } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { Text, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
