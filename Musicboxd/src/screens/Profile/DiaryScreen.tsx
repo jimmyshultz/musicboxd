@@ -105,19 +105,9 @@ import { theme, spacing } from '../../utils/theme';
 
   const navigateToProfile = () => {
     if (currentUser?.id === userId) {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'ProfileMain' as never }],
-        })
-      );
+      navigation.navigate('ProfileMain' as any);
     } else {
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'UserProfile' as never, params: { userId } as never }],
-        })
-      );
+      navigation.navigate('UserProfile' as any, { userId });
     }
   };
 
