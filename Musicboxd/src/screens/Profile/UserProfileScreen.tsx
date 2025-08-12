@@ -374,7 +374,7 @@ export default function UserProfileScreen() {
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <IconButton
           icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.getParent()?.navigate('Home' as never)}
           style={styles.backButton}
         />
       </View>
