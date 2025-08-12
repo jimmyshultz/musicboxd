@@ -380,7 +380,7 @@ export default function UserProfileScreen() {
       </View>
 
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: currentTheme.colors.border }]}>
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
