@@ -21,6 +21,7 @@ import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { userStatsService } from '../../services/userStatsService';
 import { theme, spacing, shadows } from '../../utils/theme';
+import { SegmentedButtons } from 'react-native-paper';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -328,6 +329,22 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Segmented Control */}
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
+        <SegmentedButtons
+          value={'profile'}
+          onValueChange={(v: any) => {
+            if (v === 'diary') {
+              navigation.navigate('Diary', { userId: user.id, username: user.username });
+            }
+          }}
+          buttons={[
+            { value: 'profile', label: 'Profile' },
+            { value: 'diary', label: 'Diary' },
+          ]}
+        />
+      </View>
+
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <Avatar.Image 
@@ -426,19 +443,17 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: theme.colors.surface,
+  },
   container: {
     flex: 1,
-    backgroundColor: theme.light.colors.background,
+    backgroundColor: theme.colors.background,
   },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.light.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.light.colors.onSurfaceVariant,
+  segmentHeader: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
   },
   profileHeader: {
     alignItems: 'center',

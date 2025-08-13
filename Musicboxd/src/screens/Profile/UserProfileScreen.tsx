@@ -9,7 +9,7 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { Text, Avatar, ActivityIndicator, IconButton, Button } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator, IconButton, Button, SegmentedButtons } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -374,8 +374,24 @@ export default function UserProfileScreen() {
       <View style={[styles.header, { paddingTop: insets.top }]}>
         <IconButton
           icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.getParent()?.navigate('Home' as never, { screen: 'HomeMain' } as never)}
           style={styles.backButton}
+        />
+      </View>
+
+      {/* Segmented Control */}
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
+        <SegmentedButtons
+          value={'profile'}
+          onValueChange={(v: any) => {
+            if (v === 'diary' && user) {
+              navigation.navigate('Diary', { userId: user.id, username: user.username });
+            }
+          }}
+          buttons={[
+            { value: 'profile', label: 'Profile' },
+            { value: 'diary', label: 'Diary' },
+          ]}
         />
       </View>
 
@@ -491,6 +507,10 @@ const styles = StyleSheet.create({
   },
   backButton: {
     margin: 0,
+  },
+  segmentHeader: {
+    padding: spacing.md,
+    borderBottomWidth: 1,
   },
   profileHeader: {
     alignItems: 'center',

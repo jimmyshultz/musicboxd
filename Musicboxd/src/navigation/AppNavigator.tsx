@@ -23,6 +23,8 @@ import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
 import FavoriteAlbumsManagementScreen from '../screens/Profile/FavoriteAlbumsManagementScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
+import DiaryScreen from '../screens/Profile/DiaryScreen';
+import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -74,7 +76,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="HomeMain"
         component={HomeScreen}
-        options={{ title: 'Musicboxd' }}
+        options={{ title: 'Musicboxd', headerBackVisible: false }}
       />
       <HomeStack.Screen
         name="PopularThisWeek"
@@ -138,6 +140,16 @@ function HomeStackNavigator() {
         options={{
           headerShown: false,
         }}
+      />
+      <HomeStack.Screen
+        name="Diary"
+        component={DiaryScreen}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
+      />
+      <HomeStack.Screen
+        name="DiaryEntryDetails"
+        component={DiaryEntryDetailsScreen}
+        options={{ title: 'Diary Entry' }}
       />
     </HomeStack.Navigator>
   );
@@ -159,7 +171,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="SearchMain"
         component={SearchScreen}
-        options={{ title: 'Search' }}
+        options={{ title: 'Search', headerBackVisible: false }}
       />
       <SearchStack.Screen
         name="PopularThisWeek"
@@ -223,6 +235,16 @@ function SearchStackNavigator() {
         options={{
           headerShown: false,
         }}
+      />
+      <SearchStack.Screen
+        name="Diary"
+        component={DiaryScreen}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
+      />
+      <SearchStack.Screen
+        name="DiaryEntryDetails"
+        component={DiaryEntryDetailsScreen}
+        options={{ title: 'Diary Entry' }}
       />
     </SearchStack.Navigator>
   );
@@ -244,7 +266,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{ title: 'Profile' }}
+        options={{ title: 'Profile', headerBackVisible: false }}
       />
       <ProfileStack.Screen
         name="PopularThisWeek"
@@ -308,6 +330,16 @@ function ProfileStackNavigator() {
         options={{
           headerShown: false,
         }}
+      />
+      <ProfileStack.Screen
+        name="Diary"
+        component={DiaryScreen}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
+      />
+      <ProfileStack.Screen
+        name="DiaryEntryDetails"
+        component={DiaryEntryDetailsScreen}
+        options={{ title: 'Diary Entry' }}
       />
     </ProfileStack.Navigator>
   );

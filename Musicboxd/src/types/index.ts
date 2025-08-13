@@ -114,6 +114,17 @@ export interface Activity {
   timestamp: Date;
 }
 
+// Diary types
+export interface DiaryEntry {
+  id: string;
+  userId: string;
+  albumId: string;
+  diaryDate: string; // YYYY-MM-DD in user's local time
+  ratingAtTime?: number; // 1-5 optional
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+}
+
 // Navigation types
 export type RootStackParamList = {
   Auth: undefined;
@@ -138,6 +149,8 @@ export type HomeStackParamList = {
   NewFromFriends: undefined;
   PopularWithFriends: undefined;
   FavoriteAlbumsManagement: undefined;
+  Diary: { userId: string; username: string };
+  DiaryEntryDetails: { entryId: string; userId: string };
 };
 
 export type SearchStackParamList = {
@@ -151,6 +164,8 @@ export type SearchStackParamList = {
   NewFromFriends: undefined;
   PopularWithFriends: undefined;
   FavoriteAlbumsManagement: undefined;
+  Diary: { userId: string; username: string };
+  DiaryEntryDetails: { entryId: string; userId: string };
 };
 
 export type ProfileStackParamList = {
@@ -164,6 +179,8 @@ export type ProfileStackParamList = {
   NewFromFriends: undefined;
   PopularWithFriends: undefined;
   FavoriteAlbumsManagement: undefined;
+  Diary: { userId: string; username: string };
+  DiaryEntryDetails: { entryId: string; userId: string };
 };
 
 // Search types
