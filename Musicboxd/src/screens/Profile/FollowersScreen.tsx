@@ -11,7 +11,6 @@ import {
   Avatar,
   Button,
   ActivityIndicator,
-  IconButton,
   SegmentedButtons,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
@@ -27,9 +26,7 @@ import { userService } from '../../services/userService';
 type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
 type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
-// Icon component to avoid creating it during render
-const arrowIconStyle = { fontSize: 20, color: '#666' };
-const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
+
 
 const EmptyState = ({ activeTab, username }: { activeTab: string; username: string }) => (
   <View style={styles.emptyContainer}>
@@ -157,15 +154,9 @@ export default function FollowersScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
-        <IconButton
-          icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        />
         <Text variant="headlineSmall" style={styles.headerTitle}>
           @{username}
         </Text>
-        <View style={styles.placeholder} />
       </View>
 
       {/* Tab Selector */}
@@ -224,15 +215,11 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     backgroundColor: theme.colors.surface,
   },
-  backButton: {
-    margin: 0,
-  },
+
   headerTitle: {
     fontWeight: 'bold',
   },
-  placeholder: {
-    width: 48, // Same width as back button
-  },
+
   tabContainer: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,

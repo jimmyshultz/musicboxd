@@ -9,7 +9,7 @@ import {
   useColorScheme,
 } from 'react-native';
 
-import { Text, Avatar, ActivityIndicator, IconButton, Button, SegmentedButtons } from 'react-native-paper';
+  import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -29,9 +29,6 @@ type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
 
-// Icon component to avoid creating it during render
-const arrowIconStyle = { fontSize: 20, color: '#666' };
-const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
 
 interface UserStats {
   albumsThisYear: number;
@@ -370,13 +367,8 @@ export default function UserProfileScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header with Back Button */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top }]}>
-        <IconButton
-          icon={ArrowLeftIcon}
-          onPress={() => navigation.getParent()?.navigate('Home' as never, { screen: 'HomeMain' } as never)}
-          style={styles.backButton}
-        />
       </View>
 
       {/* Segmented Control */}
@@ -505,9 +497,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  backButton: {
-    margin: 0,
-  },
+
   segmentHeader: {
     padding: spacing.md,
     borderBottomWidth: 1,
