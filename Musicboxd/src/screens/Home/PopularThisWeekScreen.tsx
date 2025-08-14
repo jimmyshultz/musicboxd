@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, ActivityIndicator, IconButton } from 'react-native-paper';
+import { Text, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -21,9 +21,6 @@ type PopularThisWeekNavigationProp = StackNavigationProp<HomeStackParamList>;
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns with proper spacing
 
-// Icon component to avoid creating it during render
-const arrowIconStyle = { fontSize: 20, color: '#666' };
-const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
 
 export default function PopularThisWeekScreen() {
   const navigation = useNavigation<PopularThisWeekNavigationProp>();
@@ -94,15 +91,9 @@ export default function PopularThisWeekScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <IconButton
-            icon={ArrowLeftIcon}
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          />
           <Text variant="headlineMedium" style={styles.headerTitle}>
             Popular This Week
           </Text>
-          <View style={styles.placeholder} />
         </View>
 
         <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -143,9 +134,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     backgroundColor: colors.surface,
   },
-  backButton: {
-    margin: 0,
-  },
+
   headerTitle: {
     fontWeight: 'bold',
     flex: 1,

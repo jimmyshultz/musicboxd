@@ -10,7 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
   ActivityIndicator,
-  IconButton,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -27,9 +26,6 @@ type UserReviewsScreenRouteProp = RouteProp<
 >;
 type UserReviewsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-// Icon component to avoid creating it during render
-const arrowIconStyle = { fontSize: 20, color: '#666' };
-const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
 
 
 interface ReviewData {
@@ -154,11 +150,6 @@ export default function UserReviewsScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
-        <IconButton
-          icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        />
         <View style={styles.headerContent}>
           <Text variant="headlineSmall" style={styles.headerTitle}>
             Ratings
@@ -214,9 +205,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  backButton: {
-    margin: 0,
-  },
+
   headerContent: {
     flex: 1,
     marginLeft: spacing.sm,
