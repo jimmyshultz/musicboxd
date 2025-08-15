@@ -159,19 +159,21 @@ function HomeStackNavigator() {
             const routes = state.routes;
             const currentRouteIndex = state.index;
             
-            // Look backwards in the route history to find the last non-diary screen
+            // Look backwards in the route history to find the last non-diary, non-userprofile screen
+            let foundValidRoute = false;
             for (let i = currentRouteIndex - 1; i >= 0; i--) {
               const route = routes[i];
-              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails') {
-                // Found a non-diary screen, navigate back to it
+              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
+                // Found a valid non-diary, non-userprofile screen, navigate back to it
                 navigation.navigate(route.name, route.params);
+                foundValidRoute = true;
                 return;
               }
             }
             
-            // If no non-diary screen found, use default back behavior
-            if (navigation.canGoBack()) {
-              navigation.goBack();
+            // If no valid screen found, go to home
+            if (!foundValidRoute) {
+              navigation.navigate('HomeMain');
             }
           }} />,
         })}
@@ -306,19 +308,21 @@ function SearchStackNavigator() {
             const routes = state.routes;
             const currentRouteIndex = state.index;
             
-            // Look backwards in the route history to find the last non-diary screen
+            // Look backwards in the route history to find the last non-diary, non-userprofile screen
+            let foundValidRoute = false;
             for (let i = currentRouteIndex - 1; i >= 0; i--) {
               const route = routes[i];
-              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails') {
-                // Found a non-diary screen, navigate back to it
+              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
+                // Found a valid non-diary, non-userprofile screen, navigate back to it
                 navigation.navigate(route.name, route.params);
+                foundValidRoute = true;
                 return;
               }
             }
             
-            // If no non-diary screen found, use default back behavior
-            if (navigation.canGoBack()) {
-              navigation.goBack();
+            // If no valid screen found, go to search main
+            if (!foundValidRoute) {
+              navigation.navigate('SearchMain');
             }
           }} />,
         })}
@@ -453,19 +457,21 @@ function ProfileStackNavigator() {
             const routes = state.routes;
             const currentRouteIndex = state.index;
             
-            // Look backwards in the route history to find the last non-diary screen
+            // Look backwards in the route history to find the last non-diary, non-userprofile screen
+            let foundValidRoute = false;
             for (let i = currentRouteIndex - 1; i >= 0; i--) {
               const route = routes[i];
-              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails') {
-                // Found a non-diary screen, navigate back to it
+              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
+                // Found a valid non-diary, non-userprofile screen, navigate back to it
                 navigation.navigate(route.name, route.params);
+                foundValidRoute = true;
                 return;
               }
             }
             
-            // If no non-diary screen found, use default back behavior
-            if (navigation.canGoBack()) {
-              navigation.goBack();
+            // If no valid screen found, go to profile main
+            if (!foundValidRoute) {
+              navigation.navigate('ProfileMain');
             }
           }} />,
         })}
