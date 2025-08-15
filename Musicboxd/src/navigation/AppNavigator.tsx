@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, useColorScheme } from 'react-native';
+import { Text, useColorScheme, TouchableOpacity } from 'react-native';
 import { useSelector } from 'react-redux';
 
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -28,6 +28,29 @@ import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen'
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
+
+// Back button component
+const BackButton = ({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
+  const isDark = useColorScheme() === 'dark';
+  const currentTheme = isDark ? theme.dark : theme.light;
+  
+  const handlePress = () => {
+    if (customOnPress) {
+      customOnPress();
+    } else if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
+  return (
+    <TouchableOpacity 
+      onPress={handlePress}
+      style={{ paddingLeft: 16, paddingRight: 8, paddingVertical: 8 }}
+    >
+      <Text style={{ fontSize: 18, color: currentTheme.colors.onSurface }}>←</Text>
+    </TouchableOpacity>
+  );
+};
 
 // Tab icon component to avoid creating it during render
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
@@ -81,60 +104,107 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="PopularThisWeek"
         component={PopularThisWeekScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('HomeMain');
+          }} />,
+        })}
       />
       <HomeStack.Screen
         name="NewFromFriends"
         component={NewFromFriendsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('HomeMain');
+          }} />,
+        })}
       />
       <HomeStack.Screen
         name="PopularWithFriends"
         component={PopularWithFriendsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('HomeMain');
+          }} />,
+        })}
       />
       <HomeStack.Screen
         name="AlbumDetails"
         component={AlbumDetailsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Album Details',
           headerBackVisible: false,
-          headerLeft: () => null,
-        }}
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <HomeStack.Screen
         name="UserProfile"
         component={UserProfileScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            // Custom logic to skip diary screens
+            const state = navigation.getState();
+            const routes = state.routes;
+            const currentRouteIndex = state.index;
+            
+            // Look backwards in the route history to find the last non-diary screen
+            for (let i = currentRouteIndex - 1; i >= 0; i--) {
+              const route = routes[i];
+              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails') {
+                // Found a non-diary screen, navigate back to it
+                navigation.navigate(route.name, route.params);
+                return;
+              }
+            }
+            
+            // If no non-diary screen found, use default back behavior
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            }
+          }} />,
+        })}
       />
       <HomeStack.Screen
         name="Followers"
         component={FollowersScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <HomeStack.Screen
         name="ListenedAlbums"
         component={ListenedAlbumsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <HomeStack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <HomeStack.Screen
         name="FavoriteAlbumsManagement"
@@ -178,60 +248,107 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="PopularThisWeek"
         component={PopularThisWeekScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('SearchMain');
+          }} />,
+        })}
       />
       <SearchStack.Screen
         name="NewFromFriends"
         component={NewFromFriendsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('SearchMain');
+          }} />,
+        })}
       />
       <SearchStack.Screen
         name="PopularWithFriends"
         component={PopularWithFriendsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('SearchMain');
+          }} />,
+        })}
       />
       <SearchStack.Screen
         name="AlbumDetails"
         component={AlbumDetailsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Album Details',
           headerBackVisible: false,
-          headerLeft: () => null,
-        }}
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <SearchStack.Screen
         name="UserProfile"
         component={UserProfileScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            // Custom logic to skip diary screens
+            const state = navigation.getState();
+            const routes = state.routes;
+            const currentRouteIndex = state.index;
+            
+            // Look backwards in the route history to find the last non-diary screen
+            for (let i = currentRouteIndex - 1; i >= 0; i--) {
+              const route = routes[i];
+              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails') {
+                // Found a non-diary screen, navigate back to it
+                navigation.navigate(route.name, route.params);
+                return;
+              }
+            }
+            
+            // If no non-diary screen found, use default back behavior
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            }
+          }} />,
+        })}
       />
       <SearchStack.Screen
         name="Followers"
         component={FollowersScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <SearchStack.Screen
         name="ListenedAlbums"
         component={ListenedAlbumsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <SearchStack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <SearchStack.Screen
         name="FavoriteAlbumsManagement"
@@ -275,60 +392,107 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="PopularThisWeek"
         component={PopularThisWeekScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('ProfileMain');
+          }} />,
+        })}
       />
       <ProfileStack.Screen
         name="NewFromFriends"
         component={NewFromFriendsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('ProfileMain');
+          }} />,
+        })}
       />
       <ProfileStack.Screen
         name="PopularWithFriends"
         component={PopularWithFriendsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.navigate('ProfileMain');
+          }} />,
+        })}
       />
       <ProfileStack.Screen
         name="AlbumDetails"
         component={AlbumDetailsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Album Details',
           headerBackVisible: false,
-          headerLeft: () => null,
-        }}
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <ProfileStack.Screen
         name="UserProfile"
         component={UserProfileScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            // Custom logic to skip diary screens
+            const state = navigation.getState();
+            const routes = state.routes;
+            const currentRouteIndex = state.index;
+            
+            // Look backwards in the route history to find the last non-diary screen
+            for (let i = currentRouteIndex - 1; i >= 0; i--) {
+              const route = routes[i];
+              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails') {
+                // Found a non-diary screen, navigate back to it
+                navigation.navigate(route.name, route.params);
+                return;
+              }
+            }
+            
+            // If no non-diary screen found, use default back behavior
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            }
+          }} />,
+        })}
       />
       <ProfileStack.Screen
         name="Followers"
         component={FollowersScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <ProfileStack.Screen
         name="ListenedAlbums"
         component={ListenedAlbumsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <ProfileStack.Screen
         name="UserReviews"
         component={UserReviewsScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <ProfileStack.Screen
         name="FavoriteAlbumsManagement"
