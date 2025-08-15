@@ -6,10 +6,10 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
+  TextInput,
 } from 'react-native';
 import {
   Text,
-  Searchbar,
   Chip,
   ActivityIndicator,
   Divider,
@@ -32,6 +32,41 @@ import { AlbumService } from '../../services/albumService';
 import { theme, spacing } from '../../utils/theme';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
+
+// Custom search input component to replace react-native-paper Searchbar
+const CustomSearchbar = ({ 
+  placeholder, 
+  onChangeText, 
+  onSubmitEditing, 
+  value, 
+  style 
+}: {
+  placeholder: string;
+  onChangeText: (text: string) => void;
+  onSubmitEditing: () => void;
+  value: string;
+  style?: any;
+}) => {
+  return (
+    <View style={[styles.searchInputContainer, style]}>
+      <Text style={styles.searchIcon}>🔍</Text>
+      <TextInput
+        style={styles.searchInput}
+        placeholder={placeholder}
+        onChangeText={onChangeText}
+        onSubmitEditing={onSubmitEditing}
+        value={value}
+        placeholderTextColor={theme.colors.textSecondary}
+        returnKeyType="search"
+      />
+      {value.length > 0 && (
+        <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
+          <Text style={styles.clearIcon}>✕</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
 
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
@@ -158,7 +193,7 @@ export default function SearchScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
-        <Searchbar
+        <CustomSearchbar
           placeholder="Search albums, artists, genres..."
           onChangeText={handleSearchChange}
           onSubmitEditing={handleSearchSubmit}
@@ -263,9 +298,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.md,
   },
-  searchbar: {
-    elevation: 2,
-  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -362,5 +395,32 @@ const styles = StyleSheet.create({
   },
   trendingArtist: {
     color: theme.colors.textSecondary,
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  searchInput: {
+    flex: 1,
+    paddingVertical: 0,
+    paddingHorizontal: spacing.sm,
+    fontSize: 16,
+    color: theme.colors.text,
+  },
+  searchIcon: {
+    fontSize: 24,
+    marginRight: spacing.sm,
+  },
+  clearButton: {
+    padding: spacing.sm,
+  },
+  clearIcon: {
+    fontSize: 20,
   },
 });
