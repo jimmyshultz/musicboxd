@@ -99,7 +99,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="HomeMain"
         component={HomeScreen}
-        options={{ title: 'Musicboxd', headerBackVisible: false }}
+        options={{ title: 'Musicboxd', headerBackVisible: false, headerLeft: () => null }}
       />
       <HomeStack.Screen
         name="PopularThisWeek"
@@ -109,7 +109,7 @@ function HomeStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('HomeMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -121,7 +121,7 @@ function HomeStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('HomeMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -133,7 +133,7 @@ function HomeStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('HomeMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -243,7 +243,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="SearchMain"
         component={SearchScreen}
-        options={{ title: 'Search', headerBackVisible: false }}
+        options={{ title: 'Search', headerBackVisible: false, headerLeft: () => null }}
       />
       <SearchStack.Screen
         name="PopularThisWeek"
@@ -253,7 +253,7 @@ function SearchStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('SearchMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -265,7 +265,7 @@ function SearchStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('SearchMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -277,7 +277,7 @@ function SearchStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('SearchMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -397,7 +397,7 @@ function ProfileStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('ProfileMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -409,7 +409,7 @@ function ProfileStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('ProfileMain');
+            navigation.goBack();
           }} />,
         })}
       />
@@ -421,7 +421,7 @@ function ProfileStackNavigator() {
           title: '',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.navigate('ProfileMain');
+            navigation.goBack();
           }} />,
         })}
       />
