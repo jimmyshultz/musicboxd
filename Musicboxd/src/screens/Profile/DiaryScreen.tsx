@@ -150,12 +150,15 @@ import { theme, spacing } from '../../utils/theme';
   return (
     <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
       <View style={styles.headerToggle}>
-        <SegmentedButtons
-          value={selectedTab}
-          onValueChange={(v: any) => {
-            if (v === 'profile') navigateToProfile();
-            else setSelectedTab('diary');
-          }}
+                  <SegmentedButtons
+            value={selectedTab}
+                       onValueChange={(v: any) => {
+               if (v === 'profile') {
+                 navigation.replace('ProfileMain' as any);
+               } else {
+                 setSelectedTab('diary');
+               }
+             }}
           buttons={[
             { value: 'profile', label: 'Profile' },
             { value: 'diary', label: 'Diary' },

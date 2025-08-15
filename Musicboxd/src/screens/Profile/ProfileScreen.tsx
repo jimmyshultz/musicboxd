@@ -335,7 +335,7 @@ export default function ProfileScreen() {
           value={'profile'}
           onValueChange={(v: any) => {
             if (v === 'diary') {
-              navigation.navigate('Diary', { userId: user.id, username: user.username });
+              navigation.replace('Diary', { userId: user.id, username: user.username });
             }
           }}
           buttons={[
