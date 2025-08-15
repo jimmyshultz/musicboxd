@@ -9,7 +9,7 @@ import {
   useColorScheme,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView import removed - using regular View since header handles safe area
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -329,7 +329,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['left','right','bottom']}>
+    <View style={styles.safeArea}>
       {/* Segmented Control */}
       <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}> 
         <SegmentedButtons
@@ -441,7 +441,7 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
