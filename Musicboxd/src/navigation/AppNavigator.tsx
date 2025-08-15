@@ -209,9 +209,12 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="FavoriteAlbumsManagement"
         component={FavoriteAlbumsManagementScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <HomeStack.Screen
         name="Diary"
@@ -353,9 +356,12 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="FavoriteAlbumsManagement"
         component={FavoriteAlbumsManagementScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <SearchStack.Screen
         name="Diary"
@@ -497,9 +503,12 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="FavoriteAlbumsManagement"
         component={FavoriteAlbumsManagementScreen}
-        options={{
-          headerShown: false,
-        }}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: '',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
       <ProfileStack.Screen
         name="Diary"
