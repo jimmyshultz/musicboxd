@@ -270,7 +270,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{ headerShown: false }}
+        options={{ title: 'Profile', headerBackVisible: false, headerLeft: () => null }}
       />
       <ProfileStack.Screen
         name="PopularThisWeek"
@@ -340,7 +340,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ headerShown: false }}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
       />
       <ProfileStack.Screen
         name="DiaryEntryDetails"
