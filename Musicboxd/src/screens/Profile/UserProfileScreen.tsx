@@ -367,9 +367,6 @@ export default function UserProfileScreen() {
 
   return (
     <View style={styles.container}>
-            {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top }]} />
-
       {/* Segmented Control */}
       <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <SegmentedButtons

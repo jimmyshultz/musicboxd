@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView import removed - using regular View since header handles safe area
 import {
   Text,
   Avatar,
@@ -150,7 +150,7 @@ export default function FollowersScreen() {
   const currentData = activeTab === 'followers' ? followers : followingUsers;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
         {/* Header */}
   <View style={styles.header}>
     <Text variant="headlineSmall" style={styles.headerTitle}>
@@ -192,7 +192,7 @@ export default function FollowersScreen() {
           ListEmptyComponent={<EmptyState activeTab={activeTab} username={username} />}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

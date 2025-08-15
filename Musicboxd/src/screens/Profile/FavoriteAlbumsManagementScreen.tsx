@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -196,7 +196,7 @@ export default function FavoriteAlbumsManagementScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <Text variant="headlineMedium" style={styles.headerTitle}>
@@ -262,7 +262,7 @@ export default function FavoriteAlbumsManagementScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
