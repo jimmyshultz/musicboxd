@@ -8,28 +8,20 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text, ActivityIndicator, IconButton, Searchbar } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { ProfileStackParamList, Album } from '../../types';
+import { Album } from '../../types';
 import { RootState } from '../../store';
 import { updateProfile } from '../../store/slices/authSlice';
 import { AlbumService } from '../../services/albumService';
 import { colors, spacing } from '../../utils/theme';
 
-type FavoriteAlbumsManagementNavigationProp = StackNavigationProp<ProfileStackParamList>;
-
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
 
-// Icon component to avoid creating it during render
-const arrowIconStyle = { fontSize: 20, color: '#666' };
-const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
 
 export default function FavoriteAlbumsManagementScreen() {
-  const navigation = useNavigation<FavoriteAlbumsManagementNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   
@@ -207,15 +199,9 @@ export default function FavoriteAlbumsManagementScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
-        <IconButton
-          icon={ArrowLeftIcon}
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-        />
         <Text variant="headlineMedium" style={styles.headerTitle}>
           Favorite Albums
         </Text>
-        <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -298,9 +284,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     backgroundColor: colors.surface,
   },
-  backButton: {
-    margin: 0,
-  },
+
   headerTitle: {
     fontWeight: 'bold',
     flex: 1,

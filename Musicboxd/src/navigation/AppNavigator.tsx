@@ -104,6 +104,8 @@ function HomeStackNavigator() {
         component={AlbumDetailsScreen}
         options={{
           title: 'Album Details',
+          headerBackVisible: false,
+          headerLeft: () => null,
         }}
       />
       <HomeStack.Screen
@@ -149,7 +151,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry' }}
+        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
       />
     </HomeStack.Navigator>
   );
@@ -199,6 +201,8 @@ function SearchStackNavigator() {
         component={AlbumDetailsScreen}
         options={{
           title: 'Album Details',
+          headerBackVisible: false,
+          headerLeft: () => null,
         }}
       />
       <SearchStack.Screen
@@ -244,7 +248,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry' }}
+        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
       />
     </SearchStack.Navigator>
   );
@@ -266,7 +270,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{ title: 'Profile', headerBackVisible: false }}
+        options={{ title: 'Profile', headerBackVisible: false, headerLeft: () => null }}
       />
       <ProfileStack.Screen
         name="PopularThisWeek"
@@ -294,6 +298,8 @@ function ProfileStackNavigator() {
         component={AlbumDetailsScreen}
         options={{
           title: 'Album Details',
+          headerBackVisible: false,
+          headerLeft: () => null,
         }}
       />
       <ProfileStack.Screen
@@ -339,7 +345,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry' }}
+        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
       />
     </ProfileStack.Navigator>
   );

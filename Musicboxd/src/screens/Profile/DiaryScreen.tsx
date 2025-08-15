@@ -103,13 +103,7 @@ import { theme, spacing } from '../../utils/theme';
     loadInitial();
   }, [loadInitial]);
 
-  const navigateToProfile = () => {
-    if (currentUser?.id === userId) {
-      navigation.navigate('ProfileMain' as any);
-    } else {
-      navigation.navigate('UserProfile' as any, { userId });
-    }
-  };
+
 
   const renderRow = ({ item }: { item: DiaryEntry }) => {
     const album = albumsById[item.albumId];
@@ -150,13 +144,20 @@ import { theme, spacing } from '../../utils/theme';
   return (
     <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
       <View style={styles.headerToggle}>
-        <SegmentedButtons
-          value={selectedTab}
-          onValueChange={(v: any) => {
-            if (v === 'profile') navigateToProfile();
-            else setSelectedTab('diary');
-          }}
-          buttons={[
+                            <SegmentedButtons
+            value={selectedTab}
+            onValueChange={(v: any) => {
+              if (v === 'profile') {
+                if (currentUser?.id === userId) {
+                  navigation.replace('ProfileMain' as any);
+                } else {
+                  navigation.replace('UserProfile' as any, { userId });
+                }
+              } else {
+                setSelectedTab('diary');
+              }
+            }}
+            buttons={[
             { value: 'profile', label: 'Profile' },
             { value: 'diary', label: 'Diary' },
           ]}

@@ -11,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Text,
   ActivityIndicator,
-  IconButton,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -28,9 +27,6 @@ type ListenedAlbumsScreenRouteProp = RouteProp<
 >;
 type ListenedAlbumsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-// Icon component to avoid creating it during render
-const arrowIconStyle = { fontSize: 20, color: '#666' };
-const ArrowLeftIcon = (props: any) => <Text style={{ ...arrowIconStyle, color: props.color || '#666' }}>←</Text>;
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 3) / 2;
@@ -133,11 +129,6 @@ export default function ListenedAlbumsScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <IconButton
-            icon={ArrowLeftIcon}
-            onPress={() => navigation.goBack()}
-            style={styles.backButton}
-          />
           <View style={styles.headerContent}>
             <Text variant="headlineSmall" style={styles.headerTitle}>
               Albums Listened
@@ -197,9 +188,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
-  backButton: {
-    margin: 0,
-  },
+
   headerContent: {
     flex: 1,
     marginLeft: spacing.sm,
