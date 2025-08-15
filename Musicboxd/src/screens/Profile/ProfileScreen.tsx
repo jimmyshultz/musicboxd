@@ -329,10 +329,9 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safeArea} edges={['left','right','bottom']}>
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
+      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}> 
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -347,100 +346,101 @@ export default function ProfileScreen() {
         />
       </View>
 
-      {/* Profile Header */}
-      <View style={styles.profileHeader}>
-        <Avatar.Image 
-          size={80} 
-          source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
-          style={styles.profilePicture}
-        />
-        <Text variant="headlineMedium" style={styles.username}>
-          @{user.username}
-        </Text>
-      </View>
-
-      {/* Favorite Albums */}
-      <View style={styles.section}>
-        <View style={styles.sectionHeaderWithButton}>
-          <Text variant="headlineSmall" style={styles.sectionTitleInHeader}>
-            Favorite Albums
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never">
+        {/* Profile Header */}
+        <View style={styles.profileHeader}>
+          <Avatar.Image 
+            size={80} 
+            source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
+            style={styles.profilePicture}
+          />
+          <Text variant="headlineMedium" style={styles.username}>
+            @{user.username}
           </Text>
-          <TouchableOpacity onPress={navigateToFavoriteAlbumsManagement}>
-            <Text style={styles.editButton}>
-              {favoriteAlbums.length > 0 ? 'Edit' : 'Add'}
-            </Text>
-          </TouchableOpacity>
         </View>
-        {favoriteAlbums.length > 0 ? (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.horizontalList}>
-              {favoriteAlbums.map(renderFavoriteAlbum)}
-            </View>
-          </ScrollView>
-        ) : (
-          <TouchableOpacity
-            style={styles.emptyFavoritesContainer}
-            onPress={navigateToFavoriteAlbumsManagement}
-          >
-            <Text variant="bodyLarge" style={styles.emptyFavoritesText}>
-              Add your five favorite albums
-            </Text>
-            <Text variant="bodyMedium" style={styles.emptyFavoritesSubtext}>
-              Tap to select albums that define your music taste
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
 
-      {/* Recent Activity */}
-      {recentActivity.length > 0 && (
+        {/* Favorite Albums */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderWithButton}>
+            <Text variant="headlineSmall" style={styles.sectionTitleInHeader}>
+              Favorite Albums
+            </Text>
+            <TouchableOpacity onPress={navigateToFavoriteAlbumsManagement}>
+              <Text style={styles.editButton}>
+                {favoriteAlbums.length > 0 ? 'Edit' : 'Add'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {favoriteAlbums.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.horizontalList}>
+                {favoriteAlbums.map(renderFavoriteAlbum)}
+              </View>
+            </ScrollView>
+          ) : (
+            <TouchableOpacity
+              style={styles.emptyFavoritesContainer}
+              onPress={navigateToFavoriteAlbumsManagement}
+            >
+              <Text variant="bodyLarge" style={styles.emptyFavoritesText}>
+                Add your five favorite albums
+              </Text>
+              <Text variant="bodyMedium" style={styles.emptyFavoritesSubtext}>
+                Tap to select albums that define your music taste
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Recent Activity */}
+        {recentActivity.length > 0 && (
+          <View style={styles.section}>
+            <Text variant="headlineSmall" style={styles.sectionTitle}>
+              Recent Activity
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.horizontalList}>
+                {recentActivity.map(renderRecentActivityItem)}
+              </View>
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Stats Grid */}
         <View style={styles.section}>
           <Text variant="headlineSmall" style={styles.sectionTitle}>
-            Recent Activity
+            Stats & Social
           </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.horizontalList}>
-              {recentActivity.map(renderRecentActivityItem)}
-            </View>
-          </ScrollView>
+          <View style={styles.statsGrid}>
+            {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
+            {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
+            {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
+            {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
+            {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
+            {renderStatCard('Following', userStats.following, navigateToFollowing)}
+          </View>
         </View>
-      )}
 
-      {/* Stats Grid */}
-      <View style={styles.section}>
-        <Text variant="headlineSmall" style={styles.sectionTitle}>
-          Stats & Social
-        </Text>
-        <View style={styles.statsGrid}>
-          {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
-          {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
-          {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
-          {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-          {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
-          {renderStatCard('Following', userStats.following, navigateToFollowing)}
+        {/* Settings */}
+        <View style={styles.section}>
+          <Text variant="headlineSmall" style={styles.sectionTitle}>
+            Settings
+          </Text>
+          <View style={styles.settingsContainer}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
+              <Text style={styles.settingsText}>Account Settings</Text>
+              <ChevronIcon />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
+              <Text style={styles.settingsText}>Help & Support</Text>
+              <ChevronIcon />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.settingsItem} onPress={handleLogout}>
+              <Text style={styles.settingsText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-
-      {/* Settings */}
-      <View style={styles.section}>
-        <Text variant="headlineSmall" style={styles.sectionTitle}>
-          Settings
-        </Text>
-        <View style={styles.settingsContainer}>
-          <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
-            <Text style={styles.settingsText}>Account Settings</Text>
-            <ChevronIcon />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
-            <Text style={styles.settingsText}>Help & Support</Text>
-            <ChevronIcon />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.settingsItem} onPress={handleLogout}>
-            <Text style={styles.settingsText}>Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -456,7 +456,9 @@ const styles = StyleSheet.create({
   },
   segmentHeader: {
     padding: spacing.md,
+    backgroundColor: theme.light.colors.surface,
     borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   profileHeader: {
     alignItems: 'center',
