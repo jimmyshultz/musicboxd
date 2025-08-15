@@ -9,24 +9,19 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { ProfileStackParamList, Album } from '../../types';
+import { Album } from '../../types';
 import { RootState } from '../../store';
 import { updateProfile } from '../../store/slices/authSlice';
 import { AlbumService } from '../../services/albumService';
 import { colors, spacing } from '../../utils/theme';
-
-type FavoriteAlbumsManagementNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
 
 
 export default function FavoriteAlbumsManagementScreen() {
-  const navigation = useNavigation<FavoriteAlbumsManagementNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch();
   

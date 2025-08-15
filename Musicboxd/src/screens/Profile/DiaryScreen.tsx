@@ -103,13 +103,7 @@ import { theme, spacing } from '../../utils/theme';
     loadInitial();
   }, [loadInitial]);
 
-  const navigateToProfile = () => {
-    if (currentUser?.id === userId) {
-      navigation.navigate('ProfileMain' as any);
-    } else {
-      navigation.navigate('UserProfile' as any, { userId });
-    }
-  };
+
 
   const renderRow = ({ item }: { item: DiaryEntry }) => {
     const album = albumsById[item.albumId];
