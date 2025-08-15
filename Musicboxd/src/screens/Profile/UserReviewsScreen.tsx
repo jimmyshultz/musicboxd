@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView import removed - using regular View since header handles safe area
 import {
   Text,
   ActivityIndicator,
@@ -147,7 +147,7 @@ export default function UserReviewsScreen() {
     : 0;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -178,7 +178,7 @@ export default function UserReviewsScreen() {
           <View style={styles.bottomPadding} />
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

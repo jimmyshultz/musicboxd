@@ -7,7 +7,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// SafeAreaView import removed - using regular View since header handles safe area
 import {
   Text,
   ActivityIndicator,
@@ -125,7 +125,7 @@ export default function ListenedAlbumsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -157,7 +157,7 @@ export default function ListenedAlbumsScreen() {
           </ScrollView>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
