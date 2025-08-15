@@ -106,7 +106,7 @@ function HomeStackNavigator() {
         component={PopularThisWeekScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'Popular This Week',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -118,7 +118,7 @@ function HomeStackNavigator() {
         component={NewFromFriendsScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'New From Friends',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -130,7 +130,7 @@ function HomeStackNavigator() {
         component={PopularWithFriendsScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'Popular With Friends',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -253,7 +253,7 @@ function SearchStackNavigator() {
         component={PopularThisWeekScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'Popular This Week',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -265,7 +265,7 @@ function SearchStackNavigator() {
         component={NewFromFriendsScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'New From Friends',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -277,7 +277,7 @@ function SearchStackNavigator() {
         component={PopularWithFriendsScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'Popular With Friends',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -400,7 +400,7 @@ function ProfileStackNavigator() {
         component={PopularThisWeekScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'Popular This Week',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -412,7 +412,7 @@ function ProfileStackNavigator() {
         component={NewFromFriendsScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'New From Friends',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
@@ -424,7 +424,7 @@ function ProfileStackNavigator() {
         component={PopularWithFriendsScreen}
         options={({ navigation }) => ({
           headerShown: true,
-          title: '',
+          title: 'Popular With Friends',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();

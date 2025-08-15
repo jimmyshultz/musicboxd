@@ -204,13 +204,6 @@ export default function PopularWithFriendsScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            Popular With Friends
-          </Text>
-        </View>
-
         <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.grid}>
             {albums.map((album, index) => renderAlbumCard(album, index))}

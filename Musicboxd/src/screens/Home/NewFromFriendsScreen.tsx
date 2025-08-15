@@ -166,13 +166,6 @@ export default function NewFromFriendsScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.headerTitle}>
-            New From Friends
-          </Text>
-        </View>
-
         <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
           <View style={styles.grid}>
             {activities.map((activity, index) => renderActivityCard(activity, index))}
