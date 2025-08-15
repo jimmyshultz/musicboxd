@@ -146,7 +146,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ headerShown: false }}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
       />
       <HomeStack.Screen
         name="DiaryEntryDetails"
@@ -243,7 +243,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ headerShown: false }}
+        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
       />
       <SearchStack.Screen
         name="DiaryEntryDetails"
