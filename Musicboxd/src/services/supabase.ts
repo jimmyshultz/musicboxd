@@ -1,12 +1,13 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
+import Config from 'react-native-config';
 
-// Supabase configuration - replace with your actual values
-const supabaseUrl = 'https://your-project-ref.supabase.co'; // Replace with your actual Supabase URL
-const supabaseAnonKey = 'your_actual_anon_key_here'; // Replace with your actual anon key
+// Environment variables from .env file
+const supabaseUrl = Config.SUPABASE_URL;
+const supabaseAnonKey = Config.SUPABASE_ANON_KEY;
 
-if (supabaseUrl === 'https://your-project-ref.supabase.co' || supabaseAnonKey === 'your_actual_anon_key_here') {
-  console.warn('⚠️  Supabase configuration not found. Please update with your actual Supabase credentials.');
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('⚠️  Supabase configuration not found. Please check your .env file has SUPABASE_URL and SUPABASE_ANON_KEY');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
