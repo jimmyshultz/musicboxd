@@ -1,345 +1,417 @@
-import { User, Activity, Follow } from '../types';
-import { AlbumService } from './albumService';
+import { supabase } from './supabase';
+import { UserProfile } from '../types/database';
+import { User } from '@supabase/supabase-js';
 
-class UserService {
-  // Mock data for demonstration - in real app, these would be API calls
-  
-  // Track follow relationships - initialize with some sample relationships
-  private followRelationships: Follow[] = [
-    // Some initial follows to make the social graph more interesting
-    {
-      followerId: 'user1',
-      followingId: 'user2',
-      dateFollowed: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
-    },
-    {
-      followerId: 'user2',
-      followingId: 'user3',
-      dateFollowed: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    },
-    {
-      followerId: 'user3',
-      followingId: 'user1',
-      dateFollowed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-    },
-    // Add relationships for current user
-    {
-      followerId: 'current-user-id',
-      followingId: 'user1',
-      dateFollowed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-    },
-    {
-      followerId: 'current-user-id',
-      followingId: 'user2',
-      dateFollowed: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
-    },
-    {
-      followerId: 'user1',
-      followingId: 'current-user-id',
-      dateFollowed: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
-    },
-    {
-      followerId: 'user3',
-      followingId: 'current-user-id',
-      dateFollowed: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), // 6 days ago
-    },
-  ];
-  
-  private mockUsers: User[] = [
-    {
-      id: 'current-user-id',
-      username: 'musiclover2024',
-      email: 'music@example.com',
-      profilePicture: 'https://randomuser.me/api/portraits/men/32.jpg',
-      bio: 'Passionate about discovering new music across all genres 🎶',
-      joinedDate: new Date('2024-01-15'),
-      lastActiveDate: new Date(),
-      preferences: {
-        favoriteGenres: ['Indie Rock', 'Electronic', 'Jazz'],
-        favoriteAlbumIds: ['1', '3'], // Add missing property
-        notifications: {
-          newFollowers: true,
-          reviewLikes: true,
-          friendActivity: true,
-        },
-        privacy: {
-          profileVisibility: 'public',
-          activityVisibility: 'public',
-        },
-      },
-    },
-    {
-      id: 'user1',
-      username: 'indierocklover',
-      email: 'indie@music.com',
-      profilePicture: 'https://randomuser.me/api/portraits/women/44.jpg',
-      bio: 'Obsessed with indie rock and discovering underground bands 🎸',
-      joinedDate: new Date('2023-06-15'),
-      lastActiveDate: new Date(),
-      preferences: {
-        favoriteGenres: ['Indie Rock', 'Alternative', 'Post-Rock'],
-        favoriteAlbumIds: ['2', '4'], // Add missing property
-        notifications: {
-          newFollowers: true,
-          reviewLikes: true,
-          friendActivity: true,
-        },
-        privacy: {
-          profileVisibility: 'public',
-          activityVisibility: 'public',
-        },
-      },
-    },
-    {
-      id: 'user2',
-      username: 'jazzfanatic',
-      email: 'jazz@music.com',
-      profilePicture: 'https://randomuser.me/api/portraits/men/55.jpg',
-      bio: 'Jazz collector with 500+ vinyl records. Always hunting for rare pressings 🎷',
-      joinedDate: new Date('2023-03-20'),
-      lastActiveDate: new Date(),
-      preferences: {
-        favoriteGenres: ['Jazz', 'Fusion', 'Bebop'],
-        favoriteAlbumIds: ['5', '6'], // Add missing property
-        notifications: {
-          newFollowers: true,
-          reviewLikes: true,
-          friendActivity: true,
-        },
-        privacy: {
-          profileVisibility: 'public',
-          activityVisibility: 'public',
-        },
-      },
-    },
-    {
-      id: 'user3',
-      username: 'hiphophead',
-      email: 'hiphop@music.com',
-      profilePicture: 'https://randomuser.me/api/portraits/men/23.jpg',
-      bio: 'Real hip-hop never died 🎤 Vinyl collector and beat maker',
-      joinedDate: new Date('2023-08-10'),
-      lastActiveDate: new Date(),
-      preferences: {
-        favoriteGenres: ['Hip-Hop', 'Rap', 'R&B'],
-        favoriteAlbumIds: ['7', '8'], // Add missing property
-        notifications: {
-          newFollowers: true,
-          reviewLikes: false,
-          friendActivity: true,
-        },
-        privacy: {
-          profileVisibility: 'public',
-          activityVisibility: 'friends',
-        },
-      },
-    },
-  ];
+// Type-safe Supabase client
+type SupabaseClient = typeof supabase;
 
-  private mockActivity: Activity[] = [
-    {
-      id: '1',
-      userId: 'user1',
-      type: 'review',
-      albumId: 'album1',
-      reviewId: 'review1',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    },
-    {
-      id: '2',
-      userId: 'user1',
-      type: 'listen',
-      albumId: 'album2',
-      timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    },
-    {
-      id: '3',
-      userId: 'user2',
-      type: 'list_created',
-      listId: 'list1',
-      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000),
-    },
-    {
-      id: '4',
-      userId: 'user3',
-      type: 'follow',
-      followedUserId: 'user1',
-      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    },
-    {
-      id: '5',
-      userId: 'user2',
-      type: 'review',
-      albumId: 'album3',
-      reviewId: 'review2',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    },
-  ];
+export class UserService {
+  private client: SupabaseClient;
 
-  // Get user by ID
-  async getUserById(userId: string): Promise<User | null> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const user = this.mockUsers.find(u => u.id === userId);
-    return user || null;
+  constructor() {
+    this.client = supabase;
   }
 
-  // Search users by username
-  async searchUsers(query: string): Promise<User[]> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    if (!query.trim()) return [];
-    
-    return this.mockUsers.filter(user => 
-      user.username.toLowerCase().includes(query.toLowerCase())
-    );
+  // ============================================================================
+  // AUTHENTICATION
+  // ============================================================================
+
+  /**
+   * Get current user session
+   */
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await this.client.auth.getUser();
+    return user;
   }
 
-  // Get user's activity feed
-  async getUserActivity(userId: string, limit: number = 10): Promise<Activity[]> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    return this.mockActivity
-      .filter(activity => activity.userId === userId)
-      .slice(0, limit);
+  /**
+   * Get current user session
+   */
+  async getSession() {
+    const { data: { session } } = await this.client.auth.getSession();
+    return session;
   }
 
-  // Get activity feed for followed users
-  async getFollowingActivity(followingUserIds: string[], limit: number = 20): Promise<Activity[]> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    return this.mockActivity
-      .filter(activity => followingUserIds.includes(activity.userId))
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
+  /**
+   * Sign out current user
+   */
+  async signOut() {
+    const { error } = await this.client.auth.signOut();
+    if (error) throw error;
   }
 
-  // Follow a user
-  async followUser(userId: string): Promise<{ followerId: string; followingId: string; dateFollowed: string }> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const follow: Follow = {
-      followerId: 'current-user-id',
-      followingId: userId,
-      dateFollowed: new Date(),
-    };
-    
-    // Add to our follow relationships tracking
-    const existingFollow = this.followRelationships.find(
-      f => f.followerId === follow.followerId && f.followingId === follow.followingId
-    );
-    
-    if (!existingFollow) {
-      this.followRelationships.push(follow);
+  // ============================================================================
+  // USER PROFILES
+  // ============================================================================
+
+  /**
+   * Get user profile by ID
+   */
+  async getUserProfile(userId: string): Promise<UserProfile | null> {
+    const { data, error } = await this.client
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows found
+        return null;
+      }
+      throw error;
     }
+
+    return data;
+  }
+
+  /**
+   * Get current user's profile
+   */
+  async getCurrentUserProfile(): Promise<UserProfile | null> {
+    const user = await this.getCurrentUser();
+    if (!user) return null;
+
+    return this.getUserProfile(user.id);
+  }
+
+  /**
+   * Create or update user profile
+   */
+  async upsertUserProfile(profile: Partial<UserProfile> & { id: string }): Promise<UserProfile> {
+    const { data, error } = await this.client
+      .from('user_profiles')
+      .upsert(profile)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Update user profile
+   */
+  async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+    const { data, error } = await this.client
+      .from('user_profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Search users by username or display name
+   */
+  async searchUsers(query: string, limit: number = 10): Promise<UserProfile[]> {
+    const { data, error } = await this.client
+      .from('user_profiles')
+      .select('*')
+      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+      .eq('is_private', false) // Only search public profiles
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  /**
+   * Check if username is available
+   */
+  async isUsernameAvailable(username: string): Promise<boolean> {
+    const { error } = await this.client
+      .from('user_profiles')
+      .select('id')
+      .eq('username', username)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // No rows found, username is available
+      return true;
+    }
+
+    if (error) throw error;
     
-    // Return serialized version to avoid Redux serialization issues
+    // Username exists
+    return false;
+  }
+
+  // ============================================================================
+  // FOLLOWING SYSTEM
+  // ============================================================================
+
+  /**
+   * Follow a user
+   */
+  async followUser(followingId: string): Promise<void> {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error('Must be authenticated to follow users');
+
+    const { error } = await this.client
+      .from('user_follows')
+      .insert({
+        follower_id: user.id,
+        following_id: followingId,
+      });
+
+    if (error) throw error;
+  }
+
+  /**
+   * Unfollow a user
+   */
+  async unfollowUser(followingId: string): Promise<void> {
+    const user = await this.getCurrentUser();
+    if (!user) throw new Error('Must be authenticated to unfollow users');
+
+    const { error } = await this.client
+      .from('user_follows')
+      .delete()
+      .eq('follower_id', user.id)
+      .eq('following_id', followingId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Check if current user is following another user
+   */
+  async isFollowing(followingId: string): Promise<boolean> {
+    const user = await this.getCurrentUser();
+    if (!user) return false;
+
+    const { data, error } = await this.client
+      .from('user_follows')
+      .select('id')
+      .eq('follower_id', user.id)
+      .eq('following_id', followingId)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // No rows found, not following
+      return false;
+    }
+
+    if (error) throw error;
+    return !!data;
+  }
+
+  /**
+   * Get user's followers
+   */
+  async getFollowers(userId: string): Promise<UserProfile[]> {
+    try {
+      // Get follower IDs first
+      const { data: followData, error: followError } = await this.client
+        .from('user_follows')
+        .select('follower_id')
+        .eq('following_id', userId);
+
+      if (followError) throw followError;
+      
+      if (!followData || followData.length === 0) {
+        return [];
+      }
+
+      const followerIds = followData.map(f => f.follower_id);
+
+      // Get user profiles for those IDs
+      const { data: profileData, error: profileError } = await this.client
+        .from('user_profiles')
+        .select('*')
+        .in('id', followerIds);
+
+      if (profileError) throw profileError;
+      return profileData || [];
+    } catch (error) {
+      console.error('Error fetching followers:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get users that a user is following
+   */
+  async getFollowing(userId: string): Promise<UserProfile[]> {
+    try {
+      // Get following IDs first
+      const { data: followData, error: followError } = await this.client
+        .from('user_follows')
+        .select('following_id')
+        .eq('follower_id', userId);
+
+      if (followError) throw followError;
+      
+      if (!followData || followData.length === 0) {
+        return [];
+      }
+
+      const followingIds = followData.map(f => f.following_id);
+
+      // Get user profiles for those IDs
+      const { data: profileData, error: profileError } = await this.client
+        .from('user_profiles')
+        .select('*')
+        .in('id', followingIds);
+
+      if (profileError) throw profileError;
+      return profileData || [];
+    } catch (error) {
+      console.error('Error fetching following:', error);
+      return [];
+    }
+  }
+
+  // Legacy method names for backward compatibility
+  /**
+   * @deprecated Use getUserProfile instead
+   */
+  async getUserById(userId: string): Promise<UserProfile | null> {
+    return this.getUserProfile(userId);
+  }
+
+  /**
+   * @deprecated Use getFollowers instead
+   */
+  async getUserFollowers(userId: string): Promise<UserProfile[]> {
+    return this.getFollowers(userId);
+  }
+
+  /**
+   * @deprecated Use getFollowing instead
+   */
+  async getUserFollowing(userId: string): Promise<UserProfile[]> {
+    return this.getFollowing(userId);
+  }
+
+  /**
+   * Get follower/following counts for a user
+   */
+  async getFollowCounts(userId: string): Promise<{ followers: number; following: number }> {
+    const [followersResult, followingResult] = await Promise.all([
+      this.client
+        .from('user_follows')
+        .select('id', { count: 'exact' })
+        .eq('following_id', userId),
+      this.client
+        .from('user_follows')
+        .select('id', { count: 'exact' })
+        .eq('follower_id', userId),
+    ]);
+
+    if (followersResult.error) throw followersResult.error;
+    if (followingResult.error) throw followingResult.error;
+
     return {
-      followerId: follow.followerId,
-      followingId: follow.followingId,
-      dateFollowed: follow.dateFollowed.toISOString(),
+      followers: followersResult.count || 0,
+      following: followingResult.count || 0,
     };
   }
 
-  // Unfollow a user
-  async unfollowUser(userId: string): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Remove from our follow relationships tracking
-    this.followRelationships = this.followRelationships.filter(
-      f => !(f.followerId === 'current-user-id' && f.followingId === userId)
-    );
-  }
+  // ============================================================================
+  // USER SUGGESTIONS
+  // ============================================================================
 
-  // Get user's followers
-  async getUserFollowers(userId: string): Promise<User[]> {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    // Get all users who follow this user
-    const followerIds = this.followRelationships
-      .filter(f => f.followingId === userId)
-      .map(f => f.followerId);
-    
-    // Return the user objects for those IDs
-    return this.mockUsers.filter(user => followerIds.includes(user.id));
-  }
+  /**
+   * Get suggested users to follow (basic implementation)
+   * In a real app, this would use a recommendation algorithm
+   */
+  async getSuggestedUsers(limit: number = 5): Promise<UserProfile[]> {
+    const user = await this.getCurrentUser();
+    if (!user) return [];
 
-  // Get users that a user is following
-  async getUserFollowing(userId: string): Promise<User[]> {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    // Get all users this user is following
-    const followingIds = this.followRelationships
-      .filter(f => f.followerId === userId)
-      .map(f => f.followingId);
-    
-    // Return the user objects for those IDs
-    return this.mockUsers.filter(user => followingIds.includes(user.id));
-  }
+    try {
+      // Get users that the current user is not following
+      const { data: followingData } = await this.client
+        .from('user_follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
 
-  // Get suggested users to follow
-  async getSuggestedUsers(currentUserId: string, limit: number = 5): Promise<User[]> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Simple suggestion algorithm - exclude current user and already followed users
-    return this.mockUsers
-      .filter(user => user.id !== currentUserId)
-      .slice(0, limit);
-  }
+      const followingIds = followingData?.map(f => f.following_id) || [];
+      
+      // Build query to get public profiles, excluding current user
+      let query = this.client
+        .from('user_profiles')
+        .select('*')
+        .eq('is_private', false)
+        .not('id', 'eq', user.id)
+        .limit(limit);
 
-  // Update user profile
-  async updateUserProfile(userId: string, updates: Partial<User>): Promise<User> {
-    await new Promise(resolve => setTimeout(resolve, 400));
-    
-    const userIndex = this.mockUsers.findIndex(u => u.id === userId);
-    if (userIndex === -1) {
-      throw new Error('User not found');
+      // Only add the NOT IN clause if there are following IDs
+      if (followingIds.length > 0) {
+        query = query.not('id', 'in', `(${followingIds.join(',')})`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching suggested users:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getSuggestedUsers:', error);
+      return [];
     }
-    
-    this.mockUsers[userIndex] = { ...this.mockUsers[userIndex], ...updates };
-    return this.mockUsers[userIndex];
   }
 
-  // Get current user's follower count  
-  getCurrentUserFollowerCount(): number {
-    return this.followRelationships.filter(f => f.followingId === 'current-user-id').length;
-  }
+  // ============================================================================
+  // USER STATISTICS
+  // ============================================================================
 
-  // Get current user's following count
-  getCurrentUserFollowingCount(): number {
-    return this.followRelationships.filter(f => f.followerId === 'current-user-id').length;
-  }
-
-  // Get user statistics
+  /**
+   * Get user statistics (albums listened, reviews, etc.)
+   */
   async getUserStats(userId: string) {
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Calculate real follower and following counts for the specific user
-    const followingCount = this.followRelationships.filter(f => f.followerId === userId).length;
-    const followersCount = this.followRelationships.filter(f => f.followingId === userId).length;
-    
-    // Get real album stats from AlbumService
-    const albumStats = await AlbumService.getUserAlbumStats(userId);
-    
-    // Get static data for lists (would be from a lists service in real app)
-    const getListsCreated = (targetUserId: string) => {
-      if (targetUserId === 'current-user-id') return 3;
-      if (targetUserId === 'user1') return 5;
-      if (targetUserId === 'user2') return 12;
-      if (targetUserId === 'user3') return 8;
-      return 0;
-    };
-    
+    const [albumStats, followCounts] = await Promise.all([
+      this.getUserAlbumStats(userId),
+      this.getFollowCounts(userId),
+    ]);
+
     return {
-      albumsListened: albumStats.albumsListened,
-      reviews: albumStats.reviews,
-      averageRating: albumStats.averageRating,
-      following: followingCount,
-      followers: followersCount,
-      listsCreated: getListsCreated(userId),
+      ...albumStats,
+      ...followCounts,
+      listsCreated: 0, // Placeholder for future lists feature
+    };
+  }
+
+  /**
+   * Get user's album statistics
+   */
+  private async getUserAlbumStats(userId: string) {
+    const { data, error } = await this.client
+      .from('user_albums')
+      .select('rating, is_listened')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching user album stats:', error);
+      return {
+        albumsListened: 0,
+        reviews: 0,
+        averageRating: 0,
+      };
+    }
+
+    const albumsListened = data?.filter(ua => ua.is_listened).length || 0;
+    const ratingsData = data?.filter(ua => ua.rating !== null) || [];
+    const reviews = ratingsData.length;
+    const averageRating = reviews > 0 
+      ? ratingsData.reduce((sum, ua) => sum + (ua.rating || 0), 0) / reviews 
+      : 0;
+
+    return {
+      albumsListened,
+      reviews,
+      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
     };
   }
 }
 
+// Export singleton instance
 export const userService = new UserService();
