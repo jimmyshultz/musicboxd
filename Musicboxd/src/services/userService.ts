@@ -253,6 +253,106 @@ export class UserService {
       following: followingResult.count || 0,
     };
   }
+
+  // ============================================================================
+  // USER SUGGESTIONS
+  // ============================================================================
+
+  /**
+   * Get suggested users to follow (basic implementation)
+   * In a real app, this would use a recommendation algorithm
+   */
+  async getSuggestedUsers(limit: number = 5): Promise<UserProfile[]> {
+    const user = await this.getCurrentUser();
+    if (!user) return [];
+
+    try {
+      // Get users that the current user is not following
+      const { data: followingData } = await this.client
+        .from('user_follows')
+        .select('following_id')
+        .eq('follower_id', user.id);
+
+      const followingIds = followingData?.map(f => f.following_id) || [];
+      
+      // Build query to get public profiles, excluding current user
+      let query = this.client
+        .from('user_profiles')
+        .select('*')
+        .eq('is_private', false)
+        .not('id', 'eq', user.id)
+        .limit(limit);
+
+      // Only add the NOT IN clause if there are following IDs
+      if (followingIds.length > 0) {
+        query = query.not('id', 'in', `(${followingIds.join(',')})`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching suggested users:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in getSuggestedUsers:', error);
+      return [];
+    }
+  }
+
+  // ============================================================================
+  // USER STATISTICS
+  // ============================================================================
+
+  /**
+   * Get user statistics (albums listened, reviews, etc.)
+   */
+  async getUserStats(userId: string) {
+    const [albumStats, followCounts] = await Promise.all([
+      this.getUserAlbumStats(userId),
+      this.getFollowCounts(userId),
+    ]);
+
+    return {
+      ...albumStats,
+      ...followCounts,
+      listsCreated: 0, // Placeholder for future lists feature
+    };
+  }
+
+  /**
+   * Get user's album statistics
+   */
+  private async getUserAlbumStats(userId: string) {
+    const { data, error } = await this.client
+      .from('user_albums')
+      .select('rating, is_listened')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching user album stats:', error);
+      return {
+        albumsListened: 0,
+        reviews: 0,
+        averageRating: 0,
+      };
+    }
+
+    const albumsListened = data?.filter(ua => ua.is_listened).length || 0;
+    const ratingsData = data?.filter(ua => ua.rating !== null) || [];
+    const reviews = ratingsData.length;
+    const averageRating = reviews > 0 
+      ? ratingsData.reduce((sum, ua) => sum + (ua.rating || 0), 0) / reviews 
+      : 0;
+
+    return {
+      albumsListened,
+      reviews,
+      averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+    };
+  }
 }
 
 // Export singleton instance
