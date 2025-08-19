@@ -230,6 +230,28 @@ export class UserService {
     return data?.map((item: any) => item.following).filter(Boolean) || [];
   }
 
+  // Legacy method names for backward compatibility
+  /**
+   * @deprecated Use getUserProfile instead
+   */
+  async getUserById(userId: string): Promise<UserProfile | null> {
+    return this.getUserProfile(userId);
+  }
+
+  /**
+   * @deprecated Use getFollowers instead
+   */
+  async getUserFollowers(userId: string): Promise<UserProfile[]> {
+    return this.getFollowers(userId);
+  }
+
+  /**
+   * @deprecated Use getFollowing instead
+   */
+  async getUserFollowing(userId: string): Promise<UserProfile[]> {
+    return this.getFollowing(userId);
+  }
+
   /**
    * Get follower/following counts for a user
    */
