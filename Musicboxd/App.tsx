@@ -13,33 +13,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { lightTheme, darkTheme } from './src/utils/theme';
-import { loginSuccess } from './src/store/slices/authSlice';
-import { addListen, addReview } from './src/store/slices/albumSlice';
-import { AlbumService } from './src/services/albumService';
-
-// Mock user data
-const mockUser = {
-  id: 'current-user-id',
-  username: 'musiclover2024',
-  email: 'user@example.com',
-  bio: 'Passionate about discovering new music',
-  profilePicture: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face',
-  joinedDate: '2024-01-15T00:00:00.000Z',
-  lastActiveDate: new Date().toISOString(),
-  preferences: {
-    favoriteGenres: ['Rock', 'Electronic', 'Jazz'],
-    favoriteAlbumIds: [],
-    notifications: {
-      newFollowers: true,
-      reviewLikes: true,
-      friendActivity: true,
-    },
-    privacy: {
-      profileVisibility: 'public' as const,
-      activityVisibility: 'public' as const,
-    },
-  },
-};
+import { loginSuccess, loginFailure } from './src/store/slices/authSlice';
+import { userService } from './src/services/userService';
+import { supabase } from './src/services/supabase';
 
 function AppContent() {
   const dispatch = useDispatch();
@@ -47,32 +23,81 @@ function AppContent() {
   const currentTheme = isDarkMode ? darkTheme : lightTheme;
 
   useEffect(() => {
-    // Auto-login mock user on app start (until real auth is implemented)
-    dispatch(loginSuccess(mockUser));
-    
-    // Initialize user listens and reviews in Redux store
-    const initializeUserData = async () => {
+    // Initialize Supabase authentication
+    const initializeAuth = async () => {
       try {
-        const [userListens, userReviews] = await Promise.all([
-          AlbumService.getUserListens(mockUser.id),
-          AlbumService.getUserReviews(mockUser.id),
-        ]);
+        // Check if user is already logged in
+        const { data: { session } } = await supabase.auth.getSession();
         
-        // Dispatch listens to Redux store
-        userListens.forEach(listen => {
-          dispatch(addListen(listen));
-        });
-        
-        // Dispatch reviews to Redux store
-        userReviews.forEach(review => {
-          dispatch(addReview(review));
-        });
+        if (session?.user) {
+          // User is logged in, get their profile
+          const profile = await userService.getCurrentUserProfile();
+          
+          if (profile) {
+            // Convert profile to user format expected by Redux
+            const user = {
+              id: profile.id,
+              username: profile.username,
+              email: session.user.email || '',
+              bio: profile.bio || '',
+              profilePicture: profile.avatar_url || '',
+              joinedDate: profile.created_at,
+              lastActiveDate: new Date().toISOString(),
+              preferences: {
+                favoriteGenres: [],
+                favoriteAlbumIds: [],
+                notifications: {
+                  newFollowers: true,
+                  reviewLikes: true,
+                  friendActivity: true,
+                },
+                privacy: {
+                  profileVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                  activityVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                },
+              },
+            };
+            
+            dispatch(loginSuccess(user));
+          }
+        } else {
+          // No active session - for now, create a temporary mock user for development
+          // TODO: Implement proper login screen
+          console.log('No active session - user needs to log in');
+          
+          // For development, create a temporary mock user with a proper UUID format
+          const tempUser = {
+            id: '00000000-0000-0000-0000-000000000000', // Valid UUID format
+            username: 'temp_user',
+            email: 'temp@example.com',
+            bio: 'Temporary user for development',
+            profilePicture: '',
+            joinedDate: new Date().toISOString(),
+            lastActiveDate: new Date().toISOString(),
+            preferences: {
+              favoriteGenres: ['Rock', 'Electronic'],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                reviewLikes: true,
+                friendActivity: true,
+              },
+              privacy: {
+                profileVisibility: 'public' as const,
+                activityVisibility: 'public' as const,
+              },
+            },
+          };
+          
+          dispatch(loginSuccess(tempUser));
+        }
       } catch (error) {
-        console.error('Error initializing user data:', error);
+        console.error('Error initializing auth:', error);
+        dispatch(loginFailure('Failed to initialize authentication'));
       }
     };
-    
-    initializeUserData();
+
+    initializeAuth();
   }, [dispatch]);
 
   return (
