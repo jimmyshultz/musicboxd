@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { UserProfile, Database } from '../types/database';
+import { UserProfile } from '../types/database';
 import { User } from '@supabase/supabase-js';
 
 // Type-safe Supabase client
@@ -123,7 +123,7 @@ export class UserService {
    * Check if username is available
    */
   async isUsernameAvailable(username: string): Promise<boolean> {
-    const { data, error } = await this.client
+    const { error } = await this.client
       .from('user_profiles')
       .select('id')
       .eq('username', username)
