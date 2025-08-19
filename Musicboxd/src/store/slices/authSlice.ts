@@ -1,5 +1,7 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { User, SerializedUser } from '../../types';
+import { AuthService } from '../../services/authService';
+import { userService } from '../../services/userService';
 
 interface AuthState {
   user: SerializedUser | null;
@@ -14,6 +16,102 @@ const initialState: AuthState = {
   loading: false,
   error: null,
 };
+
+// Async thunks for authentication
+export const signInWithGoogle = createAsyncThunk(
+  'auth/signInWithGoogle',
+  async (_, { rejectWithValue }) => {
+    try {
+      const result = await AuthService.signInWithGoogle();
+      if (result.user) {
+        // Get the user profile from the database
+        const profile = await userService.getCurrentUserProfile();
+        if (profile) {
+          // Convert to User format expected by Redux
+          const user: User = {
+            id: profile.id,
+            username: profile.username,
+            email: result.user.email || '',
+            bio: profile.bio || '',
+            profilePicture: profile.avatar_url || '',
+            joinedDate: new Date(profile.created_at),
+            lastActiveDate: new Date(),
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                reviewLikes: true,
+                friendActivity: true,
+              },
+              privacy: {
+                profileVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                activityVisibility: profile.is_private ? 'private' as const : 'public' as const,
+              },
+            },
+          };
+          return user;
+        }
+      }
+      throw new Error('Failed to get user profile after sign in');
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Google Sign-In failed');
+    }
+  }
+);
+
+export const signOutUser = createAsyncThunk(
+  'auth/signOut',
+  async (_, { rejectWithValue }) => {
+    try {
+      await AuthService.signOut();
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Sign out failed');
+    }
+  }
+);
+
+export const initializeAuth = createAsyncThunk(
+  'auth/initialize',
+  async (_, { rejectWithValue }) => {
+    try {
+      const session = await AuthService.getCurrentSession();
+      if (session?.user) {
+        // Get the user profile from the database
+        const profile = await userService.getCurrentUserProfile();
+        if (profile) {
+          // Convert to User format expected by Redux
+          const user: User = {
+            id: profile.id,
+            username: profile.username,
+            email: session.user.email || '',
+            bio: profile.bio || '',
+            profilePicture: profile.avatar_url || '',
+            joinedDate: new Date(profile.created_at),
+            lastActiveDate: new Date(),
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                reviewLikes: true,
+                friendActivity: true,
+              },
+              privacy: {
+                profileVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                activityVisibility: profile.is_private ? 'private' as const : 'public' as const,
+              },
+            },
+          };
+          return user;
+        }
+      }
+      return null; // No authenticated user
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to initialize auth');
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
@@ -75,6 +173,75 @@ const authSlice = createSlice({
         state.user = { ...state.user, ...updates };
       }
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      // Google Sign-In
+      .addCase(signInWithGoogle.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(signInWithGoogle.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        if (action.payload.joinedDate instanceof Date) {
+          const user = action.payload as User;
+          state.user = {
+            ...user,
+            joinedDate: user.joinedDate.toISOString(),
+            lastActiveDate: user.lastActiveDate.toISOString(),
+          };
+        } else {
+          state.user = action.payload as SerializedUser;
+        }
+        state.error = null;
+      })
+      .addCase(signInWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload as string;
+      })
+      // Sign Out
+      .addCase(signOutUser.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(signOutUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      // Initialize Auth
+      .addCase(initializeAuth.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(initializeAuth.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload) {
+          state.isAuthenticated = true;
+          if (action.payload.joinedDate instanceof Date) {
+            const user = action.payload as User;
+            state.user = {
+              ...user,
+              joinedDate: user.joinedDate.toISOString(),
+              lastActiveDate: user.lastActiveDate.toISOString(),
+            };
+          } else {
+            state.user = action.payload as SerializedUser;
+          }
+        } else {
+          state.isAuthenticated = false;
+          state.user = null;
+        }
+        state.error = null;
+      })
+      .addCase(initializeAuth.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload as string;
+      });
   },
 });
 
