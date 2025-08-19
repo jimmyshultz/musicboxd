@@ -70,7 +70,7 @@ Scale Phase (1000+):         $34.25/month
 - ✅ Supabase project setup with PostgreSQL database
 - ✅ Database schema design (Users, Albums, Ratings, Follows, Activity)
 - ✅ Row Level Security (RLS) policies configured
-- ✅ Google & Apple Sign-In OAuth configuration
+- ✅ Google Sign-In OAuth configuration (Apple Sign-In deferred to Week 7)
 - ✅ Basic API endpoints for user management
 
 **Key Milestones:**
@@ -86,7 +86,7 @@ Scale Phase (1000+):         $34.25/month
 **Deliverables:**
 - ✅ React Native app connected to Supabase (`@supabase/supabase-js`)
 - ✅ Google Sign-In working on iOS (`@react-native-google-signin/google-signin`)
-- ✅ Apple Sign-In working on iOS (`@invertase/react-native-apple-authentication`)
+- ⏸️ Apple Sign-In deferred to Week 7 (pre-beta) to avoid developer program costs
 - ✅ User profile creation and management screens
 - ✅ Redux store updated for authentication state
 - ✅ Proper session handling and token refresh
@@ -176,6 +176,7 @@ Scale Phase (1000+):         $34.25/month
 **Deliverables:**
 - ✅ **PRODUCTION ENVIRONMENT**: Dedicated Supabase project
 - ✅ iOS App Store Connect configuration
+- ✅ Apple Developer Program enrollment and Apple Sign-In configuration
 - ✅ TestFlight build creation and distribution setup
 - ✅ Basic analytics tracking (user actions, feature usage)
 - ✅ Error monitoring and crash reporting

@@ -80,6 +80,10 @@ The schema includes:
 
 ### Apple Sign-In Setup
 
+**⏸️ DEFERRED UNTIL PRE-BETA** - To avoid Apple Developer Program costs ($99/year) until necessary.
+
+Apple Sign-In configuration will be completed in Week 7 (just before TestFlight distribution):
+
 1. **Enable Apple** provider in Supabase
 2. **Configure Apple Developer Account**:
    - Go to [Apple Developer Console](https://developer.apple.com/)
