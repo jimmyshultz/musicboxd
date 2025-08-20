@@ -34,7 +34,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") {
       if let plist = NSDictionary(contentsOfFile: path) {
         if let clientId = plist["CLIENT_ID"] as? String {
-          guard let config = GIDConfiguration(clientID: clientId) else { return true }
+          let config = GIDConfiguration(clientID: clientId)
           GIDSignIn.sharedInstance.configuration = config
         }
       }
