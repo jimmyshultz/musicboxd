@@ -11,7 +11,7 @@ export class AuthService {
     GoogleSignin.configure({
       // Using your actual client IDs from Google Cloud Console
       iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // iOS client ID
-      webClientId: 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com', // Replace with Web client ID
+      webClientId: '148204198310-jb85bku6g5sdoggvt6idqq3j31momvl7.apps.googleusercontent.com', // Web client ID
       offlineAccess: false, // Set to false for ID token
       scopes: ['openid', 'profile', 'email'], // Explicitly request required scopes
       forceCodeForRefreshToken: false, // Set to false for ID token
