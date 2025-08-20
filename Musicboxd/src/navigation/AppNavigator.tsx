@@ -23,6 +23,7 @@ import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
 import FavoriteAlbumsManagementScreen from '../screens/Profile/FavoriteAlbumsManagementScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
+import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
 
@@ -584,13 +585,23 @@ export default function AppNavigator() {
             options={{ headerShown: false }}
           />
         ) : (
-          <Stack.Screen
-            name="Auth"
-            component={AuthScreen}
-            options={{
-              headerShown: false,
-            }}
-          />
+          <>
+            <Stack.Screen
+              name="Auth"
+              component={AuthScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ProfileSetup"
+              component={ProfileSetupScreen}
+              options={{
+                title: 'Profile Setup',
+                headerBackVisible: false,
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
