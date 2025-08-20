@@ -9,12 +9,12 @@ export class AuthService {
    */
   static initializeGoogleSignIn() {
     GoogleSignin.configure({
-      // Using your actual client IDs from the GoogleService-Info.plist
-      iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com',
-      webClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // Same as iOS for this setup
-      offlineAccess: true,
-      hostedDomain: '',
-      forceCodeForRefreshToken: true,
+      // Using your actual client IDs from Google Cloud Console
+      iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // iOS client ID
+      webClientId: 'YOUR_WEB_CLIENT_ID_HERE.apps.googleusercontent.com', // Replace with Web client ID
+      offlineAccess: false, // Set to false for ID token
+      scopes: ['openid', 'profile', 'email'], // Explicitly request required scopes
+      forceCodeForRefreshToken: false, // Set to false for ID token
     });
   }
 
