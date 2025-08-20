@@ -9,9 +9,9 @@ export class AuthService {
    */
   static initializeGoogleSignIn() {
     GoogleSignin.configure({
-      // These will need to be replaced with actual values from Google Cloud Console
-      iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com', // From GoogleService-Info.plist
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // From Google Cloud Console
+      // Using your actual client IDs from the GoogleService-Info.plist
+      iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com',
+      webClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // Same as iOS for this setup
       offlineAccess: true,
       hostedDomain: '',
       forceCodeForRefreshToken: true,

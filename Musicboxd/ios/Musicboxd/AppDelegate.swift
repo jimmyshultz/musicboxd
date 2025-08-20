@@ -30,7 +30,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
       launchOptions: launchOptions
     )
 
+    // Configure Google Sign-In
+    if let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") {
+      if let plist = NSDictionary(contentsOfFile: path) {
+        if let clientId = plist["CLIENT_ID"] as? String {
+          guard let config = GIDConfiguration(clientID: clientId) else { return true }
+          GIDSignIn.sharedInstance.configuration = config
+        }
+      }
+    }
+
     return true
+  }
+
+  // Handle Google Sign-In URL callback
+  func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+    return GIDSignIn.sharedInstance.handle(url)
   }
 }
 
