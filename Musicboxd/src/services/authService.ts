@@ -12,7 +12,7 @@ export class AuthService {
       // Using your actual client IDs from Google Cloud Console
       iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // iOS client ID
       webClientId: '148204198310-jb85bku6g5sdoggvt6idqq3j31momvl7.apps.googleusercontent.com', // Web client ID
-      offlineAccess: false, // Disable offline access to avoid nonce issues
+      offlineAccess: false, // Try without offline access to avoid nonce
       scopes: ['openid', 'profile', 'email'], // Explicitly request required scopes
     });
   }
@@ -31,9 +31,10 @@ export class AuthService {
       // Debug: Log the entire userInfo object
       console.log('Google Sign-In userInfo:', JSON.stringify(userInfo, null, 2));
       
-      // Extract user data and token from the correct location
+      // Extract user data and tokens from the correct location
       const googleUser = userInfo.data?.user || userInfo.user;
       const idToken = userInfo.data?.idToken || userInfo.idToken;
+      const serverAuthCode = userInfo.data?.serverAuthCode || userInfo.serverAuthCode;
       
       if (!googleUser || !googleUser.email || !idToken) {
         throw new Error('Incomplete user data received from Google');
@@ -41,8 +42,9 @@ export class AuthService {
 
       console.log('Using ID token for Supabase auth...');
 
-      // Try the ID token approach again, but with better error handling
-      // The nonce issue might be resolved by using the latest Supabase client
+      // Try the simplified ID token approach with better configuration
+      console.log('Attempting Supabase auth with ID token...');
+      
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
