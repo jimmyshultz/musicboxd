@@ -4,6 +4,48 @@ import { userService } from './userService';
 
 export class AuthService {
   /**
+   * Generate a unique username from a display name
+   * Format: firstnamelastname, firstnamelastname2, firstnamelastname3, etc.
+   */
+  static async generateUniqueUsername(displayName: string): Promise<string> {
+    // Clean the display name: remove spaces, special chars, convert to lowercase
+    const cleanName = displayName
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric characters
+      .substring(0, 20); // Limit length
+    
+    let baseUsername = cleanName || 'user';
+    let username = baseUsername;
+    let counter = 1;
+    
+    // Keep trying until we find a unique username
+    while (true) {
+      try {
+        // Check if username is available
+        const isAvailable = await userService.isUsernameAvailable(username);
+        if (isAvailable) {
+          console.log('Generated unique username:', username);
+          return username;
+        }
+        
+        // Username taken, try with number suffix
+        counter++;
+        username = `${baseUsername}${counter}`;
+        
+        // Safety check to prevent infinite loop
+        if (counter > 1000) {
+          // Fallback to timestamp-based username
+          return `${baseUsername}_${Date.now()}`;
+        }
+      } catch (error) {
+        console.error('Error checking username availability:', error);
+        // Fallback to timestamp-based username
+        return `${baseUsername}_${Date.now()}`;
+      }
+    }
+  }
+
+  /**
    * Initialize Google Sign-In configuration
    * Call this once when the app starts
    */
@@ -81,10 +123,13 @@ export class AuthService {
         let profile = await userService.getUserProfile(data.user.id);
         
         if (!profile) {
+          // Generate a unique username
+          const uniqueUsername = await this.generateUniqueUsername(googleUser.name || 'User');
+          
           // Create new user profile
           profile = await userService.upsertUserProfile({
             id: data.user.id,
-            username: googleUser.name || `user_${Date.now()}`,
+            username: uniqueUsername,
             bio: '',
             avatar_url: googleUser.photo || '',
             is_private: false,
@@ -94,14 +139,13 @@ export class AuthService {
         } else {
           console.log('Found existing user profile:', profile.username);
           
-          // Update existing profile with Google data if needed
-          if (profile.username.startsWith('user_') && googleUser.name) {
-            console.log('Updating profile with Google name...');
+          // Update existing profile with Google data if needed (but keep existing username)
+          if (profile.avatar_url !== googleUser.photo) {
+            console.log('Updating profile avatar...');
             profile = await userService.updateUserProfile(data.user.id, {
-              username: googleUser.name,
               avatar_url: googleUser.photo || profile.avatar_url,
             });
-            console.log('Updated user profile:', profile.username);
+            console.log('Updated user avatar');
           }
         }
       }
