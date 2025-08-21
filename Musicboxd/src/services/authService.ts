@@ -44,10 +44,24 @@ export class AuthService {
       
       console.log('Skipping Supabase auth for now, creating local session...');
       
+      // Generate a proper UUID from the Google ID
+      const generateUUIDFromGoogleId = (googleId: string): string => {
+        // Create a deterministic UUID based on the Google ID
+        // This ensures the same Google user always gets the same UUID
+        const hash = googleId.padStart(32, '0').substring(0, 32);
+        return [
+          hash.substring(0, 8),
+          hash.substring(8, 12),
+          hash.substring(12, 16),
+          hash.substring(16, 20),
+          hash.substring(20, 32),
+        ].join('-');
+      };
+
       // Create a mock Supabase response structure
       const data = {
         user: {
-          id: `google_${googleUser.id}`, // Use Google ID prefixed
+          id: generateUUIDFromGoogleId(googleUser.id), // Generate proper UUID
           email: googleUser.email,
           user_metadata: {
             name: googleUser.name,
