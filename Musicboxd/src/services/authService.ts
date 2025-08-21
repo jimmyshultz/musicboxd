@@ -12,9 +12,8 @@ export class AuthService {
       // Using your actual client IDs from Google Cloud Console
       iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // iOS client ID
       webClientId: '148204198310-jb85bku6g5sdoggvt6idqq3j31momvl7.apps.googleusercontent.com', // Web client ID
-      offlineAccess: true, // Enable offline access to get refresh token
+      offlineAccess: false, // Disable offline access to avoid nonce issues
       scopes: ['openid', 'profile', 'email'], // Explicitly request required scopes
-      forceCodeForRefreshToken: true, // Force code for refresh token
     });
   }
 
@@ -46,6 +45,7 @@ export class AuthService {
       console.log('Using token:', token.substring(0, 50) + '...');
 
       // Sign in to Supabase using Google token
+      // Try without nonce first to avoid nonce mismatch error
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: token,
