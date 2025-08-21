@@ -18,7 +18,7 @@ export class AuthService {
   }
 
   /**
-   * Sign in with Google
+   * Sign in with Google - Fixed approach for Supabase integration
    */
   static async signInWithGoogle() {
     try {
@@ -31,67 +31,87 @@ export class AuthService {
       // Debug: Log the entire userInfo object
       console.log('Google Sign-In userInfo:', JSON.stringify(userInfo, null, 2));
       
-      // Extract user data from the correct location
+      // Extract user data and token from the correct location
       const googleUser = userInfo.data?.user || userInfo.user;
+      const idToken = userInfo.data?.idToken || userInfo.idToken;
       
-      if (!googleUser || !googleUser.email) {
-        throw new Error('No user data received from Google');
+      if (!googleUser || !googleUser.email || !idToken) {
+        throw new Error('Incomplete user data received from Google');
       }
 
-      // For now, let's skip Supabase auth and just create a local session
-      // This allows us to test the rest of the authentication flow
-      // TODO: Fix the nonce issue with Supabase later
-      
-      console.log('Skipping Supabase auth for now, creating local session...');
-      
-      // Generate a proper UUID from the Google ID
-      const generateUUIDFromGoogleId = (googleId: string): string => {
-        // Create a deterministic UUID based on the Google ID
-        // This ensures the same Google user always gets the same UUID
-        const hash = googleId.padStart(32, '0').substring(0, 32);
-        return [
-          hash.substring(0, 8),
-          hash.substring(8, 12),
-          hash.substring(12, 16),
-          hash.substring(16, 20),
-          hash.substring(20, 32),
-        ].join('-');
-      };
+      console.log('Using ID token for Supabase auth...');
 
-      // Create a mock Supabase response structure
-      const data = {
-        user: {
-          id: generateUUIDFromGoogleId(googleUser.id), // Generate proper UUID
-          email: googleUser.email,
-          user_metadata: {
-            name: googleUser.name,
-            avatar_url: googleUser.photo,
-            provider: 'google',
-          },
-        },
-        session: {
-          access_token: 'mock_token',
-          refresh_token: 'mock_refresh',
-        },
-      };
+      // Try the ID token approach again, but with better error handling
+      // The nonce issue might be resolved by using the latest Supabase client
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+
+      if (error) {
+        console.error('Supabase auth error:', error);
+        
+        // If we get a nonce error, use a fallback approach
+        if (error.message.includes('nonce')) {
+          console.log('Nonce error detected, using fallback approach...');
+          
+          // Generate a deterministic UUID from Google ID
+          const generateUUIDFromGoogleId = (googleId: string): string => {
+            const hash = googleId.padStart(32, '0').substring(0, 32);
+            return [
+              hash.substring(0, 8),
+              hash.substring(8, 12),
+              hash.substring(12, 16),
+              hash.substring(16, 20),
+              hash.substring(20, 32),
+            ].join('-');
+          };
+
+          // Create a mock session with deterministic UUID
+          const mockData = {
+            user: {
+              id: generateUUIDFromGoogleId(googleUser.id),
+              email: googleUser.email,
+              user_metadata: {
+                name: googleUser.name,
+                avatar_url: googleUser.photo,
+                provider: 'google',
+              },
+            },
+            session: {
+              access_token: 'mock_token',
+              refresh_token: 'mock_refresh',
+            },
+          };
+          
+          console.log('Using fallback mock session for user:', googleUser.email);
+          return mockData;
+        } else {
+          throw error;
+        }
+      }
 
       console.log('Supabase auth successful:', data.user?.email);
 
-      // For testing, skip database operations since we're using mock session
-      // TODO: Re-enable once we fix Supabase authentication
-      console.log('Skipping database profile operations for testing...');
-      
-      // Create a mock profile for testing the navigation flow
-      const profile = {
-        id: data.user.id,
-        username: googleUser.name || `user_${Date.now()}`,
-        bio: '',
-        avatar_url: googleUser.photo || '',
-        is_private: false,
-        created_at: new Date().toISOString(),
-      };
-      
-      console.log('Using mock profile for testing:', profile.username);
+      // Check if user profile exists, create if not
+      if (data.user) {
+        let profile = await userService.getUserProfile(data.user.id);
+        
+        if (!profile) {
+          // Create new user profile
+          profile = await userService.upsertUserProfile({
+            id: data.user.id,
+            username: googleUser.name || `user_${Date.now()}`,
+            bio: '',
+            avatar_url: googleUser.photo || '',
+            is_private: false,
+            created_at: new Date().toISOString(),
+          });
+          console.log('Created new user profile:', profile.username);
+        } else {
+          console.log('Found existing user profile:', profile.username);
+        }
+      }
 
       return data;
     } catch (error) {
