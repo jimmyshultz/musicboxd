@@ -1,8 +1,9 @@
+/* eslint-disable react/no-unstable-nested-components */
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, useColorScheme, TouchableOpacity } from 'react-native';
+import { Text, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -23,6 +24,7 @@ import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
 import FavoriteAlbumsManagementScreen from '../screens/Profile/FavoriteAlbumsManagementScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
+import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
 
@@ -30,27 +32,29 @@ const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Back button component
-const BackButton = ({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
+const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
   const isDark = useColorScheme() === 'dark';
   const currentTheme = isDark ? theme.dark : theme.light;
   
-  const handlePress = () => {
+  const handlePress = React.useCallback(() => {
     if (customOnPress) {
       customOnPress();
     } else if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  };
+  }, [customOnPress, navigation]);
 
   return (
     <TouchableOpacity 
       onPress={handlePress}
-      style={{ paddingLeft: 16, paddingRight: 8, paddingVertical: 8 }}
+      style={backButtonStyles.container}
     >
-      <Text style={{ fontSize: 18, color: currentTheme.colors.onSurface }}>←</Text>
+      <Text style={[backButtonStyles.text, { color: currentTheme.colors.onSurface }]}>←</Text>
     </TouchableOpacity>
   );
-};
+});
+
+
 
 // Tab icon component to avoid creating it during render
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
@@ -584,15 +588,37 @@ export default function AppNavigator() {
             options={{ headerShown: false }}
           />
         ) : (
-          <Stack.Screen
-            name="Auth"
-            component={AuthScreen}
-            options={{
-              headerShown: false,
-            }}
-          />
+          <>
+            <Stack.Screen
+              name="Auth"
+              component={AuthScreen}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="ProfileSetup"
+              component={ProfileSetupScreen}
+              options={{
+                title: 'Profile Setup',
+                headerBackVisible: false,
+              }}
+            />
+          </>
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 }
+
+// Styles for BackButton component
+const backButtonStyles = StyleSheet.create({
+  container: {
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingVertical: 8,
+  },
+  text: {
+    fontSize: 18,
+  },
+});

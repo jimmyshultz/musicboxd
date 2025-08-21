@@ -12,6 +12,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		DF7AC3DC0B5E35225C2CDEEC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		E77BC1C17BE2F60C53DE0673 /* libPods-Musicboxd.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BA40CBFE466CE8A1E3C34E7D /* libPods-Musicboxd.a */; };
+		F7F4B8D62E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist in Resources */ = {isa = PBXBuildFile; fileRef = F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		A077342AC24B8F53E59A53FB /* Pods-Musicboxd.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Musicboxd.debug.xcconfig"; path = "Target Support Files/Pods-Musicboxd/Pods-Musicboxd.debug.xcconfig"; sourceTree = "<group>"; };
 		BA40CBFE466CE8A1E3C34E7D /* libPods-Musicboxd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Musicboxd.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
+		F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist"; sourceTree = "<group>"; };
 		FDE72B57C922407527E27E99 /* Pods-Musicboxd.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Musicboxd.release.xcconfig"; path = "Target Support Files/Pods-Musicboxd/Pods-Musicboxd.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -70,6 +72,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */,
 				13B07FAE1A68108700A75B9A /* Musicboxd */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -158,6 +161,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7F4B8D62E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				DF7AC3DC0B5E35225C2CDEEC /* PrivacyInfo.xcprivacy in Resources */,
@@ -273,7 +277,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.musicboxd.app";
+				PRODUCT_BUNDLE_IDENTIFIER = com.musicboxd.app;
 				PRODUCT_NAME = Musicboxd;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -300,7 +304,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.musicboxd.app";
+				PRODUCT_BUNDLE_IDENTIFIER = com.musicboxd.app;
 				PRODUCT_NAME = Musicboxd;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
