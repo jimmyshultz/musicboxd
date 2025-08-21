@@ -26,14 +26,14 @@ export const signInWithGoogle = createAsyncThunk(
       if (result.user) {
         // For testing with mock session, create a mock user profile
         // TODO: Replace with real database call once Supabase auth is fixed
-        const user: User = {
+        const user: SerializedUser = {
           id: result.user.id,
           username: result.user.user_metadata?.name || 'User',
           email: result.user.email || '',
           bio: '',
           profilePicture: result.user.user_metadata?.avatar_url || '',
-          joinedDate: new Date(),
-          lastActiveDate: new Date(),
+          joinedDate: new Date().toISOString(), // Convert to string for Redux
+          lastActiveDate: new Date().toISOString(), // Convert to string for Redux
           preferences: {
             favoriteGenres: [],
             favoriteAlbumIds: [],
@@ -78,15 +78,15 @@ export const initializeAuth = createAsyncThunk(
         // Get the user profile from the database
         const profile = await userService.getCurrentUserProfile();
         if (profile) {
-          // Convert to User format expected by Redux
-          const user: User = {
+          // Convert to SerializedUser format for Redux (dates as strings)
+          const user: SerializedUser = {
             id: profile.id,
             username: profile.username,
             email: session.user.email || '',
             bio: profile.bio || '',
             profilePicture: profile.avatar_url || '',
-            joinedDate: new Date(profile.created_at),
-            lastActiveDate: new Date(),
+            joinedDate: profile.created_at, // Already a string from database
+            lastActiveDate: new Date().toISOString(), // Convert to string for Redux
             preferences: {
               favoriteGenres: [],
               favoriteAlbumIds: [],
