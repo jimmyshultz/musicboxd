@@ -43,9 +43,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     return true
   }
 
-  // Handle Google Sign-In URL callback
+  // Handle URL callbacks (Google Sign-In and Supabase OAuth)
   func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-    return GIDSignIn.sharedInstance.handle(url)
+    // Handle Google Sign-In URLs
+    if GIDSignIn.sharedInstance.handle(url) {
+      return true
+    }
+    
+    // Handle Supabase OAuth callbacks
+    if url.scheme == "com.musicboxd.app" {
+      // This will be handled by Supabase's URL handling in React Native
+      return true
+    }
+    
+    return false
   }
 }
 

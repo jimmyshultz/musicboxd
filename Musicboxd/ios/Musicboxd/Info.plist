@@ -59,6 +59,14 @@
 				<string>com.googleusercontent.apps.148204198310-f563ltpvfnibugfc3e3c9quaupnejb17</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.musicboxd.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.musicboxd.app</string>
+			</array>
+		</dict>
 	</array>
 </dict>
 </plist>

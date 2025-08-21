@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
+import { Linking } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../store';
 import { AuthService } from '../services/authService';
 import { initializeAuth } from '../store/slices/authSlice';
+import { supabase } from '../services/supabase';
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -18,6 +20,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Initialize authentication state
     dispatch(initializeAuth());
 
+    // Set up URL handling for OAuth callbacks
+    const handleDeepLink = (url: string) => {
+      console.log('Received deep link:', url);
+      if (url.includes('auth/callback')) {
+        // Let Supabase handle the OAuth callback
+        supabase.auth.getSessionFromUrl({ url });
+      }
+    };
+
+    // Listen for deep links
+    const linkingListener = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    // Check if app was opened with a deep link
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url);
+      }
+    });
+
     // Set up auth state listener for real-time updates
     const { data: authListener } = AuthService.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
@@ -30,7 +53,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return () => {
-      // Cleanup the auth listener
+      // Cleanup listeners
+      linkingListener?.remove();
       if (authListener?.subscription) {
         authListener.subscription.unsubscribe();
       }
