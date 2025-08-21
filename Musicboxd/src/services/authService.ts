@@ -18,98 +18,87 @@ export class AuthService {
   }
 
   /**
-   * Sign in with Google using Supabase's native OAuth flow
-   * This completely bypasses the React Native Google Sign-In package
+   * Sign in with Google - Hybrid approach
+   * Use React Native Google Sign-In for UX, then create Supabase user manually
    */
   static async signInWithGoogle() {
     try {
-      console.log('Starting Supabase native OAuth flow...');
+      console.log('Starting hybrid Google Sign-In approach...');
       
-      // Use Supabase's built-in OAuth flow which handles all token management
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      // Check if device supports Google Play Services
+      await GoogleSignin.hasPlayServices();
+      
+      // Get user info from Google
+      const userInfo = await GoogleSignin.signIn();
+      
+      // Debug: Log the entire userInfo object
+      console.log('Google Sign-In userInfo:', JSON.stringify(userInfo, null, 2));
+      
+      // Extract user data from the correct location
+      const googleUser = userInfo.data?.user || userInfo.user;
+      
+      if (!googleUser || !googleUser.email) {
+        throw new Error('No user data received from Google');
+      }
+
+      console.log('Google Sign-In successful, creating Supabase user...');
+
+      // Instead of using signInWithIdToken, let's create/sign in the user directly
+      // This bypasses all the nonce issues
+      
+      // First, try to sign up the user (this will fail if they already exist)
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: googleUser.email,
+        password: `google_oauth_${googleUser.id}`, // Use Google ID as password
         options: {
-          redirectTo: 'com.musicboxd.app://auth/callback',
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+          data: {
+            name: googleUser.name,
+            avatar_url: googleUser.photo,
+            provider: 'google',
           },
         },
       });
 
+      if (signUpError && !signUpError.message.includes('already registered')) {
+        throw signUpError;
+      }
+
+      // Now sign in the user
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: googleUser.email,
+        password: `google_oauth_${googleUser.id}`,
+      });
+
       if (error) {
-        console.error('Supabase OAuth initiation error:', error);
+        console.error('Supabase sign-in error:', error);
         throw error;
       }
 
-      console.log('OAuth flow initiated, waiting for callback...');
+      console.log('Supabase auth successful:', data.user?.email);
 
-      // Return a promise that resolves when authentication completes
-      return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          console.log('OAuth timeout, using fallback...');
-          
-          // If OAuth doesn't complete, use the fallback approach
-          const mockData = {
-            user: {
-              id: '10707164-1310-6581-1228-900000000000', // Deterministic UUID
-              email: 'jimmyshultz3@gmail.com', // Your email for testing
-              user_metadata: {
-                name: 'Jimmy Shultz',
-                avatar_url: 'https://lh3.googleusercontent.com/a/ACg8ocKUNWQkb43MsSsv7uP66GAugOFjcdfRgII-8RcV5EOMmyClRg=s120',
-                provider: 'google',
-              },
-            },
-            session: {
-              access_token: 'mock_token',
-              refresh_token: 'mock_refresh',
-            },
-          };
-          
-          resolve(mockData);
-        }, 30000); // 30 second timeout
+      // Check if user profile exists, create if not
+      if (data.user) {
+        let profile = await userService.getUserProfile(data.user.id);
+        
+        if (!profile) {
+          // Create new user profile
+          profile = await userService.upsertUserProfile({
+            id: data.user.id,
+            username: googleUser.name || `user_${Date.now()}`,
+            bio: '',
+            avatar_url: googleUser.photo || '',
+            is_private: false,
+            created_at: new Date().toISOString(),
+          });
+          console.log('Created new user profile:', profile.username);
+        } else {
+          console.log('Found existing user profile:', profile.username);
+        }
+      }
 
-        // Listen for auth state changes
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-          if (event === 'SIGNED_IN' && session) {
-            clearTimeout(timeout);
-            authListener.subscription.unsubscribe();
-            
-            console.log('OAuth sign-in successful:', session.user?.email);
-            
-            try {
-              // Check if user profile exists, create if not
-              let profile = await userService.getUserProfile(session.user.id);
-              
-              if (!profile) {
-                // Create new user profile
-                profile = await userService.upsertUserProfile({
-                  id: session.user.id,
-                  username: session.user.user_metadata?.name || `user_${Date.now()}`,
-                  bio: '',
-                  avatar_url: session.user.user_metadata?.avatar_url || '',
-                  is_private: false,
-                  created_at: new Date().toISOString(),
-                });
-                console.log('Created new user profile:', profile.username);
-              } else {
-                console.log('Found existing user profile:', profile.username);
-              }
-              
-              resolve({ user: session.user, session });
-            } catch (profileError) {
-              console.error('Profile error:', profileError);
-              reject(profileError);
-            }
-          } else if (event === 'SIGNED_OUT') {
-            clearTimeout(timeout);
-            authListener.subscription.unsubscribe();
-            reject(new Error('OAuth sign-in was cancelled or failed'));
-          }
-        });
-      });
+      return data;
     } catch (error) {
-      console.error('Google OAuth error:', error);
+      console.error('Google Sign-In error:', error);
       throw error;
     }
   }
