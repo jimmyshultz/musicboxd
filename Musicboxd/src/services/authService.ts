@@ -35,8 +35,8 @@ export class AuthService {
       // Also show an alert for debugging (remove this later)
       // Alert.alert('Debug', `idToken: ${!!userInfo.idToken}, accessToken: ${!!userInfo.accessToken}`);
       
-      // Try different ways to get the token
-      let token = userInfo.idToken || userInfo.accessToken;
+      // Extract token from the correct location in the response
+      let token = userInfo.data?.idToken || userInfo.idToken || userInfo.data?.accessToken || userInfo.accessToken;
       
       if (!token) {
         console.error('No token found in userInfo:', userInfo);
@@ -63,13 +63,16 @@ export class AuthService {
         let profile = await userService.getUserProfile(data.user.id);
         
         if (!profile) {
+          // Extract user data from the correct location
+          const googleUser = userInfo.data?.user || userInfo.user;
+          
           // Create new user profile
           profile = await userService.createUserProfile({
             id: data.user.id,
-            username: userInfo.user.name || `user_${Date.now()}`,
-            email: userInfo.user.email,
+            username: googleUser.name || `user_${Date.now()}`,
+            email: googleUser.email,
             bio: '',
-            avatar_url: userInfo.user.photo || '',
+            avatar_url: googleUser.photo || '',
             is_private: false,
           });
           console.log('Created new user profile:', profile.username);
