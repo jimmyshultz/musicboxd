@@ -7,9 +7,9 @@ import {
 import {
   Text,
   Card,
-  Button,
   ActivityIndicator,
 } from 'react-native-paper';
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle } from '../../store/slices/authSlice';
@@ -22,10 +22,10 @@ export default function AuthScreen() {
   const handleGoogleSignIn = async () => {
     try {
       await dispatch(signInWithGoogle()).unwrap();
-    } catch (error: any) {
+    } catch (signInError: any) {
       Alert.alert(
         'Sign In Failed',
-        error.message || 'An error occurred during sign in. Please try again.',
+        signInError.message || 'An error occurred during sign in. Please try again.',
         [{ text: 'OK' }]
       );
     }
@@ -55,14 +55,13 @@ export default function AuthScreen() {
         {loading ? (
           <ActivityIndicator size="large" style={styles.loader} />
         ) : (
-          <Button
-            mode="contained"
-            style={styles.button}
+          <GoogleSigninButton
+            style={styles.googleButton}
+            size={GoogleSigninButton.Size.Wide}
+            color={GoogleSigninButton.Color.Dark}
             onPress={handleGoogleSignIn}
-            icon="google"
-          >
-            Continue with Google
-          </Button>
+            disabled={loading}
+          />
         )}
         
         {error && (
@@ -120,7 +119,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 20,
   },
-  button: {
+  googleButton: {
     width: '100%',
+    height: 48,
   },
 });

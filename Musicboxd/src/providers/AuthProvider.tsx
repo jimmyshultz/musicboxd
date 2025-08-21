@@ -42,7 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     // Set up auth state listener for real-time updates
-    const { data: authListener } = AuthService.onAuthStateChange((event, session) => {
+    const { data: authListener } = AuthService.onAuthStateChange((event, _session) => {
       if (event === 'SIGNED_OUT') {
         // Handle sign out
         dispatch(initializeAuth());

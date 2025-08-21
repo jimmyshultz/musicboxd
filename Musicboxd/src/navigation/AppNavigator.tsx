@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, useColorScheme, TouchableOpacity } from 'react-native';
+import { Text, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -31,27 +31,27 @@ const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Back button component
-const BackButton = ({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
+const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
   const isDark = useColorScheme() === 'dark';
   const currentTheme = isDark ? theme.dark : theme.light;
   
-  const handlePress = () => {
+  const handlePress = React.useCallback(() => {
     if (customOnPress) {
       customOnPress();
     } else if (navigation.canGoBack()) {
       navigation.goBack();
     }
-  };
+  }, [customOnPress, navigation]);
 
   return (
     <TouchableOpacity 
       onPress={handlePress}
-      style={{ paddingLeft: 16, paddingRight: 8, paddingVertical: 8 }}
+      style={backButtonStyles.container}
     >
-      <Text style={{ fontSize: 18, color: currentTheme.colors.onSurface }}>←</Text>
+      <Text style={[backButtonStyles.text, { color: currentTheme.colors.onSurface }]}>←</Text>
     </TouchableOpacity>
   );
-};
+});
 
 // Tab icon component to avoid creating it during render
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
@@ -607,3 +607,15 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+
+// Styles for BackButton component
+const backButtonStyles = StyleSheet.create({
+  container: {
+    paddingLeft: 16,
+    paddingRight: 8,
+    paddingVertical: 8,
+  },
+  text: {
+    fontSize: 18,
+  },
+});

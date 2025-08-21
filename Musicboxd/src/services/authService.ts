@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { userService } from './userService';
 
 export class AuthService {
@@ -89,7 +89,7 @@ export class AuthService {
       // This bypasses all the nonce issues
       
       // First, try to sign up the user (this will fail if they already exist)
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email: googleUser.email,
         password: `google_oauth_${googleUser.id}`, // Use Google ID as password
         options: {
