@@ -53,6 +53,57 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
   );
 });
 
+// Create reusable back button functions to avoid creating components during render
+const createBackButton = (navigation: any, customOnPress?: () => void) => () => (
+  <BackButton navigation={navigation} customOnPress={customOnPress} />
+);
+
+// Specific back button handlers
+const createSimpleBackButton = (navigation: any) => () => (
+  <BackButton navigation={navigation} />
+);
+
+const createHomeBackButton = (navigation: any) => () => (
+  <BackButton navigation={navigation} customOnPress={() => navigation.goBack()} />
+);
+
+const createSearchBackButton = (navigation: any) => () => (
+  <BackButton navigation={navigation} customOnPress={() => navigation.navigate('SearchMain')} />
+);
+
+const createProfileBackButton = (navigation: any) => () => (
+  <BackButton navigation={navigation} customOnPress={() => navigation.navigate('ProfileMain')} />
+);
+
+const createUserProfileBackButton = (navigation: any) => () => (
+  <BackButton 
+    navigation={navigation} 
+    customOnPress={() => {
+      // Custom logic to skip diary screens
+      const state = navigation.getState();
+      const routes = state.routes;
+      const currentRouteIndex = state.index;
+      
+      // Look backwards in the route history to find the last non-diary, non-userprofile screen
+      let foundValidRoute = false;
+      for (let i = currentRouteIndex - 1; i >= 0; i--) {
+        const route = routes[i];
+        if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
+          // Found a valid non-diary, non-userprofile screen, navigate back to it
+          navigation.navigate(route.name, route.params);
+          foundValidRoute = true;
+          return;
+        }
+      }
+      
+      // If no valid screen found, go to appropriate main screen
+      if (!foundValidRoute) {
+        navigation.navigate('HomeMain');
+      }
+    }}
+  />
+);
+
 // Tab icon component to avoid creating it during render
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
   let iconText: string;
