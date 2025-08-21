@@ -12,9 +12,9 @@ export class AuthService {
       // Using your actual client IDs from Google Cloud Console
       iosClientId: '148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com', // iOS client ID
       webClientId: '148204198310-jb85bku6g5sdoggvt6idqq3j31momvl7.apps.googleusercontent.com', // Web client ID
-      offlineAccess: false, // Set to false for ID token
+      offlineAccess: true, // Enable offline access to get refresh token
       scopes: ['openid', 'profile', 'email'], // Explicitly request required scopes
-      forceCodeForRefreshToken: false, // Set to false for ID token
+      forceCodeForRefreshToken: true, // Force code for refresh token
     });
   }
 
@@ -29,19 +29,31 @@ export class AuthService {
       // Get user info from Google
       const userInfo = await GoogleSignin.signIn();
       
-      if (!userInfo.idToken) {
-        throw new Error('No ID token received from Google');
+      // Debug: Log the entire userInfo object
+      console.log('Google Sign-In userInfo:', JSON.stringify(userInfo, null, 2));
+      
+      // Try different ways to get the token
+      let token = userInfo.idToken || userInfo.accessToken;
+      
+      if (!token) {
+        console.error('No token found in userInfo:', userInfo);
+        throw new Error('No authentication token received from Google');
       }
 
-      // Sign in to Supabase using Google ID token
+      console.log('Using token:', token.substring(0, 50) + '...');
+
+      // Sign in to Supabase using Google token
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
-        token: userInfo.idToken,
+        token: token,
       });
 
       if (error) {
+        console.error('Supabase auth error:', error);
         throw error;
       }
+
+      console.log('Supabase auth successful:', data.user?.email);
 
       // Check if user profile exists, create if not
       if (data.user) {
@@ -57,6 +69,9 @@ export class AuthService {
             avatar_url: userInfo.user.photo || '',
             is_private: false,
           });
+          console.log('Created new user profile:', profile.username);
+        } else {
+          console.log('Found existing user profile:', profile.username);
         }
       }
 
