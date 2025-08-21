@@ -82,14 +82,15 @@ export class AuthService {
         let profile = await userService.getUserProfile(data.user.id);
         
         if (!profile) {
-          // Create new user profile
-          profile = await userService.createUserProfile({
+          // Create new user profile using upsert method
+          profile = await userService.upsertUserProfile({
             id: data.user.id,
             username: googleUser.name || `user_${Date.now()}`,
             email: googleUser.email,
             bio: '',
             avatar_url: googleUser.photo || '',
             is_private: false,
+            created_at: new Date().toISOString(),
           });
           console.log('Created new user profile:', profile.username);
         } else {
