@@ -83,10 +83,10 @@ export class AuthService {
         
         if (!profile) {
           // Create new user profile using upsert method
+          // Note: email is stored in auth.users, not user_profiles
           profile = await userService.upsertUserProfile({
             id: data.user.id,
             username: googleUser.name || `user_${Date.now()}`,
-            email: googleUser.email,
             bio: '',
             avatar_url: googleUser.photo || '',
             is_private: false,
