@@ -93,6 +93,16 @@ export class AuthService {
           console.log('Created new user profile:', profile.username);
         } else {
           console.log('Found existing user profile:', profile.username);
+          
+          // Update existing profile with Google data if needed
+          if (profile.username.startsWith('user_') && googleUser.name) {
+            console.log('Updating profile with Google name...');
+            profile = await userService.updateUserProfile(data.user.id, {
+              username: googleUser.name,
+              avatar_url: googleUser.photo || profile.avatar_url,
+            });
+            console.log('Updated user profile:', profile.username);
+          }
         }
       }
 
