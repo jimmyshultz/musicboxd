@@ -24,32 +24,35 @@ export const signInWithGoogle = createAsyncThunk(
     try {
       const result = await AuthService.signInWithGoogle();
       if (result.user) {
-        // For testing with mock session, create a mock user profile
-        // TODO: Replace with real database call once Supabase auth is fixed
-        const user: SerializedUser = {
-          id: result.user.id,
-          username: result.user.user_metadata?.name || 'User',
-          email: result.user.email || '',
-          bio: '',
-          profilePicture: result.user.user_metadata?.avatar_url || '',
-          joinedDate: new Date().toISOString(), // Convert to string for Redux
-          lastActiveDate: new Date().toISOString(), // Convert to string for Redux
-          preferences: {
-            favoriteGenres: [],
-            favoriteAlbumIds: [],
-            notifications: {
-              newFollowers: true,
-              reviewLikes: true,
-              friendActivity: true,
+        // Get the actual user profile from the database (real Supabase session now!)
+        const profile = await userService.getCurrentUserProfile();
+        if (profile) {
+          // Convert to SerializedUser format for Redux
+          const user: SerializedUser = {
+            id: profile.id,
+            username: profile.username,
+            email: result.user.email || '',
+            bio: profile.bio || '',
+            profilePicture: profile.avatar_url || '',
+            joinedDate: profile.created_at, // Already a string from database
+            lastActiveDate: new Date().toISOString(),
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                reviewLikes: true,
+                friendActivity: true,
+              },
+              privacy: {
+                profileVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                activityVisibility: profile.is_private ? 'private' as const : 'public' as const,
+              },
             },
-            privacy: {
-              profileVisibility: 'public' as const,
-              activityVisibility: 'public' as const,
-            },
-          },
-        };
-        console.log('Created mock user for Redux:', user.username);
-        return user;
+          };
+          console.log('Loaded real user profile for Redux:', user.username);
+          return user;
+        }
       }
       throw new Error('Failed to get user data from Google Sign-In');
     } catch (error: any) {
