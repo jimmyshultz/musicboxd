@@ -77,26 +77,21 @@ export class AuthService {
 
       console.log('Supabase auth successful:', data.user?.email);
 
-      // Check if user profile exists, create if not
-      if (data.user) {
-        let profile = await userService.getUserProfile(data.user.id);
-        
-        if (!profile) {
-          // Create new user profile using upsert method
-          // Note: email is stored in auth.users, not user_profiles
-          profile = await userService.upsertUserProfile({
-            id: data.user.id,
-            username: googleUser.name || `user_${Date.now()}`,
-            bio: '',
-            avatar_url: googleUser.photo || '',
-            is_private: false,
-            created_at: new Date().toISOString(),
-          });
-          console.log('Created new user profile:', profile.username);
-        } else {
-          console.log('Found existing user profile:', profile.username);
-        }
-      }
+      // For testing, skip database operations since we're using mock session
+      // TODO: Re-enable once we fix Supabase authentication
+      console.log('Skipping database profile operations for testing...');
+      
+      // Create a mock profile for testing the navigation flow
+      const profile = {
+        id: data.user.id,
+        username: googleUser.name || `user_${Date.now()}`,
+        bio: '',
+        avatar_url: googleUser.photo || '',
+        is_private: false,
+        created_at: new Date().toISOString(),
+      };
+      
+      console.log('Using mock profile for testing:', profile.username);
 
       return data;
     } catch (error) {
