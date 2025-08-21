@@ -32,6 +32,9 @@ export class AuthService {
       // Debug: Log the entire userInfo object
       console.log('Google Sign-In userInfo:', JSON.stringify(userInfo, null, 2));
       
+      // Also show an alert for debugging (remove this later)
+      // Alert.alert('Debug', `idToken: ${!!userInfo.idToken}, accessToken: ${!!userInfo.accessToken}`);
+      
       // Try different ways to get the token
       let token = userInfo.idToken || userInfo.accessToken;
       
