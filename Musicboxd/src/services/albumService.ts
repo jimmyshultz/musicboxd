@@ -1,5 +1,8 @@
 import { Album, SearchResult, ApiResponse, Listen, Review } from '../types';
 import { mockAlbums, popularGenres } from './mockData';
+import { SpotifyService } from './spotifyService';
+import { SpotifyMapper } from './spotifyMapper';
+import { SPOTIFY_CONFIG } from '../config/spotify';
 
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -249,29 +252,113 @@ export class AlbumService {
 
   // Fetch popular/trending albums
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
-    await delay(500);
-    return {
-      data: mockAlbums,
-      success: true,
-      message: 'Albums fetched successfully',
-    };
+    try {
+      // Check if Spotify is configured
+      if (!SpotifyService.isConfigured()) {
+        console.warn('Spotify API not configured, falling back to mock data');
+        await delay(500);
+        return {
+          data: mockAlbums,
+          success: true,
+          message: 'Albums fetched successfully (mock data)',
+        };
+      }
+
+      // Fetch from Spotify API
+      const spotifyResponse = await SpotifyService.getPopularAlbums(20);
+      
+      if (!spotifyResponse.albums?.items) {
+        throw new Error('No albums found in Spotify response');
+      }
+
+      // Convert Spotify albums to our format
+      const albums = spotifyResponse.albums.items
+        .filter(SpotifyMapper.isValidSpotifyAlbum)
+        .map(SpotifyMapper.mapSpotifyAlbumToAlbum);
+
+      return {
+        data: albums,
+        success: true,
+        message: `Fetched ${albums.length} popular albums from Spotify`,
+      };
+    } catch (error) {
+      console.error('Error fetching popular albums from Spotify:', error);
+      
+      // Fallback to mock data on error
+      console.warn('Falling back to mock data due to Spotify API error');
+      await delay(300);
+      return {
+        data: mockAlbums,
+        success: true,
+        message: 'Albums fetched successfully (fallback to mock data)',
+      };
+    }
   }
 
   // Get album by ID
   static async getAlbumById(id: string): Promise<ApiResponse<Album | null>> {
-    await delay(300);
-    const album = mockAlbums.find(a => a.id === id);
-    return {
-      data: album || null,
-      success: !!album,
-      message: album ? 'Album found' : 'Album not found',
-    };
+    try {
+      // First check if this is a Spotify ID (should be alphanumeric)
+      const isSpotifyId = /^[a-zA-Z0-9]+$/.test(id) && id.length > 10;
+      
+      if (isSpotifyId && SpotifyService.isConfigured()) {
+        try {
+          // Try to fetch from Spotify API
+          const spotifyAlbum = await SpotifyService.getAlbum(id);
+          
+          if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
+            const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
+            return {
+              data: album,
+              success: true,
+              message: 'Album found on Spotify',
+            };
+          }
+        } catch (spotifyError) {
+          console.warn('Failed to fetch album from Spotify:', spotifyError);
+          // Continue to check mock data
+        }
+      }
+      
+      // Check mock data (for backward compatibility and fallback)
+      await delay(300);
+      const mockAlbum = mockAlbums.find(a => a.id === id);
+      
+      if (mockAlbum) {
+        return {
+          data: mockAlbum,
+          success: true,
+          message: 'Album found in local data',
+        };
+      }
+      
+      // If it's a Spotify ID but we couldn't fetch it, try to find by external ID in mock data
+      const albumBySpotifyId = mockAlbums.find(a => a.externalIds.spotify === id);
+      if (albumBySpotifyId) {
+        return {
+          data: albumBySpotifyId,
+          success: true,
+          message: 'Album found by Spotify ID in local data',
+        };
+      }
+      
+      return {
+        data: null,
+        success: false,
+        message: 'Album not found',
+      };
+    } catch (error) {
+      console.error('Error fetching album by ID:', error);
+      return {
+        data: null,
+        success: false,
+        message: 'Error fetching album',
+      };
+    }
   }
 
   // Search albums
   static async searchAlbums(query: string): Promise<ApiResponse<SearchResult>> {
-    await delay(400);
-    
     if (!query.trim()) {
       return {
         data: { albums: [], artists: [], totalResults: 0 },
@@ -280,6 +367,48 @@ export class AlbumService {
       };
     }
 
+    try {
+      // Check if Spotify is configured
+      if (!SpotifyService.isConfigured()) {
+        console.warn('Spotify API not configured, searching mock data only');
+        return this.searchMockData(query);
+      }
+
+      // Search Spotify API
+      const spotifyResponse = await SpotifyService.searchAlbums(query, 20);
+      
+      if (!spotifyResponse.albums?.items) {
+        console.warn('No albums found in Spotify response, trying mock data');
+        return this.searchMockData(query);
+      }
+
+      // Convert Spotify results to our format
+      const searchResult = SpotifyMapper.mapSpotifySearchToSearchResult(spotifyResponse);
+      
+      // If no results from Spotify, also search mock data for better coverage
+      if (searchResult.albums.length === 0) {
+        console.log('No Spotify results, searching mock data as fallback');
+        return this.searchMockData(query);
+      }
+
+      return {
+        data: searchResult,
+        success: true,
+        message: `Found ${searchResult.totalResults} results from Spotify`,
+      };
+    } catch (error) {
+      console.error('Error searching albums on Spotify:', error);
+      
+      // Fallback to mock data search
+      console.warn('Falling back to mock data search due to Spotify API error');
+      return this.searchMockData(query);
+    }
+  }
+
+  // Helper method to search mock data
+  private static async searchMockData(query: string): Promise<ApiResponse<SearchResult>> {
+    await delay(400);
+    
     const lowercaseQuery = query.toLowerCase();
     
     // Filter albums by title or artist
@@ -301,7 +430,7 @@ export class AlbumService {
     return {
       data: searchResult,
       success: true,
-      message: `Found ${filteredAlbums.length} results`,
+      message: `Found ${filteredAlbums.length} results (local data)`,
     };
   }
 

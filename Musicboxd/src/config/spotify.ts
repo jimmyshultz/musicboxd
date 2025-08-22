@@ -1,0 +1,65 @@
+// Spotify Web API Configuration
+export const SPOTIFY_CONFIG = {
+  // API Base URL
+  API_BASE_URL: 'https://api.spotify.com/v1',
+  
+  // Authentication endpoints
+  AUTH_URL: 'https://accounts.spotify.com/api/token',
+  
+  // Client credentials - these should be set in .env file
+  // For development, you'll need to:
+  // 1. Go to https://developer.spotify.com/dashboard
+  // 2. Create a new app
+  // 3. Get your Client ID and Client Secret
+  // 4. Copy .env.example to .env and add your credentials
+  CLIENT_ID: process.env.SPOTIFY_CLIENT_ID || 'your_spotify_client_id',
+  CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET || 'your_spotify_client_secret',
+  
+  // API Endpoints
+  ENDPOINTS: {
+    SEARCH: '/search',
+    ALBUMS: '/albums',
+    ARTISTS: '/artists',
+    TRACKS: '/tracks',
+  },
+  
+  // Rate limiting configuration
+  RATE_LIMIT: {
+    REQUESTS_PER_SECOND: 10, // Conservative limit to avoid hitting rate limits
+    RETRY_ATTEMPTS: 3,
+    RETRY_DELAY: 1000, // 1 second
+  },
+  
+  // Search configuration
+  SEARCH: {
+    DEFAULT_LIMIT: 20,
+    MAX_LIMIT: 50,
+    DEFAULT_MARKET: 'US',
+    TYPES: {
+      ALBUM: 'album',
+      ARTIST: 'artist',
+      TRACK: 'track',
+    },
+  },
+};
+
+// Environment setup instructions
+export const SETUP_INSTRUCTIONS = `
+To set up Spotify API integration:
+
+1. Go to https://developer.spotify.com/dashboard
+2. Log in with your Spotify account
+3. Click "Create an App"
+4. Fill in the app details:
+   - App name: "Musicboxd Development"
+   - App description: "Music discovery and rating app"
+   - Website: Leave blank or add your website
+   - Redirect URIs: Not needed for Client Credentials flow
+5. Accept the terms and create the app
+6. Copy your Client ID and Client Secret
+7. Set environment variables:
+   - SPOTIFY_CLIENT_ID=your_client_id_here
+   - SPOTIFY_CLIENT_SECRET=your_client_secret_here
+
+For React Native development, you can create a .env file in the project root.
+`;

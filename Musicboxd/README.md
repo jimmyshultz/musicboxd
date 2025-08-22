@@ -8,22 +8,22 @@ Musicboxd is a mobile application inspired by Letterboxd, designed for music ent
 
 ### Core Features (Implemented)
 - ✅ **Album Discovery**: Browse popular albums with beautiful cover art
-- ✅ **Search Functionality**: Real-time search with debounced API calls
+- ✅ **Real-time Search**: Search Spotify's entire catalog with instant results
 - ✅ **Album Details**: Comprehensive album view with track listings, metadata, and ratings
 - ✅ **Interactive Rating System**: 5-star rating system for albums
 - ✅ **Professional UI**: Material Design 3 with consistent theming and navigation
 - ✅ **Dark/Light Mode**: Automatic theme switching based on system preferences
 - ✅ **TypeScript Integration**: Full type safety throughout the application
 - ✅ **Redux State Management**: Centralized state management with Redux Toolkit
-- ✅ **Mock Data**: Rich album data including track listings for popular albums
+- ✅ **Spotify Integration**: Real music data from Spotify Web API with fallback to mock data
 
 ### Upcoming Features
-- 📋 User Authentication (Firebase/JWT)
+- 📋 User Authentication (Supabase)
 - 👥 Social Features (Follow users, activity feeds)
 - 📊 Listening Statistics and Insights
 - 📋 Custom Lists and Collections
 - 🔍 Advanced Search Filters
-- 🎧 Streaming Service Integration
+- 🎧 Enhanced Streaming Integration
 - 📱 Push Notifications
 
 ## 🛠 Tech Stack
@@ -95,6 +95,29 @@ Musicboxd is a mobile application inspired by Letterboxd, designed for music ent
    # For Android
    npm run android
    ```
+
+### 🎵 Spotify Integration Setup (Optional)
+
+By default, the app works with sample album data. To enable real Spotify data:
+
+1. **Create a Spotify App**:
+   - Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
+   - Create a new app with any name and description
+   - Copy your Client ID and Client Secret
+
+2. **Configure Environment Variables**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your Spotify credentials:
+   # SPOTIFY_CLIENT_ID=your_client_id_here
+   # SPOTIFY_CLIENT_SECRET=your_client_secret_here
+   ```
+
+3. **Restart the development server** to load the new environment variables
+
+📖 **For detailed setup instructions, see [SPOTIFY_SETUP.md](SPOTIFY_SETUP.md)**
+
+> **Note**: Without Spotify credentials, the app automatically falls back to sample data and works perfectly for development and testing.
 
 ## 📱 Screenshots & Demo
 
