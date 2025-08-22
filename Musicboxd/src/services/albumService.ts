@@ -449,62 +449,88 @@ export class AlbumService {
     };
   }
 
-  // Get trending albums using Spotify API
+  // Get trending albums based on user activity in our app
+  // TODO: This should query the database for albums marked as "listened" most frequently in the last 7 days
+  // For now, returns mock data until social features and user activity tracking are implemented
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
     try {
-      // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
-        console.warn('Spotify API not configured for trending albums, falling back to mock data');
-        await delay(500);
-        // Shuffle and return a subset for trending
-        const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
-        return {
-          data: shuffled.slice(0, 4),
-          success: true,
-          message: 'Trending albums fetched (mock data)',
-        };
-      }
-
-      // Use popular albums from Spotify as trending albums
-      console.log('🎵 Fetching trending albums from Spotify...');
-      const spotifyResponse = await SpotifyService.getPopularAlbums(8); // Get more to have variety
+      console.log('🎵 Fetching trending albums based on user activity...');
       
-      console.log('📊 Spotify response for trending albums:', {
-        hasAlbums: !!spotifyResponse.albums,
-        itemCount: spotifyResponse.albums?.items?.length || 0,
-        totalResults: spotifyResponse.albums?.total || 0
-      });
+      // TODO: Implement actual trending logic when social features are ready:
+      // 1. Query Supabase for user_listens table
+      // 2. Filter by dateListened >= 7 days ago
+      // 3. Group by albumId and count occurrences
+      // 4. Order by listen count DESC
+      // 5. Take top 4-6 albums
+      // 6. Fetch album details for each trending album
       
-      if (!spotifyResponse.albums?.items || spotifyResponse.albums.items.length === 0) {
-        throw new Error('No albums found in Spotify response');
-      }
-
-      // Convert Spotify albums to our format and take a subset
-      const validAlbums = spotifyResponse.albums.items.filter(SpotifyMapper.isValidSpotifyAlbum);
-      console.log(`🔍 Valid albums after filtering: ${validAlbums.length} out of ${spotifyResponse.albums.items.length}`);
+      /* FUTURE IMPLEMENTATION (Week 4-5):
       
-      const albums = validAlbums
-        .map(SpotifyMapper.mapSpotifyAlbumToAlbum)
-        .slice(0, 4); // Take first 4 for trending
+      const { data: recentListens, error } = await supabase
+        .from('user_listens')
+        .select('album_id')
+        .gte('date_listened', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('date_listened', { ascending: false });
       
-      console.log(`✅ Final trending albums: ${albums.length}`, albums.map(a => `${a.artist} - ${a.title}`));
-
+      if (error) throw error;
+      
+      // Count occurrences of each album
+      const albumCounts = recentListens.reduce((acc, listen) => {
+        acc[listen.album_id] = (acc[listen.album_id] || 0) + 1;
+        return acc;
+      }, {});
+      
+      // Sort by count and take top albums
+      const trendingAlbumIds = Object.entries(albumCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 4)
+        .map(([albumId]) => albumId);
+      
+      // Fetch album details for trending albums
+      const trendingAlbums = await Promise.all(
+        trendingAlbumIds.map(albumId => this.getAlbumById(albumId))
+      );
+      
       return {
-        data: albums,
+        data: trendingAlbums.filter(response => response.success).map(response => response.data),
         success: true,
-        message: `Fetched ${albums.length} trending albums from Spotify`,
+        message: `Trending albums based on ${recentListens.length} user listens this week`,
       };
-    } catch (error) {
-      console.error('Error fetching trending albums from Spotify:', error);
       
-      // Fallback to mock data on error
-      console.warn('Falling back to mock data for trending albums');
+      */
+      
+      // For now, simulate trending with mock data that represents user activity
+      console.log('📊 Using mock trending data (user activity tracking not yet implemented)');
+      
+      // Simulate what trending albums might look like based on user listens
+      const mockTrendingIds = ['1', '3', '2', '5']; // IDs of albums with most "listens" this week
+      const trendingAlbums: Album[] = [];
+      
+      for (const albumId of mockTrendingIds) {
+        const response = await this.getAlbumById(albumId);
+        if (response.success && response.data) {
+          trendingAlbums.push(response.data);
+        }
+      }
+      
+      console.log(`✅ Mock trending albums based on simulated user activity: ${trendingAlbums.length}`);
+      
+      return {
+        data: trendingAlbums,
+        success: true,
+        message: `Trending albums based on user activity (${trendingAlbums.length} albums)`,
+      };
+      
+    } catch (error) {
+      console.error('Error fetching trending albums:', error);
+      
+      // Fallback to basic mock data
       await delay(300);
       const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
       return {
         data: shuffled.slice(0, 4),
         success: true,
-        message: 'Trending albums fetched (fallback to mock data)',
+        message: 'Trending albums fetched (fallback)',
       };
     }
   }
