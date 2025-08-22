@@ -250,49 +250,25 @@ export class AlbumService {
     },
   ];
 
-  // Fetch popular/trending albums
+  // Get popular albums based on user activity in our app
+  // TODO: This should show albums that are popular among ALL users in the last week
+  // For now, returns empty until social features and user activity tracking are implemented
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
-    try {
-      // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
-        console.warn('Spotify API not configured, falling back to mock data');
-        await delay(500);
-        return {
-          data: mockAlbums,
-          success: true,
-          message: 'Albums fetched successfully (mock data)',
-        };
-      }
-
-      // Fetch from Spotify API
-      const spotifyResponse = await SpotifyService.getPopularAlbums(20);
-      
-      if (!spotifyResponse.albums?.items) {
-        throw new Error('No albums found in Spotify response');
-      }
-
-      // Convert Spotify albums to our format
-      const albums = spotifyResponse.albums.items
-        .filter(SpotifyMapper.isValidSpotifyAlbum)
-        .map(SpotifyMapper.mapSpotifyAlbumToAlbum);
-
-      return {
-        data: albums,
-        success: true,
-        message: `Fetched ${albums.length} popular albums from Spotify`,
-      };
-    } catch (error) {
-      console.error('Error fetching popular albums from Spotify:', error);
-      
-      // Fallback to mock data on error
-      console.warn('Falling back to mock data due to Spotify API error');
-      await delay(300);
-      return {
-        data: mockAlbums,
-        success: true,
-        message: 'Albums fetched successfully (fallback to mock data)',
-      };
-    }
+    console.log('🎵 Popular albums requested - returning empty until social features implemented');
+    
+    // TODO: Implement actual popular logic when social features are ready:
+    // 1. Query Supabase for user_listens table
+    // 2. Filter by dateListened >= 7 days ago  
+    // 3. Group by albumId and count occurrences across ALL users
+    // 4. Order by listen count DESC
+    // 5. Return top 10-20 albums that are actually popular in our community
+    
+    await delay(300);
+    return {
+      data: [], // Empty until we have real user activity data
+      success: true,
+      message: 'Popular albums not available yet - requires social features implementation',
+    };
   }
 
   // Get album by ID
@@ -499,26 +475,14 @@ export class AlbumService {
       
       */
       
-      // For now, simulate trending with mock data that represents user activity
-      console.log('📊 Using mock trending data (user activity tracking not yet implemented)');
+      // Return empty results until we have real user activity data
+      console.log('📊 Returning empty trending albums until user activity tracking is implemented');
       
-      // Simulate what trending albums might look like based on user listens
-      const mockTrendingIds = ['1', '3', '2', '5']; // IDs of albums with most "listens" this week
-      const trendingAlbums: Album[] = [];
-      
-      for (const albumId of mockTrendingIds) {
-        const response = await this.getAlbumById(albumId);
-        if (response.success && response.data) {
-          trendingAlbums.push(response.data);
-        }
-      }
-      
-      console.log(`✅ Mock trending albums based on simulated user activity: ${trendingAlbums.length}`);
-      
+      await delay(300);
       return {
-        data: trendingAlbums,
+        data: [], // Empty until we have real user activity data
         success: true,
-        message: `Trending albums based on user activity (${trendingAlbums.length} albums)`,
+        message: 'Trending albums not available yet - requires social features implementation',
       };
       
     } catch (error) {

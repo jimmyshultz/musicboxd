@@ -259,58 +259,13 @@ export class SpotifyService {
   }
 
   /**
-   * Get popular albums by searching for popular artists and their albums
-   * Since Spotify doesn't have a direct "popular albums" endpoint,
-   * we'll search for albums from popular genres and artists
+   * Get popular albums - REMOVED
+   * This method was removed because "popular albums" should be based on 
+   * user activity within our app, not arbitrary Spotify searches.
+   * 
+   * Popular albums should come from analyzing user listening data in our database,
+   * not from hardcoded artist searches that don't reflect our community's preferences.
    */
-  static async getPopularAlbums(
-    limit: number = SPOTIFY_CONFIG.SEARCH.DEFAULT_LIMIT,
-    market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET
-  ): Promise<SpotifySearchResponse> {
-    // Try multiple popular search strategies
-    const popularQueries = [
-      // Popular artists that are likely to have results
-      'Taylor Swift OR Drake OR Billie Eilish OR The Weeknd',
-      // Recent years with broader range
-      'year:2024 OR year:2023 OR year:2022',
-      // Popular genres
-      'genre:pop OR genre:rock OR genre:hip-hop',
-      // Fallback: just search for "album" to get any albums
-      'album',
-    ];
-
-    // Try each query until we get results
-    for (const query of popularQueries) {
-      try {
-        console.log(`🔍 Trying popular albums query: "${query}"`);
-        const response = await this.searchAlbums(query, limit, 0, market);
-        
-        if (response.albums?.items && response.albums.items.length > 0) {
-          console.log(`✅ Found ${response.albums.items.length} popular albums with query: "${query}"`);
-          return response;
-        } else {
-          console.log(`❌ No results for query: "${query}"`);
-        }
-      } catch (error) {
-        console.warn(`Error with popular albums query "${query}":`, error);
-        continue;
-      }
-    }
-    
-    // If all queries fail, return empty response
-    console.warn('All popular album queries failed, returning empty response');
-    return {
-      albums: {
-        href: '',
-        items: [],
-        limit: limit,
-        next: null,
-        offset: 0,
-        previous: null,
-        total: 0,
-      }
-    };
-  }
 
   /**
    * Check if the service is properly configured
