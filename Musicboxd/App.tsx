@@ -22,7 +22,7 @@ function AppContent() {
 
   // Validate Spotify integration on app startup
   useEffect(() => {
-    const { configured, message } = quickValidation();
+    const { configured } = quickValidation();
     if (!configured) {
       console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
     }

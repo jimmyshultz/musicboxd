@@ -21,7 +21,7 @@ export interface AppError {
 /**
  * Create a user-friendly error from various error types
  */
-export function createAppError(error: any, context: string = ''): AppError {
+export function createAppError(error: any): AppError {
   // Network errors
   if (!navigator.onLine) {
     return {
@@ -45,7 +45,7 @@ export function createAppError(error: any, context: string = ''): AppError {
   // Spotify API specific errors
   if (error.message?.includes('Spotify API error')) {
     const statusMatch = error.message.match(/(\d{3})/);
-    const status = statusMatch ? parseInt(statusMatch[1]) : 0;
+    const status = statusMatch ? parseInt(statusMatch[1], 10) : 0;
 
     if (status === 401) {
       return {
@@ -256,7 +256,7 @@ export async function withErrorHandling<T>(
     const data = await operation();
     return { data, error: null };
   } catch (rawError) {
-    const error = createAppError(rawError, context);
+    const error = createAppError(rawError);
     logError(error, context);
     
     return { 
@@ -280,7 +280,7 @@ export async function withRetry<T>(
     try {
       return await operation();
     } catch (rawError) {
-      lastError = createAppError(rawError, context);
+      lastError = createAppError(rawError);
       logError(lastError, `${context} (attempt ${attempt}/${maxAttempts})`);
       
       if (!shouldRetry(lastError, attempt) || attempt === maxAttempts) {

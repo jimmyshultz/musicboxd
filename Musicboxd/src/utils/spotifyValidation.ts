@@ -117,7 +117,7 @@ function validateConfiguration(): ValidationResult {
 async function testAuthentication(): ValidationResult {
   try {
     // This will trigger authentication internally
-    const response = await SpotifyService.searchAlbums('test', 1);
+    await SpotifyService.searchAlbums('test', 1);
     
     return {
       step: 'Authentication Test',

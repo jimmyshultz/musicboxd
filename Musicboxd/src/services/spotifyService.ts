@@ -6,7 +6,6 @@ import {
   SpotifySearchParams,
   SpotifyAlbumParams,
   SpotifyMultipleAlbumsParams,
-  SpotifyError,
   isSpotifyError,
 } from '../types/spotify';
 import { Buffer } from 'buffer';
@@ -113,7 +112,7 @@ export class SpotifyService {
         if (response.status === 429) {
           // Rate limited - wait and retry
           const retryAfter = response.headers.get('Retry-After');
-          const delay = retryAfter ? parseInt(retryAfter) * 1000 : SPOTIFY_CONFIG.RATE_LIMIT.RETRY_DELAY * attempt;
+          const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : SPOTIFY_CONFIG.RATE_LIMIT.RETRY_DELAY * attempt;
           console.warn(`Rate limited by Spotify. Waiting ${delay}ms before retry ${attempt}/${SPOTIFY_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;

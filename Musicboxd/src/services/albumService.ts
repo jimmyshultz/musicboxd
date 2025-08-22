@@ -2,7 +2,6 @@ import { Album, SearchResult, ApiResponse, Listen, Review } from '../types';
 import { mockAlbums, popularGenres } from './mockData';
 import { SpotifyService } from './spotifyService';
 import { SpotifyMapper } from './spotifyMapper';
-import { SPOTIFY_CONFIG } from '../config/spotify';
 
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
