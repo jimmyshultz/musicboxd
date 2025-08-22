@@ -68,7 +68,7 @@ export class SpotifyMapper {
       id: spotifyTrack.id,
       trackNumber: spotifyTrack.track_number,
       title: spotifyTrack.name,
-      duration: this.msToSeconds(spotifyTrack.duration_ms),
+      duration: SpotifyMapper.msToSeconds(spotifyTrack.duration_ms),
       artist: spotifyTrack.artists.length > 1 
         ? spotifyTrack.artists.slice(1).map(a => a.name).join(', ') // Featured artists
         : undefined,
@@ -81,7 +81,7 @@ export class SpotifyMapper {
   static mapSpotifyAlbumToAlbum(spotifyAlbum: SpotifyAlbum): Album {
     // Convert tracks if available
     const trackList: Track[] = spotifyAlbum.tracks?.items
-      ? spotifyAlbum.tracks.items.map(track => this.mapSpotifyTrackToTrack(track))
+      ? spotifyAlbum.tracks.items.map(track => SpotifyMapper.mapSpotifyTrackToTrack(track))
       : [];
 
     return {
@@ -89,10 +89,10 @@ export class SpotifyMapper {
       title: spotifyAlbum.name,
       artist: spotifyAlbum.artists.map(artist => artist.name).join(', '),
       releaseDate: spotifyAlbum.release_date,
-      genre: this.extractGenres(spotifyAlbum),
-      coverImageUrl: this.getBestImageUrl(spotifyAlbum.images),
+      genre: SpotifyMapper.extractGenres(spotifyAlbum),
+      coverImageUrl: SpotifyMapper.getBestImageUrl(spotifyAlbum.images),
       trackList,
-      description: this.generateAlbumDescription(spotifyAlbum),
+      description: SpotifyMapper.generateAlbumDescription(spotifyAlbum),
       externalIds: {
         spotify: spotifyAlbum.id,
         // We could add other service IDs here in the future
@@ -132,7 +132,7 @@ export class SpotifyMapper {
    */
   static mapSpotifySearchToSearchResult(spotifySearch: SpotifySearchResponse): SearchResult {
     const albums: Album[] = spotifySearch.albums?.items
-      ? spotifySearch.albums.items.map(album => this.mapSpotifyAlbumToAlbum(album))
+      ? spotifySearch.albums.items.map(album => SpotifyMapper.mapSpotifyAlbumToAlbum(album))
       : [];
 
     // Extract unique artists from albums
@@ -180,7 +180,7 @@ export class SpotifyMapper {
 
     try {
       const fullSpotifyAlbum = await getFullAlbumData(album.externalIds.spotify);
-      return this.mapSpotifyAlbumToAlbum(fullSpotifyAlbum);
+      return SpotifyMapper.mapSpotifyAlbumToAlbum(fullSpotifyAlbum);
     } catch (error) {
       console.warn('Failed to enhance album with tracks:', error);
       return album; // Return original album if enhancement fails
