@@ -1,5 +1,7 @@
 import { Album, SearchResult, ApiResponse, Listen, Review } from '../types';
 import { mockAlbums, popularGenres } from './mockData';
+import { SpotifyService } from './spotifyService';
+import { SpotifyMapper } from './spotifyMapper';
 
 // Simulate API delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -247,31 +249,87 @@ export class AlbumService {
     },
   ];
 
-  // Fetch popular/trending albums
+  // Get popular albums based on user activity in our app
+  // TODO: This should show albums that are popular among ALL users in the last week
+  // For now, returns empty until social features and user activity tracking are implemented
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
-    await delay(500);
+    // TODO: Implement actual popular logic when social features are ready:
+    // 1. Query Supabase for user_listens table
+    // 2. Filter by dateListened >= 7 days ago  
+    // 3. Group by albumId and count occurrences across ALL users
+    // 4. Order by listen count DESC
+    // 5. Return top 10-20 albums that are actually popular in our community
+    
+    await delay(300);
     return {
-      data: mockAlbums,
+      data: [], // Empty until we have real user activity data
       success: true,
-      message: 'Albums fetched successfully',
+      message: 'Popular albums not available yet - requires social features implementation',
     };
   }
 
   // Get album by ID
   static async getAlbumById(id: string): Promise<ApiResponse<Album | null>> {
-    await delay(300);
-    const album = mockAlbums.find(a => a.id === id);
-    return {
-      data: album || null,
-      success: !!album,
-      message: album ? 'Album found' : 'Album not found',
-    };
+    try {
+      // First check if this is a Spotify ID (should be alphanumeric)
+      const isSpotifyId = /^[a-zA-Z0-9]+$/.test(id) && id.length > 10;
+      
+      if (isSpotifyId && SpotifyService.isConfigured()) {
+        try {
+          // Try to fetch from Spotify API
+          const spotifyAlbum = await SpotifyService.getAlbum(id);
+          
+          if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
+            const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
+            return {
+              data: album,
+              success: true,
+              message: 'Album found on Spotify',
+            };
+          }
+        } catch (spotifyError) {
+          // Continue to check mock data if Spotify fails
+        }
+      }
+      
+      // Check mock data (for backward compatibility and fallback)
+      await delay(300);
+      const mockAlbum = mockAlbums.find(a => a.id === id);
+      
+      if (mockAlbum) {
+        return {
+          data: mockAlbum,
+          success: true,
+          message: 'Album found in local data',
+        };
+      }
+      
+      // If it's a Spotify ID but we couldn't fetch it, try to find by external ID in mock data
+      const albumBySpotifyId = mockAlbums.find(a => a.externalIds.spotify === id);
+      if (albumBySpotifyId) {
+        return {
+          data: albumBySpotifyId,
+          success: true,
+          message: 'Album found by Spotify ID in local data',
+        };
+      }
+      
+      return {
+        data: null,
+        success: false,
+        message: 'Album not found',
+      };
+    } catch (error) {
+      return {
+        data: null,
+        success: false,
+        message: 'Error fetching album',
+      };
+    }
   }
 
   // Search albums
   static async searchAlbums(query: string): Promise<ApiResponse<SearchResult>> {
-    await delay(400);
-    
     if (!query.trim()) {
       return {
         data: { albums: [], artists: [], totalResults: 0 },
@@ -280,6 +338,42 @@ export class AlbumService {
       };
     }
 
+    try {
+      // Check if Spotify is configured
+      if (!SpotifyService.isConfigured()) {
+        return this.searchMockData(query);
+      }
+
+      // Search Spotify API
+      const spotifyResponse = await SpotifyService.searchAlbums(query, 20);
+      
+      if (!spotifyResponse.albums?.items) {
+        return this.searchMockData(query);
+      }
+
+      // Convert Spotify results to our format
+      const searchResult = SpotifyMapper.mapSpotifySearchToSearchResult(spotifyResponse);
+      
+      // If no results from Spotify, also search mock data for better coverage
+      if (searchResult.albums.length === 0) {
+        return this.searchMockData(query);
+      }
+
+      return {
+        data: searchResult,
+        success: true,
+        message: `Found ${searchResult.totalResults} results from Spotify`,
+      };
+    } catch (error) {
+      // Fallback to mock data search on error
+      return this.searchMockData(query);
+    }
+  }
+
+  // Helper method to search mock data
+  private static async searchMockData(query: string): Promise<ApiResponse<SearchResult>> {
+    await delay(400);
+    
     const lowercaseQuery = query.toLowerCase();
     
     // Filter albums by title or artist
@@ -301,7 +395,7 @@ export class AlbumService {
     return {
       data: searchResult,
       success: true,
-      message: `Found ${filteredAlbums.length} results`,
+      message: `Found ${filteredAlbums.length} results (local data)`,
     };
   }
 
@@ -320,16 +414,71 @@ export class AlbumService {
     };
   }
 
-  // Get trending albums (mock implementation)
+  // Get trending albums based on user activity in our app
+  // TODO: This should query the database for albums marked as "listened" most frequently in the last 7 days
+  // For now, returns mock data until social features and user activity tracking are implemented
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
-    await delay(500);
-    // Shuffle and return a subset for trending
-    const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
-    return {
-      data: shuffled.slice(0, 4),
-      success: true,
-      message: 'Trending albums fetched',
-    };
+    try {
+      // TODO: Implement actual trending logic when social features are ready:
+      // 1. Query Supabase for user_listens table
+      // 2. Filter by dateListened >= 7 days ago
+      // 3. Group by albumId and count occurrences
+      // 4. Order by listen count DESC
+      // 5. Take top 4-6 albums
+      // 6. Fetch album details for each trending album
+      
+      /* FUTURE IMPLEMENTATION (Week 4-5):
+      
+      const { data: recentListens, error } = await supabase
+        .from('user_listens')
+        .select('album_id')
+        .gte('date_listened', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('date_listened', { ascending: false });
+      
+      if (error) throw error;
+      
+      // Count occurrences of each album
+      const albumCounts = recentListens.reduce((acc, listen) => {
+        acc[listen.album_id] = (acc[listen.album_id] || 0) + 1;
+        return acc;
+      }, {});
+      
+      // Sort by count and take top albums
+      const trendingAlbumIds = Object.entries(albumCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 4)
+        .map(([albumId]) => albumId);
+      
+      // Fetch album details for trending albums
+      const trendingAlbums = await Promise.all(
+        trendingAlbumIds.map(albumId => this.getAlbumById(albumId))
+      );
+      
+      return {
+        data: trendingAlbums.filter(response => response.success).map(response => response.data),
+        success: true,
+        message: `Trending albums based on ${recentListens.length} user listens this week`,
+      };
+      
+      */
+      
+      await delay(300);
+      return {
+        data: [], // Empty until we have real user activity data
+        success: true,
+        message: 'Trending albums not available yet - requires social features implementation',
+      };
+      
+    } catch (error) {
+      // Fallback to basic mock data on error
+      await delay(300);
+      const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
+      return {
+        data: shuffled.slice(0, 4),
+        success: true,
+        message: 'Trending albums fetched (fallback)',
+      };
+    }
   }
 
   // Get new releases (mock implementation)

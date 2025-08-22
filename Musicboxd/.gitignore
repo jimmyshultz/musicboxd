@@ -83,3 +83,4 @@ yarn-error.log
 
 # Environment configuration
 src/config/env.ts
+src/config/env.local.ts
