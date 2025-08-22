@@ -254,8 +254,6 @@ export class AlbumService {
   // TODO: This should show albums that are popular among ALL users in the last week
   // For now, returns empty until social features and user activity tracking are implemented
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
-    console.log('🎵 Popular albums requested - returning empty until social features implemented');
-    
     // TODO: Implement actual popular logic when social features are ready:
     // 1. Query Supabase for user_listens table
     // 2. Filter by dateListened >= 7 days ago  
@@ -291,8 +289,7 @@ export class AlbumService {
             };
           }
         } catch (spotifyError) {
-          console.warn('Failed to fetch album from Spotify:', spotifyError);
-          // Continue to check mock data
+          // Continue to check mock data if Spotify fails
         }
       }
       
@@ -324,7 +321,6 @@ export class AlbumService {
         message: 'Album not found',
       };
     } catch (error) {
-      console.error('Error fetching album by ID:', error);
       return {
         data: null,
         success: false,
@@ -346,7 +342,6 @@ export class AlbumService {
     try {
       // Check if Spotify is configured
       if (!SpotifyService.isConfigured()) {
-        console.warn('Spotify API not configured, searching mock data only');
         return this.searchMockData(query);
       }
 
@@ -354,7 +349,6 @@ export class AlbumService {
       const spotifyResponse = await SpotifyService.searchAlbums(query, 20);
       
       if (!spotifyResponse.albums?.items) {
-        console.warn('No albums found in Spotify response, trying mock data');
         return this.searchMockData(query);
       }
 
@@ -363,7 +357,6 @@ export class AlbumService {
       
       // If no results from Spotify, also search mock data for better coverage
       if (searchResult.albums.length === 0) {
-        console.log('No Spotify results, searching mock data as fallback');
         return this.searchMockData(query);
       }
 
@@ -373,10 +366,7 @@ export class AlbumService {
         message: `Found ${searchResult.totalResults} results from Spotify`,
       };
     } catch (error) {
-      console.error('Error searching albums on Spotify:', error);
-      
-      // Fallback to mock data search
-      console.warn('Falling back to mock data search due to Spotify API error');
+      // Fallback to mock data search on error
       return this.searchMockData(query);
     }
   }
@@ -430,8 +420,6 @@ export class AlbumService {
   // For now, returns mock data until social features and user activity tracking are implemented
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
     try {
-      console.log('🎵 Fetching trending albums based on user activity...');
-      
       // TODO: Implement actual trending logic when social features are ready:
       // 1. Query Supabase for user_listens table
       // 2. Filter by dateListened >= 7 days ago
@@ -475,9 +463,6 @@ export class AlbumService {
       
       */
       
-      // Return empty results until we have real user activity data
-      console.log('📊 Returning empty trending albums until user activity tracking is implemented');
-      
       await delay(300);
       return {
         data: [], // Empty until we have real user activity data
@@ -486,9 +471,7 @@ export class AlbumService {
       };
       
     } catch (error) {
-      console.error('Error fetching trending albums:', error);
-      
-      // Fallback to basic mock data
+      // Fallback to basic mock data on error
       await delay(300);
       const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
       return {

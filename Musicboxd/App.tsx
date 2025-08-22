@@ -20,13 +20,11 @@ function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? darkTheme : lightTheme;
 
-  // Run Spotify validation on app startup
+  // Validate Spotify integration on app startup
   useEffect(() => {
     const { configured, message } = quickValidation();
-    console.log('🎵 Spotify Integration Status:', message);
-    
     if (!configured) {
-      console.log('📖 For setup instructions, see: SPOTIFY_SETUP.md');
+      console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
     }
   }, []);
 

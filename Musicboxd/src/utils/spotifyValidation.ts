@@ -271,21 +271,16 @@ function generateRecommendations(results: ValidationResult[], recommendations: s
 }
 
 /**
- * Quick validation check (for development use)
+ * Quick validation check for Spotify configuration
  */
 export function quickValidation(): { configured: boolean; message: string } {
   const configured = SpotifyService.isConfigured();
   
-  if (configured) {
-    return {
-      configured: true,
-      message: 'Spotify API is configured and ready to use',
-    };
-  }
-
   return {
-    configured: false,
-    message: 'Spotify API not configured - using mock data. See SPOTIFY_SETUP.md for setup instructions.',
+    configured,
+    message: configured 
+      ? 'Spotify API configured' 
+      : 'Spotify API not configured - using fallback data',
   };
 }
 
