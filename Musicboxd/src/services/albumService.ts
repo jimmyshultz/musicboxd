@@ -449,16 +449,53 @@ export class AlbumService {
     };
   }
 
-  // Get trending albums (mock implementation)
+  // Get trending albums using Spotify API
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
-    await delay(500);
-    // Shuffle and return a subset for trending
-    const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
-    return {
-      data: shuffled.slice(0, 4),
-      success: true,
-      message: 'Trending albums fetched',
-    };
+    try {
+      // Check if Spotify is configured
+      if (!SpotifyService.isConfigured()) {
+        console.warn('Spotify API not configured for trending albums, falling back to mock data');
+        await delay(500);
+        // Shuffle and return a subset for trending
+        const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
+        return {
+          data: shuffled.slice(0, 4),
+          success: true,
+          message: 'Trending albums fetched (mock data)',
+        };
+      }
+
+      // Use popular albums from Spotify as trending albums
+      const spotifyResponse = await SpotifyService.getPopularAlbums(8); // Get more to have variety
+      
+      if (!spotifyResponse.albums?.items) {
+        throw new Error('No albums found in Spotify response');
+      }
+
+      // Convert Spotify albums to our format and take a subset
+      const albums = spotifyResponse.albums.items
+        .filter(SpotifyMapper.isValidSpotifyAlbum)
+        .map(SpotifyMapper.mapSpotifyAlbumToAlbum)
+        .slice(0, 4); // Take first 4 for trending
+
+      return {
+        data: albums,
+        success: true,
+        message: `Fetched ${albums.length} trending albums from Spotify`,
+      };
+    } catch (error) {
+      console.error('Error fetching trending albums from Spotify:', error);
+      
+      // Fallback to mock data on error
+      console.warn('Falling back to mock data for trending albums');
+      await delay(300);
+      const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
+      return {
+        data: shuffled.slice(0, 4),
+        success: true,
+        message: 'Trending albums fetched (fallback to mock data)',
+      };
+    }
   }
 
   // Get new releases (mock implementation)
