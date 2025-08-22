@@ -1,4 +1,6 @@
 // Spotify Web API Configuration
+import { ENV_CONFIG } from './env';
+
 export const SPOTIFY_CONFIG = {
   // API Base URL
   API_BASE_URL: 'https://api.spotify.com/v1',
@@ -6,14 +8,14 @@ export const SPOTIFY_CONFIG = {
   // Authentication endpoints
   AUTH_URL: 'https://accounts.spotify.com/api/token',
   
-  // Client credentials - these should be set in .env file
+  // Client credentials from environment configuration
   // For development, you'll need to:
   // 1. Go to https://developer.spotify.com/dashboard
   // 2. Create a new app
   // 3. Get your Client ID and Client Secret
-  // 4. Copy .env.example to .env and add your credentials
-  CLIENT_ID: process.env.SPOTIFY_CLIENT_ID || 'your_spotify_client_id',
-  CLIENT_SECRET: process.env.SPOTIFY_CLIENT_SECRET || 'your_spotify_client_secret',
+  // 4. Create env.local.ts with your credentials (see env.ts for example)
+  CLIENT_ID: ENV_CONFIG.SPOTIFY_CLIENT_ID || 'your_spotify_client_id',
+  CLIENT_SECRET: ENV_CONFIG.SPOTIFY_CLIENT_SECRET || 'your_spotify_client_secret',
   
   // API Endpoints
   ENDPOINTS: {
@@ -43,6 +45,11 @@ export const SPOTIFY_CONFIG = {
   },
 };
 
+// Debug logging for final config
+console.log('🎵 Spotify Config Debug:');
+console.log('- CLIENT_ID:', SPOTIFY_CONFIG.CLIENT_ID === 'your_spotify_client_id' ? '[DEFAULT/NOT SET]' : '[CONFIGURED]');
+console.log('- CLIENT_SECRET:', SPOTIFY_CONFIG.CLIENT_SECRET === 'your_spotify_client_secret' ? '[DEFAULT/NOT SET]' : '[CONFIGURED]');
+
 // Environment setup instructions
 export const SETUP_INSTRUCTIONS = `
 To set up Spotify API integration:
@@ -54,12 +61,12 @@ To set up Spotify API integration:
    - App name: "Musicboxd Development"
    - App description: "Music discovery and rating app"
    - Website: Leave blank or add your website
-   - Redirect URIs: Not needed for Client Credentials flow
+   - Redirect URIs: https://example.com/callback (secure placeholder)
 5. Accept the terms and create the app
 6. Copy your Client ID and Client Secret
-7. Set environment variables:
+7. Set environment variables in .env file:
    - SPOTIFY_CLIENT_ID=your_client_id_here
    - SPOTIFY_CLIENT_SECRET=your_client_secret_here
 
-For React Native development, you can create a .env file in the project root.
+For React Native development, you need react-native-config to load .env files.
 `;
