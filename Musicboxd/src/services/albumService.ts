@@ -466,17 +466,28 @@ export class AlbumService {
       }
 
       // Use popular albums from Spotify as trending albums
+      console.log('🎵 Fetching trending albums from Spotify...');
       const spotifyResponse = await SpotifyService.getPopularAlbums(8); // Get more to have variety
       
-      if (!spotifyResponse.albums?.items) {
+      console.log('📊 Spotify response for trending albums:', {
+        hasAlbums: !!spotifyResponse.albums,
+        itemCount: spotifyResponse.albums?.items?.length || 0,
+        totalResults: spotifyResponse.albums?.total || 0
+      });
+      
+      if (!spotifyResponse.albums?.items || spotifyResponse.albums.items.length === 0) {
         throw new Error('No albums found in Spotify response');
       }
 
       // Convert Spotify albums to our format and take a subset
-      const albums = spotifyResponse.albums.items
-        .filter(SpotifyMapper.isValidSpotifyAlbum)
+      const validAlbums = spotifyResponse.albums.items.filter(SpotifyMapper.isValidSpotifyAlbum);
+      console.log(`🔍 Valid albums after filtering: ${validAlbums.length} out of ${spotifyResponse.albums.items.length}`);
+      
+      const albums = validAlbums
         .map(SpotifyMapper.mapSpotifyAlbumToAlbum)
         .slice(0, 4); // Take first 4 for trending
+      
+      console.log(`✅ Final trending albums: ${albums.length}`, albums.map(a => `${a.artist} - ${a.title}`));
 
       return {
         data: albums,

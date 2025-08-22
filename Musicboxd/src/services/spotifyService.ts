@@ -267,17 +267,49 @@ export class SpotifyService {
     limit: number = SPOTIFY_CONFIG.SEARCH.DEFAULT_LIMIT,
     market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET
   ): Promise<SpotifySearchResponse> {
-    // Search for albums from popular genres/years
+    // Try multiple popular search strategies
     const popularQueries = [
-      'year:2023 OR year:2022 OR year:2021',
+      // Popular artists that are likely to have results
+      'Taylor Swift OR Drake OR Billie Eilish OR The Weeknd',
+      // Recent years with broader range
+      'year:2024 OR year:2023 OR year:2022',
+      // Popular genres
       'genre:pop OR genre:rock OR genre:hip-hop',
-      'genre:indie OR genre:alternative',
+      // Fallback: just search for "album" to get any albums
+      'album',
     ];
 
-    // For now, use the first query. In a real app, you might want to combine results
-    const query = popularQueries[0];
+    // Try each query until we get results
+    for (const query of popularQueries) {
+      try {
+        console.log(`🔍 Trying popular albums query: "${query}"`);
+        const response = await this.searchAlbums(query, limit, 0, market);
+        
+        if (response.albums?.items && response.albums.items.length > 0) {
+          console.log(`✅ Found ${response.albums.items.length} popular albums with query: "${query}"`);
+          return response;
+        } else {
+          console.log(`❌ No results for query: "${query}"`);
+        }
+      } catch (error) {
+        console.warn(`Error with popular albums query "${query}":`, error);
+        continue;
+      }
+    }
     
-    return this.searchAlbums(query, limit, 0, market);
+    // If all queries fail, return empty response
+    console.warn('All popular album queries failed, returning empty response');
+    return {
+      albums: {
+        href: '',
+        items: [],
+        limit: limit,
+        next: null,
+        offset: 0,
+        previous: null,
+        total: 0,
+      }
+    };
   }
 
   /**
