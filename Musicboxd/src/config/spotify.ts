@@ -1,6 +1,14 @@
 // Spotify Web API Configuration
 import { ENV_CONFIG } from './env';
 
+// Add comprehensive debug logging
+console.log('🔍 SPOTIFY CONFIG LOADING DEBUG:');
+console.log('1. ENV_CONFIG import result:', ENV_CONFIG);
+console.log('2. ENV_CONFIG.SPOTIFY_CLIENT_ID:', ENV_CONFIG.SPOTIFY_CLIENT_ID);
+console.log('3. ENV_CONFIG.SPOTIFY_CLIENT_SECRET:', ENV_CONFIG.SPOTIFY_CLIENT_SECRET ? '[PRESENT]' : '[MISSING]');
+console.log('4. process.env.SPOTIFY_CLIENT_ID:', process.env.SPOTIFY_CLIENT_ID);
+console.log('5. process.env.SPOTIFY_CLIENT_SECRET:', process.env.SPOTIFY_CLIENT_SECRET ? '[PRESENT]' : '[MISSING]');
+
 export const SPOTIFY_CONFIG = {
   // API Base URL
   API_BASE_URL: 'https://api.spotify.com/v1',
@@ -47,8 +55,9 @@ export const SPOTIFY_CONFIG = {
 
 // Debug logging for final config
 console.log('🎵 Spotify Config Debug:');
-console.log('- CLIENT_ID:', SPOTIFY_CONFIG.CLIENT_ID === 'your_spotify_client_id' ? '[DEFAULT/NOT SET]' : '[CONFIGURED]');
-console.log('- CLIENT_SECRET:', SPOTIFY_CONFIG.CLIENT_SECRET === 'your_spotify_client_secret' ? '[DEFAULT/NOT SET]' : '[CONFIGURED]');
+console.log('- CLIENT_ID value:', SPOTIFY_CONFIG.CLIENT_ID);
+console.log('- CLIENT_ID status:', SPOTIFY_CONFIG.CLIENT_ID === 'your_spotify_client_id' ? '[DEFAULT/NOT SET]' : '[CONFIGURED]');
+console.log('- CLIENT_SECRET status:', SPOTIFY_CONFIG.CLIENT_SECRET === 'your_spotify_client_secret' ? '[DEFAULT/NOT SET]' : '[CONFIGURED]');
 
 // Environment setup instructions
 export const SETUP_INSTRUCTIONS = `
