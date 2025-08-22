@@ -70,14 +70,12 @@ export default function FavoriteAlbumsManagementScreen() {
     setLoading(true);
     setHasSearched(true);
     try {
-      // Mock search by filtering popular albums
-      const response = await AlbumService.getPopularAlbums();
-      if (response.success) {
-        const filtered = response.data.filter(album => 
-          album.title.toLowerCase().includes(query.toLowerCase()) ||
-          album.artist.toLowerCase().includes(query.toLowerCase())
-        );
-        setSearchResults(filtered);
+      // Use real search API to search Spotify's full catalog
+      const response = await AlbumService.searchAlbums(query);
+      if (response.success && response.data) {
+        setSearchResults(response.data.albums);
+      } else {
+        setSearchResults([]);
       }
     } catch (error) {
       console.error('Error searching albums:', error);
