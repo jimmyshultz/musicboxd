@@ -18,6 +18,7 @@ import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
+import { fetchUserAlbumStats } from '../../store/slices/userAlbumsSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { userStatsService } from '../../services/userStatsService';
@@ -39,6 +40,7 @@ interface UserStats {
   albumsAllTime: number;
   ratingsThisYear: number;
   ratingsAllTime: number;
+  averageRating: number;
   followers: number;
   following: number;
 }
@@ -54,6 +56,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
   const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
+  const { stats: databaseStats } = useSelector((state: RootState) => state.userAlbums);
   const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? theme.dark : theme.light;
 
@@ -64,6 +67,7 @@ export default function ProfileScreen() {
     albumsAllTime: 0,
     ratingsThisYear: 0,
     ratingsAllTime: 0,
+    averageRating: 0,
     followers: 0,
     following: 0,
   });
@@ -162,19 +166,37 @@ export default function ProfileScreen() {
         lastActiveDate: following.lastActiveDate.toISOString(),
       }))));
       
-      // Use centralized stats service for consistent calculation
-      const stats = userStatsService.calculateStatsFromRedux(
-        userListens,
-        userReviews,
-        followersData,
-        followingData
-      );
+      // Fetch database-backed album stats
+      await dispatch(fetchUserAlbumStats(user.id));
       
-      setUserStats(stats);
+      // Use database stats if available, otherwise fallback to legacy calculation
+      if (databaseStats) {
+        setUserStats({
+          albumsThisYear: databaseStats.albumsThisYear,
+          albumsAllTime: databaseStats.totalAlbums,
+          ratingsThisYear: databaseStats.ratingsThisYear,
+          ratingsAllTime: databaseStats.totalRatings,
+          averageRating: databaseStats.averageRating,
+          followers: followersData.length,
+          following: followingData.length,
+        });
+      } else {
+        // Fallback to legacy stats calculation
+        const stats = userStatsService.calculateStatsFromRedux(
+          userListens,
+          userReviews,
+          followersData,
+          followingData
+        );
+        setUserStats({
+          ...stats,
+          averageRating: 0, // Legacy stats don't have average rating
+        });
+      }
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, userListens, userReviews, dispatch]);
+  }, [user?.id, userListens, userReviews, databaseStats, dispatch]);
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -416,6 +438,7 @@ export default function ProfileScreen() {
             {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
             {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
             {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
+            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating}`, () => navigateToUserReviews('alltime'))}
             {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
             {renderStatCard('Following', userStats.following, navigateToFollowing)}
           </View>
