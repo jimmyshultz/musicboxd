@@ -263,7 +263,7 @@ export default function AlbumDetailsScreen() {
           albumId: currentAlbum.id,
           rating,
           review: '',
-          dateReviewed: new Date(),
+          dateReviewed: new Date().toISOString(),
         };
         dispatch(setCurrentAlbumUserReview(newReview));
       }

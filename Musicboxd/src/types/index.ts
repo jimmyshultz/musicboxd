@@ -80,7 +80,7 @@ export interface Review {
   albumId: string;
   rating: number; // 1-5 stars
   reviewText?: string;
-  dateReviewed: Date;
+  dateReviewed: Date | string; // Allow both Date objects and ISO strings for Redux serialization
   likesCount: number;
   commentsCount: number;
 }
