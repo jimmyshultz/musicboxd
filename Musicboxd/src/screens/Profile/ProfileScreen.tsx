@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -68,6 +68,18 @@ export default function ProfileScreen() {
     following: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
+  // Memoize current user's listens and reviews to prevent unnecessary recalculations
+  const currentUserListens = useMemo(() => 
+    userListens.filter(listen => listen.userId === user?.id), 
+    [userListens, user?.id]
+  );
+  
+  const currentUserReviews = useMemo(() => 
+    userReviews.filter(review => review.userId === user?.id), 
+    [userReviews, user?.id]
+  );
 
   const loadFavoriteAlbums = useCallback(async () => {
     if (!user?.preferences?.favoriteAlbumIds?.length) {
@@ -96,18 +108,22 @@ export default function ProfileScreen() {
     }
   }, [user?.preferences?.favoriteAlbumIds]);
 
-  const loadRecentActivity = useCallback(async () => {
-    if (!user?.id) return;
+  const loadRecentActivity = useCallback(async (listens: Listen[], reviews: Review[]) => {
+    if (!user?.id || !listens) {
+      setRecentActivity([]);
+      return;
+    }
 
     try {
-      // Use Redux state for user listens and reviews
-      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
-      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
-
       // Get 5 most recent listens
-      const recentListens = currentUserListens
+      const recentListens = listens
         .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
         .slice(0, 5);
+
+      if (recentListens.length === 0) {
+        setRecentActivity([]);
+        return;
+      }
 
       // Get albums for the recent listens
       const albumPromises = recentListens.map(listen => 
@@ -122,7 +138,7 @@ export default function ProfileScreen() {
       recentListens.forEach((listen, index) => {
         const albumResponse = albumResponses[index];
         if (albumResponse.success && albumResponse.data) {
-          const correspondingReview = currentUserReviews.find(
+          const correspondingReview = reviews.find(
             review => review.albumId === listen.albumId
           );
           
@@ -137,10 +153,11 @@ export default function ProfileScreen() {
       setRecentActivity(activity);
     } catch (error) {
       console.error('Error loading recent activity:', error);
+      setRecentActivity([]);
     }
-  }, [user?.id, userListens, userReviews]);
+  }, [user?.id]);
 
-  const loadUserStats = useCallback(async () => {
+  const loadUserStats = useCallback(async (listens: Listen[], reviews: Review[]) => {
     if (!user?.id) return;
 
     try {
@@ -164,8 +181,8 @@ export default function ProfileScreen() {
       
       // Use centralized stats service for consistent calculation
       const stats = userStatsService.calculateStatsFromRedux(
-        userListens,
-        userReviews,
+        listens,
+        reviews,
         followersData,
         followingData
       );
@@ -174,13 +191,12 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, userListens, userReviews, dispatch]);
+  }, [user?.id, dispatch]);
 
+  // Initial load effect - only runs once when component mounts or user changes
   useEffect(() => {
     const loadAllData = async () => {
-      // Only load data if user exists
-      if (!user) {
-        setLoading(false);
+      if (!user || initialLoadDone) {
         return;
       }
 
@@ -188,16 +204,40 @@ export default function ProfileScreen() {
       try {
         await Promise.all([
           loadFavoriteAlbums(),
-          loadRecentActivity(),
-          loadUserStats(),
+          loadRecentActivity(currentUserListens, currentUserReviews),
+          loadUserStats(currentUserListens, currentUserReviews),
         ]);
       } finally {
         setLoading(false);
+        setInitialLoadDone(true);
       }
     };
 
     loadAllData();
-  }, [user?.id]); // Only depend on user ID, not the whole user object or callback functions
+  }, [user?.id]); // Only depend on user ID
+
+  // Separate effect to handle Redux state changes for recent activity and stats
+  useEffect(() => {
+    if (!user || !initialLoadDone) return;
+
+    // Update recent activity and stats when Redux state changes
+    loadRecentActivity(currentUserListens, currentUserReviews);
+    loadUserStats(currentUserListens, currentUserReviews);
+  }, [currentUserListens, currentUserReviews, loadRecentActivity, loadUserStats, user, initialLoadDone]);
+
+  // Reset when user changes
+  useEffect(() => {
+    setInitialLoadDone(false);
+    setRecentActivity([]);
+    setUserStats({
+      albumsThisYear: 0,
+      albumsAllTime: 0,
+      ratingsThisYear: 0,
+      ratingsAllTime: 0,
+      followers: 0,
+      following: 0,
+    });
+  }, [user?.id]);
 
   const handleLogout = () => {
     dispatch(logout());

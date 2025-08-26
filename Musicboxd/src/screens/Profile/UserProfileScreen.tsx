@@ -121,30 +121,36 @@ export default function UserProfileScreen() {
     }
   }, []);
 
-  const loadRecentActivity = useCallback(async (userData: User) => {
+  const loadRecentActivity = useCallback(async (userData: User, targetListens?: Listen[], targetReviews?: Review[]) => {
     if (!userData?.id) return;
 
     try {
-      let targetUserListens: Listen[];
-      let targetUserReviews: Review[];
+      let userListensData: Listen[];
+      let userReviewsData: Review[];
       
-      // Check if this is the current user or another user
-      if (userData.id === currentUser?.id) {
-        // For current user, use Redux state data
-        targetUserListens = userListens;
-        targetUserReviews = userReviews;
+      // Use provided data if available, otherwise fetch
+      if (targetListens && targetReviews) {
+        userListensData = targetListens;
+        userReviewsData = targetReviews;
       } else {
-        // For other users, fetch their data from the API
-        const [listens, reviews] = await Promise.all([
-          AlbumService.getUserListens(userData.id),
-          AlbumService.getUserReviews(userData.id),
-        ]);
-        targetUserListens = listens;
-        targetUserReviews = reviews;
+        // Check if this is the current user or another user
+        if (userData.id === currentUser?.id) {
+          // For current user, use Redux state data
+          userListensData = userListens;
+          userReviewsData = userReviews;
+        } else {
+          // For other users, fetch their data from the API
+          const [listens, reviews] = await Promise.all([
+            AlbumService.getUserListens(userData.id),
+            AlbumService.getUserReviews(userData.id),
+          ]);
+          userListensData = listens;
+          userReviewsData = reviews;
+        }
       }
 
       // Get 5 most recent listens
-      const recentListens = targetUserListens
+      const recentListens = userListensData
         .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
         .slice(0, 5);
 
@@ -166,7 +172,7 @@ export default function UserProfileScreen() {
       recentListens.forEach((listen, index) => {
         const albumResponse = albumResponses[index];
         if (albumResponse.success && albumResponse.data) {
-          const correspondingReview = targetUserReviews.find(
+          const correspondingReview = userReviewsData.find(
             review => review.albumId === listen.albumId
           );
           
@@ -185,14 +191,27 @@ export default function UserProfileScreen() {
     }
   }, [currentUser?.id, userListens, userReviews]);
 
-  const loadUserStats = useCallback(async (userData: User) => {
+  const loadUserStats = useCallback(async (userData: User, targetListens?: Listen[], targetReviews?: Review[]) => {
     if (!userData?.id) return;
 
     try {
       let stats: UserStats;
       
-      // Check if this is the current user or another user
-      if (userData.id === currentUser?.id) {
+      // Use provided data if available
+      if (targetListens && targetReviews && userData.id === currentUser?.id) {
+        // For current user with provided data
+        const [followersData, followingData] = await Promise.all([
+          userService.getUserFollowers(userData.id),
+          userService.getUserFollowing(userData.id),
+        ]);
+        
+        stats = userStatsService.calculateStatsFromRedux(
+          targetListens,
+          targetReviews,
+          followersData,
+          followingData
+        );
+      } else if (userData.id === currentUser?.id) {
         // For current user, use Redux state data for better performance
         const [followersData, followingData] = await Promise.all([
           userService.getUserFollowers(userData.id),
@@ -215,6 +234,17 @@ export default function UserProfileScreen() {
       console.error('Error loading user stats:', error);
     }
   }, [currentUser?.id, userListens, userReviews]);
+
+  // Memoize current user's listens and reviews to prevent unnecessary recalculations
+  const currentUserListens = useMemo(() => 
+    userListens.filter(listen => listen.userId === currentUser?.id), 
+    [userListens, currentUser?.id]
+  );
+  
+  const currentUserReviews = useMemo(() => 
+    userReviews.filter(review => review.userId === currentUser?.id), 
+    [userReviews, currentUser?.id]
+  );
 
   // Main load function that loads all data in sequence
   const loadAllData = useCallback(async () => {
@@ -244,6 +274,15 @@ export default function UserProfileScreen() {
       }
     }, [loadAllData, initialLoadDone])
   );
+
+  // Separate effect to handle Redux state changes for current user's profile
+  useEffect(() => {
+    if (!user || !initialLoadDone || !isOwnProfile) return;
+
+    // Update recent activity and stats when Redux state changes for own profile
+    loadRecentActivity(user, currentUserListens, currentUserReviews);
+    loadUserStats(user, currentUserListens, currentUserReviews);
+  }, [currentUserListens, currentUserReviews, user, initialLoadDone, isOwnProfile, loadRecentActivity, loadUserStats]);
 
   // Reset initial load flag when userId changes
   useEffect(() => {
