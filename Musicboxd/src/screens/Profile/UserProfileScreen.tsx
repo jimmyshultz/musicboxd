@@ -349,9 +349,9 @@ export default function UserProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecentActivityItem = (activity: RecentActivity) => (
+  const renderRecentActivityItem = (activity: RecentActivity, index: number) => (
     <TouchableOpacity
-      key={activity.album.id}
+      key={`${activity.album.id}-${activity.listen.id}-${index}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
@@ -474,18 +474,32 @@ export default function UserProfileScreen() {
         </View>
 
         {/* Recent Activity */}
-        {recentActivity.length > 0 && (
-          <View style={styles.section}>
-            <Text variant="headlineSmall" style={styles.sectionTitle}>
-              Recent Activity
-            </Text>
+        <View style={styles.section}>
+          <Text variant="headlineSmall" style={styles.sectionTitle}>
+            Recently Listened
+          </Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" />
+              <Text variant="bodyMedium" style={styles.loadingText}>Loading recent activity...</Text>
+            </View>
+          ) : recentActivity.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.horizontalList}>
-                {recentActivity.map(renderRecentActivityItem)}
+                {recentActivity.map((activity, index) => renderRecentActivityItem(activity, index))}
               </View>
             </ScrollView>
-          </View>
-        )}
+          ) : (
+            <View style={styles.emptyActivityContainer}>
+              <Text variant="bodyLarge" style={styles.emptyActivityText}>
+                No recent activity
+              </Text>
+              <Text variant="bodyMedium" style={styles.emptyActivitySubtext}>
+                {isOwnProfile ? "Start listening to some albums!" : "This user hasn't listened to any albums recently"}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Stats Grid */}
         <View style={styles.section}>
@@ -641,5 +655,28 @@ const styles = StyleSheet.create({
     color: theme.light.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
+  },
+  emptyActivityContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: theme.light.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: spacing.lg,
+    ...shadows.small,
+  },
+  emptyActivityText: {
+    fontWeight: 'bold',
+    marginBottom: spacing.xs,
+  },
+  emptyActivitySubtext: {
+    color: theme.light.colors.onSurfaceVariant,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
 });
