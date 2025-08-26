@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -11,7 +11,7 @@ import {
 
 import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -70,28 +70,39 @@ export default function UserProfileScreen() {
     following: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
-  const isFollowing = following.some(followedUser => followedUser.id === userId);
-  const isOwnProfile = currentUser?.id === userId;
+  const isFollowing = useMemo(() => 
+    following.some(followedUser => followedUser.id === userId), 
+    [following, userId]
+  );
+  const isOwnProfile = useMemo(() => 
+    currentUser?.id === userId, 
+    [currentUser?.id, userId]
+  );
 
   const loadUserProfile = useCallback(async () => {
+    if (!userId) return;
+    
     try {
       const userData = await userService.getUserById(userId);
       setUser(userData);
+      return userData;
     } catch (error) {
       console.error('Error loading user profile:', error);
+      return null;
     }
   }, [userId]);
 
-  const loadFavoriteAlbums = useCallback(async () => {
-    if (!user?.preferences?.favoriteAlbumIds?.length) {
+  const loadFavoriteAlbums = useCallback(async (userData: User) => {
+    if (!userData?.preferences?.favoriteAlbumIds?.length) {
       setFavoriteAlbums([]);
       return;
     }
 
     try {
       // Get the actual albums matching the user's favorite IDs
-      const albumPromises = user.preferences.favoriteAlbumIds.map(albumId => 
+      const albumPromises = userData.preferences.favoriteAlbumIds.map(albumId => 
         AlbumService.getAlbumById(albumId)
       );
       
@@ -108,25 +119,25 @@ export default function UserProfileScreen() {
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }
-  }, [user?.preferences?.favoriteAlbumIds]);
+  }, []);
 
-  const loadRecentActivity = useCallback(async () => {
-    if (!user?.id) return;
+  const loadRecentActivity = useCallback(async (userData: User) => {
+    if (!userData?.id) return;
 
     try {
       let targetUserListens: Listen[];
       let targetUserReviews: Review[];
       
       // Check if this is the current user or another user
-      if (user.id === currentUser?.id) {
+      if (userData.id === currentUser?.id) {
         // For current user, use Redux state data
         targetUserListens = userListens;
         targetUserReviews = userReviews;
       } else {
         // For other users, fetch their data from the API
         const [listens, reviews] = await Promise.all([
-          AlbumService.getUserListens(user.id),
-          AlbumService.getUserReviews(user.id),
+          AlbumService.getUserListens(userData.id),
+          AlbumService.getUserReviews(userData.id),
         ]);
         targetUserListens = listens;
         targetUserReviews = reviews;
@@ -136,6 +147,11 @@ export default function UserProfileScreen() {
       const recentListens = targetUserListens
         .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
         .slice(0, 5);
+
+      if (recentListens.length === 0) {
+        setRecentActivity([]);
+        return;
+      }
 
       // Get albums for the recent listens
       const albumPromises = recentListens.map(listen => 
@@ -165,21 +181,22 @@ export default function UserProfileScreen() {
       setRecentActivity(activity);
     } catch (error) {
       console.error('Error loading recent activity:', error);
+      setRecentActivity([]);
     }
-  }, [user?.id, currentUser?.id, userListens, userReviews]);
+  }, [currentUser?.id, userListens, userReviews]);
 
-  const loadUserStats = useCallback(async () => {
-    if (!user?.id) return;
+  const loadUserStats = useCallback(async (userData: User) => {
+    if (!userData?.id) return;
 
     try {
       let stats: UserStats;
       
       // Check if this is the current user or another user
-      if (user.id === currentUser?.id) {
+      if (userData.id === currentUser?.id) {
         // For current user, use Redux state data for better performance
         const [followersData, followingData] = await Promise.all([
-          userService.getUserFollowers(user.id),
-          userService.getUserFollowing(user.id),
+          userService.getUserFollowers(userData.id),
+          userService.getUserFollowing(userData.id),
         ]);
         
         stats = userStatsService.calculateStatsFromRedux(
@@ -190,35 +207,59 @@ export default function UserProfileScreen() {
         );
       } else {
         // For other users, fetch their data from the API
-        stats = await userStatsService.getUserStats(user.id);
+        stats = await userStatsService.getUserStats(userData.id);
       }
       
       setUserStats(stats);
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, currentUser?.id, userListens, userReviews]);
+  }, [currentUser?.id, userListens, userReviews]);
 
-  useEffect(() => {
-    const loadAllData = async () => {
-      setLoading(true);
-      await loadUserProfile();
-    };
+  // Main load function that loads all data in sequence
+  const loadAllData = useCallback(async () => {
+    if (initialLoadDone) return;
     
-    loadAllData();
-  }, [userId, loadUserProfile]);
-
-  useEffect(() => {
-    if (user) {
-      Promise.all([
-        loadFavoriteAlbums(),
-        loadRecentActivity(),
-        loadUserStats(),
-      ]).finally(() => {
-        setLoading(false);
-      });
+    setLoading(true);
+    try {
+      const userData = await loadUserProfile();
+      if (userData) {
+        await Promise.all([
+          loadFavoriteAlbums(userData),
+          loadRecentActivity(userData),
+          loadUserStats(userData),
+        ]);
+      }
+    } finally {
+      setLoading(false);
+      setInitialLoadDone(true);
     }
-  }, [user, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+
+  // Use focus effect to load data only when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!initialLoadDone) {
+        loadAllData();
+      }
+    }, [loadAllData, initialLoadDone])
+  );
+
+  // Reset initial load flag when userId changes
+  useEffect(() => {
+    setInitialLoadDone(false);
+    setUser(null);
+    setFavoriteAlbums([]);
+    setRecentActivity([]);
+    setUserStats({
+      albumsThisYear: 0,
+      albumsAllTime: 0,
+      ratingsThisYear: 0,
+      ratingsAllTime: 0,
+      followers: 0,
+      following: 0,
+    });
+  }, [userId]);
 
   const handleFollowToggle = async () => {
     if (!user) return;
