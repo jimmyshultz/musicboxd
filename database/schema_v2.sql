@@ -41,16 +41,21 @@ CREATE TABLE public.albums (
 -- ACTIVITY TABLES - SEPARATE FOR EACH TYPE
 -- ============================================================================
 
--- Album listens - chronological history
+-- Album listens - simple boolean status (listened or not)
 CREATE TABLE public.album_listens (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     album_id TEXT REFERENCES public.albums(id) ON DELETE CASCADE NOT NULL,
-    listened_at TIMESTAMPTZ DEFAULT NOW(),
+    is_listened BOOLEAN DEFAULT true, -- Simple listened status
+    first_listened_at TIMESTAMPTZ DEFAULT NOW(), -- When they first marked it as listened
     created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
     
-    -- Index for fast queries
-    INDEX idx_album_listens_user_listened (user_id, listened_at DESC),
+    -- One listen status per user per album
+    UNIQUE(user_id, album_id),
+    
+    -- Indexes
+    INDEX idx_album_listens_user (user_id),
     INDEX idx_album_listens_album (album_id)
 );
 
@@ -73,23 +78,24 @@ CREATE TABLE public.album_ratings (
     INDEX idx_album_ratings_rating (rating)
 );
 
--- Diary entries - specific date-based logs
+-- Diary entries - chronological listening history with multiple entries per album
 CREATE TABLE public.diary_entries (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     album_id TEXT REFERENCES public.albums(id) ON DELETE CASCADE NOT NULL,
     diary_date DATE NOT NULL, -- The date the user assigns to this listen
-    rating INTEGER CHECK (rating >= 1 AND rating <= 5), -- Rating at the time
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5), -- Rating at the time of this listen
     notes TEXT CHECK (char_length(notes) <= 1000), -- Optional diary notes
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
-    -- One diary entry per user per album per date
+    -- One diary entry per user per album per date (can re-listen on different dates)
     UNIQUE(user_id, album_id, diary_date),
     
     -- Indexes
     INDEX idx_diary_entries_user_date (user_id, diary_date DESC),
-    INDEX idx_diary_entries_album (album_id)
+    INDEX idx_diary_entries_album (album_id),
+    INDEX idx_diary_entries_user_album (user_id, album_id)
 );
 
 -- ============================================================================
@@ -164,7 +170,7 @@ $$ language 'plpgsql';
 
 -- Triggers for activity feed
 CREATE TRIGGER create_listen_activity
-    AFTER INSERT ON public.album_listens
+    AFTER INSERT OR UPDATE ON public.album_listens
     FOR EACH ROW EXECUTE FUNCTION create_activity_feed_entry('listen');
 
 CREATE TRIGGER create_rating_activity
@@ -284,17 +290,24 @@ To migrate from the old schema:
 1. Backup existing data from user_albums table
 2. Create the new tables above
 3. Migrate data:
-   - user_albums.is_listened=true -> album_listens
+   - user_albums.is_listened=true -> album_listens (simple boolean status)
    - user_albums.rating -> album_ratings  
    - user_albums.review -> album_ratings.review
+   - Create diary_entries for any existing listens (using listened_at as diary_date)
 4. Drop old user_albums table
 5. Update application services to use new tables
 
+Schema Design Philosophy:
+- album_listens: Simple "have I listened to this?" status
+- album_ratings: "What did I think of this?" with reviews
+- diary_entries: "When did I listen and how did I feel?" chronological log
+
 Benefits of new schema:
-- Multiple listens per album tracked chronologically
-- Ratings separate from listens (can rate without listening)
-- Proper diary entries with dates and notes
+- Clear separation of concerns between listen status, ratings, and diary
+- album_listens = simple boolean for "listened/not listened"
+- diary_entries = chronological history of when you listened (multiple entries per album)
+- Ratings independent of listen status or diary entries
 - Better performance with targeted indexes
-- Cleaner data integrity
-- Easier to query and analyze user behavior
+- Cleaner data integrity and constraints
+- Much easier to query and calculate stats
 */
