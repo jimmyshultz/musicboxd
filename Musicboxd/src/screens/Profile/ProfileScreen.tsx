@@ -18,13 +18,9 @@ import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
-import { 
-  fetchUserListeningHistory, 
-  fetchUserAlbumStats,
-  fetchUserRatedAlbums 
-} from '../../store/slices/userAlbumsSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
+import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { theme, spacing, shadows } from '../../utils/theme';
 import { SegmentedButtons } from 'react-native-paper';
 
@@ -57,7 +53,6 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { listeningHistory, stats: databaseStats, loading: userAlbumsLoading } = useSelector((state: RootState) => state.userAlbums);
   const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? theme.dark : theme.light;
 
@@ -101,65 +96,29 @@ export default function ProfileScreen() {
     }
   }, [user?.preferences?.favoriteAlbumIds]);
 
-  const loadRecentActivity = useCallback(() => {
-    if (!listeningHistory?.length) {
+  const loadRecentActivity = useCallback(async () => {
+    if (!user?.id) {
       setRecentActivity([]);
       return;
     }
 
     try {
-      // Convert database listening history to recent activity format
-      const activity: RecentActivity[] = listeningHistory.slice(0, 5).map(historyItem => {
-        // Convert database album format to app Album format
-        const album: Album = {
-          id: historyItem.id,
-          title: historyItem.name,
-          artist: historyItem.artist_name,
-          releaseDate: historyItem.release_date || '',
-          genre: historyItem.genres || [],
-          coverImageUrl: historyItem.image_url || '',
-          spotifyUrl: historyItem.spotify_url || '',
-          totalTracks: historyItem.total_tracks || 0,
-          albumType: historyItem.album_type || 'album',
-          trackList: [], // Empty for now, would be populated if needed
-        };
-
-        // Convert database interaction to app Listen format
-        const listen: Listen = {
-          id: historyItem.interaction?.id || `listen_${historyItem.id}`,
-          userId: historyItem.interaction?.user_id || user?.id || '',
-          albumId: historyItem.id,
-          dateListened: new Date(historyItem.interaction?.listened_at || Date.now()),
-        };
-
-        // Convert database rating to app Review format if exists
-        let review: Review | undefined;
-        if (historyItem.interaction?.rating) {
-          review = {
-            id: `review_${historyItem.id}_${user?.id}`,
-            userId: user?.id || '',
-            albumId: historyItem.id,
-            rating: historyItem.interaction.rating,
-            review: historyItem.interaction.review || '',
-            dateReviewed: new Date(historyItem.interaction.updated_at),
-          };
-        }
-
-        return { album, listen, review };
-      });
-
+      const activity = await userStatsServiceV2.getRecentActivity(user.id, 5);
       setRecentActivity(activity);
     } catch (error) {
-      console.error('Error processing recent activity:', error);
+      console.error('Error loading recent activity:', error);
       setRecentActivity([]);
     }
-  }, [listeningHistory, user?.id]);
+  }, [user?.id]);
 
   const loadUserStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Get social stats
+      // Get comprehensive stats using the new service
+      const stats = await userStatsServiceV2.getUserStats(user.id);
+      
+      // Get social data for Redux store
       const [followersData, followingData] = await Promise.all([
         userService.getUserFollowers(user.id),
         userService.getUserFollowing(user.id),
@@ -177,35 +136,21 @@ export default function ProfileScreen() {
         lastActiveDate: following.lastActiveDate.toISOString(),
       }))));
       
-      // Use database stats if available
-      if (databaseStats) {
-        console.log('Database stats:', databaseStats); // Debug log
-        setUserStats({
-          albumsThisYear: databaseStats.albumsThisYear,
-          albumsAllTime: databaseStats.totalAlbums,
-          ratingsThisYear: databaseStats.ratingsThisYear,
-          ratingsAllTime: databaseStats.totalRatings,
-          followers: followersData.length,
-          following: followingData.length,
-        });
-      } else {
-        console.log('No database stats available, using fallback'); // Debug log
-        // Fallback to basic stats when database stats aren't available
-        setUserStats({
-          albumsThisYear: 0,
-          albumsAllTime: 0,
-          ratingsThisYear: 0,
-          ratingsAllTime: 0,
-          followers: followersData.length,
-          following: followingData.length,
-        });
-      }
+      console.log('User stats from new service:', stats); // Debug log
+      setUserStats({
+        albumsThisYear: stats.albumsThisYear,
+        albumsAllTime: stats.albumsAllTime,
+        ratingsThisYear: stats.ratingsThisYear,
+        ratingsAllTime: stats.ratingsAllTime,
+        followers: stats.followers,
+        following: stats.following,
+      });
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, databaseStats, dispatch]);
+  }, [user?.id, dispatch]);
 
-  // Initial load effect - fetch data from database
+  // Initial load effect - fetch data
   useEffect(() => {
     const loadAllData = async () => {
       if (!user || initialLoadDone) {
@@ -214,10 +159,10 @@ export default function ProfileScreen() {
 
       setLoading(true);
       try {
-        // Fetch database data
+        // Load all data using new services
         await Promise.all([
-          dispatch(fetchUserListeningHistory({ userId: user.id, limit: 5 })),
-          dispatch(fetchUserAlbumStats(user.id)),
+          loadRecentActivity(),
+          loadUserStats(),
           loadFavoriteAlbums(),
         ]);
       } finally {
@@ -227,30 +172,17 @@ export default function ProfileScreen() {
     };
 
     loadAllData();
-  }, [user?.id, dispatch, loadFavoriteAlbums]); // Only depend on user ID
-
-  // Update recent activity when listening history changes
-  useEffect(() => {
-    if (initialLoadDone) {
-      loadRecentActivity();
-    }
-  }, [listeningHistory, loadRecentActivity, initialLoadDone]);
-
-  // Update stats when database stats change
-  useEffect(() => {
-    if (initialLoadDone && user) {
-      loadUserStats();
-    }
-  }, [databaseStats, loadUserStats, user, initialLoadDone]);
+  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums]); // Only depend on user ID
 
   // Refresh stats when screen comes into focus (after returning from album rating)
   useFocusEffect(
     useCallback(() => {
       if (initialLoadDone && user?.id) {
-        // Refetch stats to ensure they're up to date
-        dispatch(fetchUserAlbumStats(user.id));
+        // Refresh stats and recent activity to ensure they're up to date
+        loadUserStats();
+        loadRecentActivity();
       }
-    }, [dispatch, user?.id, initialLoadDone])
+    }, [loadUserStats, loadRecentActivity, user?.id, initialLoadDone])
   );
 
   // Reset when user changes
