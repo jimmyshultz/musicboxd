@@ -238,6 +238,7 @@ export default function UserProfileScreen() {
           userService.getUserFollowing(userData.id),
         ]);
         
+        console.log('UserProfile - Current user stats from Redux:', currentUserStats); // Debug log
         stats = {
           albumsThisYear: currentUserStats.albumsThisYear,
           albumsAllTime: currentUserStats.totalAlbums,
@@ -255,6 +256,7 @@ export default function UserProfileScreen() {
           userService.getUserFollowing(userData.id),
         ]);
         
+        console.log('UserProfile - Other user stats from DB:', albumStats); // Debug log
         stats = {
           albumsThisYear: albumStats.albumsThisYear,
           albumsAllTime: albumStats.totalAlbums,
@@ -301,6 +303,9 @@ export default function UserProfileScreen() {
           dispatch(fetchUserAlbumStats(currentUser.id));
         }
         loadAllData();
+      } else if (isOwnProfile && currentUser) {
+        // Refresh own profile stats when returning to screen
+        dispatch(fetchUserAlbumStats(currentUser.id));
       }
     }, [loadAllData, initialLoadDone, isOwnProfile, currentUser, dispatch])
   );

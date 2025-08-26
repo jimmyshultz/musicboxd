@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -179,6 +179,7 @@ export default function ProfileScreen() {
       
       // Use database stats if available
       if (databaseStats) {
+        console.log('Database stats:', databaseStats); // Debug log
         setUserStats({
           albumsThisYear: databaseStats.albumsThisYear,
           albumsAllTime: databaseStats.totalAlbums,
@@ -188,6 +189,7 @@ export default function ProfileScreen() {
           following: followingData.length,
         });
       } else {
+        console.log('No database stats available, using fallback'); // Debug log
         // Fallback to basic stats when database stats aren't available
         setUserStats({
           albumsThisYear: 0,
@@ -240,6 +242,16 @@ export default function ProfileScreen() {
       loadUserStats();
     }
   }, [databaseStats, loadUserStats, user, initialLoadDone]);
+
+  // Refresh stats when screen comes into focus (after returning from album rating)
+  useFocusEffect(
+    useCallback(() => {
+      if (initialLoadDone && user?.id) {
+        // Refetch stats to ensure they're up to date
+        dispatch(fetchUserAlbumStats(user.id));
+      }
+    }, [dispatch, user?.id, initialLoadDone])
+  );
 
   // Reset when user changes
   useEffect(() => {
