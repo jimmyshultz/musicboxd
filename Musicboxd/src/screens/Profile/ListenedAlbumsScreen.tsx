@@ -20,8 +20,7 @@ import { theme, spacing, shadows } from '../../utils/theme';
 import { Listen, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { AlbumService } from '../../services/albumService';
 import { RootState } from '../../store';
-import { fetchUserListeningHistory } from '../../store/slices/userAlbumsSlice';
-import { AlbumWithInteraction } from '../../services/userAlbumsService';
+import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 
 type ListenedAlbumsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
@@ -41,10 +40,8 @@ interface ListenedAlbumData {
 export default function ListenedAlbumsScreen() {
   const route = useRoute<ListenedAlbumsScreenRouteProp>();
   const navigation = useNavigation<ListenedAlbumsScreenNavigationProp>();
-  const dispatch = useDispatch();
   const { userId, username } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const { listeningHistory, loading: userAlbumsLoading } = useSelector((state: RootState) => state.userAlbums);
 
   const [listenedAlbums, setListenedAlbums] = useState<ListenedAlbumData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,36 +49,38 @@ export default function ListenedAlbumsScreen() {
   const loadListenedAlbums = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch listening history from database if this is the current user
-      if (currentUser && userId === currentUser.id) {
-        await dispatch(fetchUserListeningHistory({ userId, limit: 50, offset: 0 }));
-      } else {
-        // For other users, fallback to the old method for now
-        const listens = await AlbumService.getUserListens(userId);
-        
-        // Get album details for each listen
-        const albumPromises = listens.map(async (listen) => {
-          const albumResponse = await AlbumService.getAlbumById(listen.albumId);
-          return {
-            listen,
-            album: albumResponse.data!,
-          };
-        });
-
-        const albumsData = await Promise.all(albumPromises);
-        // Filter out any failed album fetches and sort by listen date (newest first)
-        const validAlbums = albumsData
-          .filter(data => data.album)
-          .sort((a, b) => new Date(b.listen.dateListened).getTime() - new Date(a.listen.dateListened).getTime());
-        
-        setListenedAlbums(validAlbums);
-      }
+      // Use the new service to get listening history for any user
+      const listeningHistory = await userStatsServiceV2.getUserListeningHistory(userId, 50, 0);
+      
+      // Convert to the format expected by this screen
+      const listenedAlbumsData: ListenedAlbumData[] = listeningHistory.map(item => ({
+        album: {
+          id: item.id,
+          title: item.name,
+          artist: item.artist_name,
+          releaseDate: item.release_date || '',
+          genre: item.genres || [],
+          coverImageUrl: item.image_url || '',
+          spotifyUrl: item.spotify_url || '',
+          totalTracks: item.total_tracks || 0,
+          albumType: item.album_type || 'album',
+          trackList: [], // Empty for now
+        },
+        listen: {
+          id: item.interaction?.id || `listen_${item.id}`,
+          userId: item.interaction?.user_id || userId,
+          albumId: item.id,
+          dateListened: new Date(item.interaction?.listened_at || Date.now()),
+        }
+      }));
+      
+      setListenedAlbums(listenedAlbumsData);
     } catch (error) {
       console.error('Error loading listened albums:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId, currentUser, dispatch]);
+  }, [userId]);
 
   useEffect(() => {
     loadListenedAlbums();
@@ -103,76 +102,36 @@ export default function ListenedAlbumsScreen() {
     return listenDate.toLocaleDateString();
   };
 
-  // Get display data (either from database or legacy)
-  const getDisplayData = (): (ListenedAlbumData | AlbumWithInteraction)[] => {
-    if (currentUser && userId === currentUser.id) {
-      // Use database-backed data for current user
-      return listeningHistory;
-    } else {
-      // Use legacy data for other users
-      return listenedAlbums;
-    }
+  // Get display data - now we always use the same data structure from our service
+  const getDisplayData = (): ListenedAlbumData[] => {
+    return listenedAlbums;
   };
 
-  const isAlbumWithInteraction = (item: ListenedAlbumData | AlbumWithInteraction): item is AlbumWithInteraction => {
-    return 'interaction' in item;
-  };
-
-  const renderAlbumCard = (data: ListenedAlbumData | AlbumWithInteraction, index: number) => {
-    if (isAlbumWithInteraction(data)) {
-      // Database-backed data
-      return (
-        <TouchableOpacity
-          key={`${data.id}-${index}`}
-          style={styles.albumCard}
-          onPress={() => navigateToAlbum(data.id)}
-        >
-          <Image source={{ uri: data.image_url || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image' }} style={styles.albumCover} />
-          <View style={styles.albumInfo}>
-            <Text variant="bodyMedium" numberOfLines={2} style={styles.albumTitle}>
-              {data.name}
-            </Text>
-            <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-              {data.artist_name}
-            </Text>
-            <Text variant="bodySmall" style={styles.listenDate}>
-              {data.interaction?.listened_at ? formatListenDate(data.interaction.listened_at) : 'Unknown'}
-            </Text>
-            {data.interaction?.rating && (
-              <Text variant="bodySmall" style={styles.rating}>
-                ★ {data.interaction.rating}
-              </Text>
-            )}
-          </View>
-        </TouchableOpacity>
-      );
-    } else {
-      // Legacy data
-      return (
-        <TouchableOpacity
-          key={data.listen.id}
-          style={styles.albumCard}
-          onPress={() => navigateToAlbum(data.album.id)}
-        >
-          <Image source={{ uri: data.album.coverImageUrl }} style={styles.albumCover} />
-          <View style={styles.albumInfo}>
-            <Text variant="bodyMedium" numberOfLines={2} style={styles.albumTitle}>
-              {data.album.title}
-            </Text>
-            <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-              {data.album.artist}
-            </Text>
-            <Text variant="bodySmall" style={styles.listenDate}>
-              {formatListenDate(new Date(data.listen.dateListened))}
-            </Text>
-          </View>
-        </TouchableOpacity>
-      );
-    }
+  const renderAlbumCard = (data: ListenedAlbumData, index: number) => {
+    return (
+      <TouchableOpacity
+        key={`${data.album.id}-${index}`}
+        style={styles.albumCard}
+        onPress={() => navigateToAlbum(data.album.id)}
+      >
+        <Image source={{ uri: data.album.coverImageUrl || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image' }} style={styles.albumCover} />
+        <View style={styles.albumInfo}>
+          <Text variant="bodyMedium" numberOfLines={2} style={styles.albumTitle}>
+            {data.album.title}
+          </Text>
+          <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+            {data.album.artist}
+          </Text>
+          <Text variant="bodySmall" style={styles.listenDate}>
+            {formatListenDate(new Date(data.listen.dateListened))}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
   };
 
   const displayData = getDisplayData();
-  const isLoading = loading || (currentUser && userId === currentUser.id && userAlbumsLoading.listeningHistory);
+  const isLoading = loading;
 
   if (isLoading) {
     return (
