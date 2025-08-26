@@ -4,6 +4,7 @@ export interface FavoriteAlbum {
   id: string;
   user_id: string;
   album_id: string;
+  ranking: number; // 1-5 ranking
   favorited_at: string;
   created_at: string;
   updated_at: string;
@@ -25,10 +26,15 @@ export interface FavoriteAlbumWithAlbum extends FavoriteAlbum {
 
 class FavoriteAlbumsService {
   /**
-   * Add an album to user's favorites
+   * Add an album to user's favorites with a specific ranking
    */
-  async addToFavorites(userId: string, albumId: string): Promise<FavoriteAlbum> {
+  async addToFavorites(userId: string, albumId: string, ranking: number): Promise<FavoriteAlbum> {
     try {
+      // Validate ranking
+      if (ranking < 1 || ranking > 5) {
+        throw new Error('Ranking must be between 1 and 5');
+      }
+
       // First, ensure the album exists in the albums table
       await this.ensureAlbumExists(albumId);
 
@@ -37,6 +43,7 @@ class FavoriteAlbumsService {
         .insert({
           user_id: userId,
           album_id: albumId,
+          ranking: ranking,
           favorited_at: new Date().toISOString(),
         })
         .select()
@@ -54,19 +61,149 @@ class FavoriteAlbumsService {
   }
 
   /**
-   * Remove an album from user's favorites
+   * Update the ranking of a favorite album
    */
-  async removeFromFavorites(userId: string, albumId: string): Promise<void> {
+  async updateFavoriteRanking(userId: string, albumId: string, newRanking: number): Promise<FavoriteAlbum> {
     try {
-      const { error } = await supabase
+      // Validate ranking
+      if (newRanking < 1 || newRanking > 5) {
+        throw new Error('Ranking must be between 1 and 5');
+      }
+
+      const { data, error } = await supabase
         .from('favorite_albums')
-        .delete()
+        .update({
+          ranking: newRanking,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', userId)
-        .eq('album_id', albumId);
+        .eq('album_id', albumId)
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating favorite ranking:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Set user's complete favorite albums list with rankings
+   * This replaces all existing favorites
+   */
+  async setUserFavorites(userId: string, favorites: { albumId: string; ranking: number }[]): Promise<FavoriteAlbum[]> {
+    try {
+      // Validate all rankings
+      for (const fav of favorites) {
+        if (fav.ranking < 1 || fav.ranking > 5) {
+          throw new Error('All rankings must be between 1 and 5');
+        }
+      }
+
+      // Check for duplicate rankings
+      const rankings = favorites.map(f => f.ranking);
+      if (new Set(rankings).size !== rankings.length) {
+        throw new Error('Each ranking position (1-5) can only be used once');
+      }
+
+      // Ensure all albums exist
+      await Promise.all(favorites.map(fav => this.ensureAlbumExists(fav.albumId)));
+
+      // Delete existing favorites
+      await supabase
+        .from('favorite_albums')
+        .delete()
+        .eq('user_id', userId);
+
+      // Insert new favorites if any provided
+      if (favorites.length > 0) {
+        const { data, error } = await supabase
+          .from('favorite_albums')
+          .insert(
+            favorites.map(fav => ({
+              user_id: userId,
+              album_id: fav.albumId,
+              ranking: fav.ranking,
+              favorited_at: new Date().toISOString(),
+            }))
+          )
+          .select();
+
+        if (error) {
+          throw error;
+        }
+
+        return data || [];
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error setting user favorites:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Reorder user's favorites by moving an album to a new position
+   * This handles the complex logic of shifting other albums
+   */
+  async reorderFavorites(userId: string, albumId: string, newRanking: number): Promise<FavoriteAlbum[]> {
+    try {
+      if (newRanking < 1 || newRanking > 5) {
+        throw new Error('Ranking must be between 1 and 5');
+      }
+
+      // Get current favorites
+      const currentFavorites = await this.getUserFavoriteAlbums(userId);
+      
+      // Find the album being moved
+      const albumIndex = currentFavorites.findIndex(fav => fav.album_id === albumId);
+      if (albumIndex === -1) {
+        throw new Error('Album not found in favorites');
+      }
+
+      // Create new ordering
+      const reorderedFavorites = [...currentFavorites];
+      const [movedAlbum] = reorderedFavorites.splice(albumIndex, 1);
+      reorderedFavorites.splice(newRanking - 1, 0, movedAlbum);
+
+      // Update rankings
+      const newFavorites = reorderedFavorites.map((fav, index) => ({
+        albumId: fav.album_id,
+        ranking: index + 1
+      }));
+
+      // Apply the new order
+      return await this.setUserFavorites(userId, newFavorites);
+    } catch (error) {
+      console.error('Error reordering favorites:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove an album from user's favorites and reorder remaining albums
+   */
+  async removeFromFavorites(userId: string, albumId: string): Promise<void> {
+    try {
+      // Get current favorites
+      const currentFavorites = await this.getUserFavoriteAlbums(userId);
+      
+      // Filter out the album to remove
+      const remainingFavorites = currentFavorites
+        .filter(fav => fav.album_id !== albumId)
+        .map((fav, index) => ({
+          albumId: fav.album_id,
+          ranking: index + 1  // Recompute rankings 1, 2, 3, etc.
+        }));
+
+      // Apply the new order (this will delete and recreate all)
+      await this.setUserFavorites(userId, remainingFavorites);
     } catch (error) {
       console.error('Error removing album from favorites:', error);
       throw error;
@@ -97,9 +234,9 @@ class FavoriteAlbumsService {
   }
 
   /**
-   * Get user's favorite albums with album details
+   * Get user's favorite albums with album details, ordered by ranking
    */
-  async getUserFavoriteAlbums(userId: string, limit: number = 50, offset: number = 0): Promise<FavoriteAlbumWithAlbum[]> {
+  async getUserFavoriteAlbums(userId: string, limit: number = 5): Promise<FavoriteAlbumWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('favorite_albums')
@@ -108,8 +245,8 @@ class FavoriteAlbumsService {
           albums (*)
         `)
         .eq('user_id', userId)
-        .order('favorited_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .order('ranking', { ascending: true }) // Order by ranking 1-5
+        .limit(limit);
 
       if (error) {
         throw error;
@@ -119,6 +256,36 @@ class FavoriteAlbumsService {
     } catch (error) {
       console.error('Error getting user favorite albums:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Get user's favorite album for a specific ranking position
+   */
+  async getUserFavoriteByRanking(userId: string, ranking: number): Promise<FavoriteAlbumWithAlbum | null> {
+    try {
+      if (ranking < 1 || ranking > 5) {
+        throw new Error('Ranking must be between 1 and 5');
+      }
+
+      const { data, error } = await supabase
+        .from('favorite_albums')
+        .select(`
+          *,
+          albums (*)
+        `)
+        .eq('user_id', userId)
+        .eq('ranking', ranking)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data || null;
+    } catch (error) {
+      console.error('Error getting user favorite by ranking:', error);
+      return null;
     }
   }
 

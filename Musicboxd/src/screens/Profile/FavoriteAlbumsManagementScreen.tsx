@@ -99,13 +99,14 @@ export default function FavoriteAlbumsManagementScreen() {
     
     if (!favoriteAlbums.find(fav => fav.id === album.id)) {
       try {
-        await favoriteAlbumsService.addToFavorites(currentUser.id, album.id);
+        // Find the next available ranking (1-5)
+        const nextRanking = favoriteAlbums.length + 1;
+        await favoriteAlbumsService.addToFavorites(currentUser.id, album.id, nextRanking);
         
-        // Update local state
-        const newFavorites = [...favoriteAlbums, album];
-        setFavoriteAlbums(newFavorites);
+        // Reload favorites to get the updated rankings
+        await loadFavoriteAlbums();
         
-        console.log('Added to favorites:', album.title);
+        console.log('Added to favorites:', album.title, 'at ranking', nextRanking);
       } catch (error) {
         console.error('Error adding to favorites:', error);
       }
@@ -118,9 +119,8 @@ export default function FavoriteAlbumsManagementScreen() {
     try {
       await favoriteAlbumsService.removeFromFavorites(currentUser.id, albumId);
       
-      // Update local state
-      const newFavorites = favoriteAlbums.filter(album => album.id !== albumId);
-      setFavoriteAlbums(newFavorites);
+      // Reload favorites to get the updated rankings (others may shift up)
+      await loadFavoriteAlbums();
       
       console.log('Removed from favorites:', albumId);
     } catch (error) {

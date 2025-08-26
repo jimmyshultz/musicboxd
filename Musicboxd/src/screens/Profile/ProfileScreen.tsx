@@ -77,8 +77,8 @@ export default function ProfileScreen() {
     }
 
     try {
-      // Get favorite albums from database
-      const favoriteAlbums = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 10);
+      // Get favorite albums from database (limited to 5 ranked favorites)
+      const favoriteAlbums = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
       
       // Convert to the Album format expected by the UI
       const albums = favoriteAlbums.map(favorite => ({
