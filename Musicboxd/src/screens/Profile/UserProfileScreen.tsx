@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -11,7 +11,7 @@ import {
 
 import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -70,28 +70,50 @@ export default function UserProfileScreen() {
     following: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   
-  const isFollowing = following.some(followedUser => followedUser.id === userId);
-  const isOwnProfile = currentUser?.id === userId;
+  const isFollowing = useMemo(() => 
+    following.some(followedUser => followedUser.id === userId), 
+    [following, userId]
+  );
+  const isOwnProfile = useMemo(() => 
+    currentUser?.id === userId, 
+    [currentUser?.id, userId]
+  );
+
+  // Memoize current user's listens and reviews to prevent unnecessary recalculations
+  const currentUserListens = useMemo(() => 
+    userListens.filter(listen => listen.userId === currentUser?.id), 
+    [userListens, currentUser?.id]
+  );
+  
+  const currentUserReviews = useMemo(() => 
+    userReviews.filter(review => review.userId === currentUser?.id), 
+    [userReviews, currentUser?.id]
+  );
 
   const loadUserProfile = useCallback(async () => {
+    if (!userId) return;
+    
     try {
       const userData = await userService.getUserById(userId);
       setUser(userData);
+      return userData;
     } catch (error) {
       console.error('Error loading user profile:', error);
+      return null;
     }
   }, [userId]);
 
-  const loadFavoriteAlbums = useCallback(async () => {
-    if (!user?.preferences?.favoriteAlbumIds?.length) {
+  const loadFavoriteAlbums = useCallback(async (userData: User) => {
+    if (!userData?.preferences?.favoriteAlbumIds?.length) {
       setFavoriteAlbums([]);
       return;
     }
 
     try {
       // Get the actual albums matching the user's favorite IDs
-      const albumPromises = user.preferences.favoriteAlbumIds.map(albumId => 
+      const albumPromises = userData.preferences.favoriteAlbumIds.map(albumId => 
         AlbumService.getAlbumById(albumId)
       );
       
@@ -108,34 +130,45 @@ export default function UserProfileScreen() {
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }
-  }, [user?.preferences?.favoriteAlbumIds]);
+  }, []);
 
-  const loadRecentActivity = useCallback(async () => {
-    if (!user?.id) return;
+  const loadRecentActivity = useCallback(async (userData: User, targetListens?: Listen[], targetReviews?: Review[]) => {
+    if (!userData?.id) return;
 
     try {
-      let targetUserListens: Listen[];
-      let targetUserReviews: Review[];
+      let userListensData: Listen[];
+      let userReviewsData: Review[];
       
-      // Check if this is the current user or another user
-      if (user.id === currentUser?.id) {
-        // For current user, use Redux state data
-        targetUserListens = userListens;
-        targetUserReviews = userReviews;
+      // Use provided data if available, otherwise fetch
+      if (targetListens && targetReviews) {
+        userListensData = targetListens;
+        userReviewsData = targetReviews;
       } else {
-        // For other users, fetch their data from the API
-        const [listens, reviews] = await Promise.all([
-          AlbumService.getUserListens(user.id),
-          AlbumService.getUserReviews(user.id),
-        ]);
-        targetUserListens = listens;
-        targetUserReviews = reviews;
+        // Check if this is the current user or another user
+        if (userData.id === currentUser?.id) {
+          // For current user, use Redux state data
+          userListensData = userListens;
+          userReviewsData = userReviews;
+        } else {
+          // For other users, fetch their data from the API
+          const [listens, reviews] = await Promise.all([
+            AlbumService.getUserListens(userData.id),
+            AlbumService.getUserReviews(userData.id),
+          ]);
+          userListensData = listens;
+          userReviewsData = reviews;
+        }
       }
 
       // Get 5 most recent listens
-      const recentListens = targetUserListens
+      const recentListens = userListensData
         .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
         .slice(0, 5);
+
+      if (recentListens.length === 0) {
+        setRecentActivity([]);
+        return;
+      }
 
       // Get albums for the recent listens
       const albumPromises = recentListens.map(listen => 
@@ -150,7 +183,7 @@ export default function UserProfileScreen() {
       recentListens.forEach((listen, index) => {
         const albumResponse = albumResponses[index];
         if (albumResponse.success && albumResponse.data) {
-          const correspondingReview = targetUserReviews.find(
+          const correspondingReview = userReviewsData.find(
             review => review.albumId === listen.albumId
           );
           
@@ -165,21 +198,35 @@ export default function UserProfileScreen() {
       setRecentActivity(activity);
     } catch (error) {
       console.error('Error loading recent activity:', error);
+      setRecentActivity([]);
     }
-  }, [user?.id, currentUser?.id, userListens, userReviews]);
+  }, [currentUser?.id, userListens, userReviews]);
 
-  const loadUserStats = useCallback(async () => {
-    if (!user?.id) return;
+  const loadUserStats = useCallback(async (userData: User, targetListens?: Listen[], targetReviews?: Review[]) => {
+    if (!userData?.id) return;
 
     try {
       let stats: UserStats;
       
-      // Check if this is the current user or another user
-      if (user.id === currentUser?.id) {
+      // Use provided data if available
+      if (targetListens && targetReviews && userData.id === currentUser?.id) {
+        // For current user with provided data
+        const [followersData, followingData] = await Promise.all([
+          userService.getUserFollowers(userData.id),
+          userService.getUserFollowing(userData.id),
+        ]);
+        
+        stats = userStatsService.calculateStatsFromRedux(
+          targetListens,
+          targetReviews,
+          followersData,
+          followingData
+        );
+      } else if (userData.id === currentUser?.id) {
         // For current user, use Redux state data for better performance
         const [followersData, followingData] = await Promise.all([
-          userService.getUserFollowers(user.id),
-          userService.getUserFollowing(user.id),
+          userService.getUserFollowers(userData.id),
+          userService.getUserFollowing(userData.id),
         ]);
         
         stats = userStatsService.calculateStatsFromRedux(
@@ -190,35 +237,68 @@ export default function UserProfileScreen() {
         );
       } else {
         // For other users, fetch their data from the API
-        stats = await userStatsService.getUserStats(user.id);
+        stats = await userStatsService.getUserStats(userData.id);
       }
       
       setUserStats(stats);
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, currentUser?.id, userListens, userReviews]);
+  }, [currentUser?.id, userListens, userReviews]);
 
-  useEffect(() => {
-    const loadAllData = async () => {
-      setLoading(true);
-      await loadUserProfile();
-    };
+  // Main load function that loads all data in sequence
+  const loadAllData = useCallback(async () => {
+    if (initialLoadDone) return;
     
-    loadAllData();
-  }, [userId, loadUserProfile]);
-
-  useEffect(() => {
-    if (user) {
-      Promise.all([
-        loadFavoriteAlbums(),
-        loadRecentActivity(),
-        loadUserStats(),
-      ]).finally(() => {
-        setLoading(false);
-      });
+    setLoading(true);
+    try {
+      const userData = await loadUserProfile();
+      if (userData) {
+        await Promise.all([
+          loadFavoriteAlbums(userData),
+          loadRecentActivity(userData),
+          loadUserStats(userData),
+        ]);
+      }
+    } finally {
+      setLoading(false);
+      setInitialLoadDone(true);
     }
-  }, [user, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+
+  // Use focus effect to load data only when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (!initialLoadDone) {
+        loadAllData();
+      }
+    }, [loadAllData, initialLoadDone])
+  );
+
+  // Separate effect to handle Redux state changes for current user's profile
+  useEffect(() => {
+    if (!user || !initialLoadDone || !isOwnProfile) return;
+
+    // Update recent activity and stats when Redux state changes for own profile
+    loadRecentActivity(user, currentUserListens, currentUserReviews);
+    loadUserStats(user, currentUserListens, currentUserReviews);
+  }, [currentUserListens, currentUserReviews, user, initialLoadDone, isOwnProfile, loadRecentActivity, loadUserStats]);
+
+  // Reset initial load flag when userId changes
+  useEffect(() => {
+    setInitialLoadDone(false);
+    setUser(null);
+    setFavoriteAlbums([]);
+    setRecentActivity([]);
+    setUserStats({
+      albumsThisYear: 0,
+      albumsAllTime: 0,
+      ratingsThisYear: 0,
+      ratingsAllTime: 0,
+      followers: 0,
+      following: 0,
+    });
+  }, [userId]);
 
   const handleFollowToggle = async () => {
     if (!user) return;
@@ -308,9 +388,9 @@ export default function UserProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecentActivityItem = (activity: RecentActivity) => (
+  const renderRecentActivityItem = (activity: RecentActivity, index: number) => (
     <TouchableOpacity
-      key={activity.album.id}
+      key={`${activity.album.id}-${activity.listen.id}-${index}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
@@ -433,18 +513,32 @@ export default function UserProfileScreen() {
         </View>
 
         {/* Recent Activity */}
-        {recentActivity.length > 0 && (
-          <View style={styles.section}>
-            <Text variant="headlineSmall" style={styles.sectionTitle}>
-              Recent Activity
-            </Text>
+        <View style={styles.section}>
+          <Text variant="headlineSmall" style={styles.sectionTitle}>
+            Recently Listened
+          </Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" />
+              <Text variant="bodyMedium" style={styles.loadingText}>Loading recent activity...</Text>
+            </View>
+          ) : recentActivity.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.horizontalList}>
-                {recentActivity.map(renderRecentActivityItem)}
+                {recentActivity.map((activity, index) => renderRecentActivityItem(activity, index))}
               </View>
             </ScrollView>
-          </View>
-        )}
+          ) : (
+            <View style={styles.emptyActivityContainer}>
+              <Text variant="bodyLarge" style={styles.emptyActivityText}>
+                No recent activity
+              </Text>
+              <Text variant="bodyMedium" style={styles.emptyActivitySubtext}>
+                {isOwnProfile ? "Start listening to some albums!" : "This user hasn't listened to any albums recently"}
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Stats Grid */}
         <View style={styles.section}>
@@ -600,5 +694,28 @@ const styles = StyleSheet.create({
     color: theme.light.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
+  },
+  emptyActivityContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: theme.light.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: spacing.lg,
+    ...shadows.small,
+  },
+  emptyActivityText: {
+    fontWeight: 'bold',
+    marginBottom: spacing.xs,
+  },
+  emptyActivitySubtext: {
+    color: theme.light.colors.onSurfaceVariant,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
 });
