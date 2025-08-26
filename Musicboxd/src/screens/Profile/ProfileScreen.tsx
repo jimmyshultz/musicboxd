@@ -21,6 +21,7 @@ import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
+import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { theme, spacing, shadows } from '../../utils/theme';
 import { SegmentedButtons } from 'react-native-paper';
 
@@ -70,31 +71,34 @@ export default function ProfileScreen() {
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   const loadFavoriteAlbums = useCallback(async () => {
-    if (!user?.preferences?.favoriteAlbumIds?.length) {
+    if (!user?.id) {
       setFavoriteAlbums([]);
       return;
     }
 
     try {
-      // Get the actual albums matching the user's favorite IDs
-      const albumPromises = user.preferences.favoriteAlbumIds.map(albumId => 
-        AlbumService.getAlbumById(albumId)
-      );
+      // Get favorite albums from database
+      const favoriteAlbums = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 10);
       
-      const albumResponses = await Promise.all(albumPromises);
-      const favorites: Album[] = [];
+      // Convert to the Album format expected by the UI
+      const albums = favoriteAlbums.map(favorite => ({
+        id: favorite.albums.id,
+        title: favorite.albums.name,
+        artist: favorite.albums.artist_name,
+        releaseDate: favorite.albums.release_date || '',
+        genre: favorite.albums.genres || [],
+        coverImageUrl: favorite.albums.image_url || '',
+        spotifyUrl: favorite.albums.spotify_url || '',
+        totalTracks: favorite.albums.total_tracks || 0,
+        albumType: favorite.albums.album_type || 'album',
+        trackList: [], // Empty for now
+      }));
       
-      albumResponses.forEach(response => {
-        if (response.success && response.data) {
-          favorites.push(response.data);
-        }
-      });
-      
-      setFavoriteAlbums(favorites);
+      setFavoriteAlbums(albums);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }
-  }, [user?.preferences?.favoriteAlbumIds]);
+  }, [user?.id]);
 
   const loadRecentActivity = useCallback(async () => {
     if (!user?.id) {
