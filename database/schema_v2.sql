@@ -52,11 +52,7 @@ CREATE TABLE public.album_listens (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- One listen status per user per album
-    UNIQUE(user_id, album_id),
-    
-    -- Indexes
-    INDEX idx_album_listens_user (user_id),
-    INDEX idx_album_listens_album (album_id)
+    UNIQUE(user_id, album_id)
 );
 
 -- Album ratings - separate from listens
@@ -70,12 +66,7 @@ CREATE TABLE public.album_ratings (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- One rating per user per album (can be updated)
-    UNIQUE(user_id, album_id),
-    
-    -- Indexes
-    INDEX idx_album_ratings_user (user_id, updated_at DESC),
-    INDEX idx_album_ratings_album (album_id),
-    INDEX idx_album_ratings_rating (rating)
+    UNIQUE(user_id, album_id)
 );
 
 -- Diary entries - chronological listening history with multiple entries per album
@@ -90,12 +81,7 @@ CREATE TABLE public.diary_entries (
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
     -- One diary entry per user per album per date (can re-listen on different dates)
-    UNIQUE(user_id, album_id, diary_date),
-    
-    -- Indexes
-    INDEX idx_diary_entries_user_date (user_id, diary_date DESC),
-    INDEX idx_diary_entries_album (album_id),
-    INDEX idx_diary_entries_user_album (user_id, album_id)
+    UNIQUE(user_id, album_id, diary_date)
 );
 
 -- ============================================================================
@@ -121,12 +107,31 @@ CREATE TABLE public.user_activities (
     activity_type TEXT NOT NULL CHECK (activity_type IN ('listen', 'rating', 'diary')),
     album_id TEXT REFERENCES public.albums(id) ON DELETE CASCADE NOT NULL,
     reference_id UUID, -- Points to the specific listen/rating/diary record
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    
-    -- Indexes
-    INDEX idx_user_activities_user_created (user_id, created_at DESC),
-    INDEX idx_user_activities_type (activity_type)
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ============================================================================
+-- INDEXES FOR PERFORMANCE
+-- ============================================================================
+
+-- Album listens indexes
+CREATE INDEX idx_album_listens_user ON public.album_listens(user_id);
+CREATE INDEX idx_album_listens_album ON public.album_listens(album_id);
+CREATE INDEX idx_album_listens_listened_at ON public.album_listens(first_listened_at);
+
+-- Album ratings indexes
+CREATE INDEX idx_album_ratings_user ON public.album_ratings(user_id, updated_at DESC);
+CREATE INDEX idx_album_ratings_album ON public.album_ratings(album_id);
+CREATE INDEX idx_album_ratings_rating ON public.album_ratings(rating);
+
+-- Diary entries indexes
+CREATE INDEX idx_diary_entries_user_date ON public.diary_entries(user_id, diary_date DESC);
+CREATE INDEX idx_diary_entries_album ON public.diary_entries(album_id);
+CREATE INDEX idx_diary_entries_user_album ON public.diary_entries(user_id, album_id);
+
+-- User activities indexes
+CREATE INDEX idx_user_activities_user_created ON public.user_activities(user_id, created_at DESC);
+CREATE INDEX idx_user_activities_type ON public.user_activities(activity_type);
 
 -- ============================================================================
 -- FUNCTIONS & TRIGGERS
