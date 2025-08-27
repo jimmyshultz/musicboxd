@@ -18,7 +18,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, User, SerializedUser } from '../../types';
 import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
-import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
@@ -102,10 +101,10 @@ export default function UserProfileScreen() {
 
     try {
       // Get favorite albums from database (limited to 5 ranked favorites)
-      const favoriteAlbums = await favoriteAlbumsService.getUserFavoriteAlbums(userData.id, 5);
+      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(userData.id, 5);
       
       // Convert to the Album format expected by the UI
-      const albums = favoriteAlbums.map(favorite => ({
+      const albums = favoriteAlbumsData.map(favorite => ({
         id: favorite.albums.id,
         title: favorite.albums.name,
         artist: favorite.albums.artist_name,

@@ -14,11 +14,10 @@ import {
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
 import { Listen, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
-import { AlbumService } from '../../services/albumService';
 import { RootState } from '../../store';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 

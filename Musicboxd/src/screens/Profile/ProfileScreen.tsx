@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -18,7 +18,6 @@ import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
-import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
@@ -78,10 +77,10 @@ export default function ProfileScreen() {
 
     try {
       // Get favorite albums from database (limited to 5 ranked favorites)
-      const favoriteAlbums = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
+      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
       
       // Convert to the Album format expected by the UI
-      const albums = favoriteAlbums.map(favorite => ({
+      const albums = favoriteAlbumsData.map(favorite => ({
         id: favorite.albums.id,
         title: favorite.albums.name,
         artist: favorite.albums.artist_name,
@@ -176,7 +175,7 @@ export default function ProfileScreen() {
     };
 
     loadAllData();
-  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums]); // Only depend on user ID
+  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums, initialLoadDone]);
 
   // Refresh stats when screen comes into focus (after returning from album rating)
   useFocusEffect(

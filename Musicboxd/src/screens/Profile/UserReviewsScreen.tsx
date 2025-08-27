@@ -17,7 +17,6 @@ import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
 import { Review, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
-import { AlbumService } from '../../services/albumService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { RootState } from '../../store';
 

@@ -26,18 +26,8 @@ import {
   setCurrentAlbum, 
   clearCurrentAlbum, 
   setCurrentAlbumUserReview, 
-  setCurrentAlbumIsListened,
-  addListen,
-  removeListen,
-  removeReview
+  setCurrentAlbumIsListened
 } from '../../store/slices/albumSlice';
-import {
-  markAlbumAsListened,
-  unmarkAlbumAsListened,
-  rateAlbum,
-  removeAlbumRating,
-  fetchUserAlbumInteractions
-} from '../../store/slices/userAlbumsSlice';
 import { AlbumService } from '../../services/albumService';
 import { albumListensService } from '../../services/albumListensService';
 import { albumRatingsService } from '../../services/albumRatingsService';

@@ -38,10 +38,10 @@ export default function FavoriteAlbumsManagementScreen() {
 
     try {
       // Get favorite albums from database
-      const favoriteAlbums = await favoriteAlbumsService.getUserFavoriteAlbums(currentUser.id, 100);
+      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(currentUser.id, 100);
       
       // Convert to the Album format expected by the UI
-      const albums = favoriteAlbums.map(favorite => ({
+      const albums = favoriteAlbumsData.map(favorite => ({
         id: favorite.albums.id,
         title: favorite.albums.name,
         artist: favorite.albums.artist_name,

@@ -9,7 +9,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
-import { AlbumService } from '../../services/albumService';
 import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../store/slices/diarySlice';
 import { theme, spacing } from '../../utils/theme';
 
