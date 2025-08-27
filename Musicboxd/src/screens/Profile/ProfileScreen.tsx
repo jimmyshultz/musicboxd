@@ -175,7 +175,7 @@ export default function ProfileScreen() {
     };
 
     loadAllData();
-  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums, initialLoadDone]);
+  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums, initialLoadDone, user]);
 
   // Refresh stats when screen comes into focus (after returning from album rating)
   useFocusEffect(
