@@ -1,10 +1,14 @@
 import { supabase } from './supabase';
-import { UserActivity, UserProfile, Album } from '../types/database';
+import { UserActivity, UserProfile, Album, AlbumRating, AlbumListen, DiaryEntry } from '../types/database';
 
-// Enhanced activity type for display in feeds
+// Enhanced activity type for display in feeds (Schema V2)
 export interface ActivityWithDetails extends UserActivity {
   user_profile: UserProfile;
   album: Album;
+  // Additional details based on activity type
+  rating_details?: AlbumRating;
+  listen_details?: AlbumListen;
+  diary_details?: DiaryEntry;
 }
 
 export class ActivityService {
@@ -15,7 +19,7 @@ export class ActivityService {
   // ============================================================================
 
   /**
-   * Get activity feed for a user's followed users
+   * Get activity feed for a user's followed users (Schema V2)
    * Shows recent activities from people the user follows
    */
   async getActivityFeed(userId: string, limit: number = 20): Promise<ActivityWithDetails[]> {
@@ -35,7 +39,7 @@ export class ActivityService {
 
       const followingIds = followingData.map(f => f.following_id);
 
-      // Get activities from followed users, including user profiles and album data
+      // Get activities from followed users with basic info
       const { data: activities, error: activitiesError } = await this.client
         .from('user_activities')
         .select(`
@@ -64,9 +68,12 @@ export class ActivityService {
       // Filter out activities from users who have gone private
       const publicActivities = (activities || []).filter(activity => 
         activity.user_profile && !activity.user_profile.is_private
-      ) as ActivityWithDetails[];
+      );
 
-      return publicActivities;
+      // Enhance with activity details based on reference_id
+      const enhancedActivities = await this.enhanceActivitiesWithDetails(publicActivities);
+
+      return enhancedActivities;
     } catch (error) {
       console.error('Error fetching activity feed:', error);
       return [];
@@ -216,11 +223,70 @@ export class ActivityService {
   }
 
   // ============================================================================
+  // HELPER METHODS
+  // ============================================================================
+
+  /**
+   * Enhance activities with details from referenced tables (Schema V2)
+   */
+  private async enhanceActivitiesWithDetails(activities: any[]): Promise<ActivityWithDetails[]> {
+    const enhanced: ActivityWithDetails[] = [];
+
+    for (const activity of activities) {
+      const enhancedActivity: ActivityWithDetails = {
+        ...activity,
+        user_profile: activity.user_profile,
+        album: activity.album,
+      };
+
+      // Fetch details based on activity type and reference_id
+      if (activity.reference_id) {
+        try {
+          switch (activity.activity_type) {
+            case 'rating':
+              const { data: ratingData } = await this.client
+                .from('album_ratings')
+                .select('*')
+                .eq('id', activity.reference_id)
+                .single();
+              if (ratingData) enhancedActivity.rating_details = ratingData;
+              break;
+
+            case 'listen':
+              const { data: listenData } = await this.client
+                .from('album_listens')
+                .select('*')
+                .eq('id', activity.reference_id)
+                .single();
+              if (listenData) enhancedActivity.listen_details = listenData;
+              break;
+
+            case 'diary':
+              const { data: diaryData } = await this.client
+                .from('diary_entries')
+                .select('*')
+                .eq('id', activity.reference_id)
+                .single();
+              if (diaryData) enhancedActivity.diary_details = diaryData;
+              break;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch details for activity ${activity.id}:`, error);
+        }
+      }
+
+      enhanced.push(enhancedActivity);
+    }
+
+    return enhanced;
+  }
+
+  // ============================================================================
   // UTILITY METHODS
   // ============================================================================
 
   /**
-   * Get activity type display text
+   * Get activity type display text (Schema V2)
    */
   getActivityDisplayText(activity: ActivityWithDetails): string {
     const username = activity.user_profile.display_name || activity.user_profile.username;
@@ -230,10 +296,13 @@ export class ActivityService {
       case 'listen':
         return `${username} listened to ${albumTitle}`;
       case 'rating':
-        const stars = activity.rating ? '★'.repeat(activity.rating) + '☆'.repeat(5 - activity.rating) : '';
+        const rating = activity.rating_details?.rating;
+        const stars = rating ? '★'.repeat(rating) + '☆'.repeat(5 - rating) : '';
         return `${username} rated ${albumTitle} ${stars}`;
-      case 'review':
-        return `${username} reviewed ${albumTitle}`;
+      case 'diary':
+        const diaryRating = activity.diary_details?.rating;
+        const diaryStars = diaryRating ? '★'.repeat(diaryRating) + '☆'.repeat(5 - diaryRating) : '';
+        return `${username} added ${albumTitle} to diary ${diaryStars}`;
       default:
         return `${username} interacted with ${albumTitle}`;
     }

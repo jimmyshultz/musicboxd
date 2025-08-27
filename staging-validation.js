@@ -220,12 +220,16 @@ async function main() {
       name: 'Database & Performance',
       tests: [
         {
-          description: 'Data persistence',
+          description: 'Data persistence (Schema V2)',
           steps: [
-            'Perform various actions (follow, rate, review)',
+            'Perform various actions (follow, rate albums, add diary entries)',
             'Close the app completely',
             'Reopen the app',
-            'Verify all data is preserved',
+            'Verify all data is preserved in correct V2 tables:',
+            '  - album_ratings for ratings',
+            '  - album_listens for listen status', 
+            '  - diary_entries for diary',
+            '  - user_activities for activity feed',
             'Check that relationships are maintained'
           ]
         },

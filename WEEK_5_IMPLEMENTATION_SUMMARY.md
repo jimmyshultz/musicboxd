@@ -180,12 +180,15 @@ The Week 5 implementation fully leverages the existing database schema:
 
 ## 🚀 **Social Features Database Schema Utilization**
 
-Week 5 implementation maximizes the existing database architecture:
+Week 5 implementation maximizes the existing database architecture (Schema V2):
 
 ### Tables Enhanced
 - **user_follows**: Primary social relationship management
-- **user_activities**: Automated social activity tracking
+- **user_activities**: Automated social activity tracking with reference-based system
 - **user_profiles**: Enhanced search and privacy functionality
+- **album_listens**: Listen status tracking (V2 schema)
+- **album_ratings**: Rating and review management (V2 schema)
+- **diary_entries**: Chronological listening diary (V2 schema)
 
 ### Advanced Features Utilized
 - **Database Triggers**: Automatic activity generation on user interactions

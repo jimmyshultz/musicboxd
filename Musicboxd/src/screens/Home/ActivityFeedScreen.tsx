@@ -121,12 +121,17 @@ export default function ActivityFeedScreen() {
           <View style={styles.activityInfo}>
             <Text variant="bodySmall" style={styles.activityType}>
               {activity.activity_type === 'listen' && '🎧 Listened'}
-              {activity.activity_type === 'rating' && `⭐ Rated ${activity.rating}/5`}
-              {activity.activity_type === 'review' && '📝 Reviewed'}
+              {activity.activity_type === 'rating' && `⭐ Rated ${activity.rating_details?.rating || '?'}/5`}
+              {activity.activity_type === 'diary' && `📔 Added to diary${activity.diary_details?.rating ? ` (${activity.diary_details.rating}/5)` : ''}`}
             </Text>
-            {activity.review_excerpt && (
+            {activity.rating_details?.review && (
               <Text variant="bodySmall" numberOfLines={2} style={styles.reviewExcerpt}>
-                "{activity.review_excerpt}"
+                "{activity.rating_details.review}"
+              </Text>
+            )}
+            {activity.diary_details?.notes && (
+              <Text variant="bodySmall" numberOfLines={2} style={styles.reviewExcerpt}>
+                "{activity.diary_details.notes}"
               </Text>
             )}
           </View>

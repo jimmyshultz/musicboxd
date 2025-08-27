@@ -26,14 +26,41 @@ export interface Album {
   updated_at: string;
 }
 
-export interface UserAlbum {
+// Schema V2: Separate tables for different activity types
+
+export interface AlbumListen {
   id: string;
   user_id: string;
   album_id: string;
-  rating?: number; // 1-5 stars
   is_listened: boolean;
-  listened_at?: string;
+  first_listened_at: string;
+  created_at: string;
+  updated_at: string;
+  // Relations (populated when joining)
+  album?: Album;
+  user_profile?: UserProfile;
+}
+
+export interface AlbumRating {
+  id: string;
+  user_id: string;
+  album_id: string;
+  rating: number; // 1-5 stars, required in V2
   review?: string;
+  created_at: string;
+  updated_at: string;
+  // Relations (populated when joining)
+  album?: Album;
+  user_profile?: UserProfile;
+}
+
+export interface DiaryEntry {
+  id: string;
+  user_id: string;
+  album_id: string;
+  diary_date: string; // Date string YYYY-MM-DD
+  rating?: number; // Optional rating at time of listen
+  notes?: string;
   created_at: string;
   updated_at: string;
   // Relations (populated when joining)
@@ -54,26 +81,27 @@ export interface UserFollow {
 export interface UserActivity {
   id: string;
   user_id: string;
-  activity_type: 'rating' | 'review' | 'listen';
+  activity_type: 'listen' | 'rating' | 'diary';
   album_id: string;
-  rating?: number;
-  review_excerpt?: string;
+  reference_id?: string; // Points to the specific listen/rating/diary record
   created_at: string;
   // Relations (populated when joining)
   user_profile?: UserProfile;
   album?: Album;
 }
 
-// Database table names for type safety
+// Database table names for type safety (Schema V2)
 export const TableNames = {
   USER_PROFILES: 'user_profiles',
   ALBUMS: 'albums',
-  USER_ALBUMS: 'user_albums',
+  ALBUM_LISTENS: 'album_listens',
+  ALBUM_RATINGS: 'album_ratings',
+  DIARY_ENTRIES: 'diary_entries',
   USER_FOLLOWS: 'user_follows',
   USER_ACTIVITIES: 'user_activities',
 } as const;
 
-// Supabase database type definition
+// Supabase database type definition (Schema V2)
 export interface Database {
   public: {
     Tables: {
@@ -89,10 +117,20 @@ export interface Database {
         Insert: Omit<Album, 'created_at' | 'updated_at'>;
         Update: Partial<Omit<Album, 'id' | 'created_at' | 'updated_at'>>;
       };
-      user_albums: {
-        Row: UserAlbum;
-        Insert: Omit<UserAlbum, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<UserAlbum, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+      album_listens: {
+        Row: AlbumListen;
+        Insert: Omit<AlbumListen, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<AlbumListen, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+      };
+      album_ratings: {
+        Row: AlbumRating;
+        Insert: Omit<AlbumRating, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<AlbumRating, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+      };
+      diary_entries: {
+        Row: DiaryEntry;
+        Insert: Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<DiaryEntry, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
       };
       user_follows: {
         Row: UserFollow;

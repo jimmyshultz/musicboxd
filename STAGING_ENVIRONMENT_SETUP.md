@@ -41,12 +41,14 @@ Once the project is created, go to Settings → API:
 ### 2.1 Run Database Schema
 1. Go to your staging project dashboard
 2. Navigate to SQL Editor
-3. Copy the entire contents of `/database/schema.sql`
+3. **IMPORTANT**: Copy the entire contents of `/database/schema_v2.sql` (NOT schema.sql)
 4. Paste and run the SQL script
 5. Verify all tables are created:
    - `user_profiles`
    - `albums`
-   - `user_albums`
+   - `album_listens` (NEW in V2)
+   - `album_ratings` (NEW in V2)
+   - `diary_entries` (NEW in V2)
    - `user_follows`
    - `user_activities`
 
