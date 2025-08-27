@@ -15,6 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album, Listen, Review } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
@@ -127,16 +128,50 @@ export default function ProfileScreen() {
         userService.getUserFollowing(user.id),
       ]);
       
-      // Update Redux store with social data
+      // Update Redux store with social data - convert UserProfile to SerializedUser
       dispatch(setFollowers(followersData.map(follower => ({
-        ...follower,
-        joinedDate: follower.joinedDate.toISOString(),
-        lastActiveDate: follower.lastActiveDate.toISOString(),
+        id: follower.id,
+        username: follower.username,
+        email: '', // UserProfile doesn't have email
+        profilePicture: follower.avatar_url,
+        bio: follower.bio,
+        joinedDate: follower.created_at, // Map created_at to joinedDate
+        lastActiveDate: follower.updated_at, // Map updated_at to lastActiveDate
+        preferences: {
+          favoriteGenres: [],
+          favoriteAlbumIds: [],
+          notifications: {
+            newFollowers: true,
+            albumRecommendations: true,
+            friendActivity: true,
+          },
+          privacy: {
+            showActivity: !follower.is_private,
+            activityVisibility: follower.is_private ? 'private' as const : 'public' as const,
+          }
+        }
       }))));
       dispatch(setFollowing(followingData.map(following => ({
-        ...following,
-        joinedDate: following.joinedDate.toISOString(),
-        lastActiveDate: following.lastActiveDate.toISOString(),
+        id: following.id,
+        username: following.username,
+        email: '', // UserProfile doesn't have email
+        profilePicture: following.avatar_url,
+        bio: following.bio,
+        joinedDate: following.created_at, // Map created_at to joinedDate
+        lastActiveDate: following.updated_at, // Map updated_at to lastActiveDate
+        preferences: {
+          favoriteGenres: [],
+          favoriteAlbumIds: [],
+          notifications: {
+            newFollowers: true,
+            albumRecommendations: true,
+            friendActivity: true,
+          },
+          privacy: {
+            showActivity: !following.is_private,
+            activityVisibility: following.is_private ? 'private' as const : 'public' as const,
+          }
+        }
       }))));
       
       console.log('User stats from new service:', stats); // Debug log
