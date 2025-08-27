@@ -16,6 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, User, SerializedUser } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
@@ -57,7 +58,7 @@ export default function UserProfileScreen() {
   const { following } = useSelector((state: RootState) => state.user);
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -93,7 +94,7 @@ export default function UserProfileScreen() {
     }
   }, [userId]);
 
-  const loadFavoriteAlbums = useCallback(async (userData: User) => {
+  const loadFavoriteAlbums = useCallback(async (userData: UserProfile) => {
     if (!userData?.id) {
       setFavoriteAlbums([]);
       return;
@@ -123,7 +124,7 @@ export default function UserProfileScreen() {
     }
   }, []);
 
-  const loadRecentActivity = useCallback(async (userData: User) => {
+  const loadRecentActivity = useCallback(async (userData: UserProfile) => {
     if (!userData?.id) return;
 
     try {
@@ -135,7 +136,7 @@ export default function UserProfileScreen() {
     }
   }, []);
 
-  const loadUserStats = useCallback(async (userData: User) => {
+  const loadUserStats = useCallback(async (userData: UserProfile) => {
     if (!userData?.id) return;
 
     try {
@@ -215,11 +216,29 @@ export default function UserProfileScreen() {
         dispatch(removeFollowing(userId));
         await userService.unfollowUser(userId);
       } else {
-        // Convert Date objects to strings to avoid Redux serialization issues
+        // Create a serialized user for Redux store
+        // Note: user is actually UserProfile type, not User type
         const serializedUser: SerializedUser = {
-          ...user,
-          joinedDate: user.joinedDate.toISOString(),
-          lastActiveDate: user.lastActiveDate.toISOString(),
+          id: user.id,
+          username: user.username,
+          email: '', // UserProfile doesn't have email, provide default
+          profilePicture: user.avatar_url,
+          bio: user.bio,
+          joinedDate: user.created_at, // Use created_at as joinedDate
+          lastActiveDate: user.updated_at, // Use updated_at as lastActiveDate
+          preferences: {
+            favoriteGenres: [],
+            favoriteAlbumIds: [],
+            notifications: {
+              newFollowers: true,
+              albumRecommendations: true,
+              friendActivity: true,
+            },
+            privacy: {
+              showActivity: !user.is_private,
+              activityVisibility: user.is_private ? 'private' as const : 'public' as const,
+            }
+          }
         };
         dispatch(addFollowing(serializedUser));
         await userService.followUser(userId);

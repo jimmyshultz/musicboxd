@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
 import { User, SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
+import { UserProfile } from '../../types/database';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 
@@ -48,8 +49,8 @@ export default function FollowersScreen() {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [followers, setFollowers] = useState<User[]>([]);
-  const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const [followers, setFollowers] = useState<UserProfile[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -77,17 +78,35 @@ export default function FollowersScreen() {
     return following.some(user => user.id === targetUserId);
   };
 
-  const handleFollowToggle = async (user: User) => {
+  const handleFollowToggle = async (user: UserProfile) => {
     try {
       if (isFollowing(user.id)) {
         dispatch(removeFollowing(user.id));
         await userService.unfollowUser(user.id);
       } else {
-        // Convert Date objects to strings to avoid Redux serialization issues
+        // Create a serialized user for Redux store
+        // Note: user is UserProfile type, convert to SerializedUser
         const serializedUser: SerializedUser = {
-          ...user,
-          joinedDate: user.joinedDate.toISOString(),
-          lastActiveDate: user.lastActiveDate.toISOString(),
+          id: user.id,
+          username: user.username,
+          email: '', // UserProfile doesn't have email, provide default
+          profilePicture: user.avatar_url,
+          bio: user.bio,
+          joinedDate: user.created_at, // Use created_at as joinedDate
+          lastActiveDate: user.updated_at, // Use updated_at as lastActiveDate
+          preferences: {
+            favoriteGenres: [],
+            favoriteAlbumIds: [],
+            notifications: {
+              newFollowers: true,
+              albumRecommendations: true,
+              friendActivity: true,
+            },
+            privacy: {
+              showActivity: !user.is_private,
+              activityVisibility: user.is_private ? 'private' as const : 'public' as const,
+            }
+          }
         };
         dispatch(addFollowing(serializedUser));
         await userService.followUser(user.id);
@@ -106,7 +125,7 @@ export default function FollowersScreen() {
     }
   };
 
-  const renderUserItem = ({ item: user }: { item: User }) => {
+  const renderUserItem = ({ item: user }: { item: UserProfile }) => {
     const isCurrentUser = user.id === currentUser?.id;
     const userIsFollowing = isFollowing(user.id);
 
@@ -118,7 +137,7 @@ export default function FollowersScreen() {
         <View style={styles.userInfo}>
           <Avatar.Image
             size={50}
-            source={{ uri: user.profilePicture || 'https://via.placeholder.com/50x50/cccccc/999999?text=User' }}
+            source={{ uri: user.avatar_url || 'https://via.placeholder.com/50x50/cccccc/999999?text=User' }}
             style={styles.avatar}
           />
           <View style={styles.userDetails}>
