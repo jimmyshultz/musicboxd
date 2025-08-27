@@ -62,8 +62,7 @@ import { theme, spacing } from '../../utils/theme';
         userId: entry.user_id,
         albumId: entry.album_id,
         diaryDate: entry.diary_date,
-        rating: entry.rating || undefined,
-        notes: entry.notes || undefined,
+        ratingAtTime: entry.rating || undefined,
         createdAt: entry.created_at,
         updatedAt: entry.updated_at,
       }));
@@ -111,8 +110,7 @@ import { theme, spacing } from '../../utils/theme';
         userId: entry.user_id,
         albumId: entry.album_id,
         diaryDate: entry.diary_date,
-        rating: entry.rating || undefined,
-        notes: entry.notes || undefined,
+        ratingAtTime: entry.rating || undefined,
         createdAt: entry.created_at,
         updatedAt: entry.updated_at,
       }));
