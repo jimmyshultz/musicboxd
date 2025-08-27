@@ -34,6 +34,7 @@ const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CAR
 
 interface FriendActivity {
   album: Album;
+  diaryEntryId: string; // Store diary entry ID for navigation
   friend: {
     id: string;
     username: string;
@@ -98,6 +99,7 @@ export default function NewFromFriendsScreen() {
 
               friendActivities.push({
                 album: album, // Use converted album
+                diaryEntryId: entry.id, // Store diary entry ID for navigation
                 friend: {
                   id: friend.id,
                   username: friend.username,
@@ -137,6 +139,10 @@ export default function NewFromFriendsScreen() {
     navigation.navigate('UserProfile', { userId });
   };
 
+  const navigateToDiaryEntry = (entryId: string, userId: string) => {
+    navigation.navigate('DiaryEntryDetails', { entryId, userId });
+  };
+
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -154,7 +160,7 @@ export default function NewFromFriendsScreen() {
     
     return (
       <View key={`${activity.album.id}_${index}`} style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}>
-      <TouchableOpacity onPress={() => navigateToAlbum(activity.album.id)}>
+      <TouchableOpacity onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}>
         <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
         <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
           {activity.album.title}

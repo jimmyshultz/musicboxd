@@ -30,6 +30,7 @@ const USER_CARD_WIDTH = 140;
 interface FriendActivity {
   album: Album;
   originalAlbumId: string; // Store original album ID for navigation
+  diaryEntryId: string; // Store diary entry ID for navigation
   friend: {
     id: string;
     username: string;
@@ -138,6 +139,7 @@ export default function HomeScreen() {
                     id: album.id + '_friend_activity_' + friend.id + '_' + entry.id,
                   },
                   originalAlbumId: album.id, // Store original album ID for navigation
+                  diaryEntryId: entry.id, // Store diary entry ID for diary navigation
                   friend: {
                     id: friend.id,
                     username: friend.username,
@@ -303,6 +305,10 @@ export default function HomeScreen() {
     navigation.navigate('UserProfile', { userId });
   };
 
+  const navigateToDiaryEntry = (entryId: string, userId: string) => {
+    navigation.navigate('DiaryEntryDetails', { entryId, userId });
+  };
+
   const renderSectionHeader = (title: string, onSeeAll?: () => void) => (
     <View style={styles.sectionHeader}>
       <Text variant="headlineSmall" style={styles.sectionTitle}>
@@ -336,7 +342,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={activity.album.id}
       style={styles.albumCard}
-      onPress={() => navigateToAlbum(activity.originalAlbumId)}
+      onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
     >
       <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
