@@ -448,7 +448,7 @@ export default function ProfileScreen() {
             Settings
           </Text>
           <View style={styles.settingsContainer}>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
+            <TouchableOpacity style={styles.settingsItem} onPress={() => navigation.navigate('Settings')}>
               <Text style={styles.settingsText}>Account Settings</Text>
               <ChevronIcon />
             </TouchableOpacity>

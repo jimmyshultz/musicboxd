@@ -12,6 +12,7 @@ import { theme } from '../utils/theme';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
+import ActivityFeedScreen from '../screens/Home/ActivityFeedScreen';
 import PopularThisWeekScreen from '../screens/Home/PopularThisWeekScreen';
 import NewFromFriendsScreen from '../screens/Home/NewFromFriendsScreen';
 import PopularWithFriendsScreen from '../screens/Home/PopularWithFriendsScreen';
@@ -27,6 +28,7 @@ import AuthScreen from '../screens/Auth/AuthScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
+import SettingsScreen from '../screens/Profile/SettingsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -104,6 +106,18 @@ function HomeStackNavigator() {
         name="HomeMain"
         component={HomeScreen}
         options={{ title: 'Musicboxd', headerBackVisible: false, headerLeft: () => null }}
+      />
+      <HomeStack.Screen
+        name="ActivityFeed"
+        component={ActivityFeedScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Activity Feed',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
       />
       <HomeStack.Screen
         name="PopularThisWeek"
@@ -529,6 +543,18 @@ function ProfileStackNavigator() {
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
         options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
+      />
+      <ProfileStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Settings',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
       />
     </ProfileStack.Navigator>
   );

@@ -140,6 +140,7 @@ export type MainTabParamList = {
 // Stack navigator types for each tab
 export type HomeStackParamList = {
   HomeMain: undefined;
+  ActivityFeed: undefined;
   AlbumDetails: { albumId: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
@@ -181,6 +182,7 @@ export type ProfileStackParamList = {
   FavoriteAlbumsManagement: undefined;
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
+  Settings: undefined;
 };
 
 // Search types

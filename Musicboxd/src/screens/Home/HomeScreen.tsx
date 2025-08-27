@@ -379,6 +379,14 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Activity Feed */}
+      <View style={styles.section}>
+        {renderSectionHeader('Activity Feed', () => navigation.navigate('ActivityFeed'))}
+        <Text variant="bodyMedium" style={styles.sectionDescription}>
+          See what your friends are listening to
+        </Text>
+      </View>
+
       {/* Popular This Week */}
       <View style={styles.section}>
         {renderSectionHeader('Popular This Week', () => navigation.navigate('PopularThisWeek'))}
@@ -450,6 +458,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: 'bold',
+  },
+  sectionDescription: {
+    color: colors.textSecondary,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
   seeAllButton: {
     padding: spacing.sm,
