@@ -14,15 +14,21 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
 
 import { HomeStackParamList, Album } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { theme, spacing } from '../../utils/theme';
+
+const colors = theme.colors;
 
 type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns with proper spacing
+const CARDS_PER_ROW = 3;
+const HORIZONTAL_SPACING = spacing.lg;
+const CARD_MARGIN = spacing.sm;
+const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 interface FriendActivity {
@@ -44,8 +50,15 @@ export default function NewFromFriendsScreen() {
   const loadFriendActivities = useCallback(async () => {
     setLoading(true);
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -74,7 +87,7 @@ export default function NewFromFriendsScreen() {
                 friend: {
                   id: friend.id,
                   username: friend.username,
-                  profilePicture: friend.profilePicture,
+                  profilePicture: friend.avatar_url,
                 },
                 dateListened: new Date(listen.dateListened),
               });
@@ -120,8 +133,11 @@ export default function NewFromFriendsScreen() {
     return '1w ago';
   };
 
-  const renderActivityCard = (activity: FriendActivity, index: number) => (
-    <View key={`${activity.album.id}_${index}`} style={styles.albumCard}>
+  const renderActivityCard = (activity: FriendActivity, index: number) => {
+    const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
+    
+    return (
+      <View key={`${activity.album.id}_${index}`} style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}>
       <TouchableOpacity onPress={() => navigateToAlbum(activity.album.id)}>
         <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
         <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
@@ -149,8 +165,9 @@ export default function NewFromFriendsScreen() {
           </Text>
         </View>
       </TouchableOpacity>
-    </View>
-  );
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -219,14 +236,18 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: HORIZONTAL_SPACING,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   albumCard: {
     width: ALBUM_CARD_WIDTH,
     marginBottom: spacing.lg,
+    marginRight: CARD_MARGIN,
+  },
+  albumCardLastInRow: {
+    marginRight: 0,
   },
   albumCover: {
     width: ALBUM_CARD_WIDTH,
