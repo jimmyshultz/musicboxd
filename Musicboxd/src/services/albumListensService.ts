@@ -262,6 +262,42 @@ class AlbumListensService {
       return {};
     }
   }
+
+  /**
+   * Get all listens for a user with album details
+   */
+  async getUserListensWithAlbums(userId: string): Promise<AlbumListenWithAlbum[]> {
+    try {
+      const { data, error } = await supabase
+        .from('album_listens')
+        .select(`
+          *,
+          albums (
+            id,
+            name,
+            artist_name,
+            release_date,
+            image_url,
+            spotify_url,
+            total_tracks,
+            album_type,
+            genres
+          )
+        `)
+        .eq('user_id', userId)
+        .eq('is_listened', true)
+        .order('first_listened_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting user listens with albums:', error);
+      return [];
+    }
+  }
 }
 
 export const albumListensService = new AlbumListensService();

@@ -12,11 +12,14 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, User, Album } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { theme, spacing } from '../../utils/theme';
+
+const colors = theme.colors;
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -77,8 +80,14 @@ export default function HomeScreen() {
 
   const loadNewFromFriends = useCallback(async () => {
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setNewFromFriends([]);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -118,7 +127,7 @@ export default function HomeScreen() {
                   friend: {
                     id: friend.id,
                     username: friend.username,
-                    profilePicture: friend.profilePicture,
+                    profilePicture: friend.avatar_url,
                   },
                   dateListened: new Date(listen.dateListened),
                 });
@@ -141,8 +150,14 @@ export default function HomeScreen() {
 
   const loadPopularWithFriends = useCallback(async () => {
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setPopularWithFriends([]);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -188,7 +203,7 @@ export default function HomeScreen() {
               entry.friendData.push({
                 id: friend.id,
                 username: friend.username,
-                profilePicture: friend.profilePicture,
+                profilePicture: friend.avatar_url,
               });
             }
           }
