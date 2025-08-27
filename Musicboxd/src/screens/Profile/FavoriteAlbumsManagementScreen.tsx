@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 
 import { Album } from '../../types';
 import { RootState } from '../../store';
-import { updateProfile } from '../../store/slices/authSlice';
 import { AlbumService } from '../../services/albumService';
+import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { colors, spacing } from '../../utils/theme';
 
 const { width } = Dimensions.get('window');
@@ -23,7 +23,6 @@ const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
 
 export default function FavoriteAlbumsManagementScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const dispatch = useDispatch();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Album[]>([]);
@@ -32,33 +31,34 @@ export default function FavoriteAlbumsManagementScreen() {
   const [hasSearched, setHasSearched] = useState(false);
 
   const loadFavoriteAlbums = useCallback(async () => {
-    const currentFavoriteIds = currentUser?.preferences?.favoriteAlbumIds || [];
-    
-    if (currentFavoriteIds.length === 0) {
+    if (!currentUser?.id) {
       setFavoriteAlbums([]);
       return;
     }
 
     try {
-      // Get the actual albums matching the user's favorite IDs
-      const albumPromises = currentFavoriteIds.map(albumId => 
-        AlbumService.getAlbumById(albumId)
-      );
+      // Get favorite albums from database
+      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(currentUser.id, 100);
       
-      const albumResponses = await Promise.all(albumPromises);
-      const favorites: Album[] = [];
+      // Convert to the Album format expected by the UI
+      const albums = favoriteAlbumsData.map(favorite => ({
+        id: favorite.albums.id,
+        title: favorite.albums.name,
+        artist: favorite.albums.artist_name,
+        releaseDate: favorite.albums.release_date || '',
+        genre: favorite.albums.genres || [],
+        coverImageUrl: favorite.albums.image_url || '',
+        spotifyUrl: favorite.albums.spotify_url || '',
+        totalTracks: favorite.albums.total_tracks || 0,
+        albumType: favorite.albums.album_type || 'album',
+        trackList: [], // Empty for now
+      }));
       
-      albumResponses.forEach(response => {
-        if (response.success && response.data) {
-          favorites.push(response.data);
-        }
-      });
-      
-      setFavoriteAlbums(favorites);
+      setFavoriteAlbums(albums);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }
-  }, [currentUser?.preferences?.favoriteAlbumIds]);
+  }, [currentUser?.id]);
 
   const searchAlbums = useCallback(async (query: string) => {
     if (!query.trim()) {
@@ -89,61 +89,43 @@ export default function FavoriteAlbumsManagementScreen() {
     loadFavoriteAlbums();
   }, [loadFavoriteAlbums]);
 
-  const addToFavorites = (album: Album) => {
+  const addToFavorites = async (album: Album) => {
+    if (!currentUser?.id) return;
+    
     if (favoriteAlbums.length >= 5) {
       // Could show a toast/alert here
       return;
     }
     
     if (!favoriteAlbums.find(fav => fav.id === album.id)) {
-      const newFavorites = [...favoriteAlbums, album];
-      setFavoriteAlbums(newFavorites);
-      
-      // Update user preferences in Redux store
-      const newFavoriteIds = newFavorites.map(fav => fav.id);
-      dispatch(updateProfile({
-        preferences: {
-          favoriteGenres: currentUser?.preferences?.favoriteGenres || [],
-          favoriteAlbumIds: newFavoriteIds,
-          notifications: currentUser?.preferences?.notifications || {
-            newFollowers: true,
-            reviewLikes: true,
-            friendActivity: true,
-          },
-          privacy: currentUser?.preferences?.privacy || {
-            profileVisibility: 'public',
-            activityVisibility: 'public',
-          },
-        },
-      }));
-      
-      console.log('Added to favorites:', album.title);
+      try {
+        // Find the next available ranking (1-5)
+        const nextRanking = favoriteAlbums.length + 1;
+        await favoriteAlbumsService.addToFavorites(currentUser.id, album.id, nextRanking);
+        
+        // Reload favorites to get the updated rankings
+        await loadFavoriteAlbums();
+        
+        console.log('Added to favorites:', album.title, 'at ranking', nextRanking);
+      } catch (error) {
+        console.error('Error adding to favorites:', error);
+      }
     }
   };
 
-  const removeFromFavorites = (albumId: string) => {
-    const newFavorites = favoriteAlbums.filter(album => album.id !== albumId);
-    setFavoriteAlbums(newFavorites);
+  const removeFromFavorites = async (albumId: string) => {
+    if (!currentUser?.id) return;
     
-    // Update user preferences in Redux store
-    const newFavoriteIds = newFavorites.map(fav => fav.id);
-    dispatch(updateProfile({
-      preferences: {
-        favoriteGenres: currentUser?.preferences?.favoriteGenres || [],
-        favoriteAlbumIds: newFavoriteIds,
-        notifications: currentUser?.preferences?.notifications || {
-          newFollowers: true,
-          reviewLikes: true,
-          friendActivity: true,
-        },
-        privacy: currentUser?.preferences?.privacy || {
-          profileVisibility: 'public',
-          activityVisibility: 'public',
-        },
-      },
-    }));
-    
-    console.log('Removed from favorites:', albumId);
+    try {
+      await favoriteAlbumsService.removeFromFavorites(currentUser.id, albumId);
+      
+      // Reload favorites to get the updated rankings (others may shift up)
+      await loadFavoriteAlbums();
+      
+      console.log('Removed from favorites:', albumId);
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+    }
   };
 
   const renderFavoriteAlbum = (album: Album, index: number) => (

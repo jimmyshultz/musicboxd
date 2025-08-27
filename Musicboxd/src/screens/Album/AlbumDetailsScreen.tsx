@@ -26,14 +26,13 @@ import {
   setCurrentAlbum, 
   clearCurrentAlbum, 
   setCurrentAlbumUserReview, 
-  setCurrentAlbumIsListened,
-  addListen,
-  removeListen,
-  removeReview
+  setCurrentAlbumIsListened
 } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
+import { albumListensService } from '../../services/albumListensService';
+import { albumRatingsService } from '../../services/albumRatingsService';
+import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { theme, spacing, shadows } from '../../utils/theme';
-import { DiaryService } from '../../services/diaryService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Portal, Dialog, Switch } from 'react-native-paper';
 
@@ -122,6 +121,10 @@ export default function AlbumDetailsScreen() {
   
   const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } = useSelector((state: RootState) => state.albums);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { interactions, loading: userAlbumsLoading } = useSelector((state: RootState) => state.userAlbums);
+  
+  // Get current album interaction from the new database-backed state
+  const currentAlbumInteraction = interactions[albumId];
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showDiaryModal, setShowDiaryModal] = useState(false);
@@ -143,17 +146,23 @@ export default function AlbumDetailsScreen() {
     try {
       if (addToDiary) {
         const iso = `${diaryDate.getFullYear()}-${String(diaryDate.getMonth()+1).padStart(2,'0')}-${String(diaryDate.getDate()).padStart(2,'0')}`;
-        const res = await DiaryService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating);
+        const res = await diaryEntriesService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating);
         if (!res.success) {
           console.warn(res.message);
         } else {
           // If user has not rated the album yet and provided a diary rating, set the overall album rating now
           if (typeof diaryRating === 'number' && diaryRating > 0 && (!currentAlbumUserReview || currentAlbumUserReview.rating <= 0)) {
             try {
-              const reviewRes = await AlbumService.addReview(user.id, currentAlbum.id, diaryRating);
-              if (reviewRes.success && reviewRes.data) {
-                dispatch(setCurrentAlbumUserReview(reviewRes.data));
-              }
+              await albumRatingsService.rateAlbum(user.id, currentAlbum.id, diaryRating);
+              const newReview = {
+                id: `review_${currentAlbum.id}_${user.id}`,
+                userId: user.id,
+                albumId: currentAlbum.id,
+                rating: diaryRating,
+                review: '',
+                dateReviewed: new Date().toISOString(),
+              };
+              dispatch(setCurrentAlbumUserReview(newReview));
             } catch (e) {
               console.error('Error applying diary rating to album rating:', e);
             }
@@ -174,21 +183,17 @@ export default function AlbumDetailsScreen() {
     if (!user || !currentAlbum || submitting) return;
     setSubmitting(true);
     try {
-      if (currentAlbumIsListened) {
-        // Remove listen
-        const response = await AlbumService.removeListened(user.id, currentAlbum.id);
-        if (response.success) {
-          dispatch(setCurrentAlbumIsListened(false));
-          dispatch(removeListen({ userId: user.id, albumId: currentAlbum.id }));
-        }
+      const isCurrentlyListened = currentAlbumIsListened;
+      
+      if (isCurrentlyListened) {
+        // Remove listen using new service
+        await albumListensService.unmarkAsListened(user.id, currentAlbum.id);
+        dispatch(setCurrentAlbumIsListened(false));
       } else {
-        // Add listen then open diary modal
-        const response = await AlbumService.addListened(user.id, currentAlbum.id);
-        if (response.success) {
-          dispatch(setCurrentAlbumIsListened(true));
-          dispatch(addListen(response.data));
-          openDiaryModal();
-        }
+        // Add listen using new service
+        await albumListensService.markAsListened(user.id, currentAlbum.id);
+        dispatch(setCurrentAlbumIsListened(true));
+        openDiaryModal();
       }
     } catch (error) {
       console.error('Error updating listen status:', error);
@@ -209,13 +214,29 @@ export default function AlbumDetailsScreen() {
       if (response.success && response.data) {
         dispatch(setCurrentAlbum(response.data));
         
-        // Load user's review and listen status if user is logged in
+        // Load user's interactions if user is logged in
         if (user) {
-          const userReview = await AlbumService.getUserReview(user.id, albumId);
-          dispatch(setCurrentAlbumUserReview(userReview));
-          
-          const hasListened = await AlbumService.hasUserListened(user.id, albumId);
-          dispatch(setCurrentAlbumIsListened(hasListened));
+          try {
+            // Check if user has listened to this album
+            const hasListened = await albumListensService.hasUserListenedToAlbum(user.id, albumId);
+            dispatch(setCurrentAlbumIsListened(hasListened));
+            
+            // Get user's rating for this album
+            const userRating = await albumRatingsService.getUserAlbumRating(user.id, albumId);
+            if (userRating) {
+              const reviewData = {
+                id: `review_${albumId}_${user.id}`,
+                userId: user.id,
+                albumId: albumId,
+                rating: userRating.rating,
+                review: userRating.review || '',
+                dateReviewed: userRating.updated_at,
+              };
+              dispatch(setCurrentAlbumUserReview(reviewData));
+            }
+          } catch (error) {
+            console.error('Error loading user album interactions:', error);
+          }
         }
       }
     } catch (error) {
@@ -238,21 +259,23 @@ export default function AlbumDetailsScreen() {
     setSubmitting(true);
     try {
       if (rating === 0) {
-        // Remove rating
-        const response = await AlbumService.removeReview(user.id, currentAlbum.id);
-        if (response.success) {
-          dispatch(setCurrentAlbumUserReview(null));
-          // Also remove from userReviews array to update stats
-          if (currentAlbumUserReview) {
-            dispatch(removeReview(currentAlbumUserReview.id));
-          }
-        }
+        // Remove rating using new service
+        await albumRatingsService.removeRating(user.id, currentAlbum.id);
+        dispatch(setCurrentAlbumUserReview(null));
       } else {
-        // Add or update rating
-        const response = await AlbumService.addReview(user.id, currentAlbum.id, rating);
-        if (response.success) {
-          dispatch(setCurrentAlbumUserReview(response.data));
-        }
+        // Add or update rating using new service
+        await albumRatingsService.rateAlbum(user.id, currentAlbum.id, rating);
+        
+        // Update local review state for immediate UI feedback
+        const newReview = {
+          id: `review_${currentAlbum.id}_${user.id}`,
+          userId: user.id,
+          albumId: currentAlbum.id,
+          rating,
+          review: '',
+          dateReviewed: new Date().toISOString(),
+        };
+        dispatch(setCurrentAlbumUserReview(newReview));
       }
     } catch (error) {
       console.error('Error saving rating:', error);
@@ -309,8 +332,8 @@ export default function AlbumDetailsScreen() {
           onPress={handleMarkAsListened}
           style={styles.actionButton}
           icon={currentAlbumIsListened ? CheckIcon : PlusIcon}
-          disabled={submitting || !user}
-          loading={submitting}
+          disabled={submitting || !user || userAlbumsLoading.markAsListened}
+          loading={submitting || userAlbumsLoading.markAsListened}
         >
           {currentAlbumIsListened ? "Listened" : "Mark as Listened"}
         </Button>
@@ -333,18 +356,23 @@ export default function AlbumDetailsScreen() {
             Rate this Album
           </Text>
           <StarRating 
-            rating={currentAlbumUserReview?.rating || 0} 
+            rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0} 
             onRatingChange={handleRating} 
-            disabled={submitting || !user}
+            disabled={submitting || !user || userAlbumsLoading.rating}
           />
-          {currentAlbumUserReview && currentAlbumUserReview.rating > 0 && (
+          {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) && (
             <Text variant="bodyMedium" style={styles.ratingText}>
-              You rated this {currentAlbumUserReview.rating} star{currentAlbumUserReview.rating !== 1 ? 's' : ''}
+              You rated this {currentAlbumInteraction?.rating || currentAlbumUserReview?.rating} star{(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) !== 1 ? 's' : ''}
             </Text>
           )}
           {!user && (
             <Text variant="bodySmall" style={styles.loginPrompt}>
               Sign in to rate this album
+            </Text>
+          )}
+          {userAlbumsLoading.rating && (
+            <Text variant="bodySmall" style={styles.loadingText}>
+              Updating rating...
             </Text>
           )}
         </Card.Content>

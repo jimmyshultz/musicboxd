@@ -229,6 +229,9 @@ CREATE POLICY "Users can view activities from public profiles" ON public.user_ac
         ) OR auth.uid() = user_id
     );
 
+CREATE POLICY "Users can create their own activities" ON public.user_activities
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 -- ============================================================================
 -- INITIAL DATA & SETUP
 -- ============================================================================

@@ -6,7 +6,7 @@ import { Button, Text, ActivityIndicator } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
-import { DiaryService } from '../../services/diaryService';
+import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
@@ -35,11 +35,30 @@ import { theme, spacing } from '../../utils/theme';
 
   const load = useCallback(async () => {
     setLoading(true);
-    const e = await DiaryService.getDiaryEntryById(entryId);
-    if (e) {
-      setEntry(e);
-      const res = await AlbumService.getAlbumById(e.albumId);
-      if (res.success && res.data) setAlbum(res.data);
+    try {
+      const e = await diaryEntriesService.getDiaryEntryById(entryId);
+      if (e) {
+        // Convert from new service format to old DiaryEntry format for compatibility
+        const convertedEntry: DiaryEntry = {
+          id: e.id,
+          userId: e.user_id,
+          albumId: e.album_id,
+          diaryDate: e.diary_date,
+          ratingAtTime: e.rating || undefined,
+          createdAt: e.created_at,
+          updatedAt: e.updated_at,
+        };
+        
+        setEntry(convertedEntry);
+        
+        // Get album details
+        const res = await AlbumService.getAlbumById(e.album_id);
+        if (res.success && res.data) {
+          setAlbum(res.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading diary entry:', error);
     }
     setLoading(false);
   }, [entryId]);
@@ -50,11 +69,25 @@ import { theme, spacing } from '../../utils/theme';
     setShowPicker(false);
     if (!entry || !selected) return;
     setSaving(true);
-    const iso = `${selected.getFullYear()}-${String(selected.getMonth()+1).padStart(2,'0')}-${String(selected.getDate()).padStart(2,'0')}`;
-    const res = await DiaryService.updateDiaryEntry(entry.id, { diaryDate: iso });
-    if (res.success && res.entry) {
-      setEntry(res.entry);
-      dispatch(upsertDiaryEntry(res.entry));
+    try {
+      const iso = `${selected.getFullYear()}-${String(selected.getMonth()+1).padStart(2,'0')}-${String(selected.getDate()).padStart(2,'0')}`;
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { diaryDate: iso });
+      if (res.success && res.entry) {
+        // Convert from new service format to old DiaryEntry format
+        const convertedEntry: DiaryEntry = {
+          id: res.entry.id,
+          userId: res.entry.user_id,
+          albumId: res.entry.album_id,
+          diaryDate: res.entry.diary_date,
+                  ratingAtTime: res.entry.rating || undefined,
+          createdAt: res.entry.created_at,
+          updatedAt: res.entry.updated_at,
+        };
+        setEntry(convertedEntry);
+        dispatch(upsertDiaryEntry(convertedEntry));
+      }
+    } catch (error) {
+      console.error('Error updating diary date:', error);
     }
     setSaving(false);
   };
@@ -62,10 +95,24 @@ import { theme, spacing } from '../../utils/theme';
   const onChangeRating = async (newRating: number) => {
     if (!entry) return;
     setSaving(true);
-    const res = await DiaryService.updateDiaryEntry(entry.id, { ratingAtTime: newRating });
-    if (res.success && res.entry) {
-      setEntry(res.entry);
-      dispatch(upsertDiaryEntry(res.entry));
+    try {
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { rating: newRating });
+      if (res.success && res.entry) {
+        // Convert from new service format to old DiaryEntry format
+        const convertedEntry: DiaryEntry = {
+          id: res.entry.id,
+          userId: res.entry.user_id,
+          albumId: res.entry.album_id,
+          diaryDate: res.entry.diary_date,
+                  ratingAtTime: res.entry.rating || undefined,
+          createdAt: res.entry.created_at,
+          updatedAt: res.entry.updated_at,
+        };
+        setEntry(convertedEntry);
+        dispatch(upsertDiaryEntry(convertedEntry));
+      }
+    } catch (error) {
+      console.error('Error updating diary rating:', error);
     }
     setSaving(false);
   };
@@ -73,10 +120,14 @@ import { theme, spacing } from '../../utils/theme';
   const onDelete = async () => {
     if (!entry) return;
     setSaving(true);
-    const res = await DiaryService.deleteDiaryEntry(entry.id);
-    if (res.success) {
-      dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
-      navigation.goBack();
+    try {
+      const res = await diaryEntriesService.deleteDiaryEntry(entry.id);
+      if (res.success) {
+        dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Error deleting diary entry:', error);
     }
     setSaving(false);
   };

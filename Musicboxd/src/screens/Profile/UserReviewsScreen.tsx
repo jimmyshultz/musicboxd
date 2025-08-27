@@ -17,7 +17,7 @@ import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
 import { Review, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
-import { AlbumService } from '../../services/albumService';
+import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { RootState } from '../../store';
 
 type UserReviewsScreenRouteProp = RouteProp<
@@ -61,24 +61,36 @@ export default function UserReviewsScreen() {
   const loadUserReviews = useCallback(async () => {
     setLoading(true);
     try {
-      const userReviews = await AlbumService.getUserReviews(userId);
+      // Use the new service to get rated albums
+      const ratedAlbums = await userStatsServiceV2.getUserRatedAlbums(userId, 50, 0);
       
-      // Get album details for each review
-      const albumPromises = userReviews.map(async (review) => {
-        const albumResponse = await AlbumService.getAlbumById(review.albumId);
-        return {
-          review,
-          album: albumResponse.data!,
-        };
-      });
-
-      const reviewsData = await Promise.all(albumPromises);
-      // Filter out any failed album fetches and sort by review date (newest first)
-      const validReviews = reviewsData
-        .filter(data => data.album)
-        .sort((a, b) => new Date(b.review.dateReviewed).getTime() - new Date(a.review.dateReviewed).getTime());
+      // Convert to the format expected by this screen
+      const reviewsData: ReviewData[] = ratedAlbums
+        .filter(item => item.interaction?.rating) // Only include items with ratings
+        .map(item => ({
+          album: {
+            id: item.id,
+            title: item.name,
+            artist: item.artist_name,
+            releaseDate: item.release_date || '',
+            genre: item.genres || [],
+            coverImageUrl: item.image_url || '',
+            spotifyUrl: item.spotify_url || '',
+            totalTracks: item.total_tracks || 0,
+            albumType: item.album_type || 'album',
+            trackList: [], // Empty for now
+          },
+          review: {
+            id: item.interaction!.id,
+            userId: item.interaction!.user_id,
+            albumId: item.id,
+            rating: item.interaction!.rating!,
+            review: item.interaction!.review || '',
+            dateReviewed: new Date(item.interaction!.updated_at),
+          }
+        }));
       
-      setReviews(validReviews);
+      setReviews(reviewsData);
     } catch (error) {
       console.error('Error loading user reviews:', error);
     } finally {

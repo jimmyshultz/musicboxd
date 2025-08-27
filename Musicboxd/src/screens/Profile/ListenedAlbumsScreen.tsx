@@ -18,8 +18,8 @@ import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
 import { Listen, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
-import { AlbumService } from '../../services/albumService';
 import { RootState } from '../../store';
+import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 
 type ListenedAlbumsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
@@ -48,24 +48,32 @@ export default function ListenedAlbumsScreen() {
   const loadListenedAlbums = useCallback(async () => {
     setLoading(true);
     try {
-      const listens = await AlbumService.getUserListens(userId);
+      // Use the new service to get listening history for any user
+      const listeningHistory = await userStatsServiceV2.getUserListeningHistory(userId, 50, 0);
       
-      // Get album details for each listen
-      const albumPromises = listens.map(async (listen) => {
-        const albumResponse = await AlbumService.getAlbumById(listen.albumId);
-        return {
-          listen,
-          album: albumResponse.data!,
-        };
-      });
-
-      const albumsData = await Promise.all(albumPromises);
-      // Filter out any failed album fetches and sort by listen date (newest first)
-      const validAlbums = albumsData
-        .filter(data => data.album)
-        .sort((a, b) => new Date(b.listen.dateListened).getTime() - new Date(a.listen.dateListened).getTime());
+      // Convert to the format expected by this screen
+      const listenedAlbumsData: ListenedAlbumData[] = listeningHistory.map(item => ({
+        album: {
+          id: item.id,
+          title: item.name,
+          artist: item.artist_name,
+          releaseDate: item.release_date || '',
+          genre: item.genres || [],
+          coverImageUrl: item.image_url || '',
+          spotifyUrl: item.spotify_url || '',
+          totalTracks: item.total_tracks || 0,
+          albumType: item.album_type || 'album',
+          trackList: [], // Empty for now
+        },
+        listen: {
+          id: item.interaction?.id || `listen_${item.id}`,
+          userId: item.interaction?.user_id || userId,
+          albumId: item.id,
+          dateListened: new Date(item.interaction?.listened_at || Date.now()),
+        }
+      }));
       
-      setListenedAlbums(validAlbums);
+      setListenedAlbums(listenedAlbumsData);
     } catch (error) {
       console.error('Error loading listened albums:', error);
     } finally {
@@ -81,39 +89,50 @@ export default function ListenedAlbumsScreen() {
     navigation.navigate('AlbumDetails', { albumId });
   };
 
-  const formatListenDate = (date: Date) => {
+  const formatListenDate = (date: Date | string) => {
+    const listenDate = new Date(date);
     const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffInDays = Math.floor((now.getTime() - listenDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
     if (diffInDays < 30) return `${Math.floor(diffInDays / 7)} weeks ago`;
-    return date.toLocaleDateString();
+    return listenDate.toLocaleDateString();
   };
 
-  const renderAlbumCard = (data: ListenedAlbumData) => (
-    <TouchableOpacity
-      key={data.listen.id}
-      style={styles.albumCard}
-      onPress={() => navigateToAlbum(data.album.id)}
-    >
-      <Image source={{ uri: data.album.coverImageUrl }} style={styles.albumCover} />
-      <View style={styles.albumInfo}>
-        <Text variant="bodyMedium" numberOfLines={2} style={styles.albumTitle}>
-          {data.album.title}
-        </Text>
-        <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-          {data.album.artist}
-        </Text>
-        <Text variant="bodySmall" style={styles.listenDate}>
-          {formatListenDate(new Date(data.listen.dateListened))}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+  // Get display data - now we always use the same data structure from our service
+  const getDisplayData = (): ListenedAlbumData[] => {
+    return listenedAlbums;
+  };
 
-  if (loading) {
+  const renderAlbumCard = (data: ListenedAlbumData, index: number) => {
+    return (
+      <TouchableOpacity
+        key={`${data.album.id}-${index}`}
+        style={styles.albumCard}
+        onPress={() => navigateToAlbum(data.album.id)}
+      >
+        <Image source={{ uri: data.album.coverImageUrl || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image' }} style={styles.albumCover} />
+        <View style={styles.albumInfo}>
+          <Text variant="bodyMedium" numberOfLines={2} style={styles.albumTitle}>
+            {data.album.title}
+          </Text>
+          <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+            {data.album.artist}
+          </Text>
+          <Text variant="bodySmall" style={styles.listenDate}>
+            {formatListenDate(new Date(data.listen.dateListened))}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const displayData = getDisplayData();
+  const isLoading = loading;
+
+  if (isLoading) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" />
@@ -134,12 +153,12 @@ export default function ListenedAlbumsScreen() {
               Albums Listened
             </Text>
             <Text variant="bodyMedium" style={styles.headerSubtitle}>
-              @{username} • {listenedAlbums.length} album{listenedAlbums.length !== 1 ? 's' : ''}
+              @{username} • {displayData.length} album{displayData.length !== 1 ? 's' : ''}
             </Text>
           </View>
         </View>
 
-        {listenedAlbums.length === 0 ? (
+        {displayData.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text variant="titleLarge" style={styles.emptyTitle}>
               No Albums Yet
@@ -151,7 +170,7 @@ export default function ListenedAlbumsScreen() {
         ) : (
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             <View style={styles.albumGrid}>
-              {listenedAlbums.map(renderAlbumCard)}
+              {displayData.map((item, index) => renderAlbumCard(item, index))}
             </View>
             <View style={styles.bottomPadding} />
           </ScrollView>
@@ -238,6 +257,12 @@ const styles = StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 12,
     fontWeight: '500',
+  },
+  rating: {
+    color: theme.colors.accent,
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
   },
   emptyContainer: {
     flex: 1,

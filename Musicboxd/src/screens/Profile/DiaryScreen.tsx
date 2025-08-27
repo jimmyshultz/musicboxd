@@ -8,8 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
-import { DiaryService } from '../../services/diaryService';
-import { AlbumService } from '../../services/albumService';
+import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../store/slices/diarySlice';
 import { theme, spacing } from '../../utils/theme';
 
@@ -54,19 +53,42 @@ import { theme, spacing } from '../../utils/theme';
   const loadInitial = useCallback(async () => {
     dispatch(fetchDiaryStart());
     try {
-      const { entries, lastMonth, hasMore } = await DiaryService.getDiaryEntriesByUser(userId, { monthWindow: 3 });
-      const albumIds = Array.from(new Set(entries.map(e => e.albumId)));
-      const responses = await Promise.all(albumIds.map(id => AlbumService.getAlbumById(id)));
+      const { entries, lastMonth, hasMore } = await diaryEntriesService.getDiaryEntriesByUser(userId, { monthWindow: 3 });
+      
+      // Convert from new service format to old DiaryEntry format
+      const convertedEntries: DiaryEntry[] = entries.map(entry => ({
+        id: entry.id,
+        userId: entry.user_id,
+        albumId: entry.album_id,
+        diaryDate: entry.diary_date,
+        ratingAtTime: entry.rating || undefined,
+        createdAt: entry.created_at,
+        updatedAt: entry.updated_at,
+      }));
+      
+      // Store album data from the joined results
       const fetched: Record<string, Album> = {};
-      responses.forEach((res, idx) => {
-        if (res.success && res.data) {
-          fetched[albumIds[idx]] = res.data;
+      entries.forEach(entry => {
+        if (entry.albums) {
+          fetched[entry.album_id] = {
+            id: entry.albums.id,
+            title: entry.albums.name,
+            artist: entry.albums.artist_name,
+            releaseDate: entry.albums.release_date || '',
+            genre: entry.albums.genres || [],
+            coverImageUrl: entry.albums.image_url || '',
+            spotifyUrl: entry.albums.spotify_url || '',
+            totalTracks: entry.albums.total_tracks || 0,
+            albumType: entry.albums.album_type || 'album',
+            trackList: [], // Empty for now
+          };
         }
       });
+      
       if (Object.keys(fetched).length > 0) {
         setAlbumsById(prev => ({ ...prev, ...fetched }));
       }
-      dispatch(fetchDiarySuccess({ userId, entries, lastMonth, hasMore, reset: true }));
+      dispatch(fetchDiarySuccess({ userId, entries: convertedEntries, lastMonth, hasMore, reset: true }));
       setInitialReady(true);
     } catch (e: any) {
       dispatch(fetchDiaryFailure(e?.message || 'Failed to load diary'));
@@ -77,23 +99,44 @@ import { theme, spacing } from '../../utils/theme';
     if (!diaryState?.hasMore || loading) return;
     dispatch(fetchDiaryStart());
     try {
-      const { entries, lastMonth, hasMore } = await DiaryService.getDiaryEntriesByUser(userId, {
+      const { entries, lastMonth, hasMore } = await diaryEntriesService.getDiaryEntriesByUser(userId, {
         startAfterMonth: diaryState.lastMonth,
         monthWindow: 3,
       });
-      const albumIds = Array.from(new Set(entries.map(e => e.albumId)));
-      const missingIds = albumIds.filter(id => !albumsById[id]);
-      if (missingIds.length) {
-        const responses = await Promise.all(missingIds.map(id => AlbumService.getAlbumById(id)));
-        const fetched: Record<string, Album> = {};
-        responses.forEach((res, idx) => {
-          if (res.success && res.data) fetched[missingIds[idx]] = res.data;
-        });
-        if (Object.keys(fetched).length > 0) {
-          setAlbumsById(prev => ({ ...prev, ...fetched }));
+      // Convert from new service format to old DiaryEntry format
+      const convertedEntries: DiaryEntry[] = entries.map(entry => ({
+        id: entry.id,
+        userId: entry.user_id,
+        albumId: entry.album_id,
+        diaryDate: entry.diary_date,
+        ratingAtTime: entry.rating || undefined,
+        createdAt: entry.created_at,
+        updatedAt: entry.updated_at,
+      }));
+      
+      // Store album data from the joined results for any missing albums
+      const fetched: Record<string, Album> = {};
+      entries.forEach(entry => {
+        if (entry.albums && !albumsById[entry.album_id]) {
+          fetched[entry.album_id] = {
+            id: entry.albums.id,
+            title: entry.albums.name,
+            artist: entry.albums.artist_name,
+            releaseDate: entry.albums.release_date || '',
+            genre: entry.albums.genres || [],
+            coverImageUrl: entry.albums.image_url || '',
+            spotifyUrl: entry.albums.spotify_url || '',
+            totalTracks: entry.albums.total_tracks || 0,
+            albumType: entry.albums.album_type || 'album',
+            trackList: [], // Empty for now
+          };
         }
+      });
+      
+      if (Object.keys(fetched).length > 0) {
+        setAlbumsById(prev => ({ ...prev, ...fetched }));
       }
-      dispatch(fetchDiarySuccess({ userId, entries, lastMonth, hasMore }));
+      dispatch(fetchDiarySuccess({ userId, entries: convertedEntries, lastMonth, hasMore, reset: false }));
     } catch (e: any) {
       dispatch(fetchDiaryFailure(e?.message || 'Failed to load more diary'));
     }

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -18,9 +18,9 @@ import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
-import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { userStatsService } from '../../services/userStatsService';
+import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
+import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { theme, spacing, shadows } from '../../utils/theme';
 import { SegmentedButtons } from 'react-native-paper';
 
@@ -53,7 +53,6 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const { userListens, userReviews } = useSelector((state: RootState) => state.albums);
   const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? theme.dark : theme.light;
 
@@ -68,83 +67,61 @@ export default function ProfileScreen() {
     following: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
 
   const loadFavoriteAlbums = useCallback(async () => {
-    if (!user?.preferences?.favoriteAlbumIds?.length) {
+    if (!user?.id) {
       setFavoriteAlbums([]);
       return;
     }
 
     try {
-      // Get the actual albums matching the user's favorite IDs
-      const albumPromises = user.preferences.favoriteAlbumIds.map(albumId => 
-        AlbumService.getAlbumById(albumId)
-      );
+      // Get favorite albums from database (limited to 5 ranked favorites)
+      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
       
-      const albumResponses = await Promise.all(albumPromises);
-      const favorites: Album[] = [];
+      // Convert to the Album format expected by the UI
+      const albums = favoriteAlbumsData.map(favorite => ({
+        id: favorite.albums.id,
+        title: favorite.albums.name,
+        artist: favorite.albums.artist_name,
+        releaseDate: favorite.albums.release_date || '',
+        genre: favorite.albums.genres || [],
+        coverImageUrl: favorite.albums.image_url || '',
+        spotifyUrl: favorite.albums.spotify_url || '',
+        totalTracks: favorite.albums.total_tracks || 0,
+        albumType: favorite.albums.album_type || 'album',
+        trackList: [], // Empty for now
+      }));
       
-      albumResponses.forEach(response => {
-        if (response.success && response.data) {
-          favorites.push(response.data);
-        }
-      });
-      
-      setFavoriteAlbums(favorites);
+      setFavoriteAlbums(albums);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
     }
-  }, [user?.preferences?.favoriteAlbumIds]);
+  }, [user?.id]);
 
   const loadRecentActivity = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setRecentActivity([]);
+      return;
+    }
 
     try {
-      // Use Redux state for user listens and reviews
-      const currentUserListens = userListens.filter(listen => listen.userId === user.id);
-      const currentUserReviews = userReviews.filter(review => review.userId === user.id);
-
-      // Get 5 most recent listens
-      const recentListens = currentUserListens
-        .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
-        .slice(0, 5);
-
-      // Get albums for the recent listens
-      const albumPromises = recentListens.map(listen => 
-        AlbumService.getAlbumById(listen.albumId)
-      );
-      
-      const albumResponses = await Promise.all(albumPromises);
-      
-      // Create activity items with actual user data
-      const activity: RecentActivity[] = [];
-      
-      recentListens.forEach((listen, index) => {
-        const albumResponse = albumResponses[index];
-        if (albumResponse.success && albumResponse.data) {
-          const correspondingReview = currentUserReviews.find(
-            review => review.albumId === listen.albumId
-          );
-          
-          activity.push({
-            album: albumResponse.data,
-            listen,
-            review: correspondingReview,
-          });
-        }
-      });
-
+      const activity = await userStatsServiceV2.getRecentActivity(user.id, 5);
       setRecentActivity(activity);
     } catch (error) {
       console.error('Error loading recent activity:', error);
+      setRecentActivity([]);
     }
-  }, [user?.id, userListens, userReviews]);
+  }, [user?.id]);
 
   const loadUserStats = useCallback(async () => {
     if (!user?.id) return;
 
     try {
-      // Get actual social stats
+      // Get comprehensive stats using the new service
+      const stats = await userStatsServiceV2.getUserStats(user.id);
+      
+      // Get social data for Redux store
       const [followersData, followingData] = await Promise.all([
         userService.getUserFollowers(user.id),
         userService.getUserFollowing(user.id),
@@ -162,39 +139,68 @@ export default function ProfileScreen() {
         lastActiveDate: following.lastActiveDate.toISOString(),
       }))));
       
-      // Use centralized stats service for consistent calculation
-      const stats = userStatsService.calculateStatsFromRedux(
-        userListens,
-        userReviews,
-        followersData,
-        followingData
-      );
-      
-      setUserStats(stats);
+      console.log('User stats from new service:', stats); // Debug log
+      setUserStats({
+        albumsThisYear: stats.albumsThisYear,
+        albumsAllTime: stats.albumsAllTime,
+        ratingsThisYear: stats.ratingsThisYear,
+        ratingsAllTime: stats.ratingsAllTime,
+        followers: stats.followers,
+        following: stats.following,
+      });
     } catch (error) {
       console.error('Error loading user stats:', error);
     }
-  }, [user?.id, userListens, userReviews, dispatch]);
+  }, [user?.id, dispatch]);
 
+  // Initial load effect - fetch data
   useEffect(() => {
     const loadAllData = async () => {
-      // Only load data if user exists
-      if (!user) {
-        setLoading(false);
+      if (!user || initialLoadDone) {
         return;
       }
 
       setLoading(true);
-      await Promise.all([
-        loadFavoriteAlbums(),
-        loadRecentActivity(),
-        loadUserStats(),
-      ]);
-      setLoading(false);
+      try {
+        // Load all data using new services
+        await Promise.all([
+          loadRecentActivity(),
+          loadUserStats(),
+          loadFavoriteAlbums(),
+        ]);
+      } finally {
+        setLoading(false);
+        setInitialLoadDone(true);
+      }
     };
 
     loadAllData();
-  }, [user, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums, initialLoadDone, user]);
+
+  // Refresh stats when screen comes into focus (after returning from album rating)
+  useFocusEffect(
+    useCallback(() => {
+      if (initialLoadDone && user?.id) {
+        // Refresh stats and recent activity to ensure they're up to date
+        loadUserStats();
+        loadRecentActivity();
+      }
+    }, [loadUserStats, loadRecentActivity, user?.id, initialLoadDone])
+  );
+
+  // Reset when user changes
+  useEffect(() => {
+    setInitialLoadDone(false);
+    setRecentActivity([]);
+    setUserStats({
+      albumsThisYear: 0,
+      albumsAllTime: 0,
+      ratingsThisYear: 0,
+      ratingsAllTime: 0,
+      followers: 0,
+      following: 0,
+    });
+  }, [user?.id]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -270,9 +276,9 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecentActivityItem = (activity: RecentActivity) => (
+  const renderRecentActivityItem = (activity: RecentActivity, index: number) => (
     <TouchableOpacity
-      key={activity.album.id}
+      key={`${activity.album.id}-${activity.listen.id}-${index}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
@@ -393,18 +399,32 @@ export default function ProfileScreen() {
         </View>
 
         {/* Recent Activity */}
-        {recentActivity.length > 0 && (
-          <View style={styles.section}>
-            <Text variant="headlineSmall" style={styles.sectionTitle}>
-              Recent Activity
-            </Text>
+        <View style={styles.section}>
+          <Text variant="headlineSmall" style={styles.sectionTitle}>
+            Recently Listened
+          </Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" />
+              <Text variant="bodyMedium" style={styles.loadingText}>Loading recent activity...</Text>
+            </View>
+          ) : recentActivity.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.horizontalList}>
-                {recentActivity.map(renderRecentActivityItem)}
+                {recentActivity.map((activity, index) => renderRecentActivityItem(activity, index))}
               </View>
             </ScrollView>
-          </View>
-        )}
+          ) : (
+            <View style={styles.emptyActivityContainer}>
+              <Text variant="bodyLarge" style={styles.emptyActivityText}>
+                No recent activity
+              </Text>
+              <Text variant="bodyMedium" style={styles.emptyActivitySubtext}>
+                Start listening to some albums!
+              </Text>
+            </View>
+          )}
+        </View>
 
         {/* Stats Grid */}
         <View style={styles.section}>
@@ -416,6 +436,7 @@ export default function ProfileScreen() {
             {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
             {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
             {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
+            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating}`, () => navigateToUserReviews('alltime'))}
             {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
             {renderStatCard('Following', userStats.following, navigateToFollowing)}
           </View>
@@ -591,5 +612,28 @@ const styles = StyleSheet.create({
     color: theme.light.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
+  },
+  emptyActivityContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: theme.light.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: spacing.lg,
+    ...shadows.small,
+  },
+  emptyActivityText: {
+    fontWeight: 'bold',
+    marginBottom: spacing.xs,
+  },
+  emptyActivitySubtext: {
+    color: theme.light.colors.onSurfaceVariant,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
   },
 });

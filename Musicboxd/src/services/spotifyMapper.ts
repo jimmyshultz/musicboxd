@@ -219,4 +219,23 @@ export class SpotifyMapper {
   static getAlbumPopularity(spotifyAlbum: SpotifyAlbum): number {
     return spotifyAlbum.popularity || 0;
   }
+
+  /**
+   * Map Spotify album to database album format
+   */
+  static mapAlbumToDatabase(spotifyAlbum: SpotifyAlbum) {
+    return {
+      id: spotifyAlbum.id,
+      name: spotifyAlbum.name,
+      artist_name: spotifyAlbum.artists.map(artist => artist.name).join(', '),
+      release_date: spotifyAlbum.release_date || null,
+      image_url: this.getBestImageUrl(spotifyAlbum.images),
+      spotify_url: spotifyAlbum.external_urls?.spotify || null,
+      total_tracks: spotifyAlbum.total_tracks || null,
+      album_type: spotifyAlbum.album_type || 'album',
+      genres: this.extractGenres(spotifyAlbum),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  }
 }
