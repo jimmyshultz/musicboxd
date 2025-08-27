@@ -193,7 +193,7 @@ export default function AlbumDetailsScreen() {
     if (!user || !currentAlbum || submitting) return;
     setSubmitting(true);
     try {
-      const isCurrentlyListened = currentAlbumInteraction?.is_listened || false;
+      const isCurrentlyListened = currentAlbumIsListened;
       
       if (isCurrentlyListened) {
         // Remove listen using new service
@@ -338,16 +338,16 @@ export default function AlbumDetailsScreen() {
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
         <Button
-          mode={(currentAlbumInteraction?.is_listened || currentAlbumIsListened) ? "contained" : "outlined"}
+          mode={currentAlbumIsListened ? "contained" : "outlined"}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
-          icon={(currentAlbumInteraction?.is_listened || currentAlbumIsListened) ? CheckIcon : PlusIcon}
+          icon={currentAlbumIsListened ? CheckIcon : PlusIcon}
           disabled={submitting || !user || userAlbumsLoading.markAsListened}
           loading={submitting || userAlbumsLoading.markAsListened}
         >
-          {(currentAlbumInteraction?.is_listened || currentAlbumIsListened) ? "Listened" : "Mark as Listened"}
+          {currentAlbumIsListened ? "Listened" : "Mark as Listened"}
         </Button>
-        {(currentAlbumInteraction?.is_listened || currentAlbumIsListened) && (
+        {currentAlbumIsListened && (
           <Button
             mode="outlined"
             onPress={handleAddDiaryOnly}
