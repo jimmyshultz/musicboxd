@@ -107,10 +107,10 @@ export default function HomeScreen() {
           const userListens = await AlbumService.getUserListens(friend.id);
           
           if (userListens.length > 0) {
-            // Get the 2 most recent listens for this friend (instead of just 1)
+            // Get the 3 most recent listens for this friend
             const recentListens = userListens
               .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
-              .slice(0, 2);
+              .slice(0, 3);
             
             // Create activities for each recent listen
             for (const listen of recentListens) {
@@ -139,9 +139,9 @@ export default function HomeScreen() {
         }
       }
       
-      // Sort by most recent first
+      // Sort by most recent first and limit to 10 total activities for home page preview
       friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
-      setNewFromFriends(friendActivities);
+      setNewFromFriends(friendActivities.slice(0, 10));
     } catch (error) {
       console.error('Error loading new from friends:', error);
       setNewFromFriends([]);
