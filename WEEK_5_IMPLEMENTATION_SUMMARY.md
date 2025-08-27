@@ -29,18 +29,12 @@ According to the production roadmap, Week 5 focused on **Social Features - Follo
 - **Navigation**: Profile navigation from follower/following lists
 - **Real-time Updates**: Immediate UI updates when follow state changes
 
-### 4. Basic Activity Feed Showing Friends' Recent Album Interactions ✅
-- **ActivityService**: New comprehensive service for activity management
-  - `getActivityFeed()`: Friends' activity feed
-  - `getGlobalActivityFeed()`: Public discovery feed
-  - `getUserActivities()`: Individual user activity history
-  - `getActivityStats()`: Activity analytics and insights
-- **ActivityFeedScreen**: New dedicated screen with dual-mode viewing
-  - Following tab: Shows friends' activities
-  - Discover tab: Shows global public activities
-- **Activity Types**: Support for listen, rating, and review activities
-- **Real-time Generation**: Automatic activity creation via database triggers
-- **Home Integration**: Activity Feed accessible from main home screen
+### 4. ~~Basic Activity Feed~~ → **REMOVED FROM MVP** ❌
+- **Decision**: Activity feed removed due to database relationship complexity
+- **Rationale**: Focus on core social features for MVP launch
+- **Database Issues**: Complex foreign key relationships causing Supabase errors
+- **Alternative**: Home page social sections (Popular This Week, New From Friends, Popular With Friends) provide sufficient social discovery
+- **Future Implementation**: Can be added post-MVP with proper database relationship setup
 
 ### 5. Privacy Controls (Public/Private Profiles) ✅
 - **SettingsScreen**: New comprehensive settings screen for privacy controls
@@ -52,7 +46,7 @@ According to the production roadmap, Week 5 focused on **Social Features - Follo
 - **Real-time Effect**: Privacy changes immediately affect search and feed visibility
 - **Settings Navigation**: Integrated into existing ProfileScreen settings
 
-### 6. Staging Environment - Separate Supabase Project for Testing ✅
+### 5. Staging Environment - Separate Supabase Project for Testing ✅
 - **Setup Documentation**: Comprehensive `STAGING_ENVIRONMENT_SETUP.md` guide
 - **Environment Configuration**: 
   - `src/config/environment.ts`: Multi-environment support
@@ -69,32 +63,19 @@ According to the production roadmap, Week 5 focused on **Social Features - Follo
 
 ### New Architecture Components
 
-1. **ActivityService** (`src/services/activityService.ts`)
-   - Comprehensive activity feed management
-   - Multi-source activity aggregation (friends vs. global)
-   - Privacy-aware activity filtering
-   - Performance optimization with proper indexing
-   - Activity statistics and analytics
-
-2. **SettingsScreen** (`src/screens/Profile/SettingsScreen.tsx`)
+1. **SettingsScreen** (`src/screens/Profile/SettingsScreen.tsx`)
    - Complete privacy controls interface
    - Real-time setting updates
    - User-friendly toggle switches
    - Integration with existing authentication
 
-3. **ActivityFeedScreen** (`src/screens/Home/ActivityFeedScreen.tsx`)
-   - Dual-mode activity viewing (Following/Discover)
-   - Pull-to-refresh functionality
-   - Real-time activity updates
-   - Navigation integration to albums and profiles
-
-4. **Enhanced SearchScreen** (`src/screens/Search/SearchScreen.tsx`)
+2. **Enhanced SearchScreen** (`src/screens/Search/SearchScreen.tsx`)
    - Dual-mode search (Albums/Users)
    - Mode toggle interface
    - Unified search experience
    - User result rendering with rich profile information
 
-5. **Environment Configuration**
+3. **Environment Configuration**
    - `src/config/environment.ts`: Environment detection and utilities
    - `src/components/EnvironmentBadge.tsx`: Staging environment indicator
    - Multi-environment Supabase configuration

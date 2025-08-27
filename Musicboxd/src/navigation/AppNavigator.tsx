@@ -12,7 +12,6 @@ import { theme } from '../utils/theme';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
-import ActivityFeedScreen from '../screens/Home/ActivityFeedScreen';
 import PopularThisWeekScreen from '../screens/Home/PopularThisWeekScreen';
 import NewFromFriendsScreen from '../screens/Home/NewFromFriendsScreen';
 import PopularWithFriendsScreen from '../screens/Home/PopularWithFriendsScreen';
@@ -107,18 +106,7 @@ function HomeStackNavigator() {
         component={HomeScreen}
         options={{ title: 'Musicboxd', headerBackVisible: false, headerLeft: () => null }}
       />
-      <HomeStack.Screen
-        name="ActivityFeed"
-        component={ActivityFeedScreen}
-        options={({ navigation }) => ({
-          headerShown: true,
-          title: 'Activity Feed',
-          headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
-        })}
-      />
+
       <HomeStack.Screen
         name="PopularThisWeek"
         component={PopularThisWeekScreen}

@@ -147,37 +147,36 @@ async function main() {
       ]
     },
     {
-      name: 'Activity Feed',
+      name: 'Home Page Social Discovery',
       tests: [
         {
-          description: 'Friends activity feed',
+          description: 'Popular This Week section',
           steps: [
             'Go to Home tab',
-            'Tap on "Activity Feed"',
-            'Switch to "Following" tab',
-            'Rate an album or mark as listened (create activity)',
-            'Have a friend do the same',
-            'Verify friend\'s activity appears in your feed',
-            'Verify activities show user, album, and action type'
+            'Verify "Popular This Week" section displays',
+            'Tap "Popular This Week" to navigate to full screen',
+            'Verify albums are displayed correctly',
+            'Test navigation back to home'
           ]
         },
         {
-          description: 'Global discovery feed',
+          description: 'New From Friends section',
           steps: [
-            'In Activity Feed, switch to "Discover" tab',
-            'Verify public activities from all users appear',
-            'Verify private users\' activities are excluded',
-            'Test navigation to albums and user profiles from feed'
+            'In Home tab, locate "New From Friends" section',
+            'Verify friend activity displays (if following users)',
+            'Tap "New From Friends" to see full screen',
+            'Verify friend music activity is shown',
+            'Test album navigation from friend activity'
           ]
         },
         {
-          description: 'Activity generation',
+          description: 'Popular With Friends section',
           steps: [
-            'Rate an album',
-            'Mark an album as listened',
-            'Write a review',
-            'Verify each action creates appropriate activity',
-            'Verify activities appear immediately in feeds'
+            'In Home tab, find "Popular With Friends" section',
+            'Verify popular albums among friends display',
+            'Navigate to full Popular With Friends screen',
+            'Verify social music discovery works',
+            'Test album details navigation'
           ]
         }
       ]
