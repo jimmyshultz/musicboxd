@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { UserProfile } from '../types/database';
+import { UserProfile, FollowRequest } from '../types/database';
 import { User } from '@supabase/supabase-js';
 
 // Type-safe Supabase client
@@ -112,18 +112,48 @@ export class UserService {
   }
 
   /**
-   * Search users by username or display name
+   * Search users by username or display name (respects privacy + existing relationships)
    */
   async searchUsers(query: string, limit: number = 10): Promise<UserProfile[]> {
+    const currentUser = await this.getCurrentUser();
+    
+    if (!currentUser) {
+      // Not logged in - only show public profiles
+      const { data, error } = await this.client
+        .from('user_profiles')
+        .select('*')
+        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .eq('is_private', false)
+        .limit(limit);
+
+      if (error) throw error;
+      return data || [];
+    }
+
+    // Logged in - show public profiles + private profiles user is following
     const { data, error } = await this.client
       .from('user_profiles')
-      .select('*')
+      .select(`
+        *,
+        followed:user_follows!user_follows_following_id_fkey(follower_id)
+      `)
       .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-      .eq('is_private', false) // Only search public profiles
+      .or(`is_private.eq.false,and(is_private.eq.true,followed.follower_id.eq.${currentUser.id})`)
       .limit(limit);
 
     if (error) throw error;
-    return data || [];
+    
+    // Clean up the response (remove the followed relation data)
+    return (data || []).map(user => ({
+      id: user.id,
+      username: user.username,
+      display_name: user.display_name,
+      bio: user.bio,
+      avatar_url: user.avatar_url,
+      is_private: user.is_private,
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    }));
   }
 
   /**
@@ -152,36 +182,68 @@ export class UserService {
   // ============================================================================
 
   /**
-   * Follow a user
+   * Follow a user (handles both public follows and private requests)
    */
-  async followUser(followingId: string): Promise<void> {
+  async followUser(followingId: string): Promise<{ type: 'followed' | 'requested' }> {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be authenticated to follow users');
 
-    const { error } = await this.client
-      .from('user_follows')
-      .insert({
-        follower_id: user.id,
-        following_id: followingId,
-      });
+    // Check what action is appropriate
+    const actionType = await this.getFollowActionType(user.id, followingId);
 
-    if (error) throw error;
+    if (actionType === 'following') {
+      throw new Error('Already following this user');
+    }
+    
+    if (actionType === 'requested') {
+      throw new Error('Follow request already sent');
+    }
+
+    if (actionType === 'request') {
+      // Send follow request for private profile
+      await this.sendFollowRequest(user.id, followingId);
+      return { type: 'requested' };
+    } else {
+      // Direct follow for public profile
+      const { error } = await this.client
+        .from('user_follows')
+        .insert({
+          follower_id: user.id,
+          following_id: followingId,
+        });
+
+      if (error) throw error;
+      return { type: 'followed' };
+    }
   }
 
   /**
-   * Unfollow a user
+   * Unfollow a user (or cancel pending request)
    */
   async unfollowUser(followingId: string): Promise<void> {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be authenticated to unfollow users');
 
-    const { error } = await this.client
-      .from('user_follows')
-      .delete()
-      .eq('follower_id', user.id)
-      .eq('following_id', followingId);
+    // Check current relationship status
+    const actionType = await this.getFollowActionType(user.id, followingId);
 
-    if (error) throw error;
+    if (actionType === 'requested') {
+      // Cancel pending follow request
+      const pendingRequest = await this.getFollowRequestStatus(user.id, followingId);
+      if (pendingRequest) {
+        await this.cancelFollowRequest(pendingRequest.id);
+      }
+    } else if (actionType === 'following') {
+      // Remove existing follow relationship
+      const { error } = await this.client
+        .from('user_follows')
+        .delete()
+        .eq('follower_id', user.id)
+        .eq('following_id', followingId);
+
+      if (error) throw error;
+    }
+    // If actionType is 'follow' or 'request', there's nothing to unfollow
   }
 
   /**
@@ -279,6 +341,36 @@ export class UserService {
    */
   async getUserById(userId: string): Promise<UserProfile | null> {
     return this.getUserProfile(userId);
+  }
+
+  /**
+   * Get users that follow the specified user
+   */
+  async getFollowers(userId: string): Promise<UserProfile[]> {
+    const { data, error } = await this.client
+      .from('user_follows')
+      .select(`
+        follower:user_profiles!user_follows_follower_id_fkey(*)
+      `)
+      .eq('following_id', userId);
+
+    if (error) throw error;
+    return (data || []).map(row => row.follower).filter(Boolean);
+  }
+
+  /**
+   * Get users that the specified user is following
+   */
+  async getFollowing(userId: string): Promise<UserProfile[]> {
+    const { data, error } = await this.client
+      .from('user_follows')
+      .select(`
+        following:user_profiles!user_follows_following_id_fkey(*)
+      `)
+      .eq('follower_id', userId);
+
+    if (error) throw error;
+    return (data || []).map(row => row.following).filter(Boolean);
   }
 
   /**
@@ -417,6 +509,169 @@ export class UserService {
       reviews,
       averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
     };
+  }
+
+  // ============================================================================
+  // FOLLOW REQUESTS (for private profiles)
+  // ============================================================================
+
+  /**
+   * Send a follow request to a user
+   */
+  async sendFollowRequest(requesterId: string, requestedId: string): Promise<FollowRequest> {
+    const { data, error } = await this.client
+      .from('follow_requests')
+      .insert({
+        requester_id: requesterId,
+        requested_id: requestedId,
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Accept a follow request (auto-creates follow relationship)
+   */
+  async acceptFollowRequest(requestId: string): Promise<void> {
+    // Start a transaction-like operation
+    // First, get the request details
+    const { data: request, error: fetchError } = await this.client
+      .from('follow_requests')
+      .select('requester_id, requested_id')
+      .eq('id', requestId)
+      .eq('status', 'pending')
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!request) throw new Error('Follow request not found or already processed');
+
+    // Update request status to accepted
+    const { error: updateError } = await this.client
+      .from('follow_requests')
+      .update({ status: 'accepted' })
+      .eq('id', requestId);
+
+    if (updateError) throw updateError;
+
+    // Create the follow relationship
+    const { error: followError } = await this.client
+      .from('user_follows')
+      .insert({
+        follower_id: request.requester_id,
+        following_id: request.requested_id
+      });
+
+    if (followError) throw followError;
+  }
+
+  /**
+   * Reject a follow request
+   */
+  async rejectFollowRequest(requestId: string): Promise<void> {
+    const { error } = await this.client
+      .from('follow_requests')
+      .update({ status: 'rejected' })
+      .eq('id', requestId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Cancel a follow request (for requester)
+   */
+  async cancelFollowRequest(requestId: string): Promise<void> {
+    const { error } = await this.client
+      .from('follow_requests')
+      .delete()
+      .eq('id', requestId);
+
+    if (error) throw error;
+  }
+
+  /**
+   * Get pending follow requests for a user (requests they received)
+   */
+  async getPendingFollowRequests(userId: string): Promise<FollowRequest[]> {
+    const { data, error } = await this.client
+      .from('follow_requests')
+      .select(`
+        *,
+        requester:user_profiles!follow_requests_requester_id_fkey(*)
+      `)
+      .eq('requested_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  /**
+   * Get sent follow requests for a user (requests they sent)
+   */
+  async getSentFollowRequests(userId: string): Promise<FollowRequest[]> {
+    const { data, error } = await this.client
+      .from('follow_requests')
+      .select(`
+        *,
+        requested:user_profiles!follow_requests_requested_id_fkey(*)
+      `)
+      .eq('requester_id', userId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  /**
+   * Check if there's a pending follow request between two users
+   */
+  async getFollowRequestStatus(requesterId: string, requestedId: string): Promise<FollowRequest | null> {
+    const { data, error } = await this.client
+      .from('follow_requests')
+      .select('*')
+      .eq('requester_id', requesterId)
+      .eq('requested_id', requestedId)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  }
+
+  /**
+   * Check what follow action is appropriate for a user
+   * Returns: 'follow' | 'request' | 'requested' | 'following'
+   */
+  async getFollowActionType(currentUserId: string, targetUserId: string): Promise<'follow' | 'request' | 'requested' | 'following'> {
+    if (currentUserId === targetUserId) {
+      throw new Error('Cannot follow yourself');
+    }
+
+    // Check if already following
+    const existingFollow = await this.isFollowing(currentUserId, targetUserId);
+    if (existingFollow) {
+      return 'following';
+    }
+
+    // Check if there's a pending request
+    const pendingRequest = await this.getFollowRequestStatus(currentUserId, targetUserId);
+    if (pendingRequest) {
+      return 'requested';
+    }
+
+    // Check if target user is private
+    const targetProfile = await this.getUserProfile(targetUserId);
+    if (targetProfile?.is_private) {
+      return 'request';
+    }
+
+    return 'follow';
   }
 }
 

@@ -315,4 +315,45 @@ Benefits of new schema:
 - Better performance with targeted indexes
 - Cleaner data integrity and constraints
 - Much easier to query and calculate stats
+
+-- Follow requests table for private profile approval system
+CREATE TABLE public.follow_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    requester_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    requested_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Prevent duplicate requests
+    UNIQUE(requester_id, requested_id),
+    
+    -- Prevent self-requests
+    CHECK (requester_id != requested_id)
+);
+
+-- Indexes for follow requests
+CREATE INDEX idx_follow_requests_requested_id ON public.follow_requests(requested_id);
+CREATE INDEX idx_follow_requests_requester_id ON public.follow_requests(requester_id);
+CREATE INDEX idx_follow_requests_status ON public.follow_requests(status);
+
+-- RLS for follow requests
+ALTER TABLE public.follow_requests ENABLE ROW LEVEL SECURITY;
+
+-- Users can see requests they sent or received
+CREATE POLICY "Users can view own follow requests" ON public.follow_requests
+    FOR SELECT USING (auth.uid() = requester_id OR auth.uid() = requested_id);
+
+-- Users can create follow requests (as requester)
+CREATE POLICY "Users can send follow requests" ON public.follow_requests
+    FOR INSERT WITH CHECK (auth.uid() = requester_id);
+
+-- Users can update requests they received (accept/reject)
+CREATE POLICY "Users can respond to received requests" ON public.follow_requests
+    FOR UPDATE USING (auth.uid() = requested_id);
+
+-- Users can delete requests they sent (cancel)
+CREATE POLICY "Users can cancel sent requests" ON public.follow_requests
+    FOR DELETE USING (auth.uid() = requester_id);
+
 */

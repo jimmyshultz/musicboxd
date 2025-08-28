@@ -78,6 +78,18 @@ export interface UserFollow {
   following?: UserProfile;
 }
 
+export interface FollowRequest {
+  id: string;
+  requester_id: string;
+  requested_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  updated_at: string;
+  // Relations (populated when joining)
+  requester?: UserProfile;
+  requested?: UserProfile;
+}
+
 export interface UserActivity {
   id: string;
   user_id: string;
@@ -136,6 +148,11 @@ export interface Database {
         Row: UserFollow;
         Insert: Omit<UserFollow, 'id' | 'created_at'>;
         Update: never; // Follows are only created or deleted, not updated
+      };
+      follow_requests: {
+        Row: FollowRequest;
+        Insert: Omit<FollowRequest, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Pick<FollowRequest, 'status'>>;
       };
       user_activities: {
         Row: UserActivity;
