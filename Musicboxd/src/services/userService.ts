@@ -105,6 +105,13 @@ export class UserService {
   }
 
   /**
+   * Alias for updateUserProfile for convenience
+   */
+  async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+    return this.updateUserProfile(userId, updates);
+  }
+
+  /**
    * Search users by username or display name
    */
   async searchUsers(query: string, limit: number = 10): Promise<UserProfile[]> {
