@@ -28,6 +28,7 @@ import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
+import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -538,6 +539,18 @@ function ProfileStackNavigator() {
         options={({ navigation }) => ({
           headerShown: true,
           title: 'Settings',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
+      />
+      <ProfileStack.Screen
+        name="FollowRequests"
+        component={FollowRequestsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Follow Requests',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();

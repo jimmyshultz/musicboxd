@@ -174,6 +174,20 @@ export default function SettingsScreen() {
             () => updateSetting('showActivity', !settings.showActivity),
             settings.isPrivate // Disabled if profile is private
           )}
+          
+          {/* Follow Requests navigation - only show for private profiles */}
+          {settings.isPrivate && (
+            <TouchableOpacity 
+              style={styles.accountItem} 
+              onPress={() => navigation.navigate('FollowRequests')}
+            >
+              <Text variant="titleMedium" style={styles.accountItemText}>
+                Follow Requests
+              </Text>
+              <Text style={styles.chevron}>›</Text>
+            </TouchableOpacity>
+          )}
+          
           <Divider style={styles.divider} />
         </>
       )}

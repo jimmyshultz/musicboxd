@@ -182,6 +182,7 @@ export type ProfileStackParamList = {
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
   Settings: undefined;
+  FollowRequests: undefined;
 };
 
 // Search types
