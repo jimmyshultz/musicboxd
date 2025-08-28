@@ -130,30 +130,24 @@ export class UserService {
       return data || [];
     }
 
-    // Logged in - show public profiles + private profiles user is following
+    // Get user's following list first
+    const followingUsers = await this.getFollowing(currentUser.id);
+    const followingIds = followingUsers.map(user => user.id);
+
+    // Search profiles: public ones + private ones user is following
     const { data, error } = await this.client
       .from('user_profiles')
-      .select(`
-        *,
-        followed:user_follows!user_follows_following_id_fkey(follower_id)
-      `)
+      .select('*')
       .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-      .or(`is_private.eq.false,and(is_private.eq.true,followed.follower_id.eq.${currentUser.id})`)
       .limit(limit);
 
     if (error) throw error;
-    
-    // Clean up the response (remove the followed relation data)
-    return (data || []).map(user => ({
-      id: user.id,
-      username: user.username,
-      display_name: user.display_name,
-      bio: user.bio,
-      avatar_url: user.avatar_url,
-      is_private: user.is_private,
-      created_at: user.created_at,
-      updated_at: user.updated_at
-    }));
+
+    // Filter results based on privacy and following status
+    return (data || []).filter(user => {
+      if (!user.is_private) return true; // Public profiles always visible
+      return followingIds.includes(user.id); // Private profiles only if following
+    });
   }
 
   /**
@@ -347,30 +341,48 @@ export class UserService {
    * Get users that follow the specified user
    */
   async getFollowers(userId: string): Promise<UserProfile[]> {
-    const { data, error } = await this.client
+    // Get follower IDs first
+    const { data: followData, error: followError } = await this.client
       .from('user_follows')
-      .select(`
-        follower:user_profiles!user_follows_follower_id_fkey(*)
-      `)
+      .select('follower_id')
       .eq('following_id', userId);
 
-    if (error) throw error;
-    return (data || []).map(row => row.follower).filter(Boolean);
+    if (followError) throw followError;
+    if (!followData || followData.length === 0) return [];
+
+    // Get user profiles for follower IDs
+    const followerIds = followData.map(row => row.follower_id);
+    const { data: profileData, error: profileError } = await this.client
+      .from('user_profiles')
+      .select('*')
+      .in('id', followerIds);
+
+    if (profileError) throw profileError;
+    return profileData || [];
   }
 
   /**
    * Get users that the specified user is following
    */
   async getFollowing(userId: string): Promise<UserProfile[]> {
-    const { data, error } = await this.client
+    // Get following IDs first
+    const { data: followData, error: followError } = await this.client
       .from('user_follows')
-      .select(`
-        following:user_profiles!user_follows_following_id_fkey(*)
-      `)
+      .select('following_id')
       .eq('follower_id', userId);
 
-    if (error) throw error;
-    return (data || []).map(row => row.following).filter(Boolean);
+    if (followError) throw followError;
+    if (!followData || followData.length === 0) return [];
+
+    // Get user profiles for following IDs
+    const followingIds = followData.map(row => row.following_id);
+    const { data: profileData, error: profileError } = await this.client
+      .from('user_profiles')
+      .select('*')
+      .in('id', followingIds);
+
+    if (profileError) throw profileError;
+    return profileData || [];
   }
 
   /**
@@ -596,36 +608,62 @@ export class UserService {
    * Get pending follow requests for a user (requests they received)
    */
   async getPendingFollowRequests(userId: string): Promise<FollowRequest[]> {
-    const { data, error } = await this.client
+    // Get the basic request data first
+    const { data: requestData, error: requestError } = await this.client
       .from('follow_requests')
-      .select(`
-        *,
-        requester:user_profiles!follow_requests_requester_id_fkey(*)
-      `)
+      .select('*')
       .eq('requested_id', userId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+    if (requestError) throw requestError;
+    if (!requestData || requestData.length === 0) return [];
+
+    // Get requester profiles
+    const requesterIds = requestData.map(req => req.requester_id);
+    const { data: profileData, error: profileError } = await this.client
+      .from('user_profiles')
+      .select('*')
+      .in('id', requesterIds);
+
+    if (profileError) throw profileError;
+
+    // Combine request data with requester profiles
+    return requestData.map(request => ({
+      ...request,
+      requester: profileData?.find(profile => profile.id === request.requester_id)
+    }));
   }
 
   /**
    * Get sent follow requests for a user (requests they sent)
    */
   async getSentFollowRequests(userId: string): Promise<FollowRequest[]> {
-    const { data, error } = await this.client
+    // Get the basic request data first
+    const { data: requestData, error: requestError } = await this.client
       .from('follow_requests')
-      .select(`
-        *,
-        requested:user_profiles!follow_requests_requested_id_fkey(*)
-      `)
+      .select('*')
       .eq('requester_id', userId)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+    if (requestError) throw requestError;
+    if (!requestData || requestData.length === 0) return [];
+
+    // Get requested user profiles
+    const requestedIds = requestData.map(req => req.requested_id);
+    const { data: profileData, error: profileError } = await this.client
+      .from('user_profiles')
+      .select('*')
+      .in('id', requestedIds);
+
+    if (profileError) throw profileError;
+
+    // Combine request data with requested user profiles
+    return requestData.map(request => ({
+      ...request,
+      requested: profileData?.find(profile => profile.id === request.requested_id)
+    }));
   }
 
   /**
