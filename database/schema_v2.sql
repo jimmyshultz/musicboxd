@@ -100,6 +100,22 @@ CREATE TABLE public.user_follows (
     UNIQUE(follower_id, following_id)
 );
 
+-- User favorite albums (top 5 ranking system)
+CREATE TABLE public.favorite_albums (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    album_id TEXT REFERENCES public.albums(id) ON DELETE CASCADE NOT NULL,
+    ranking INTEGER NOT NULL CHECK (ranking >= 1 AND ranking <= 5),
+    favorited_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- One ranking per user (can be updated)
+    UNIQUE(user_id, ranking),
+    -- One album can only be favorited once per user
+    UNIQUE(user_id, album_id)
+);
+
 -- Activity feed for social features (optional - can be computed from other tables)
 CREATE TABLE public.user_activities (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -197,6 +213,7 @@ ALTER TABLE public.album_listens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.album_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.diary_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.favorite_albums ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_activities ENABLE ROW LEVEL SECURITY;
 
 -- User profiles policies
@@ -279,6 +296,27 @@ CREATE POLICY "Users can view accessible diary entries" ON public.diary_entries
 CREATE POLICY "Users can manage own diary entries" ON public.diary_entries
     FOR ALL USING (auth.uid() = user_id);
 
+-- Favorite albums policies
+CREATE POLICY "Users can view own favorites" ON public.favorite_albums
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view accessible favorites" ON public.favorite_albums
+    FOR SELECT USING (
+        auth.uid() = user_id                     -- Own favorites
+        OR EXISTS (                              -- Public profile favorites
+            SELECT 1 FROM public.user_profiles 
+            WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile favorites (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can manage own favorites" ON public.favorite_albums
+    FOR ALL USING (auth.uid() = user_id);
+
 -- User follows policies  
 CREATE POLICY "Users can view all follows" ON public.user_follows
     FOR SELECT USING (true);
@@ -300,6 +338,9 @@ CREATE POLICY "Users can view activities from public profiles" ON public.user_ac
             WHERE id = user_id AND NOT is_private
         ) OR auth.uid() = user_id
     );
+
+CREATE POLICY "Users can manage own activities" ON public.user_activities
+    FOR ALL USING (auth.uid() = user_id);
 
 -- ============================================================================
 -- FOLLOW REQUESTS TABLE

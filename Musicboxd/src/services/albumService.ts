@@ -317,7 +317,7 @@ export class AlbumService {
       // If no real data, return some mock albums for testing
       if (popularAlbums.length === 0) {
         return {
-          data: this.mockAlbums.slice(0, 10),
+          data: mockAlbums.slice(0, 10),
           success: true,
           message: 'Using mock data - no recent activity found',
         };
@@ -332,7 +332,7 @@ export class AlbumService {
       console.error('Error in getPopularAlbums:', error);
       // Fallback to mock data
       return {
-        data: this.mockAlbums.slice(0, 10),
+        data: mockAlbums.slice(0, 10),
         success: true,
         message: 'Using fallback mock data due to error',
       };
