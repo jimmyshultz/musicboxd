@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">@string/app_name</string>
+    <!-- Add any other string resources you have -->
+</resources>

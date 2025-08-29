@@ -1,16 +1,22 @@
-// Environment configuration example for Musicboxd
-// Copy this file to env.ts and replace with your actual Supabase credentials
+import Config from 'react-native-config';
 
-export const ENV_CONFIG = {
-  SUPABASE_URL: 'https://your-project-ref.supabase.co', // Replace with your actual Supabase URL
-  SUPABASE_ANON_KEY: 'your_actual_anon_key_here', // Replace with your actual anon key
-  NODE_ENV: 'development',
-  SPOTIFY_CLIENT_ID: 'your_actual_spotify_client_id_here',
-  SPOTIFY_CLIENT_SECRET: 'your_actual_spotify_client_secret_here',
+export const ENV = {
+  ENVIRONMENT: Config.ENVIRONMENT || 'development',
+  APP_NAME: Config.APP_NAME || 'Musicboxd',
+  BUNDLE_ID: Config.BUNDLE_ID || 'com.musicboxd.app',
+  SUPABASE_URL: Config.SUPABASE_URL!,
+  SUPABASE_ANON_KEY: Config.SUPABASE_ANON_KEY!,
+  SPOTIFY_CLIENT_ID: Config.SPOTIFY_CLIENT_ID!,
 };
 
-// Validation
-if (ENV_CONFIG.SUPABASE_URL === 'https://your-project-ref.supabase.co' || 
-    ENV_CONFIG.SUPABASE_ANON_KEY === 'your_actual_anon_key_here') {
-  console.warn('⚠️  Please update src/config/env.ts with your actual Supabase credentials');
+// Environment checking helpers
+export const isDevelopment = ENV.ENVIRONMENT === 'development';
+export const isStaging = ENV.ENVIRONMENT === 'staging';
+export const isProduction = ENV.ENVIRONMENT === 'production';
+
+// Debug logging (only in development)
+if (isDevelopment) {
+  console.log('🔧 Current Environment:', ENV.ENVIRONMENT);
+  console.log('📱 App Name:', ENV.APP_NAME);
+  console.log('🆔 Bundle ID:', ENV.BUNDLE_ID);
 }
