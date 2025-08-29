@@ -283,8 +283,11 @@ CREATE POLICY "Users can manage own diary entries" ON public.diary_entries
 CREATE POLICY "Users can view all follows" ON public.user_follows
     FOR SELECT USING (true);
 
-CREATE POLICY "Users can create own follows" ON public.user_follows
-    FOR INSERT WITH CHECK (auth.uid() = follower_id);
+CREATE POLICY "Users can create follows (direct or accepted requests)" ON public.user_follows
+    FOR INSERT WITH CHECK (
+        auth.uid() = follower_id                     -- User following someone directly
+        OR auth.uid() = following_id                 -- User accepting a follow request
+    );
 
 CREATE POLICY "Users can delete own follows" ON public.user_follows
     FOR DELETE USING (auth.uid() = follower_id);
