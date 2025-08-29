@@ -1,7 +1,7 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ENV } from '../config/env';
+import { ENV_CONFIG } from '../config/env';
 import { Environment, Logger } from '../config/environment';
 import { Database } from '../types/database';
 
