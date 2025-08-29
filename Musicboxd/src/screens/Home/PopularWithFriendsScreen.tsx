@@ -17,12 +17,17 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { theme, spacing } from '../../utils/theme';
+
+const colors = theme.colors;
 
 type PopularWithFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns with proper spacing
+const CARDS_PER_ROW = 3;
+const HORIZONTAL_SPACING = spacing.lg;
+const CARD_MARGIN = spacing.sm;
+const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 
@@ -45,8 +50,15 @@ export default function PopularWithFriendsScreen() {
   const loadPopularWithFriends = useCallback(async () => {
     setLoading(true);
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 15);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setAlbums([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -92,7 +104,7 @@ export default function PopularWithFriendsScreen() {
               entry.friendData.push({
                 id: friend.id,
                 username: friend.username,
-                profilePicture: friend.profilePicture,
+                profilePicture: friend.avatar_url,
               });
             }
           }
@@ -161,12 +173,15 @@ export default function PopularWithFriendsScreen() {
     );
   };
 
-  const renderAlbumCard = (popularAlbum: FriendPopularAlbum, index: number) => (
-    <TouchableOpacity
-      key={popularAlbum.album.id}
-      style={styles.albumCard}
-      onPress={() => navigateToAlbum(popularAlbum.album.id)}
-    >
+  const renderAlbumCard = (popularAlbum: FriendPopularAlbum, index: number) => {
+    const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
+    
+    return (
+      <TouchableOpacity
+        key={popularAlbum.album.id}
+        style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
+        onPress={() => navigateToAlbum(popularAlbum.album.id)}
+      >
       <Image source={{ uri: popularAlbum.album.coverImageUrl }} style={styles.albumCover} />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {popularAlbum.album.title}
@@ -187,8 +202,9 @@ export default function PopularWithFriendsScreen() {
           #{index + 1}
         </Text>
       </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -257,15 +273,19 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: HORIZONTAL_SPACING,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   albumCard: {
     width: ALBUM_CARD_WIDTH,
     marginBottom: spacing.lg,
+    marginRight: CARD_MARGIN,
     position: 'relative',
+  },
+  albumCardLastInRow: {
+    marginRight: 0,
   },
   albumCover: {
     width: ALBUM_CARD_WIDTH,

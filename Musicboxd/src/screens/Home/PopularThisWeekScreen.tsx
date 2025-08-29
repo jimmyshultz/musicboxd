@@ -14,12 +14,17 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 import { HomeStackParamList, Album } from '../../types';
 import { AlbumService } from '../../services/albumService';
-import { colors, spacing } from '../../utils/theme';
+import { theme, spacing } from '../../utils/theme';
+
+const colors = theme.colors;
 
 type PopularThisWeekNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns with proper spacing
+const CARDS_PER_ROW = 3;
+const HORIZONTAL_SPACING = spacing.lg;
+const CARD_MARGIN = spacing.sm;
+const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 export default function PopularThisWeekScreen() {
@@ -50,26 +55,30 @@ export default function PopularThisWeekScreen() {
     navigation.navigate('AlbumDetails', { albumId });
   };
 
-  const renderAlbumCard = (album: Album, index: number) => (
-    <TouchableOpacity
-      key={album.id}
-      style={styles.albumCard}
-      onPress={() => navigateToAlbum(album.id)}
-    >
-      <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
-      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
-        {album.title}
-      </Text>
-      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-        {album.artist}
-      </Text>
-      <View style={styles.rankBadge}>
-        <Text variant="bodySmall" style={styles.rankText}>
-          #{index + 1}
+  const renderAlbumCard = (album: Album, index: number) => {
+    const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
+    
+    return (
+      <TouchableOpacity
+        key={album.id}
+        style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
+        onPress={() => navigateToAlbum(album.id)}
+      >
+        <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+        <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+          {album.title}
         </Text>
-      </View>
-    </TouchableOpacity>
-  );
+        <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+          {album.artist}
+        </Text>
+        <View style={styles.rankBadge}>
+          <Text variant="bodySmall" style={styles.rankText}>
+            #{index + 1}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   if (loading) {
     return (
@@ -142,15 +151,19 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: HORIZONTAL_SPACING,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   albumCard: {
     width: ALBUM_CARD_WIDTH,
     marginBottom: spacing.lg,
+    marginRight: CARD_MARGIN,
     position: 'relative',
+  },
+  albumCardLastInRow: {
+    marginRight: 0,
   },
   albumCover: {
     width: ALBUM_CARD_WIDTH,

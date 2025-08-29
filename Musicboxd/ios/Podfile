@@ -34,5 +34,18 @@ target 'Musicboxd' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Configure build configurations for environment switching
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # Map new configurations to base configurations
+        case config.name
+        when 'Debug-Development', 'Debug-Staging'
+          config.build_settings = config.build_settings.merge(installer.pods_project.build_configurations.find { |c| c.name == 'Debug' }.build_settings)
+        when 'Release-Development', 'Release-Staging'
+          config.build_settings = config.build_settings.merge(installer.pods_project.build_configurations.find { |c| c.name == 'Release' }.build_settings)
+        end
+      end
+    end
   end
 end

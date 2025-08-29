@@ -15,24 +15,32 @@ import { useSelector } from 'react-redux';
 
 import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
-import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { diaryService } from '../../services/diaryService';
+import { theme, spacing } from '../../utils/theme';
+
+const colors = theme.colors;
 
 type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns with proper spacing
+const CARDS_PER_ROW = 3;
+const HORIZONTAL_SPACING = spacing.lg;
+const CARD_MARGIN = spacing.sm;
+const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 interface FriendActivity {
   album: Album;
+  diaryEntryId: string; // Store diary entry ID for navigation
   friend: {
     id: string;
     username: string;
     profilePicture?: string;
   };
-  dateListened: Date;
+  diaryDate: Date;
+  rating?: number;
+  notes?: string;
 }
 
 export default function NewFromFriendsScreen() {
@@ -44,8 +52,15 @@ export default function NewFromFriendsScreen() {
   const loadFriendActivities = useCallback(async () => {
     setLoading(true);
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setActivities([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -59,34 +74,48 @@ export default function NewFromFriendsScreen() {
       
       const friendActivities: FriendActivity[] = [];
       
-      // Get real listen data for each friend
+      // Get real diary entries for each friend
       for (const friend of friendsOnly) {
         try {
-          const userListens = await AlbumService.getUserListens(friend.id);
+          const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
           
-          // Get all listens for this friend and create activities
-          for (const listen of userListens) {
-            const albumResponse = await AlbumService.getAlbumById(listen.albumId);
-            
-            if (albumResponse.success && albumResponse.data) {
+          // Get all diary entries for this friend and create activities
+          for (const entry of userDiaryEntries) {
+            if (entry.albums) {
+              const album: Album = {
+                id: entry.albums.id,
+                title: entry.albums.name,
+                artist: entry.albums.artist_name,
+                releaseDate: entry.albums.release_date || '',
+                genre: entry.albums.genres || [],
+                coverImageUrl: entry.albums.image_url || '',
+                spotifyUrl: entry.albums.spotify_url || '',
+                totalTracks: entry.albums.total_tracks || 0,
+                albumType: entry.albums.album_type || 'album',
+                trackList: [], // Empty for now
+              };
+
               friendActivities.push({
-                album: albumResponse.data, // Use original album without modifications
+                album: album, // Use converted album
+                diaryEntryId: entry.id, // Store diary entry ID for navigation
                 friend: {
                   id: friend.id,
                   username: friend.username,
-                  profilePicture: friend.profilePicture,
+                  profilePicture: friend.avatar_url,
                 },
-                dateListened: new Date(listen.dateListened),
+                diaryDate: new Date(entry.diary_date),
+                rating: entry.rating,
+                notes: entry.notes,
               });
             }
           }
         } catch (error) {
-          console.error(`Error loading listens for friend ${friend.username}:`, error);
+          console.error(`Error loading diary entries for friend ${friend.username}:`, error);
         }
       }
       
       // Sort by most recent first and limit to 60 items for performance
-      friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
+      friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
       setActivities(friendActivities.slice(0, 60));
     } catch (error) {
       console.error('Error loading friend activities:', error);
@@ -100,12 +129,14 @@ export default function NewFromFriendsScreen() {
     loadFriendActivities();
   }, [loadFriendActivities]);
 
-  const navigateToAlbum = (albumId: string) => {
-    navigation.navigate('AlbumDetails', { albumId });
-  };
+
 
   const navigateToUserProfile = (userId: string) => {
     navigation.navigate('UserProfile', { userId });
+  };
+
+  const navigateToDiaryEntry = (entryId: string, userId: string) => {
+    navigation.navigate('DiaryEntryDetails', { entryId, userId });
   };
 
   const formatTimeAgo = (date: Date) => {
@@ -120,9 +151,12 @@ export default function NewFromFriendsScreen() {
     return '1w ago';
   };
 
-  const renderActivityCard = (activity: FriendActivity, index: number) => (
-    <View key={`${activity.album.id}_${index}`} style={styles.albumCard}>
-      <TouchableOpacity onPress={() => navigateToAlbum(activity.album.id)}>
+  const renderActivityCard = (activity: FriendActivity, index: number) => {
+    const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
+    
+    return (
+      <View key={`${activity.album.id}_${index}`} style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}>
+      <TouchableOpacity onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}>
         <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
         <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
           {activity.album.title}
@@ -145,12 +179,13 @@ export default function NewFromFriendsScreen() {
             @{activity.friend.username}
           </Text>
           <Text variant="bodySmall" style={styles.timeAgo}>
-            {formatTimeAgo(activity.dateListened)}
+            {formatTimeAgo(activity.diaryDate)}
           </Text>
         </View>
       </TouchableOpacity>
-    </View>
-  );
+      </View>
+    );
+  };
 
   if (loading) {
     return (
@@ -219,14 +254,18 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: HORIZONTAL_SPACING,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   albumCard: {
     width: ALBUM_CARD_WIDTH,
     marginBottom: spacing.lg,
+    marginRight: CARD_MARGIN,
+  },
+  albumCardLastInRow: {
+    marginRight: 0,
   },
   albumCover: {
     width: ALBUM_CARD_WIDTH,

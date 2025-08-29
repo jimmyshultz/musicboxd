@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 
 import { SearchStackParamList, Album } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import {
   setSearchQuery,
@@ -29,6 +30,7 @@ import {
   setTrendingAlbums,
 } from '../../store/slices/searchSlice';
 import { AlbumService } from '../../services/albumService';
+import { userService } from '../../services/userService';
 import { theme, spacing } from '../../utils/theme';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
@@ -81,6 +83,9 @@ export default function SearchScreen() {
   } = useSelector((state: RootState) => state.search);
 
   const [popularGenres, setPopularGenres] = useState<string[]>([]);
+  const [searchMode, setSearchMode] = useState<'albums' | 'users'>('albums');
+  const [userSearchResults, setUserSearchResults] = useState<UserProfile[]>([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -107,17 +112,30 @@ export default function SearchScreen() {
 
   const performSearch = useCallback(async (query: string) => {
     if (query.trim()) {
-      dispatch(searchStart());
-      try {
-        const response = await AlbumService.searchAlbums(query);
-        if (response.success) {
-          dispatch(searchSuccess(response.data));
+      if (searchMode === 'albums') {
+        dispatch(searchStart());
+        try {
+          const response = await AlbumService.searchAlbums(query);
+          if (response.success) {
+            dispatch(searchSuccess(response.data));
+          }
+        } catch (error) {
+          console.error('Album search error:', error);
         }
-      } catch (error) {
-        console.error('Search error:', error);
+      } else {
+        setUserSearchLoading(true);
+        try {
+          const users = await userService.searchUsers(query, 20);
+          setUserSearchResults(users);
+        } catch (error) {
+          console.error('User search error:', error);
+          setUserSearchResults([]);
+        } finally {
+          setUserSearchLoading(false);
+        }
       }
     }
-  }, [dispatch]);
+  }, [dispatch, searchMode]);
 
   const debouncedSearch = useMemo(
     () => debounce(performSearch, 300),
@@ -139,6 +157,10 @@ export default function SearchScreen() {
 
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
+  };
+
+  const navigateToUserProfile = (userId: string) => {
+    navigation.navigate('UserProfile', { userId });
   };
 
   const handleGenrePress = (genre: string) => {
@@ -171,6 +193,31 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
+  const renderUserItem = ({ item }: { item: UserProfile }) => (
+    <TouchableOpacity
+      style={styles.userResultItem}
+      onPress={() => navigateToUserProfile(item.id)}
+    >
+      <Image 
+        source={{ uri: item.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.username)}&background=random` }} 
+        style={styles.userAvatar} 
+      />
+      <View style={styles.userDetailsContainer}>
+        <Text variant="titleMedium" numberOfLines={1} style={styles.userDisplayName}>
+          {item.display_name || item.username}
+        </Text>
+        <Text variant="bodyMedium" style={styles.username}>
+          @{item.username}
+        </Text>
+        {item.bio && (
+          <Text variant="bodySmall" numberOfLines={2} style={styles.userBio}>
+            {item.bio}
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
   const renderTrendingAlbum = (album: Album) => (
     <TouchableOpacity
       key={album.id}
@@ -187,28 +234,51 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
-  const showSearchResults = searchQuery.trim() && searchResults;
-  const showEmptyState = searchQuery.trim() && searchResults && searchResults.albums.length === 0;
+  const showAlbumResults = searchMode === 'albums' && searchQuery.trim() && searchResults;
+  const showUserResults = searchMode === 'users' && searchQuery.trim() && userSearchResults.length > 0;
+  const showEmptyState = searchQuery.trim() && 
+    ((searchMode === 'albums' && searchResults && searchResults.albums.length === 0) ||
+     (searchMode === 'users' && userSearchResults.length === 0));
 
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <CustomSearchbar
-          placeholder="Search albums, artists, genres..."
+          placeholder={searchMode === 'albums' ? "Search albums, artists, genres..." : "Search users..."}
           onChangeText={handleSearchChange}
           onSubmitEditing={handleSearchSubmit}
           value={searchQuery}
           style={styles.searchbar}
         />
+        
+        {/* Search Mode Toggle */}
+        <View style={styles.modeToggleContainer}>
+          <TouchableOpacity
+            style={[styles.modeToggle, searchMode === 'albums' && styles.activeModeToggle]}
+            onPress={() => setSearchMode('albums')}
+          >
+            <Text style={[styles.modeToggleText, searchMode === 'albums' && styles.activeModeToggleText]}>
+              Albums
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.modeToggle, searchMode === 'users' && styles.activeModeToggle]}
+            onPress={() => setSearchMode('users')}
+          >
+            <Text style={[styles.modeToggleText, searchMode === 'users' && styles.activeModeToggleText]}>
+              Users
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {loading && (
+      {(loading || userSearchLoading) && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" />
         </View>
       )}
 
-      {showSearchResults && !loading && (
+      {showAlbumResults && !loading && (
         <FlatList
           data={searchResults.albums}
           renderItem={renderAlbumItem}
@@ -218,13 +288,29 @@ export default function SearchScreen() {
         />
       )}
 
-      {showEmptyState && !loading && (
+      {showUserResults && !userSearchLoading && (
+        <FlatList
+          data={userSearchResults}
+          renderItem={renderUserItem}
+          keyExtractor={(item) => item.id}
+          style={styles.searchResults}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {showEmptyState && !loading && !userSearchLoading && (
         <View style={styles.emptyStateContainer}>
           <Text variant="bodyLarge" style={styles.emptyStateText}>
-            No albums found for "{searchQuery}"
+            {searchMode === 'albums' 
+              ? `No albums found for "${searchQuery}"`
+              : `No users found for "${searchQuery}"`
+            }
           </Text>
           <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
-            Try searching for a different artist or album name
+            {searchMode === 'albums'
+              ? "Try searching for a different artist or album name"
+              : "Try searching for a different username or display name"
+            }
           </Text>
         </View>
       )}
@@ -298,6 +384,29 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.md,
   },
+  modeToggleContainer: {
+    flexDirection: 'row',
+    marginTop: spacing.md,
+    backgroundColor: theme.colors.surfaceVariant,
+    borderRadius: 8,
+    padding: 2,
+  },
+  modeToggle: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderRadius: 6,
+  },
+  activeModeToggle: {
+    backgroundColor: theme.colors.primary,
+  },
+  modeToggleText: {
+    color: theme.colors.onSurfaceVariant,
+    fontWeight: '500',
+  },
+  activeModeToggleText: {
+    color: theme.colors.onPrimary,
+  },
 
   loadingContainer: {
     flex: 1,
@@ -335,6 +444,36 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   albumYear: {
+    color: theme.colors.textSecondary,
+    fontSize: 12,
+  },
+  userResultItem: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    backgroundColor: theme.colors.surface,
+    marginBottom: spacing.sm,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  userAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    resizeMode: 'cover',
+  },
+  userDetailsContainer: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  userDisplayName: {
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+  },
+  username: {
+    color: theme.colors.primary,
+    marginBottom: spacing.xs,
+  },
+  userBio: {
     color: theme.colors.textSecondary,
     fontSize: 12,
   },

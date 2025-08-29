@@ -126,7 +126,7 @@ const authSlice = createSlice({
       state.loading = false;
       state.isAuthenticated = true;
       // Convert Date objects to strings to avoid Redux serialization issues
-      if (action.payload.joinedDate instanceof Date) {
+      if (action.payload.joinedDate instanceof Date && action.payload.lastActiveDate instanceof Date) {
         const user = action.payload as User;
         state.user = {
           ...user,
@@ -185,7 +185,7 @@ const authSlice = createSlice({
       .addCase(signInWithGoogle.fulfilled, (state, action) => {
         state.loading = false;
         state.isAuthenticated = true;
-        if (action.payload.joinedDate instanceof Date) {
+        if (action.payload.joinedDate instanceof Date && action.payload.lastActiveDate instanceof Date) {
           const user = action.payload as User;
           state.user = {
             ...user,
@@ -221,7 +221,7 @@ const authSlice = createSlice({
         state.loading = false;
         if (action.payload) {
           state.isAuthenticated = true;
-          if (action.payload.joinedDate instanceof Date) {
+          if (action.payload.joinedDate instanceof Date && action.payload.lastActiveDate instanceof Date) {
             const user = action.payload as User;
             state.user = {
               ...user,

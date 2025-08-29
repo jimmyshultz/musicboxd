@@ -100,6 +100,22 @@ CREATE TABLE public.user_follows (
     UNIQUE(follower_id, following_id)
 );
 
+-- User favorite albums (top 5 ranking system)
+CREATE TABLE public.favorite_albums (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    album_id TEXT REFERENCES public.albums(id) ON DELETE CASCADE NOT NULL,
+    ranking INTEGER NOT NULL CHECK (ranking >= 1 AND ranking <= 5),
+    favorited_at TIMESTAMPTZ DEFAULT NOW(),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- One ranking per user (can be updated)
+    UNIQUE(user_id, ranking),
+    -- One album can only be favorited once per user
+    UNIQUE(user_id, album_id)
+);
+
 -- Activity feed for social features (optional - can be computed from other tables)
 CREATE TABLE public.user_activities (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -197,11 +213,12 @@ ALTER TABLE public.album_listens ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.album_ratings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.diary_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_follows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.favorite_albums ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_activities ENABLE ROW LEVEL SECURITY;
 
 -- User profiles policies
-CREATE POLICY "Public profiles are viewable by everyone" ON public.user_profiles
-    FOR SELECT USING (NOT is_private OR auth.uid() = id);
+CREATE POLICY "Profiles discoverable for Instagram model" ON public.user_profiles
+    FOR SELECT USING (true); -- All profiles visible for discovery, content protected by activity table policies
 
 CREATE POLICY "Users can update own profile" ON public.user_profiles
     FOR UPDATE USING (auth.uid() = id);
@@ -220,11 +237,17 @@ CREATE POLICY "Authenticated users can insert albums" ON public.albums
 CREATE POLICY "Users can view own listens" ON public.album_listens
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view public listens" ON public.album_listens
+CREATE POLICY "Users can view accessible listens" ON public.album_listens
     FOR SELECT USING (
-        EXISTS (
+        auth.uid() = user_id                     -- Own listens
+        OR EXISTS (                              -- Public profile listens
             SELECT 1 FROM public.user_profiles 
             WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile listens (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
         )
     );
 
@@ -235,11 +258,17 @@ CREATE POLICY "Users can manage own listens" ON public.album_listens
 CREATE POLICY "Users can view own ratings" ON public.album_ratings
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view public ratings" ON public.album_ratings
+CREATE POLICY "Users can view accessible ratings" ON public.album_ratings
     FOR SELECT USING (
-        EXISTS (
+        auth.uid() = user_id                     -- Own ratings
+        OR EXISTS (                              -- Public profile ratings
             SELECT 1 FROM public.user_profiles 
             WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile ratings (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
         )
     );
 
@@ -250,23 +279,56 @@ CREATE POLICY "Users can manage own ratings" ON public.album_ratings
 CREATE POLICY "Users can view own diary entries" ON public.diary_entries
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view public diary entries" ON public.diary_entries
+CREATE POLICY "Users can view accessible diary entries" ON public.diary_entries
     FOR SELECT USING (
-        EXISTS (
+        auth.uid() = user_id                     -- Own diary entries
+        OR EXISTS (                              -- Public profile diary entries
             SELECT 1 FROM public.user_profiles 
             WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile diary entries (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
         )
     );
 
 CREATE POLICY "Users can manage own diary entries" ON public.diary_entries
     FOR ALL USING (auth.uid() = user_id);
 
--- User follows policies
-CREATE POLICY "Users can view follows involving them" ON public.user_follows
-    FOR SELECT USING (auth.uid() = follower_id OR auth.uid() = following_id);
+-- Favorite albums policies
+CREATE POLICY "Users can view own favorites" ON public.favorite_albums
+    FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage own follows" ON public.user_follows
-    FOR ALL USING (auth.uid() = follower_id);
+CREATE POLICY "Users can view accessible favorites" ON public.favorite_albums
+    FOR SELECT USING (
+        auth.uid() = user_id                     -- Own favorites
+        OR EXISTS (                              -- Public profile favorites
+            SELECT 1 FROM public.user_profiles 
+            WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile favorites (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
+        )
+    );
+
+CREATE POLICY "Users can manage own favorites" ON public.favorite_albums
+    FOR ALL USING (auth.uid() = user_id);
+
+-- User follows policies  
+CREATE POLICY "Users can view all follows" ON public.user_follows
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create follows (direct or accepted requests)" ON public.user_follows
+    FOR INSERT WITH CHECK (
+        auth.uid() = follower_id                     -- User following someone directly
+        OR auth.uid() = following_id                 -- User accepting a follow request
+    );
+
+CREATE POLICY "Users can delete own follows" ON public.user_follows
+    FOR DELETE USING (auth.uid() = follower_id);
 
 -- User activities policies
 CREATE POLICY "Users can view activities from public profiles" ON public.user_activities
@@ -276,6 +338,53 @@ CREATE POLICY "Users can view activities from public profiles" ON public.user_ac
             WHERE id = user_id AND NOT is_private
         ) OR auth.uid() = user_id
     );
+
+CREATE POLICY "Users can manage own activities" ON public.user_activities
+    FOR ALL USING (auth.uid() = user_id);
+
+-- ============================================================================
+-- FOLLOW REQUESTS TABLE
+-- ============================================================================
+
+-- Follow requests table for private profile approval system
+CREATE TABLE public.follow_requests (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    requester_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    requested_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Prevent duplicate requests
+    UNIQUE(requester_id, requested_id),
+    
+    -- Prevent self-requests
+    CHECK (requester_id != requested_id)
+);
+
+-- Indexes for follow requests
+CREATE INDEX idx_follow_requests_requested_id ON public.follow_requests(requested_id);
+CREATE INDEX idx_follow_requests_requester_id ON public.follow_requests(requester_id);
+CREATE INDEX idx_follow_requests_status ON public.follow_requests(status);
+
+-- RLS for follow requests
+ALTER TABLE public.follow_requests ENABLE ROW LEVEL SECURITY;
+
+-- Users can see requests they sent or received
+CREATE POLICY "Users can view own follow requests" ON public.follow_requests
+    FOR SELECT USING (auth.uid() = requester_id OR auth.uid() = requested_id);
+
+-- Users can create follow requests (as requester)
+CREATE POLICY "Users can send follow requests" ON public.follow_requests
+    FOR INSERT WITH CHECK (auth.uid() = requester_id);
+
+-- Users can update requests they received (accept/reject)
+CREATE POLICY "Users can respond to received requests" ON public.follow_requests
+    FOR UPDATE USING (auth.uid() = requested_id);
+
+-- Users can delete requests they sent (cancel)
+CREATE POLICY "Users can cancel sent requests" ON public.follow_requests
+    FOR DELETE USING (auth.uid() = requester_id);
 
 -- ============================================================================
 -- GRANT PERMISSIONS

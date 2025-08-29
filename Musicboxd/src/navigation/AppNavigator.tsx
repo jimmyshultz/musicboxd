@@ -27,6 +27,8 @@ import AuthScreen from '../screens/Auth/AuthScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
+import SettingsScreen from '../screens/Profile/SettingsScreen';
+import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -105,6 +107,7 @@ function HomeStackNavigator() {
         component={HomeScreen}
         options={{ title: 'Musicboxd', headerBackVisible: false, headerLeft: () => null }}
       />
+
       <HomeStack.Screen
         name="PopularThisWeek"
         component={PopularThisWeekScreen}
@@ -529,6 +532,30 @@ function ProfileStackNavigator() {
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
         options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
+      />
+      <ProfileStack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Settings',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
+      />
+      <ProfileStack.Screen
+        name="FollowRequests"
+        component={FollowRequestsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Follow Requests',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
       />
     </ProfileStack.Navigator>
   );

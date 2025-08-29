@@ -253,18 +253,104 @@ export class AlbumService {
   // TODO: This should show albums that are popular among ALL users in the last week
   // For now, returns empty until social features and user activity tracking are implemented
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
-    // TODO: Implement actual popular logic when social features are ready:
-    // 1. Query Supabase for user_listens table
-    // 2. Filter by dateListened >= 7 days ago  
-    // 3. Group by albumId and count occurrences across ALL users
-    // 4. Order by listen count DESC
-    // 5. Return top 10-20 albums that are actually popular in our community
-    
-    await delay(300);
+    try {
+      // Import the real service
+      const { supabase } = await import('./supabase');
+      
+      // Get popular albums based on listen counts from the last 7 days
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const { data: popularData, error } = await supabase
+        .from('album_listens')
+        .select(`
+          album_id,
+          albums (
+            id,
+            name,
+            artist_name,
+            release_date,
+            image_url,
+            spotify_url,
+            total_tracks,
+            album_type,
+            genres
+          )
+        `)
+        .eq('is_listened', true)
+        .gte('first_listened_at', oneWeekAgo.toISOString())
+        .order('first_listened_at', { ascending: false });
+
+      if (error) {
+        console.error('Error getting popular albums:', error);
+        // Fallback: return some mock albums
+        return {
+          data: this.mockAlbums.slice(0, 10), 
+          success: true,
+          message: 'Using fallback data',
+        };
+      }
+
+      // Group by album and count listens
+      const albumCounts: Record<string, { album: any; count: number }> = {};
+      
+      popularData?.forEach(listen => {
+        if (listen.albums) {
+          const albumId = listen.album_id;
+          if (!albumCounts[albumId]) {
+            albumCounts[albumId] = {
+              album: listen.albums,
+              count: 0
+            };
+          }
+          albumCounts[albumId].count++;
+        }
+      });
+
+      // Convert to Album[] format and sort by popularity
+      const popularAlbums = Object.values(albumCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 15)
+        .map(item => this.mapDatabaseAlbumToApp(item.album));
+
+      // If no real data, return some mock albums for testing
+      if (popularAlbums.length === 0) {
+        return {
+          data: mockAlbums.slice(0, 10),
+          success: true,
+          message: 'Using mock data - no recent activity found',
+        };
+      }
+
+      return {
+        data: popularAlbums,
+        success: true,
+        message: `Found ${popularAlbums.length} popular albums`,
+      };
+    } catch (error) {
+      console.error('Error in getPopularAlbums:', error);
+      // Fallback to mock data
+      return {
+        data: mockAlbums.slice(0, 10),
+        success: true,
+        message: 'Using fallback mock data due to error',
+      };
+    }
+  }
+
+  // Helper method to convert database album to app Album format
+  private static mapDatabaseAlbumToApp(dbAlbum: any): Album {
     return {
-      data: [], // Empty until we have real user activity data
-      success: true,
-      message: 'Popular albums not available yet - requires social features implementation',
+      id: dbAlbum.id,
+      title: dbAlbum.name,
+      artist: dbAlbum.artist_name,
+      releaseDate: dbAlbum.release_date || '',
+      genre: dbAlbum.genres || [],
+      coverImageUrl: dbAlbum.image_url || '',
+      spotifyUrl: dbAlbum.spotify_url || '',
+      totalTracks: dbAlbum.total_tracks || 0,
+      albumType: dbAlbum.album_type || 'album',
+      trackList: [], // Empty for now
     };
   }
 
@@ -663,10 +749,30 @@ export class AlbumService {
 
   // Get user's listens
   static async getUserListens(userId: string): Promise<Listen[]> {
-    await delay(300);
-    return this.userListens
-      .filter(listen => listen.userId === userId)
-      .map(serializeListen);
+    try {
+      // Import the real service (we'll need to add this import at the top)
+      const { albumListensService } = await import('./albumListensService');
+      
+      // Get real listen data from database
+      const albumListens = await albumListensService.getUserListensWithAlbums(userId);
+      
+      // Convert to Listen format expected by the UI
+      const listens: Listen[] = albumListens.map(listen => ({
+        id: listen.id,
+        userId: listen.user_id,
+        albumId: listen.album_id,
+        dateListened: new Date(listen.first_listened_at),
+      }));
+      
+      return listens;
+    } catch (error) {
+      console.error('Error getting user listens:', error);
+      // Fallback to mock data for the current user only
+      await delay(300);
+      return this.userListens
+        .filter(listen => listen.userId === userId)
+        .map(serializeListen);
+    }
   }
 
   // Get user's reviews

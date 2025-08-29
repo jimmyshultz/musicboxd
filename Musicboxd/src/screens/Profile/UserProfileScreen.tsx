@@ -15,7 +15,8 @@ import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, User, SerializedUser } from '../../types';
+import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, SerializedUser } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
@@ -54,10 +55,10 @@ export default function UserProfileScreen() {
   const insets = useSafeAreaInsets();
   
   const { userId } = route.params;
-  const { following } = useSelector((state: RootState) => state.user);
+
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -70,11 +71,10 @@ export default function UserProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [followActionType, setFollowActionType] = useState<'follow' | 'request' | 'requested' | 'following'>('follow');
+  const [followLoading, setFollowLoading] = useState(false);
   
-  const isFollowing = useMemo(() => 
-    following.some(followedUser => followedUser.id === userId), 
-    [following, userId]
-  );
+
   const isOwnProfile = useMemo(() => 
     currentUser?.id === userId, 
     [currentUser?.id, userId]
@@ -93,7 +93,7 @@ export default function UserProfileScreen() {
     }
   }, [userId]);
 
-  const loadFavoriteAlbums = useCallback(async (userData: User) => {
+  const loadFavoriteAlbums = useCallback(async (userData: UserProfile) => {
     if (!userData?.id) {
       setFavoriteAlbums([]);
       return;
@@ -123,7 +123,7 @@ export default function UserProfileScreen() {
     }
   }, []);
 
-  const loadRecentActivity = useCallback(async (userData: User) => {
+  const loadRecentActivity = useCallback(async (userData: UserProfile) => {
     if (!userData?.id) return;
 
     try {
@@ -135,7 +135,7 @@ export default function UserProfileScreen() {
     }
   }, []);
 
-  const loadUserStats = useCallback(async (userData: User) => {
+  const loadUserStats = useCallback(async (userData: UserProfile) => {
     if (!userData?.id) return;
 
     try {
@@ -156,6 +156,17 @@ export default function UserProfileScreen() {
     }
   }, []);
 
+  const loadFollowActionType = useCallback(async () => {
+    if (!currentUser || isOwnProfile) return;
+    
+    try {
+      const actionType = await userService.getFollowActionType(currentUser.id, userId);
+      setFollowActionType(actionType);
+    } catch (error) {
+      console.error('Error loading follow action type:', error);
+    }
+  }, [currentUser, userId, isOwnProfile]);
+
   // Main load function that loads all data in sequence
   const loadAllData = useCallback(async () => {
     if (initialLoadDone) return;
@@ -168,13 +179,14 @@ export default function UserProfileScreen() {
           loadFavoriteAlbums(userData),
           loadRecentActivity(userData),
           loadUserStats(userData),
+          loadFollowActionType(),
         ]);
       }
     } finally {
       setLoading(false);
       setInitialLoadDone(true);
     }
-  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats]);
+  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats, loadFollowActionType]);
 
   // Use focus effect to load data only when screen comes into focus
   useFocusEffect(
@@ -208,24 +220,60 @@ export default function UserProfileScreen() {
   }, [userId]);
 
   const handleFollowToggle = async () => {
-    if (!user) return;
+    if (!user || !currentUser || followLoading) return;
     
+    setFollowLoading(true);
     try {
-      if (isFollowing) {
+      if (followActionType === 'following') {
+        // Unfollow
         dispatch(removeFollowing(userId));
         await userService.unfollowUser(userId);
+        setFollowActionType(user.is_private ? 'request' : 'follow');
+      } else if (followActionType === 'requested') {
+        // Cancel pending request
+        await userService.unfollowUser(userId);
+        setFollowActionType('request');
       } else {
-        // Convert Date objects to strings to avoid Redux serialization issues
-        const serializedUser: SerializedUser = {
-          ...user,
-          joinedDate: user.joinedDate.toISOString(),
-          lastActiveDate: user.lastActiveDate.toISOString(),
-        };
-        dispatch(addFollowing(serializedUser));
-        await userService.followUser(userId);
+        // Follow or send request
+        const result = await userService.followUser(userId);
+        
+        if (result.type === 'followed') {
+          // Direct follow - add to Redux store
+          const serializedUser: SerializedUser = {
+            id: user.id,
+            username: user.username,
+            email: '', // UserProfile doesn't have email, provide default
+            profilePicture: user.avatar_url,
+            bio: user.bio,
+            joinedDate: user.created_at, // Use created_at as joinedDate
+            lastActiveDate: user.updated_at, // Use updated_at as lastActiveDate
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                albumRecommendations: true,
+                friendActivity: true,
+              },
+              privacy: {
+                showActivity: !user.is_private,
+                activityVisibility: user.is_private ? 'private' as const : 'public' as const,
+              }
+            }
+          };
+          dispatch(addFollowing(serializedUser));
+          setFollowActionType('following');
+        } else {
+          // Request sent
+          setFollowActionType('requested');
+        }
       }
     } catch (error) {
       console.error('Error toggling follow:', error);
+      // Revert optimistic UI changes if needed
+      await loadFollowActionType();
+    } finally {
+      setFollowLoading(false);
     }
   };
 
@@ -386,11 +434,16 @@ export default function UserProfileScreen() {
           {!isOwnProfile && (
             <View style={styles.followContainer}>
               <Button
-                mode={isFollowing ? "outlined" : "contained"}
+                mode={followActionType === 'following' ? "outlined" : "contained"}
                 onPress={handleFollowToggle}
                 style={styles.followButton}
+                loading={followLoading}
+                disabled={followLoading}
               >
-                {isFollowing ? "Following" : "Follow"}
+                {followActionType === 'following' && "Following"}
+                {followActionType === 'follow' && "Follow"}
+                {followActionType === 'request' && "Request"}
+                {followActionType === 'requested' && "Requested"}
               </Button>
             </View>
           )}

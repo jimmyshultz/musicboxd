@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "android:dev": "ENVFILE=.env.development react-native run-android --variant=debugDevelopment",
+    "android:staging": "ENVFILE=.env.staging react-native run-android --variant=debugStaging",
     "ios": "react-native run-ios",
+    "ios:dev": "ENVFILE=.env.development react-native run-ios --scheme Musicboxd-Development",
+    "ios:staging": "ENVFILE=.env.staging react-native run-ios --scheme Musicboxd-Staging",
     "ios:setup": "cd ios && pod install && cd ..",
     "setup": "npm install && npm run ios:setup",
     "lint": "eslint .",

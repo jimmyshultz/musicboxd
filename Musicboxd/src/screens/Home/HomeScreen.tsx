@@ -16,7 +16,10 @@ import { RootState } from '../../store';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { diaryService } from '../../services/diaryService';
+import { theme, spacing } from '../../utils/theme';
+
+const colors = theme.colors;
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -26,12 +29,15 @@ const USER_CARD_WIDTH = 140;
 interface FriendActivity {
   album: Album;
   originalAlbumId: string; // Store original album ID for navigation
+  diaryEntryId: string; // Store diary entry ID for navigation
   friend: {
     id: string;
     username: string;
     profilePicture?: string;
   };
-  dateListened: Date;
+  diaryDate: Date;
+  rating?: number;
+  notes?: string;
 }
 
 interface FriendPopularAlbum {
@@ -77,8 +83,14 @@ export default function HomeScreen() {
 
   const loadNewFromFriends = useCallback(async () => {
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setNewFromFriends([]);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -92,47 +104,61 @@ export default function HomeScreen() {
       
       const friendActivities: FriendActivity[] = [];
       
-      // Get real listen data for each friend
+      // Get real diary entries for each friend
       for (const friend of friendsOnly) {
         try {
-          const userListens = await AlbumService.getUserListens(friend.id);
+          const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
           
-          if (userListens.length > 0) {
-            // Get the 2 most recent listens for this friend (instead of just 1)
-            const recentListens = userListens
-              .sort((a, b) => new Date(b.dateListened).getTime() - new Date(a.dateListened).getTime())
-              .slice(0, 2);
+          if (userDiaryEntries.length > 0) {
+            // Get the 3 most recent diary entries for this friend
+            const recentEntries = userDiaryEntries
+              .sort((a, b) => new Date(b.diary_date).getTime() - new Date(a.diary_date).getTime())
+              .slice(0, 3);
             
-            // Create activities for each recent listen
-            for (const listen of recentListens) {
-              const albumResponse = await AlbumService.getAlbumById(listen.albumId);
-              
-              if (albumResponse.success && albumResponse.data) {
+            // Create activities for each recent diary entry
+            for (const entry of recentEntries) {
+              if (entry.albums) {
+                const album: Album = {
+                  id: entry.albums.id,
+                  title: entry.albums.name,
+                  artist: entry.albums.artist_name,
+                  releaseDate: entry.albums.release_date || '',
+                  genre: entry.albums.genres || [],
+                  coverImageUrl: entry.albums.image_url || '',
+                  spotifyUrl: entry.albums.spotify_url || '',
+                  totalTracks: entry.albums.total_tracks || 0,
+                  albumType: entry.albums.album_type || 'album',
+                  trackList: [], // Empty for now
+                };
+                
                 friendActivities.push({
                   album: {
-                    ...albumResponse.data,
+                    ...album,
                     // Use unique ID for each activity instance to allow duplicates
-                    id: albumResponse.data.id + '_friend_activity_' + friend.id + '_' + listen.id,
+                    id: album.id + '_friend_activity_' + friend.id + '_' + entry.id,
                   },
-                  originalAlbumId: albumResponse.data.id, // Store original album ID for navigation
+                  originalAlbumId: album.id, // Store original album ID for navigation
+                  diaryEntryId: entry.id, // Store diary entry ID for diary navigation
                   friend: {
                     id: friend.id,
                     username: friend.username,
-                    profilePicture: friend.profilePicture,
+                    profilePicture: friend.avatar_url,
                   },
-                  dateListened: new Date(listen.dateListened),
+                  diaryDate: new Date(entry.diary_date),
+                  rating: entry.rating,
+                  notes: entry.notes,
                 });
               }
             }
           }
         } catch (error) {
-          console.error(`Error loading listens for friend ${friend.username}:`, error);
+          console.error(`Error loading diary entries for friend ${friend.username}:`, error);
         }
       }
       
-      // Sort by most recent first
-      friendActivities.sort((a, b) => b.dateListened.getTime() - a.dateListened.getTime());
-      setNewFromFriends(friendActivities);
+      // Sort by most recent first and limit to 10 total activities for home page preview
+      friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
+      setNewFromFriends(friendActivities.slice(0, 10));
     } catch (error) {
       console.error('Error loading new from friends:', error);
       setNewFromFriends([]);
@@ -141,8 +167,14 @@ export default function HomeScreen() {
 
   const loadPopularWithFriends = useCallback(async () => {
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
-      const users = await userService.getSuggestedUsers(currentUserId, 10);
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setPopularWithFriends([]);
+        return;
+      }
+      
+      // Get users that current user is actually following
+      const users = await userService.getUserFollowing(currentUserId);
       
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -188,7 +220,7 @@ export default function HomeScreen() {
               entry.friendData.push({
                 id: friend.id,
                 username: friend.username,
-                profilePicture: friend.profilePicture,
+                profilePicture: friend.avatar_url,
               });
             }
           }
@@ -272,6 +304,10 @@ export default function HomeScreen() {
     navigation.navigate('UserProfile', { userId });
   };
 
+  const navigateToDiaryEntry = (entryId: string, userId: string) => {
+    navigation.navigate('DiaryEntryDetails', { entryId, userId });
+  };
+
   const renderSectionHeader = (title: string, onSeeAll?: () => void) => (
     <View style={styles.sectionHeader}>
       <Text variant="headlineSmall" style={styles.sectionTitle}>
@@ -305,7 +341,7 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={activity.album.id}
       style={styles.albumCard}
-      onPress={() => navigateToAlbum(activity.originalAlbumId)}
+      onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
     >
       <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
@@ -450,6 +486,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontWeight: 'bold',
+  },
+  sectionDescription: {
+    color: colors.textSecondary,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
   },
   seeAllButton: {
     padding: spacing.sm,

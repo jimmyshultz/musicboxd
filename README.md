@@ -1,72 +1,116 @@
-# Musicboxd
+# 🎵 Musicboxd - Social Music Discovery App
 
-> Track, Rate, Discover - Your personal music album journal
+A React Native app for discovering, tracking, and sharing music experiences, inspired by Letterboxd but for albums.
 
-Musicboxd is a mobile application inspired by Letterboxd, designed for music enthusiasts to track, rate, and discover albums while connecting with friends. The app allows users to maintain a library of albums they've listened to, share their music taste, and discover new music through social connections.
+## 📱 Current Status: Week 5 Complete
 
-## Features
+### **✅ Implemented Features:**
+- **User Authentication** (Supabase Auth)
+- **Music Discovery** (Spotify Web API integration)
+- **Album Tracking** (Listen status, ratings, diary entries)
+- **Social Features** (Follow system, activity feeds)
+- **Instagram Privacy Model** (Private profiles with follow requests)
+- **Home Page Discovery** (Popular This Week, New From Friends, Popular With Friends)
+- **Staging Environment** (Separate testing environment)
 
-### Core Features
-- 🎵 Track albums you've listened to
-- ⭐ Rate and review albums
-- 👥 Follow friends and see their activity
-- 🔍 Discover new music based on your taste
-- 📊 View listening statistics and insights
+### **🏗️ Tech Stack:**
+- **Frontend**: React Native, TypeScript, Redux Toolkit
+- **Backend**: Supabase (PostgreSQL, Auth, RLS)
+- **Music Data**: Spotify Web API
+- **Navigation**: React Navigation
+- **Environment Management**: React Native Config
 
-### Coming Soon
-- 📋 Create and share custom lists
-- 🏆 Listening challenges and goals
-- 🎧 Integration with music streaming services
+## 🚀 Development Setup
 
-## Tech Stack
-
-- **Frontend**: React Native
-- **Backend**: Node.js with Express
-- **Database**: MongoDB
-- **Authentication**: Firebase Auth
-- **API**: Spotify Web API for music data
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v14+)
-- npm or yarn
+### **Prerequisites:**
+- Node.js 16+
 - React Native CLI
-- Xcode (for iOS development)
-- Android Studio (for Android development)
+- iOS: Xcode, CocoaPods
+- Android: Android Studio, Java 11
 
-### Installation
+### **Installation:**
+```bash
+git clone [repository-url]
+cd musicboxd/Musicboxd
+npm install
+cd ios && pod install && cd ..
+```
 
-Detailed installation instructions coming soon.
+### **Environment Configuration:**
+1. Copy environment examples: `cp .env.development.example .env.development`
+2. Fill in your credentials (Supabase, Spotify)
+3. Run development: `ENVFILE=.env.development npm run ios`
 
-## Development
+### **Staging Environment:**
+```bash
+ENVFILE=.env.staging npm run ios
+```
 
-### Branch Strategy
-This project uses a **Feature Branch Workflow** strategy. See [Feature Branch Workflow Guide](docs/feature_branch_workflow.md) for detailed instructions.
+## 📂 Project Structure
 
-### Quick Start
-1. Create a feature branch from `main`: `git checkout -b feature/your-feature-name`
-2. Make your changes and commit frequently
-3. Create a pull request to `main`
-4. After review and merge, delete the feature branch
+```
+Musicboxd/
+├── src/
+│   ├── components/          # Reusable UI components
+│   ├── screens/             # App screens
+│   ├── navigation/          # Navigation configuration
+│   ├── services/            # API services and business logic
+│   ├── store/               # Redux store and slices
+│   ├── types/               # TypeScript type definitions
+│   ├── utils/               # Utility functions
+│   └── config/              # Environment and app configuration
+├── database/
+│   └── schema_v2.sql        # Complete database schema
+└── docs/                    # Documentation
+    ├── weekly-summaries/    # Development progress summaries
+    ├── features/            # Feature implementation guides
+    ├── decisions/           # Important technical decisions
+    └── archive/             # Historical documentation
+```
 
-### Branch Structure
-- `main` - Production-ready code
-- `feature/*` - Feature branches for active development
+## 📋 Documentation
 
-### Contribution Guidelines
-1. Create a feature branch from `main`
-2. Make your changes with clear commit messages
-3. Submit a pull request to `main`
-4. Ensure CI checks pass
-5. Request a code review
-6. Clean up branches after merge
+### **📊 Weekly Progress:**
+- [`docs/weekly-summaries/WEEK_4_IMPLEMENTATION_SUMMARY.md`](docs/weekly-summaries/WEEK_4_IMPLEMENTATION_SUMMARY.md)
+- [`docs/weekly-summaries/WEEK_5_IMPLEMENTATION_SUMMARY.md`](docs/weekly-summaries/WEEK_5_IMPLEMENTATION_SUMMARY.md)
 
-## License
+### **🎯 Feature Guides:**
+- [`docs/features/INSTAGRAM_PRIVACY_MODEL.md`](docs/features/INSTAGRAM_PRIVACY_MODEL.md)
+- [`docs/features/HOME_PAGE_SOCIAL_FEATURES.md`](docs/features/HOME_PAGE_SOCIAL_FEATURES.md)
+- [`docs/features/STAGING_ENVIRONMENT_SETUP.md`](docs/features/STAGING_ENVIRONMENT_SETUP.md)
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+### **📋 Important Decisions:**
+- [`docs/decisions/DATABASE_SCHEMA_V2_MIGRATION.md`](docs/decisions/DATABASE_SCHEMA_V2_MIGRATION.md)
+- [`docs/decisions/ACTIVITY_FEED_REMOVAL_DECISION.md`](docs/decisions/ACTIVITY_FEED_REMOVAL_DECISION.md)
 
-## Acknowledgments
+### **🗺️ Roadmap:**
+- [`PRODUCTION_ROADMAP.md`](PRODUCTION_ROADMAP.md) - Complete development plan
 
-- Inspired by [Letterboxd](https://letterboxd.com/)
-- Powered by [Spotify Web API](https://developer.spotify.com/documentation/web-api/) 
+## 🎯 Next Steps (Week 6)
+
+Refer to `PRODUCTION_ROADMAP.md` for upcoming features:
+- Enhanced discovery algorithms
+- Advanced social features
+- Performance optimizations
+- Production deployment preparation
+
+## 🔧 Development Notes
+
+### **Environment Management:**
+- Environment files are in `.gitignore` for security
+- Use `.example` files as templates
+- `react-native-config` handles environment switching
+
+### **Database:**
+- `schema_v2.sql` contains the complete, current schema
+- RLS policies implement Instagram privacy model
+- Use staging environment for testing schema changes
+
+### **Privacy Model:**
+- Public profiles: Fully visible content
+- Private profiles: Discoverable but content protected until following
+- Follow requests: Complete workflow for private profile access
+
+---
+
+**Built with ❤️ for music discovery and social connection.** 🎵
