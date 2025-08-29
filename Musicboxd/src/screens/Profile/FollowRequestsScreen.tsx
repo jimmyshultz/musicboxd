@@ -9,7 +9,7 @@ import { Text, ActivityIndicator, Button, Avatar, Card } from 'react-native-pape
 
 import { useSelector } from 'react-redux';
 
-import { ProfileStackParamList } from '../../types';
+
 import { FollowRequest } from '../../types/database';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
