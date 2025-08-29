@@ -675,6 +675,26 @@ export class UserService {
   }
 
   /**
+   * Check if user is following another user
+   */
+  async isFollowing(currentUserId: string, targetUserId: string): Promise<boolean> {
+    const { data, error } = await this.client
+      .from('user_follows')
+      .select('id')
+      .eq('follower_id', currentUserId)
+      .eq('following_id', targetUserId)
+      .single();
+
+    if (error && error.code === 'PGRST116') {
+      // No rows found, not following
+      return false;
+    }
+    
+    if (error) throw error;
+    return !!data;
+  }
+
+  /**
    * Check what follow action is appropriate for a user
    * Returns: 'follow' | 'request' | 'requested' | 'following'
    */

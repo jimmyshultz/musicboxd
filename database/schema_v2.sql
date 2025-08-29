@@ -285,44 +285,19 @@ CREATE POLICY "Users can view activities from public profiles" ON public.user_ac
         ) OR auth.uid() = user_id
     );
 
+-- User follows policies  
+CREATE POLICY "Users can view all follows" ON public.user_follows
+    FOR SELECT USING (true);
+
+CREATE POLICY "Users can create own follows" ON public.user_follows
+    FOR INSERT WITH CHECK (auth.uid() = follower_id);
+
+CREATE POLICY "Users can delete own follows" ON public.user_follows
+    FOR DELETE USING (auth.uid() = follower_id);
+
 -- ============================================================================
--- GRANT PERMISSIONS
+-- FOLLOW REQUESTS TABLE
 -- ============================================================================
-
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
-
--- ============================================================================
--- MIGRATION NOTES
--- ============================================================================
-
-/*
-To migrate from the old schema:
-
-1. Backup existing data from user_albums table
-2. Create the new tables above
-3. Migrate data:
-   - user_albums.is_listened=true -> album_listens (simple boolean status)
-   - user_albums.rating -> album_ratings  
-   - user_albums.review -> album_ratings.review
-   - Create diary_entries for any existing listens (using listened_at as diary_date)
-4. Drop old user_albums table
-5. Update application services to use new tables
-
-Schema Design Philosophy:
-- album_listens: Simple "have I listened to this?" status
-- album_ratings: "What did I think of this?" with reviews
-- diary_entries: "When did I listen and how did I feel?" chronological log
-
-Benefits of new schema:
-- Clear separation of concerns between listen status, ratings, and diary
-- album_listens = simple boolean for "listened/not listened"
-- diary_entries = chronological history of when you listened (multiple entries per album)
-- Ratings independent of listen status or diary entries
-- Better performance with targeted indexes
-- Cleaner data integrity and constraints
-- Much easier to query and calculate stats
 
 -- Follow requests table for private profile approval system
 CREATE TABLE public.follow_requests (
@@ -364,4 +339,42 @@ CREATE POLICY "Users can respond to received requests" ON public.follow_requests
 CREATE POLICY "Users can cancel sent requests" ON public.follow_requests
     FOR DELETE USING (auth.uid() = requester_id);
 
+-- ============================================================================
+-- GRANT PERMISSIONS
+-- ============================================================================
+
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+-- ============================================================================
+-- MIGRATION NOTES
+-- ============================================================================
+
+/*
+To migrate from the old schema:
+
+1. Backup existing data from user_albums table
+2. Create the new tables above
+3. Migrate data:
+   - user_albums.is_listened=true -> album_listens (simple boolean status)
+   - user_albums.rating -> album_ratings  
+   - user_albums.review -> album_ratings.review
+   - Create diary_entries for any existing listens (using listened_at as diary_date)
+4. Drop old user_albums table
+5. Update application services to use new tables
+
+Schema Design Philosophy:
+- album_listens: Simple "have I listened to this?" status
+- album_ratings: "What did I think of this?" with reviews
+- diary_entries: "When did I listen and how did I feel?" chronological log
+
+Benefits of new schema:
+- Clear separation of concerns between listen status, ratings, and diary
+- album_listens = simple boolean for "listened/not listened"
+- diary_entries = chronological history of when you listened (multiple entries per album)
+- Ratings independent of listen status or diary entries
+- Better performance with targeted indexes
+- Cleaner data integrity and constraints
+- Much easier to query and calculate stats
 */
