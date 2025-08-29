@@ -130,13 +130,8 @@ export class UserService {
       return data || [];
     }
 
-    // Get user's following list first
-    console.log('🔍 searchUsers: Getting following list for user:', currentUser.id);
-    const followingUsers = await this.getFollowing(currentUser.id);
-    const followingIds = followingUsers.map(user => user.id);
-    console.log('👥 Following IDs:', followingIds);
-
-    // Search profiles: public ones + private ones user is following
+    // With RLS policy updated, we can search directly without manual filtering
+    // The database policy will handle privacy automatically
     const { data, error } = await this.client
       .from('user_profiles')
       .select('*')
@@ -144,21 +139,7 @@ export class UserService {
       .limit(limit);
 
     if (error) throw error;
-    console.log('📊 Search found', data?.length || 0, 'profiles matching query');
-
-    // Filter results based on privacy and following status
-    const filteredResults = (data || []).filter(user => {
-      if (!user.is_private) {
-        console.log('✅ Including public profile:', user.username);
-        return true; // Public profiles always visible
-      }
-      const isFollowing = followingIds.includes(user.id);
-      console.log(`🔒 Private profile ${user.username}: following=${isFollowing}`);
-      return isFollowing; // Private profiles only if following
-    });
-    
-    console.log('🎯 Final search results:', filteredResults.map(u => ({ username: u.username, is_private: u.is_private })));
-    return filteredResults;
+    return data || [];
   }
 
   /**
@@ -376,39 +357,23 @@ export class UserService {
    * Get users that the specified user is following
    */
   async getFollowing(userId: string): Promise<UserProfile[]> {
-    console.log('🔍 getFollowing called for userId:', userId);
-    
     // Get following IDs first
     const { data: followData, error: followError } = await this.client
       .from('user_follows')
       .select('following_id')
       .eq('follower_id', userId);
 
-    if (followError) {
-      console.error('❌ Error getting follow data:', followError);
-      throw followError;
-    }
-    
-    console.log('📊 Follow data found:', followData?.length || 0, 'relationships');
+    if (followError) throw followError;
     if (!followData || followData.length === 0) return [];
 
     // Get user profiles for following IDs
     const followingIds = followData.map(row => row.following_id);
-    console.log('👥 Looking up profiles for IDs:', followingIds);
-    
     const { data: profileData, error: profileError } = await this.client
       .from('user_profiles')
       .select('*')
       .in('id', followingIds);
 
-    if (profileError) {
-      console.error('❌ Error getting profile data:', profileError);
-      throw profileError;
-    }
-    
-    console.log('👤 Profile data found:', profileData?.length || 0, 'profiles');
-    console.log('📝 Profiles:', profileData?.map(p => ({ username: p.username, is_private: p.is_private })));
-    
+    if (profileError) throw profileError;
     return profileData || [];
   }
 
