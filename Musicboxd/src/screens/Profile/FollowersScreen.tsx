@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { theme, spacing } from '../../utils/theme';
 import { RootState } from '../../store';
-import { User, SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
+import { SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { UserProfile } from '../../types/database';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';

@@ -15,7 +15,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album, Listen, Review } from '../../types';
-import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';

@@ -100,9 +100,7 @@ export default function FollowRequestsScreen() {
     }
   };
 
-  const navigateToUserProfile = (userId: string) => {
-    navigation.navigate('UserProfile', { userId });
-  };
+
 
   const renderRequestCard = (request: FollowRequest) => {
     const isProcessing = processingRequests.has(request.id);

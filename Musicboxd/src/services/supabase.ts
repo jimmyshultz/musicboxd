@@ -8,8 +8,8 @@ import { Database } from '../types/database';
 // Environment-specific Supabase configuration
 const getSupabaseConfig = () => {
   const config = {
-    url: ENV.SUPABASE_URL,
-    anonKey: ENV.SUPABASE_ANON_KEY,
+    url: ENV_CONFIG.SUPABASE_URL,
+    anonKey: ENV_CONFIG.SUPABASE_ANON_KEY,
   };
 
   // In the future, different environments can use different Supabase projects

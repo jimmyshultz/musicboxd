@@ -12,7 +12,6 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, User, Album } from '../../types';
-import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';

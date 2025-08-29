@@ -15,7 +15,7 @@ import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, User, SerializedUser } from '../../types';
+import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, SerializedUser } from '../../types';
 import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
@@ -74,10 +74,7 @@ export default function UserProfileScreen() {
   const [followActionType, setFollowActionType] = useState<'follow' | 'request' | 'requested' | 'following'>('follow');
   const [followLoading, setFollowLoading] = useState(false);
   
-  const isFollowing = useMemo(() => 
-    following.some(followedUser => followedUser.id === userId), 
-    [following, userId]
-  );
+
   const isOwnProfile = useMemo(() => 
     currentUser?.id === userId, 
     [currentUser?.id, userId]

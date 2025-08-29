@@ -288,38 +288,7 @@ export class UserService {
     }
   }
 
-  /**
-   * Get users that a user is following
-   */
-  async getFollowing(userId: string): Promise<UserProfile[]> {
-    try {
-      // Get following IDs first
-      const { data: followData, error: followError } = await this.client
-        .from('user_follows')
-        .select('following_id')
-        .eq('follower_id', userId);
 
-      if (followError) throw followError;
-      
-      if (!followData || followData.length === 0) {
-        return [];
-      }
-
-      const followingIds = followData.map(f => f.following_id);
-
-      // Get user profiles for those IDs
-      const { data: profileData, error: profileError } = await this.client
-        .from('user_profiles')
-        .select('*')
-        .in('id', followingIds);
-
-      if (profileError) throw profileError;
-      return profileData || [];
-    } catch (error) {
-      console.error('Error fetching following:', error);
-      return [];
-    }
-  }
 
   // Legacy method names for backward compatibility
   /**

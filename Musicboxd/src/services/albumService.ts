@@ -255,7 +255,6 @@ export class AlbumService {
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
     try {
       // Import the real service
-      const { albumListensService } = await import('./albumListensService');
       const { supabase } = await import('./supabase');
       
       // Get popular albums based on listen counts from the last 7 days

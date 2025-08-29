@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -48,9 +48,9 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [loadSettings]);
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -68,7 +68,7 @@ export default function SettingsScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   const updateSetting = async (key: keyof UserSettings, value: boolean) => {
     if (!user) return;
