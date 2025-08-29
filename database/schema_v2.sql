@@ -228,11 +228,17 @@ CREATE POLICY "Authenticated users can insert albums" ON public.albums
 CREATE POLICY "Users can view own listens" ON public.album_listens
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view public listens" ON public.album_listens
+CREATE POLICY "Users can view accessible listens" ON public.album_listens
     FOR SELECT USING (
-        EXISTS (
+        auth.uid() = user_id                     -- Own listens
+        OR EXISTS (                              -- Public profile listens
             SELECT 1 FROM public.user_profiles 
             WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile listens (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
         )
     );
 
@@ -243,11 +249,17 @@ CREATE POLICY "Users can manage own listens" ON public.album_listens
 CREATE POLICY "Users can view own ratings" ON public.album_ratings
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view public ratings" ON public.album_ratings
+CREATE POLICY "Users can view accessible ratings" ON public.album_ratings
     FOR SELECT USING (
-        EXISTS (
+        auth.uid() = user_id                     -- Own ratings
+        OR EXISTS (                              -- Public profile ratings
             SELECT 1 FROM public.user_profiles 
             WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile ratings (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
         )
     );
 
@@ -258,32 +270,22 @@ CREATE POLICY "Users can manage own ratings" ON public.album_ratings
 CREATE POLICY "Users can view own diary entries" ON public.diary_entries
     FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view public diary entries" ON public.diary_entries
+CREATE POLICY "Users can view accessible diary entries" ON public.diary_entries
     FOR SELECT USING (
-        EXISTS (
+        auth.uid() = user_id                     -- Own diary entries
+        OR EXISTS (                              -- Public profile diary entries
             SELECT 1 FROM public.user_profiles 
             WHERE id = user_id AND NOT is_private
+        )
+        OR EXISTS (                              -- Private profile diary entries (if following)
+            SELECT 1 FROM public.user_follows 
+            WHERE following_id = user_id 
+            AND follower_id = auth.uid()
         )
     );
 
 CREATE POLICY "Users can manage own diary entries" ON public.diary_entries
     FOR ALL USING (auth.uid() = user_id);
-
--- User follows policies
-CREATE POLICY "Users can view follows involving them" ON public.user_follows
-    FOR SELECT USING (auth.uid() = follower_id OR auth.uid() = following_id);
-
-CREATE POLICY "Users can manage own follows" ON public.user_follows
-    FOR ALL USING (auth.uid() = follower_id);
-
--- User activities policies
-CREATE POLICY "Users can view activities from public profiles" ON public.user_activities
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM public.user_profiles 
-            WHERE id = user_id AND NOT is_private
-        ) OR auth.uid() = user_id
-    );
 
 -- User follows policies  
 CREATE POLICY "Users can view all follows" ON public.user_follows
@@ -294,6 +296,15 @@ CREATE POLICY "Users can create own follows" ON public.user_follows
 
 CREATE POLICY "Users can delete own follows" ON public.user_follows
     FOR DELETE USING (auth.uid() = follower_id);
+
+-- User activities policies
+CREATE POLICY "Users can view activities from public profiles" ON public.user_activities
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.user_profiles 
+            WHERE id = user_id AND NOT is_private
+        ) OR auth.uid() = user_id
+    );
 
 -- ============================================================================
 -- FOLLOW REQUESTS TABLE
