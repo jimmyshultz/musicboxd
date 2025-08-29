@@ -538,14 +538,22 @@ export class UserService {
         // Already have a pending request, return it
         return existing;
       } else {
-        // Update existing rejected/accepted request to pending
+        // Delete the old request and create a new one (RLS prevents requester from updating)
+        const { error: deleteError } = await this.client
+          .from('follow_requests')
+          .delete()
+          .eq('id', existing.id);
+
+        if (deleteError) throw deleteError;
+
+        // Create new request
         const { data, error } = await this.client
           .from('follow_requests')
-          .update({ 
-            status: 'pending',
-            updated_at: new Date().toISOString()
+          .insert({
+            requester_id: requesterId,
+            requested_id: requestedId,
+            status: 'pending'
           })
-          .eq('id', existing.id)
           .select()
           .single();
 

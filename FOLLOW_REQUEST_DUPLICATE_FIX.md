@@ -41,11 +41,11 @@ async sendFollowRequest(requesterId: string, requestedId: string): Promise<Follo
     if (existing.status === 'pending') {
       return existing;  // Already pending
     } else {
-      // Update rejected/accepted to pending
+      // Delete old request and create new one (RLS prevents requester from updating)
+      await this.client.from('follow_requests').delete().eq('id', existing.id);
       return await this.client
         .from('follow_requests')
-        .update({ status: 'pending', updated_at: new Date().toISOString() })
-        .eq('id', existing.id)
+        .insert({ requester_id: requesterId, requested_id: requestedId, status: 'pending' })
         .select()
         .single();
     }
@@ -59,6 +59,9 @@ async sendFollowRequest(requesterId: string, requestedId: string): Promise<Follo
   }
 }
 ```
+
+### **RLS Policy Issue:**
+The original approach tried to UPDATE existing requests, but the RLS policy only allows the **requested user** to update requests (for accepting/rejecting). The **requester** can only DELETE their own requests, so the fix uses delete + insert instead of update.
 
 ## Expected Behavior After Fix
 
