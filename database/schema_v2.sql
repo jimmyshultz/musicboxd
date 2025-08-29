@@ -200,16 +200,8 @@ ALTER TABLE public.user_follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_activities ENABLE ROW LEVEL SECURITY;
 
 -- User profiles policies
-CREATE POLICY "Instagram privacy model for profiles" ON public.user_profiles
-    FOR SELECT USING (
-        NOT is_private                           -- Public profiles visible to all
-        OR auth.uid() = id                       -- Own profile always visible
-        OR EXISTS (                              -- Private profiles visible to followers
-            SELECT 1 FROM public.user_follows 
-            WHERE following_id = user_profiles.id 
-            AND follower_id = auth.uid()
-        )
-    );
+CREATE POLICY "Profiles discoverable for Instagram model" ON public.user_profiles
+    FOR SELECT USING (true); -- All profiles visible for discovery, content protected by activity table policies
 
 CREATE POLICY "Users can update own profile" ON public.user_profiles
     FOR UPDATE USING (auth.uid() = id);
