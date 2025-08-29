@@ -523,18 +523,50 @@ export class UserService {
    * Send a follow request to a user
    */
   async sendFollowRequest(requesterId: string, requestedId: string): Promise<FollowRequest> {
-    const { data, error } = await this.client
+    // Check if there's already a request (any status)
+    const { data: existing, error: checkError } = await this.client
       .from('follow_requests')
-      .insert({
-        requester_id: requesterId,
-        requested_id: requestedId,
-        status: 'pending'
-      })
-      .select()
-      .single();
+      .select('*')
+      .eq('requester_id', requesterId)
+      .eq('requested_id', requestedId)
+      .maybeSingle();
 
-    if (error) throw error;
-    return data;
+    if (checkError) throw checkError;
+
+    if (existing) {
+      if (existing.status === 'pending') {
+        // Already have a pending request, return it
+        return existing;
+      } else {
+        // Update existing rejected/accepted request to pending
+        const { data, error } = await this.client
+          .from('follow_requests')
+          .update({ 
+            status: 'pending',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    } else {
+      // Create new request
+      const { data, error } = await this.client
+        .from('follow_requests')
+        .insert({
+          requester_id: requesterId,
+          requested_id: requestedId,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
   }
 
   /**
