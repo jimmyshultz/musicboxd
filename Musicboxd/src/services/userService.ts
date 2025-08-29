@@ -232,61 +232,9 @@ export class UserService {
     // If actionType is 'follow' or 'request', there's nothing to unfollow
   }
 
-  /**
-   * Check if current user is following another user
-   */
-  async isFollowing(followingId: string): Promise<boolean> {
-    const user = await this.getCurrentUser();
-    if (!user) return false;
+  
 
-    const { data, error } = await this.client
-      .from('user_follows')
-      .select('id')
-      .eq('follower_id', user.id)
-      .eq('following_id', followingId)
-      .single();
 
-    if (error && error.code === 'PGRST116') {
-      // No rows found, not following
-      return false;
-    }
-
-    if (error) throw error;
-    return !!data;
-  }
-
-  /**
-   * Get user's followers
-   */
-  async getFollowers(userId: string): Promise<UserProfile[]> {
-    try {
-      // Get follower IDs first
-      const { data: followData, error: followError } = await this.client
-        .from('user_follows')
-        .select('follower_id')
-        .eq('following_id', userId);
-
-      if (followError) throw followError;
-      
-      if (!followData || followData.length === 0) {
-        return [];
-      }
-
-      const followerIds = followData.map(f => f.follower_id);
-
-      // Get user profiles for those IDs
-      const { data: profileData, error: profileError } = await this.client
-        .from('user_profiles')
-        .select('*')
-        .in('id', followerIds);
-
-      if (profileError) throw profileError;
-      return profileData || [];
-    } catch (error) {
-      console.error('Error fetching followers:', error);
-      return [];
-    }
-  }
 
 
 

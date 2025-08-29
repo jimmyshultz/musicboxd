@@ -6,8 +6,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Text, ActivityIndicator, Button, Avatar, Card } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+
 import { useSelector } from 'react-redux';
 
 import { ProfileStackParamList } from '../../types';
@@ -18,10 +17,7 @@ import { theme, spacing } from '../../utils/theme';
 
 const colors = theme.colors;
 
-type FollowRequestsNavigationProp = StackNavigationProp<ProfileStackParamList>;
-
 export default function FollowRequestsScreen() {
-  const navigation = useNavigation<FollowRequestsNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   
   const [requests, setRequests] = useState<FollowRequest[]>([]);

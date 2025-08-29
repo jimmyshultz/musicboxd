@@ -129,9 +129,7 @@ export default function NewFromFriendsScreen() {
     loadFriendActivities();
   }, [loadFriendActivities]);
 
-  const navigateToAlbum = (albumId: string) => {
-    navigation.navigate('AlbumDetails', { albumId });
-  };
+
 
   const navigateToUserProfile = (userId: string) => {
     navigation.navigate('UserProfile', { userId });

@@ -55,7 +55,7 @@ export default function UserProfileScreen() {
   const insets = useSafeAreaInsets();
   
   const { userId } = route.params;
-  const { following } = useSelector((state: RootState) => state.user);
+
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
   const [user, setUser] = useState<UserProfile | null>(null);
