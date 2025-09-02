@@ -36,6 +36,7 @@ import { theme, spacing } from '../../utils/theme';
   const [showPicker, setShowPicker] = useState(false);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
   const [sharing, setSharing] = useState(false);
+  const [showShareView, setShowShareView] = useState(false);
   const shareViewRef = React.useRef<View>(null);
 
   const load = useCallback(async () => {
@@ -110,16 +111,24 @@ import { theme, spacing } from '../../utils/theme';
   };
 
   const handleShareToInstagram = async () => {
-    if (!album || !entry || !shareViewRef.current) return;
+    if (!album || !entry) return;
     
     setSharing(true);
+    setShowShareView(true);
+    
     try {
-      // Capture the share view as an image
-      const uri = await captureRef(shareViewRef.current, {
+      // Wait for the view to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const shareView = shareViewRef.current;
+      if (!shareView) {
+        throw new Error('Share view not found');
+      }
+      
+      // Capture the view
+      const uri = await captureRef(shareView, {
         format: 'png',
         quality: 1.0,
-        width: 1080, // Instagram Story width
-        height: 1920, // Instagram Story height
       });
 
       // Share to Instagram Stories
@@ -134,24 +143,27 @@ import { theme, spacing } from '../../utils/theme';
       await Share.shareSingle(shareOptions);
     } catch (error) {
       console.error('Error sharing to Instagram:', error);
-      // Fallback to general sharing if Instagram-specific sharing fails
+      // Fallback to general sharing
       try {
-        const uri = await captureRef(shareViewRef.current!, {
-          format: 'png',
-          quality: 1.0,
-          width: 1080,
-          height: 1920,
-        });
-        
-        await Share.open({
-          url: `file://${uri}`,
-          type: 'image/png',
-          title: 'Share Diary Entry',
-        });
+        const shareView = shareViewRef.current;
+        if (shareView) {
+          const uri = await captureRef(shareView, {
+            format: 'png',
+            quality: 1.0,
+          });
+          
+          await Share.open({
+            url: `file://${uri}`,
+            type: 'image/png',
+            title: 'Share Diary Entry',
+          });
+        }
       } catch (fallbackError) {
         console.error('Error with fallback sharing:', fallbackError);
       }
     }
+    
+    setShowShareView(false);
     setSharing(false);
   };
 
@@ -211,29 +223,31 @@ import { theme, spacing } from '../../utils/theme';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Hidden shareable view for Instagram */}
-      <View ref={shareViewRef} style={styles.shareView}>
-        {album && (
-          <View style={styles.shareContent}>
-            <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
-            <View style={styles.shareTextOverlay}>
-              <Text style={styles.shareAlbumTitle}>{album.title}</Text>
-              <Text style={styles.shareArtistName}>{album.artist}</Text>
-              <Text style={styles.shareDate}>{d.toLocaleDateString()}</Text>
-              {entry.ratingAtTime && (
-                <View style={styles.shareRatingContainer}>
-                  <HalfStarDisplay rating={entry.ratingAtTime} size="large" />
-                  <Text style={styles.shareRatingText}>{entry.ratingAtTime.toFixed(1)} stars</Text>
-                </View>
-              )}
-              {entry.notes && (
-                <Text style={styles.shareNotes}>"{entry.notes}"</Text>
-              )}
-              <Text style={styles.shareAppName}>Musicboxd</Text>
+      {/* Shareable view for Instagram - only rendered when needed */}
+      {showShareView && (
+        <View ref={shareViewRef} style={styles.shareView}>
+          {album && (
+            <View style={styles.shareContent}>
+              <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
+              <View style={styles.shareTextOverlay}>
+                <Text style={styles.shareAlbumTitle}>{album.title}</Text>
+                <Text style={styles.shareArtistName}>{album.artist}</Text>
+                <Text style={styles.shareDate}>{d.toLocaleDateString()}</Text>
+                {entry.ratingAtTime && (
+                  <View style={styles.shareRatingContainer}>
+                    <HalfStarDisplay rating={entry.ratingAtTime} size="large" />
+                    <Text style={styles.shareRatingText}>{entry.ratingAtTime.toFixed(1)} stars</Text>
+                  </View>
+                )}
+                {entry.notes && (
+                  <Text style={styles.shareNotes}>"{entry.notes}"</Text>
+                )}
+                <Text style={styles.shareAppName}>Musicboxd</Text>
+              </View>
             </View>
-          </View>
-        )}
-      </View>
+          )}
+        </View>
+      )}
 
       {/* Regular diary entry view */}
       {album && (
@@ -340,10 +354,11 @@ import { theme, spacing } from '../../utils/theme';
   },
   shareView: {
     position: 'absolute',
-    top: -10000, // Hide off-screen
+    top: 0,
     left: 0,
     width: 1080,
     height: 1920,
+    zIndex: 1000,
   },
   shareContent: {
     flex: 1,
