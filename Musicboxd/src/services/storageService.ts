@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import RNFS from 'react-native-fs';
 
 class StorageService {
   /**
@@ -11,9 +12,16 @@ class StorageService {
       const fileName = `profile_${userId}_${timestamp}.jpg`;
       const filePath = `profile-pictures/${fileName}`;
 
-      // Convert image URI to blob for upload
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
+      // Read the file as binary data for React Native
+      const fileExists = await RNFS.exists(imageUri);
+      if (!fileExists) {
+        throw new Error('File not found');
+      }
+
+      // Read file as base64 and convert to blob
+      const base64Data = await RNFS.readFile(imageUri, 'base64');
+      const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
 
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
