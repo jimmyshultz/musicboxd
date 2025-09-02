@@ -315,11 +315,14 @@ export default function AlbumDetailsScreen() {
           <Text variant="titleMedium" style={styles.ratingTitle}>
             Rate this Album
           </Text>
-          <HalfStarRating 
-            rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0} 
-            onRatingChange={handleRating} 
-            disabled={submitting || !user || userAlbumsLoading.rating}
-          />
+          <View style={styles.starContainer}>
+            <HalfStarRating 
+              rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0} 
+              onRatingChange={handleRating} 
+              disabled={submitting || !user || userAlbumsLoading.rating}
+              size="large"
+            />
+          </View>
           {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) && (
             <Text variant="bodyMedium" style={styles.ratingText}>
               You rated this {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating)?.toFixed(1)} star{(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) !== 1 ? 's' : ''}
@@ -515,7 +518,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.md,
   },
-
+  starContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
   ratingText: {
     textAlign: 'center',
     color: theme.colors.textSecondary,
