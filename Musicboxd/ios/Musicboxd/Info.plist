@@ -36,7 +36,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs access to save diary entry images to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>This app needs access to your photo library to save diary entry images.</string>
+	<string>This app needs access to your photo library to select and save images.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>

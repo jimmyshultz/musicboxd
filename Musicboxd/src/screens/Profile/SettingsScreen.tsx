@@ -223,7 +223,7 @@ export default function SettingsScreen() {
       {renderSection(
         'Account',
         <>
-          <TouchableOpacity style={styles.accountItem} onPress={() => {}}>
+          <TouchableOpacity style={styles.accountItem} onPress={() => navigation.navigate('EditProfile')}>
             <Text variant="titleMedium" style={styles.accountItemText}>
               Edit Profile
             </Text>

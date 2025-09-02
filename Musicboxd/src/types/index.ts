@@ -151,6 +151,7 @@ export type HomeStackParamList = {
   FavoriteAlbumsManagement: undefined;
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
+  EditProfile: undefined;
 };
 
 export type SearchStackParamList = {
@@ -166,6 +167,7 @@ export type SearchStackParamList = {
   FavoriteAlbumsManagement: undefined;
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
+  EditProfile: undefined;
 };
 
 export type ProfileStackParamList = {
@@ -183,6 +185,7 @@ export type ProfileStackParamList = {
   DiaryEntryDetails: { entryId: string; userId: string };
   Settings: undefined;
   FollowRequests: undefined;
+  EditProfile: undefined;
 };
 
 // Search types

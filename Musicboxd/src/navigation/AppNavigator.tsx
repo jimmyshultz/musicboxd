@@ -29,6 +29,7 @@ import AuthScreen from '../screens/Auth/AuthScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
+import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 
@@ -570,6 +571,11 @@ function ProfileStackNavigator() {
             navigation.goBack();
           }} />,
         })}
+      />
+      <ProfileStack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={{ headerShown: false }} // We'll handle the header in the component
       />
     </ProfileStack.Navigator>
   );
