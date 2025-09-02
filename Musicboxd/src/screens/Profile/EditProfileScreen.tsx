@@ -25,7 +25,7 @@ import { ProfileStackParamList } from '../../types';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { storageService } from '../../services/storageService';
-import { updateUser } from '../../store/slices/authSlice';
+import { updateProfile } from '../../store/slices/authSlice';
 import { theme, spacing } from '../../utils/theme';
 
 type EditProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
@@ -184,8 +184,7 @@ export default function EditProfileScreen() {
         const updatedProfile = await userService.updateProfile(user.id, updates);
         
         // Update Redux store
-        dispatch(updateUser({
-          ...user,
+        dispatch(updateProfile({
           username: updatedProfile.username,
           profilePicture: updatedProfile.avatar_url || undefined,
         }));
