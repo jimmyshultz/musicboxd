@@ -12,21 +12,22 @@ class StorageService {
       const fileName = `profile_${userId}_${timestamp}.jpg`;
       const filePath = `profile-pictures/${fileName}`;
 
-      // Read the file as binary data for React Native
+      // Read the file as base64 for React Native
       const fileExists = await RNFS.exists(imageUri);
       if (!fileExists) {
         throw new Error('File not found');
       }
 
-      // Read file as base64 and convert to blob
+      // Read file as base64
       const base64Data = await RNFS.readFile(imageUri, 'base64');
-      const byteArray = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+      
+      // Convert base64 to buffer for Supabase upload
+      const buffer = Buffer.from(base64Data, 'base64');
 
       // Upload to Supabase storage
       const { data, error } = await supabase.storage
         .from('avatars')
-        .upload(filePath, blob, {
+        .upload(filePath, buffer, {
           contentType: 'image/jpeg',
           upsert: false, // Don't overwrite existing files
         });
