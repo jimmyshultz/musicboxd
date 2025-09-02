@@ -17,19 +17,16 @@ class StorageService {
       console.log('Upload path:', filePath);
       console.log('Filename:', fileName);
 
-      // Create file object for React Native Supabase upload
-      const fileObject = {
-        uri: imageUri,
-        type: 'image/jpeg',
-        name: fileName,
-      };
+      // Read the file using fetch (works better in React Native)
+      const response = await fetch(imageUri);
+      const arrayBuffer = await response.arrayBuffer();
+      
+      console.log('File size after fetch:', arrayBuffer.byteLength);
 
-      console.log('File object:', fileObject);
-
-      // Upload file object directly to Supabase storage
+      // Upload the array buffer to Supabase storage
       const { data, error } = await supabase.storage
         .from('avatars')
-        .upload(filePath, fileObject as any, {
+        .upload(filePath, arrayBuffer, {
           contentType: 'image/jpeg',
           upsert: false, // Don't overwrite existing files
         });

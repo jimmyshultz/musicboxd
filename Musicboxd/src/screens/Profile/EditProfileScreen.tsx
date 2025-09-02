@@ -133,8 +133,16 @@ export default function EditProfileScreen() {
       compressImageMaxHeight: 300,
       compressImageQuality: 0.8,
       mediaType: 'photo',
-      includeBase64: false,
+      includeBase64: true, // Include base64 for easier upload
+      forceJpg: true, // Force JPEG format for consistency
     }).then(image => {
+      console.log('Image picker result:', {
+        path: image.path,
+        mime: image.mime,
+        size: image.size,
+        width: image.width,
+        height: image.height,
+      });
       setNewImageUri(image.path);
     }).catch(error => {
       if (error.code !== 'E_PICKER_CANCELLED') {
