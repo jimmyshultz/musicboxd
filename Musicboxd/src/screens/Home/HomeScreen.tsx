@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, User, Album } from '../../types';
 import { RootState } from '../../store';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
@@ -315,7 +316,7 @@ export default function HomeScreen() {
       </Text>
       {onSeeAll && (
         <TouchableOpacity onPress={onSeeAll} style={styles.seeAllButton}>
-          <Text style={styles.seeAllText}>›</Text>
+          <Icon name="chevron-right" size={16} color={theme.colors.primary} />
         </TouchableOpacity>
       )}
     </View>

@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
 import { RootState } from '../store';
@@ -51,7 +52,7 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
       onPress={handlePress}
       style={backButtonStyles.container}
     >
-      <Text style={[backButtonStyles.text, { color: currentTheme.colors.onSurface }]}>←</Text>
+      <Icon name="arrow-left" size={18} color={currentTheme.colors.onSurface} />
     </TouchableOpacity>
   );
 });
@@ -60,23 +61,23 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
 
 // Tab icon component to avoid creating it during render
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
-  let iconText: string;
+  let iconName: string;
 
   switch (routeName) {
     case 'Home':
-      iconText = '🏠';
+      iconName = 'home';
       break;
     case 'Search':
-      iconText = '🔍';
+      iconName = 'search';
       break;
     case 'Profile':
-      iconText = '👤';
+      iconName = 'user';
       break;
     default:
-      iconText = '❓';
+      iconName = 'question';
   }
 
-  return <Text style={{ fontSize: size, color }}>{iconText}</Text>;
+  return <Icon name={iconName} size={size} color={color} />;
 };
 
 // Create tab bar icon function outside component

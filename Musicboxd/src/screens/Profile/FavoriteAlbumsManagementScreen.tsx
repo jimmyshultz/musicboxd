@@ -13,6 +13,7 @@ import { useSelector } from 'react-redux';
 
 import { Album } from '../../types';
 import { RootState } from '../../store';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { AlbumService } from '../../services/albumService';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { colors, spacing } from '../../utils/theme';
@@ -133,7 +134,7 @@ export default function FavoriteAlbumsManagementScreen() {
       <TouchableOpacity onPress={() => removeFromFavorites(album.id)}>
         <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
         <View style={styles.removeButton}>
-          <Text style={styles.removeButtonText}>×</Text>
+          <Icon name="times" size={16} color="#fff" />
         </View>
       </TouchableOpacity>
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
@@ -168,7 +169,7 @@ export default function FavoriteAlbumsManagementScreen() {
         </Text>
         {isAlreadyFavorite && (
           <View style={styles.selectedBadge}>
-            <Text style={styles.selectedText}>✓</Text>
+            <Icon name="check" size={16} color="#fff" />
           </View>
         )}
       </TouchableOpacity>

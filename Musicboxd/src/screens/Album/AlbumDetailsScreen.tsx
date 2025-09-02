@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { HomeStackParamList, SearchStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
 import { HalfStarRating } from '../../components/HalfStarRating';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { 
   setCurrentAlbum, 
   clearCurrentAlbum, 
@@ -40,11 +41,8 @@ import { Portal, Dialog, Switch } from 'react-native-paper';
 type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
 
 // Icon components to avoid creating them during render
-const checkIconStyle = { fontSize: 16, color: '#666' };
-const plusIconStyle = { fontSize: 16, color: '#666' };
-
-const CheckIcon = (props: any) => <Text style={{ ...checkIconStyle, color: props.color || '#666' }}>✓</Text>;
-const PlusIcon = (props: any) => <Text style={{ ...plusIconStyle, color: props.color || '#666' }}>+</Text>;
+const CheckIcon = (props: any) => <Icon name="check" size={16} color={props.color || '#666'} />;
+const PlusIcon = (props: any) => <Icon name="plus" size={16} color={props.color || '#666'} />;
 
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;

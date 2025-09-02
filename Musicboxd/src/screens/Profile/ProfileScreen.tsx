@@ -16,6 +16,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
@@ -31,9 +32,7 @@ const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
 
 // Icon components to avoid creating them during render
-const chevronIconStyle = { fontSize: 14, color: '#666', lineHeight: 24, marginTop: 8 };
-
-const ChevronIcon = (_props: any) => <Text style={chevronIconStyle}>›</Text>;
+const ChevronIcon = (_props: any) => <Icon name="chevron-right" size={14} color="#666" />;
 
 interface UserStats {
   albumsThisYear: number;

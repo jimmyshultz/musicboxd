@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { SearchStackParamList, Album } from '../../types';
 import { UserProfile } from '../../types/database';
@@ -51,7 +52,7 @@ const CustomSearchbar = ({
 }) => {
   return (
     <View style={[styles.searchInputContainer, style]}>
-      <Text style={styles.searchIcon}>🔍</Text>
+      <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
       <TextInput
         style={styles.searchInput}
         placeholder={placeholder}
@@ -63,7 +64,7 @@ const CustomSearchbar = ({
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Text style={styles.clearIcon}>✕</Text>
+          <Icon name="times" size={16} color="#666" />
         </TouchableOpacity>
       )}
     </View>
