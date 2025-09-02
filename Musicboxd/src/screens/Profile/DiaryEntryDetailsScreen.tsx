@@ -1,8 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react';
 import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
@@ -37,6 +37,7 @@ import { theme, spacing } from '../../utils/theme';
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
   const [sharing, setSharing] = useState(false);
   const [showShareView, setShowShareView] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const shareViewRef = React.useRef<View>(null);
 
   const load = useCallback(async () => {
@@ -70,6 +71,55 @@ import { theme, spacing } from '../../utils/theme';
   }, [entryId]);
 
   useEffect(() => { load(); }, [load]);
+
+  const canEdit = entry && currentUser?.id === userId;
+
+  // Set up header menu
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={
+            <IconButton
+              icon={() => <Icon name="ellipsis-v" size={18} color="#666" />}
+              onPress={() => setMenuVisible(true)}
+            />
+          }
+        >
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
+              handleShareDiaryEntry();
+            }} 
+            title="Share" 
+            leadingIcon="share" 
+          />
+          {canEdit && (
+            <Menu.Item 
+              onPress={() => {
+                setMenuVisible(false);
+                setShowPicker(true);
+              }} 
+              title="Edit Date" 
+              leadingIcon="calendar" 
+            />
+          )}
+          {canEdit && (
+            <Menu.Item 
+              onPress={() => {
+                setMenuVisible(false);
+                onDelete();
+              }} 
+              title="Delete" 
+              leadingIcon="delete" 
+            />
+          )}
+        </Menu>
+      ),
+    });
+  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry]);
 
   const onChangeDate = (_: any, selected?: Date) => {
     if (selected) {
@@ -213,8 +263,6 @@ import { theme, spacing } from '../../utils/theme';
   const d = new Date(entry.diaryDate + 'T00:00:00');
   const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
 
-  const canEdit = currentUser?.id === userId; // Only owner edits
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Shareable view for Instagram - only rendered when needed */}
@@ -279,25 +327,7 @@ import { theme, spacing } from '../../utils/theme';
         </View>
       </View>
 
-      {/* Share button - available to all users */}
-      <View style={styles.shareActions}>
-        <Button 
-          mode="outlined" 
-          onPress={handleShareDiaryEntry} 
-          disabled={sharing}
-          icon={() => <Icon name="share" size={16} color="#666" />}
-          loading={sharing}
-        >
-          Share Diary Entry
-        </Button>
-      </View>
 
-      {canEdit && (
-        <View style={styles.actions}>
-          <Button mode="outlined" onPress={() => setShowPicker(v => !v)} disabled={saving}>Edit date</Button>
-          <Button mode="contained" onPress={onDelete} disabled={saving} style={{ marginLeft: spacing.sm }}>Delete entry</Button>
-        </View>
-      )}
 
       {showPicker && (
         <View style={styles.datePickerContainer}>
@@ -342,10 +372,7 @@ import { theme, spacing } from '../../utils/theme';
     marginTop: spacing.md,
     gap: spacing.sm,
   },
-  shareActions: {
-    marginVertical: spacing.md,
-    alignItems: 'center',
-  },
+
   shareView: {
     position: 'absolute',
     top: 0,
@@ -422,6 +449,6 @@ import { theme, spacing } from '../../utils/theme';
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   rowAlignCenter: { alignItems: 'center' },
   rowDirection: { flexDirection: 'row' },
-  actions: { flexDirection: 'row', marginTop: spacing.lg },
+
 
  });

@@ -3,8 +3,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, useColorScheme, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { useSelector } from 'react-redux';
+import { Menu, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
@@ -234,7 +235,11 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={({ navigation }) => ({ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> })}
+        options={({ navigation }) => ({ 
+          title: 'Diary Entry', 
+          headerBackVisible: false, 
+          headerLeft: () => <BackButton navigation={navigation} />
+        })}
       />
     </HomeStack.Navigator>
   );
@@ -383,7 +388,11 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={({ navigation }) => ({ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> })}
+        options={({ navigation }) => ({ 
+          title: 'Diary Entry', 
+          headerBackVisible: false, 
+          headerLeft: () => <BackButton navigation={navigation} />
+        })}
       />
     </SearchStack.Navigator>
   );
@@ -532,7 +541,11 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={({ navigation }) => ({ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> })}
+        options={({ navigation }) => ({ 
+          title: 'Diary Entry', 
+          headerBackVisible: false, 
+          headerLeft: () => <BackButton navigation={navigation} />
+        })}
       />
       <ProfileStack.Screen
         name="Settings"
