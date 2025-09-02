@@ -49,6 +49,7 @@ export default function EditProfileScreen() {
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const bypassWarningRef = React.useRef(false);
 
   // Track if changes have been made
   useEffect(() => {
@@ -60,8 +61,9 @@ export default function EditProfileScreen() {
   // Handle back button with unsaved changes warning
   useLayoutEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      // Don't show warning if we're in the saving process or no unsaved changes
-      if (!hasUnsavedChanges || isSaving) {
+      // Don't show warning if we're bypassing, saving, or no unsaved changes
+      if (bypassWarningRef.current || isSaving || !hasUnsavedChanges) {
+        bypassWarningRef.current = false; // Reset for next time
         return;
       }
 
@@ -75,7 +77,10 @@ export default function EditProfileScreen() {
           {
             text: 'Leave',
             style: 'destructive',
-            onPress: () => navigation.dispatch(e.data.action),
+            onPress: () => {
+              bypassWarningRef.current = true;
+              navigation.dispatch(e.data.action);
+            },
           },
         ]
       );
@@ -195,7 +200,8 @@ export default function EditProfileScreen() {
         }));
       }
 
-      // Clear unsaved changes flag before navigating
+      // Set bypass flag and clear unsaved changes before navigating
+      bypassWarningRef.current = true;
       setHasUnsavedChanges(false);
       
       Alert.alert('Success', 'Profile updated successfully!');
@@ -221,8 +227,8 @@ export default function EditProfileScreen() {
             text: 'Leave', 
             style: 'destructive',
             onPress: () => {
-              // Clear unsaved changes flag to bypass beforeRemove listener
-              setHasUnsavedChanges(false);
+              // Set bypass flag to prevent beforeRemove listener from showing another alert
+              bypassWarningRef.current = true;
               navigation.goBack();
             }
           },
