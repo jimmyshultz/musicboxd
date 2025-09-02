@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, Text, ActivityIndicator } from 'react-native-paper';
@@ -125,46 +125,52 @@ import { theme, spacing } from '../../utils/theme';
         throw new Error('Share view not found');
       }
       
+      console.log('Capturing view...');
       // Capture the view
       const uri = await captureRef(shareView, {
         format: 'png',
         quality: 1.0,
       });
+      
+      console.log('View captured, URI:', uri);
 
-      // Share to Instagram Stories
+      // Try general sharing first (more reliable than Instagram-specific)
       const shareOptions = {
-        title: 'Share to Instagram Story',
         url: `file://${uri}`,
         type: 'image/png',
-        social: Share.Social.INSTAGRAM_STORIES,
-        appId: 'your-facebook-app-id', // You'll need to configure this
+        title: 'Share Diary Entry',
+        message: `Check out my diary entry for ${album.title} by ${album.artist}!`,
       };
 
-      await Share.shareSingle(shareOptions);
+      console.log('Opening share dialog...');
+      const result = await Share.open(shareOptions);
+      console.log('Share dialog result:', result);
+      
     } catch (error) {
-      console.error('Error sharing to Instagram:', error);
-      // Fallback to general sharing
-      try {
-        const shareView = shareViewRef.current;
-        if (shareView) {
-          const uri = await captureRef(shareView, {
-            format: 'png',
-            quality: 1.0,
-          });
-          
-          await Share.open({
-            url: `file://${uri}`,
-            type: 'image/png',
-            title: 'Share Diary Entry',
-          });
-        }
-      } catch (fallbackError) {
-        console.error('Error with fallback sharing:', fallbackError);
-      }
+      console.error('Error sharing:', error);
+      
+      // Show user-friendly error message
+      Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
     }
     
     setShowShareView(false);
     setSharing(false);
+  };
+
+  const handleTestShare = async () => {
+    if (!album || !entry) return;
+    
+    try {
+      const shareText = `🎵 Just listened to "${album.title}" by ${album.artist}\n📅 ${new Date(entry.diaryDate).toLocaleDateString()}${entry.ratingAtTime ? `\n⭐ Rating: ${entry.ratingAtTime.toFixed(1)}/5.0` : ''}${entry.notes ? `\n📝 "${entry.notes}"` : ''}\n\n#Musicboxd`;
+      
+      await Share.open({
+        message: shareText,
+        title: 'Share Diary Entry',
+      });
+    } catch (error) {
+      console.error('Error with text sharing:', error);
+      Alert.alert('Share Error', 'Unable to share at this time.');
+    }
   };
 
   const onChangeRating = async (newRating: number) => {
@@ -296,6 +302,14 @@ import { theme, spacing } from '../../utils/theme';
         >
           Share to Instagram
         </Button>
+        <Button 
+          mode="text" 
+          onPress={handleTestShare} 
+          disabled={sharing}
+          style={{ marginTop: 8 }}
+        >
+          Test Share (Text Only)
+        </Button>
       </View>
 
       {canEdit && (
@@ -355,7 +369,7 @@ import { theme, spacing } from '../../utils/theme';
   shareView: {
     position: 'absolute',
     top: 0,
-    left: 0,
+    left: -1080, // Position off-screen to the left instead of overlaying
     width: 1080,
     height: 1920,
     zIndex: 1000,
