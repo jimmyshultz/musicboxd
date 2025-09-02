@@ -220,7 +220,11 @@ export default function EditProfileScreen() {
           { 
             text: 'Leave', 
             style: 'destructive',
-            onPress: () => navigation.goBack()
+            onPress: () => {
+              // Clear unsaved changes flag to bypass beforeRemove listener
+              setHasUnsavedChanges(false);
+              navigation.goBack();
+            }
           },
         ]
       );
