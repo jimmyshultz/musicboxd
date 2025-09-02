@@ -74,10 +74,10 @@ import { theme, spacing } from '../../utils/theme';
 
   const canEdit = entry && currentUser?.id === userId;
 
-  // Set up header menu
+  // Set up header menu - only show if user can edit
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
+      headerRight: canEdit ? () => (
         <Menu
           visible={menuVisible}
           onDismiss={() => setMenuVisible(false)}
@@ -96,28 +96,24 @@ import { theme, spacing } from '../../utils/theme';
             title="Share" 
             leadingIcon="share" 
           />
-          {canEdit && (
-            <Menu.Item 
-              onPress={() => {
-                setMenuVisible(false);
-                setShowPicker(true);
-              }} 
-              title="Edit Date" 
-              leadingIcon="calendar" 
-            />
-          )}
-          {canEdit && (
-            <Menu.Item 
-              onPress={() => {
-                setMenuVisible(false);
-                onDelete();
-              }} 
-              title="Delete" 
-              leadingIcon="delete" 
-            />
-          )}
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
+              setShowPicker(true);
+            }} 
+            title="Edit Date" 
+            leadingIcon="calendar" 
+          />
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
+              onDelete();
+            }} 
+            title="Delete" 
+            leadingIcon="delete" 
+          />
         </Menu>
-      ),
+      ) : undefined,
     });
   }, [navigation, menuVisible, canEdit, handleShareDiaryEntry]);
 
