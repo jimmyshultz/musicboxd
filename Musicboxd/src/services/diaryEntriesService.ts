@@ -43,9 +43,9 @@ class DiaryEntriesService {
     notes?: string
   ): Promise<{ success: boolean; entry?: DiaryEntry; message?: string }> {
     try {
-      // Validate rating if provided
-      if (rating !== undefined && (rating < 1 || rating > 5)) {
-        return { success: false, message: 'Rating must be between 1 and 5' };
+      // Validate rating if provided (must be in 0.5 increments between 0.5 and 5.0)
+      if (rating !== undefined && (rating < 0.5 || rating > 5.0 || (rating * 2) !== Math.floor(rating * 2))) {
+        return { success: false, message: 'Rating must be between 0.5 and 5.0 in 0.5 increments' };
       }
 
       // First, ensure the album exists in the albums table
@@ -140,9 +140,9 @@ class DiaryEntriesService {
     updates: { diaryDate?: string; rating?: number; notes?: string }
   ): Promise<{ success: boolean; entry?: DiaryEntry; message?: string }> {
     try {
-      // Validate rating if provided
-      if (updates.rating !== undefined && (updates.rating < 1 || updates.rating > 5)) {
-        return { success: false, message: 'Rating must be between 1 and 5' };
+      // Validate rating if provided (must be in 0.5 increments between 0.5 and 5.0)
+      if (updates.rating !== undefined && (updates.rating < 0.5 || updates.rating > 5.0 || (updates.rating * 2) !== Math.floor(updates.rating * 2))) {
+        return { success: false, message: 'Rating must be between 0.5 and 5.0 in 0.5 increments' };
       }
 
       const updateData: any = {

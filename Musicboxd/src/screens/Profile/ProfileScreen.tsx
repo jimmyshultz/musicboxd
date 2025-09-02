@@ -16,6 +16,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
+import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
@@ -286,13 +287,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Text key={index} style={styles.star}>
-        {index < rating ? '★' : '☆'}
-      </Text>
-    ));
-  };
+
 
   const renderFavoriteAlbum = (album: Album) => (
     <TouchableOpacity
@@ -325,7 +320,7 @@ export default function ProfileScreen() {
       </Text>
       {activity.review && (
         <View style={styles.ratingContainer}>
-          {renderStars(activity.review.rating)}
+          <HalfStarDisplay rating={activity.review.rating} size="small" />
         </View>
       )}
     </TouchableOpacity>
@@ -470,7 +465,7 @@ export default function ProfileScreen() {
             {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
             {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
             {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating}`, () => navigateToUserReviews('alltime'))}
+            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating.toFixed(1)}`, () => navigateToUserReviews('alltime'))}
             {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
             {renderStatCard('Following', userStats.following, navigateToFollowing)}
           </View>
@@ -585,10 +580,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     justifyContent: 'flex-start',
   },
-  star: {
-    fontSize: 12,
-    color: theme.light.colors.primary,
-  },
+
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

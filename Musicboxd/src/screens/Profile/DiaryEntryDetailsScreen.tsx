@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
+import { HalfStarRating, HalfStarDisplay } from '../../components/HalfStarRating';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
@@ -16,9 +17,7 @@ import { theme, spacing } from '../../utils/theme';
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
 
- const Star = ({ filled }: { filled: boolean }) => (
-  <Text style={filled ? styles.starFilled : styles.starEmpty}>{filled ? '★' : '☆'}</Text>
-);
+
 
  export default function DiaryEntryDetailsScreen() {
   const route = useRoute<DetailsRoute>();
@@ -166,11 +165,18 @@ import { theme, spacing } from '../../utils/theme';
       <View style={[styles.row, styles.rowAlignCenter] }>
         <Text variant="bodyLarge">Rating</Text>
         <View style={styles.rowDirection}>
-          {[1,2,3,4,5].map(star => (
-            <Text key={star} onPress={() => canEdit && onChangeRating(star)}>
-              <Star filled={!!entry.ratingAtTime && star <= entry.ratingAtTime} />
-            </Text>
-          ))}
+          {canEdit ? (
+            <HalfStarRating
+              rating={entry.ratingAtTime || 0}
+              onRatingChange={onChangeRating}
+              size="medium"
+            />
+          ) : (
+            <HalfStarDisplay
+              rating={entry.ratingAtTime || 0}
+              size="medium"
+            />
+          )}
         </View>
       </View>
 
@@ -207,6 +213,5 @@ import { theme, spacing } from '../../utils/theme';
   rowAlignCenter: { alignItems: 'center' },
   rowDirection: { flexDirection: 'row' },
   actions: { flexDirection: 'row', marginTop: spacing.lg },
-  starFilled: { fontSize: 20, color: theme.colors.primary },
-  starEmpty: { fontSize: 20, color: '#ccc' },
+
  });

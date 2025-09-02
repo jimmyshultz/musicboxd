@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, SearchStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
+import { HalfStarRating } from '../../components/HalfStarRating';
 import { 
   setCurrentAlbum, 
   clearCurrentAlbum, 
@@ -48,48 +49,7 @@ const PlusIcon = (props: any) => <Text style={{ ...plusIconStyle, color: props.c
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;
 
-const StarRating = ({ 
-  rating, 
-  onRatingChange, 
-  disabled = false 
-}: { 
-  rating: number; 
-  onRatingChange: (rating: number) => void;
-  disabled?: boolean;
-}) => {
-  const handleStarPress = (star: number) => {
-    if (disabled) return;
-    
-    // If clicking on the currently selected star (highest filled star), remove the rating
-    if (star === rating) {
-      onRatingChange(0); // Remove rating by setting to 0
-    } else {
-      onRatingChange(star); // Set new rating
-    }
-  };
 
-  return (
-    <View style={styles.starContainer}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <TouchableOpacity 
-          key={star} 
-          onPress={() => handleStarPress(star)}
-          disabled={disabled}
-        >
-          <Text
-            style={[
-              styles.star,
-              star <= rating ? styles.starFilled : styles.starEmpty,
-              disabled && styles.starDisabled
-            ]}
-          >
-            {star <= rating ? '★' : '☆'}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
 
 const TrackListItem = ({ track }: { track: Track; albumArtist: string }) => (
   <View style={styles.trackItem}>
@@ -355,14 +315,14 @@ export default function AlbumDetailsScreen() {
           <Text variant="titleMedium" style={styles.ratingTitle}>
             Rate this Album
           </Text>
-          <StarRating 
+          <HalfStarRating 
             rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0} 
             onRatingChange={handleRating} 
             disabled={submitting || !user || userAlbumsLoading.rating}
           />
           {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) && (
             <Text variant="bodyMedium" style={styles.ratingText}>
-              You rated this {currentAlbumInteraction?.rating || currentAlbumUserReview?.rating} star{(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) !== 1 ? 's' : ''}
+              You rated this {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating)?.toFixed(1)} star{(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) !== 1 ? 's' : ''}
             </Text>
           )}
           {!user && (
@@ -446,7 +406,7 @@ export default function AlbumDetailsScreen() {
             </View>
             <View style={styles.diaryRatingContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
-              <StarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
+              <HalfStarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
             </View>
           </Dialog.Content>
           <Dialog.Actions>
@@ -555,24 +515,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.md,
   },
-  starContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  star: {
-    fontSize: 32,
-    marginHorizontal: spacing.xs,
-  },
-  starFilled: {
-    color: theme.colors.primary,
-  },
-  starEmpty: {
-    color: '#ccc',
-  },
-  starDisabled: {
-    opacity: 0.5,
-  },
+
   ratingText: {
     textAlign: 'center',
     color: theme.colors.textSecondary,

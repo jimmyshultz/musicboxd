@@ -146,9 +146,9 @@ class UserAlbumsService {
    */
   async rateAlbum(userId: string, albumId: string, rating: number): Promise<UserAlbumInteraction> {
     try {
-      // Validate rating
-      if (rating < 1 || rating > 5) {
-        throw new Error('Rating must be between 1 and 5');
+      // Validate rating (must be in 0.5 increments between 0.5 and 5.0)
+      if (rating < 0.5 || rating > 5.0 || (rating * 2) !== Math.floor(rating * 2)) {
+        throw new Error('Rating must be between 0.5 and 5.0 in 0.5 increments');
       }
 
       // Ensure album exists in database

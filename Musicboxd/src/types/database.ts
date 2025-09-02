@@ -45,7 +45,7 @@ export interface AlbumRating {
   id: string;
   user_id: string;
   album_id: string;
-  rating: number; // 1-5 stars, required in V2
+  rating: number; // 0.5-5.0 stars in 0.5 increments, required in V2
   review?: string;
   created_at: string;
   updated_at: string;
@@ -59,7 +59,7 @@ export interface DiaryEntry {
   user_id: string;
   album_id: string;
   diary_date: string; // Date string YYYY-MM-DD
-  rating?: number; // Optional rating at time of listen
+  rating?: number; // Optional rating at time of listen, 0.5-5.0 stars in 0.5 increments
   notes?: string;
   created_at: string;
   updated_at: string;
