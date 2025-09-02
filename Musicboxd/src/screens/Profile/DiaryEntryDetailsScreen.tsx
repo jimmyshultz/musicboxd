@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, Text, ActivityIndicator } from 'react-native-paper';
@@ -197,7 +197,7 @@ import { theme, spacing } from '../../utils/theme';
 
   if (loading || !entry) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.container, styles.center]}>
         <ActivityIndicator />
         <Text style={{ marginTop: spacing.sm }}>Loading diary entry…</Text>
       </View>
@@ -210,7 +210,7 @@ import { theme, spacing } from '../../utils/theme';
   const canEdit = currentUser?.id === userId; // Only owner edits
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Hidden shareable view for Instagram */}
       <View ref={shareViewRef} style={styles.shareView}>
         {album && (
@@ -310,12 +310,16 @@ import { theme, spacing } from '../../utils/theme';
           </View>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
  }
 
  const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background, padding: spacing.lg },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  scrollContent: { 
+    padding: spacing.lg,
+    paddingBottom: spacing.xl, // Extra padding at bottom for date picker
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', marginBottom: spacing.lg },
   datePickerContainer: { 
