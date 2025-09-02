@@ -110,7 +110,7 @@ import { theme, spacing } from '../../utils/theme';
     setPendingDate(null);
   };
 
-  const handleShareToInstagram = async () => {
+  const handleShareDiaryEntry = async () => {
     if (!album || !entry) return;
     
     setSharing(true);
@@ -147,31 +147,19 @@ import { theme, spacing } from '../../utils/theme';
       console.log('Share dialog result:', result);
       
     } catch (error) {
-      console.error('Error sharing:', error);
+      console.log('Share cancelled or failed:', error);
       
-      // Show user-friendly error message
-      Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
+      // Only show error alert for actual errors, not user cancellation
+      if (error.message !== 'User did not share') {
+        Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
+      }
     }
     
     setShowShareView(false);
     setSharing(false);
   };
 
-  const handleTestShare = async () => {
-    if (!album || !entry) return;
-    
-    try {
-      const shareText = `🎵 Just listened to "${album.title}" by ${album.artist}\n📅 ${new Date(entry.diaryDate).toLocaleDateString()}${entry.ratingAtTime ? `\n⭐ Rating: ${entry.ratingAtTime.toFixed(1)}/5.0` : ''}${entry.notes ? `\n📝 "${entry.notes}"` : ''}\n\n#Musicboxd`;
-      
-      await Share.open({
-        message: shareText,
-        title: 'Share Diary Entry',
-      });
-    } catch (error) {
-      console.error('Error with text sharing:', error);
-      Alert.alert('Share Error', 'Unable to share at this time.');
-    }
-  };
+
 
   const onChangeRating = async (newRating: number) => {
     if (!entry) return;
@@ -295,20 +283,12 @@ import { theme, spacing } from '../../utils/theme';
       <View style={styles.shareActions}>
         <Button 
           mode="outlined" 
-          onPress={handleShareToInstagram} 
+          onPress={handleShareDiaryEntry} 
           disabled={sharing}
-          icon={() => <Icon name="instagram" size={16} color="#E4405F" />}
+          icon={() => <Icon name="share" size={16} color="#666" />}
           loading={sharing}
         >
-          Share to Instagram
-        </Button>
-        <Button 
-          mode="text" 
-          onPress={handleTestShare} 
-          disabled={sharing}
-          style={{ marginTop: 8 }}
-        >
-          Test Share (Text Only)
+          Share Diary Entry
         </Button>
       </View>
 
