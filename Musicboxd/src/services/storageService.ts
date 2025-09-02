@@ -6,10 +6,16 @@ class StorageService {
    */
   async uploadProfilePicture(userId: string, imageUri: string): Promise<string> {
     try {
+      console.log('Starting upload for user:', userId);
+      console.log('Image URI:', imageUri);
+      
       // Create a filename that matches our RLS policy (must contain userId)
       const timestamp = Date.now();
       const fileName = `${userId}_${timestamp}.jpg`;
       const filePath = `profile-pictures/${fileName}`;
+      
+      console.log('Upload path:', filePath);
+      console.log('Filename:', fileName);
 
       // Create file object for React Native Supabase upload
       const fileObject = {
@@ -18,6 +24,8 @@ class StorageService {
         name: fileName,
       };
 
+      console.log('File object:', fileObject);
+
       // Upload file object directly to Supabase storage
       const { data, error } = await supabase.storage
         .from('avatars')
@@ -25,6 +33,8 @@ class StorageService {
           contentType: 'image/jpeg',
           upsert: false, // Don't overwrite existing files
         });
+
+      console.log('Upload result:', { data, error });
 
       if (error) {
         throw error;
