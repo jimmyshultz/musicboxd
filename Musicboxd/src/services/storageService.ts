@@ -6,9 +6,9 @@ class StorageService {
    */
   async uploadProfilePicture(userId: string, imageUri: string): Promise<string> {
     try {
-      // Create a unique filename
+      // Create a filename that matches our RLS policy (must contain userId)
       const timestamp = Date.now();
-      const fileName = `profile_${userId}_${timestamp}.jpg`;
+      const fileName = `${userId}_${timestamp}.jpg`;
       const filePath = `profile-pictures/${fileName}`;
 
       // Create file object for React Native Supabase upload
