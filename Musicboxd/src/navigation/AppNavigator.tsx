@@ -234,7 +234,7 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> }}
+        options={({ navigation }) => ({ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> })}
       />
     </HomeStack.Navigator>
   );
@@ -383,7 +383,7 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> }}
+        options={({ navigation }) => ({ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> })}
       />
     </SearchStack.Navigator>
   );
@@ -532,7 +532,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> }}
+        options={({ navigation }) => ({ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => <BackButton navigation={navigation} /> })}
       />
       <ProfileStack.Screen
         name="Settings"
