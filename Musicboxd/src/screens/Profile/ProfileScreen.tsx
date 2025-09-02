@@ -480,10 +480,7 @@ export default function ProfileScreen() {
               <Text style={styles.settingsText}>Account Settings</Text>
               <ChevronIcon />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
-              <Text style={styles.settingsText}>Help & Support</Text>
-              <ChevronIcon />
-            </TouchableOpacity>
+
             <TouchableOpacity style={styles.settingsItem} onPress={handleLogout}>
               <Text style={styles.settingsText}>Logout</Text>
             </TouchableOpacity>

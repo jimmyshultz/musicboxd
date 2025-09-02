@@ -230,20 +230,6 @@ export default function SettingsScreen() {
             <Icon name="chevron-right" size={16} color="#666" />
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.accountItem} onPress={() => {}}>
-            <Text variant="titleMedium" style={styles.accountItemText}>
-              Data Export
-            </Text>
-            <Icon name="chevron-right" size={16} color="#666" />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.accountItem} onPress={() => {}}>
-            <Text variant="titleMedium" style={styles.accountItemText}>
-              Help & Support
-            </Text>
-            <Icon name="chevron-right" size={16} color="#666" />
-          </TouchableOpacity>
-          
           <Divider style={styles.divider} />
         </>
       )}
