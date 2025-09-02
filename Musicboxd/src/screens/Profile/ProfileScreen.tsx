@@ -388,20 +388,9 @@ export default function ProfileScreen() {
             source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
             style={styles.profilePicture}
           />
-          <View style={styles.profileInfo}>
-            <Text variant="headlineMedium" style={styles.username}>
-              @{user.username}
-            </Text>
-            <TouchableOpacity 
-              style={styles.editProfileButton}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
-              <Icon name="edit" size={16} color={theme.colors.primary} />
-              <Text variant="bodyMedium" style={styles.editProfileText}>
-                Edit Profile
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text variant="headlineMedium" style={styles.username}>
+            @{user.username}
+          </Text>
         </View>
 
         {/* Favorite Albums */}
@@ -521,29 +510,15 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   profileHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
   },
   profilePicture: {
-    marginRight: spacing.md,
-  },
-  profileInfo: {
-    flex: 1,
+    marginBottom: spacing.md,
   },
   username: {
     fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  editProfileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.xs,
-  },
-  editProfileText: {
-    color: theme.colors.primary,
-    marginLeft: spacing.xs,
   },
   section: {
     marginBottom: spacing.xl,

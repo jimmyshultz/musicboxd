@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -56,31 +56,33 @@ export default function EditProfileScreen() {
     setHasUnsavedChanges(usernameChanged || imageChanged);
   }, [username, newImageUri, user?.username]);
 
-  // Set up header with save/cancel buttons
+  // Handle back button with unsaved changes warning
   useLayoutEffect(() => {
-    navigation.setOptions({
-      title: 'Edit Profile',
-      headerRight: () => (
-        <Button
-          mode="text"
-          onPress={handleSave}
-          disabled={loading || !!usernameError || !hasUnsavedChanges}
-          loading={loading}
-        >
-          Save
-        </Button>
-      ),
-      headerLeft: () => (
-        <Button
-          mode="text"
-          onPress={handleCancel}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-      ),
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!hasUnsavedChanges) {
+        return;
+      }
+
+      e.preventDefault();
+
+      Alert.alert(
+        'Unsaved Changes',
+        'You have unsaved changes. Are you sure you want to leave?',
+        [
+          { text: 'Stay', style: 'cancel' },
+          {
+            text: 'Leave',
+            style: 'destructive',
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ]
+      );
     });
-  }, [navigation, loading, usernameError, hasUnsavedChanges]);
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges]);
+
+
 
   const validateUsername = (username: string): string | null => {
     // Length validation
@@ -319,6 +321,27 @@ export default function EditProfileScreen() {
           </Card.Content>
         </Card>
       )}
+
+      {/* Save/Cancel Buttons */}
+      <View style={styles.buttonContainer}>
+        <Button
+          mode="outlined"
+          onPress={handleCancel}
+          disabled={loading}
+          style={styles.cancelButton}
+        >
+          Cancel
+        </Button>
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          disabled={loading || !!usernameError || !hasUnsavedChanges}
+          loading={loading}
+          style={styles.saveButton}
+        >
+          Save Changes
+        </Button>
+      </View>
     </ScrollView>
   );
 }
@@ -395,5 +418,18 @@ const styles = StyleSheet.create({
   previewLabel: {
     color: theme.colors.textSecondary,
     marginTop: spacing.xs,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  cancelButton: {
+    flex: 1,
+  },
+  saveButton: {
+    flex: 1,
   },
 });

@@ -575,7 +575,11 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="EditProfile"
         component={EditProfileScreen}
-        options={{ headerShown: false }} // We'll handle the header in the component
+        options={({ navigation }) => ({
+          title: 'Edit Profile',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
       />
     </ProfileStack.Navigator>
   );
