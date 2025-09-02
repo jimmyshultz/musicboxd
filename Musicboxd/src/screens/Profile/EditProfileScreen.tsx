@@ -48,6 +48,7 @@ export default function EditProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Track if changes have been made
   useEffect(() => {
@@ -59,7 +60,8 @@ export default function EditProfileScreen() {
   // Handle back button with unsaved changes warning
   useLayoutEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-      if (!hasUnsavedChanges) {
+      // Don't show warning if we're in the saving process or no unsaved changes
+      if (!hasUnsavedChanges || isSaving) {
         return;
       }
 
@@ -80,7 +82,7 @@ export default function EditProfileScreen() {
     });
 
     return unsubscribe;
-  }, [navigation, hasUnsavedChanges]);
+  }, [navigation, hasUnsavedChanges, isSaving]);
 
 
 
@@ -141,6 +143,7 @@ export default function EditProfileScreen() {
     if (!user || loading || usernameError || !hasUnsavedChanges) return;
 
     setLoading(true);
+    setIsSaving(true);
     
     try {
       // Validate username uniqueness if it changed
@@ -149,6 +152,7 @@ export default function EditProfileScreen() {
         if (!isAvailable) {
           setUsernameError('Username is already taken');
           setLoading(false);
+          setIsSaving(false);
           return;
         }
       }
@@ -175,6 +179,7 @@ export default function EditProfileScreen() {
           console.error('Error uploading profile picture:', uploadError);
           Alert.alert('Upload Error', 'Unable to upload profile picture. Please try again.');
           setLoading(false);
+          setIsSaving(false);
           return;
         }
       }
@@ -190,6 +195,9 @@ export default function EditProfileScreen() {
         }));
       }
 
+      // Clear unsaved changes flag before navigating
+      setHasUnsavedChanges(false);
+      
       Alert.alert('Success', 'Profile updated successfully!');
       navigation.goBack();
       
@@ -199,6 +207,7 @@ export default function EditProfileScreen() {
     }
     
     setLoading(false);
+    setIsSaving(false);
   };
 
   const handleCancel = () => {
