@@ -60,14 +60,16 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
         </Text>
       );
     } else if (rating >= halfStarThreshold) {
-      // Half star - show filled left half and empty right half
+      // Half star - use stacked approach for precise half-fill
       return (
-        <View style={styles.halfStarContainer}>
-          <Text style={[styles.star, sizeStyles, { color: theme.colors.primary }]}>
+        <View style={styles.starContainer}>
+          {/* Background empty star */}
+          <Text style={[styles.star, sizeStyles, { color: '#ddd' }]}>
             ★
           </Text>
-          <View style={[styles.halfStarOverlay, { width: sizeStyles.fontSize / 2 }]}>
-            <Text style={[styles.star, sizeStyles, { color: '#ccc' }]}>
+          {/* Foreground half star - clipped to left 50% */}
+          <View style={[styles.halfStarWrapper, { width: sizeStyles.fontSize * 0.5 }]}>
+            <Text style={[styles.star, styles.halfStar, sizeStyles, { color: theme.colors.primary }]}>
               ★
             </Text>
           </View>
@@ -76,7 +78,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
     } else {
       // Empty star
       return (
-        <Text style={[styles.star, sizeStyles, { color: '#ccc' }]}>
+        <Text style={[styles.star, sizeStyles, { color: '#ddd' }]}>
           ☆
         </Text>
       );
@@ -136,14 +138,16 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
         </Text>
       );
     } else if (rating >= halfStarThreshold) {
-      // Half star - show filled left half and empty right half
+      // Half star - use stacked approach for precise half-fill
       return (
-        <View style={styles.halfStarContainer}>
-          <Text style={[styles.star, sizeStyles, { color: theme.colors.primary }]}>
+        <View style={styles.starContainer}>
+          {/* Background empty star */}
+          <Text style={[styles.star, sizeStyles, { color: '#ddd' }]}>
             ★
           </Text>
-          <View style={[styles.halfStarOverlay, { width: sizeStyles.fontSize / 2 }]}>
-            <Text style={[styles.star, sizeStyles, { color: '#ccc' }]}>
+          {/* Foreground half star - clipped to left 50% */}
+          <View style={[styles.halfStarWrapper, { width: sizeStyles.fontSize * 0.5 }]}>
+            <Text style={[styles.star, styles.halfStar, sizeStyles, { color: theme.colors.primary }]}>
               ★
             </Text>
           </View>
@@ -152,7 +156,7 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
     } else {
       // Empty star
       return (
-        <Text style={[styles.star, sizeStyles, { color: '#ccc' }]}>
+        <Text style={[styles.star, sizeStyles, { color: '#ddd' }]}>
           ☆
         </Text>
       );
@@ -162,7 +166,7 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
   return (
     <View style={styles.displayContainer}>
       {[1, 2, 3, 4, 5].map((starNumber) => (
-        <View key={starNumber}>
+        <View key={starNumber} style={styles.starTouchable}>
           {renderStar(starNumber)}
         </View>
       ))}
@@ -182,24 +186,30 @@ const styles = StyleSheet.create({
   starTouchable: {
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 2,
+  },
+  starContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   star: {
     textAlign: 'center',
     fontWeight: 'bold',
   },
+  halfStar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
   starDisabled: {
     opacity: 0.5,
   },
-  halfStarContainer: {
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  halfStarOverlay: {
+  halfStarWrapper: {
     position: 'absolute',
     top: 0,
-    right: 0,
-    bottom: 0,
+    left: 0,
     overflow: 'hidden',
+    alignItems: 'flex-start',
   },
 });
