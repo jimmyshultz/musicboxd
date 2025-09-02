@@ -7,7 +7,6 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { CameraRoll } from '@react-native-camera-roll/camera-roll';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
@@ -160,46 +159,7 @@ import { theme, spacing } from '../../utils/theme';
     setSharing(false);
   };
 
-  const handleSaveToPhotos = async () => {
-    if (!album || !entry) return;
-    
-    setSharing(true);
-    setShowShareView(true);
-    
-    try {
-      // Wait for the view to render
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const shareView = shareViewRef.current;
-      if (!shareView) {
-        throw new Error('Share view not found');
-      }
-      
-      console.log('Capturing view for photo save...');
-      // Capture the view
-      const uri = await captureRef(shareView, {
-        format: 'png',
-        quality: 1.0,
-      });
-      
-      console.log('View captured, saving to photos...');
-      
-      // Save directly to camera roll
-      await CameraRoll.save(uri, { type: 'photo' });
-      
-      console.log('Image saved to photos successfully');
-      Alert.alert('Success', 'Diary entry saved to Photos!');
-      
-    } catch (error) {
-      console.log('Save to photos failed:', error);
-      
-      // Show user-friendly error message
-      Alert.alert('Save Error', 'Unable to save to Photos. Please check your permissions and try again.');
-    }
-    
-    setShowShareView(false);
-    setSharing(false);
-  };
+
 
   const onChangeRating = async (newRating: number) => {
     if (!entry) return;
@@ -319,7 +279,7 @@ import { theme, spacing } from '../../utils/theme';
         </View>
       </View>
 
-      {/* Share buttons - available to all users */}
+      {/* Share button - available to all users */}
       <View style={styles.shareActions}>
         <Button 
           mode="outlined" 
@@ -327,19 +287,8 @@ import { theme, spacing } from '../../utils/theme';
           disabled={sharing}
           icon={() => <Icon name="share" size={16} color="#666" />}
           loading={sharing}
-          style={styles.shareButton}
         >
-          Share
-        </Button>
-        <Button 
-          mode="outlined" 
-          onPress={handleSaveToPhotos} 
-          disabled={sharing}
-          icon={() => <Icon name="download" size={16} color="#666" />}
-          loading={sharing}
-          style={styles.shareButton}
-        >
-          Save to Photos
+          Share Diary Entry
         </Button>
       </View>
 
@@ -395,13 +344,7 @@ import { theme, spacing } from '../../utils/theme';
   },
   shareActions: {
     marginVertical: spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: spacing.md,
-  },
-  shareButton: {
-    flex: 1,
-    marginHorizontal: spacing.xs,
+    alignItems: 'center',
   },
   shareView: {
     position: 'absolute',
