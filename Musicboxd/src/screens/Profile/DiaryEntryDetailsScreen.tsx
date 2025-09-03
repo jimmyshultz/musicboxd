@@ -77,6 +77,70 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
 
   const canEdit = entry && currentUser?.id === userId;
 
+  const handleShareDiaryEntry = useCallback(async () => {
+    if (!album || !entry) return;
+    
+    setSharing(true);
+    setShowShareView(true);
+    
+    try {
+      // Wait for the view to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const shareView = shareViewRef.current;
+      if (!shareView) {
+        throw new Error('Share view not found');
+      }
+      
+      console.log('Capturing view...');
+      // Capture the view
+      const uri = await captureRef(shareView, {
+        format: 'png',
+        quality: 1.0,
+      });
+      
+      console.log('View captured, URI:', uri);
+
+      // Try general sharing first (more reliable than Instagram-specific)
+      const shareOptions = {
+        url: `file://${uri}`,
+        type: 'image/png',
+        title: 'Share Diary Entry',
+        message: `Check out my diary entry for ${album.title} by ${album.artist}!`,
+      };
+
+      console.log('Opening share dialog...');
+      const result = await Share.open(shareOptions);
+      console.log('Share dialog result:', result);
+      
+    } catch (error) {
+      console.log('Share cancelled or failed:', error);
+      
+      // Only show error alert for actual errors, not user cancellation
+      if (error.message !== 'User did not share') {
+        Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
+      }
+    }
+    
+    setShowShareView(false);
+    setSharing(false);
+  }, [album, entry]);
+
+  const onDelete = useCallback(async () => {
+    if (!entry) return;
+    setSaving(true);
+    try {
+      const res = await diaryEntriesService.deleteDiaryEntry(entry.id);
+      if (res.success) {
+        dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Error deleting diary entry:', error);
+    }
+    setSaving(false);
+  }, [entry, navigation, dispatch, userId]);
+
   // Set up header menu - only show if user can edit
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -159,57 +223,6 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     setPendingDate(null);
   };
 
-  const handleShareDiaryEntry = useCallback(async () => {
-    if (!album || !entry) return;
-    
-    setSharing(true);
-    setShowShareView(true);
-    
-    try {
-      // Wait for the view to render
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const shareView = shareViewRef.current;
-      if (!shareView) {
-        throw new Error('Share view not found');
-      }
-      
-      console.log('Capturing view...');
-      // Capture the view
-      const uri = await captureRef(shareView, {
-        format: 'png',
-        quality: 1.0,
-      });
-      
-      console.log('View captured, URI:', uri);
-
-      // Try general sharing first (more reliable than Instagram-specific)
-      const shareOptions = {
-        url: `file://${uri}`,
-        type: 'image/png',
-        title: 'Share Diary Entry',
-        message: `Check out my diary entry for ${album.title} by ${album.artist}!`,
-      };
-
-      console.log('Opening share dialog...');
-      const result = await Share.open(shareOptions);
-      console.log('Share dialog result:', result);
-      
-    } catch (error) {
-      console.log('Share cancelled or failed:', error);
-      
-      // Only show error alert for actual errors, not user cancellation
-      if (error.message !== 'User did not share') {
-        Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
-      }
-    }
-    
-    setShowShareView(false);
-    setSharing(false);
-  }, [album, entry]);
-
-
-
   const onChangeRating = async (newRating: number) => {
     if (!entry) return;
     setSaving(true);
@@ -234,21 +247,6 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     }
     setSaving(false);
   };
-
-  const onDelete = useCallback(async () => {
-    if (!entry) return;
-    setSaving(true);
-    try {
-      const res = await diaryEntriesService.deleteDiaryEntry(entry.id);
-      if (res.success) {
-        dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.error('Error deleting diary entry:', error);
-    }
-    setSaving(false);
-  }, [entry, navigation, dispatch, userId]);
 
   if (loading || !entry) {
     return (
