@@ -36,7 +36,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
 
     // Get touch position relative to the star
     const { locationX } = event.nativeEvent;
-    const starWidth = iconSize + 8; // Icon size + padding
+    const starWidth = iconSize + 4; // Icon size + paddingHorizontal (2px * 2 sides = 4px total)
     const isLeftSide = locationX < starWidth / 2;
     
     const newRating = isLeftSide ? starNumber - 0.5 : starNumber;
