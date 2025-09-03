@@ -13,6 +13,7 @@ import {
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { useSelector } from 'react-redux';
 
 import { theme, spacing, shadows } from '../../utils/theme';
@@ -33,21 +34,7 @@ interface ReviewData {
   album: Album;
 }
 
-const StarDisplay = ({ rating }: { rating: number }) => (
-  <View style={styles.starContainer}>
-    {[1, 2, 3, 4, 5].map((star) => (
-      <Text
-        key={star}
-        style={[
-          styles.star,
-          star <= rating ? styles.starFilled : styles.starEmpty
-        ]}
-      >
-        {star <= rating ? '★' : '☆'}
-      </Text>
-    ))}
-  </View>
-);
+
 
 export default function UserReviewsScreen() {
   const route = useRoute<UserReviewsScreenRouteProp>();
@@ -133,7 +120,7 @@ export default function UserReviewsScreen() {
             {data.album.artist}
           </Text>
           <View style={styles.ratingRow}>
-            <StarDisplay rating={data.review.rating} />
+            <HalfStarDisplay rating={data.review.rating} size="small" />
             <Text variant="bodySmall" style={styles.reviewDate}>
               {formatReviewDate(new Date(data.review.dateReviewed))}
             </Text>
@@ -267,19 +254,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  starContainer: {
-    flexDirection: 'row',
-  },
-  star: {
-    fontSize: 16,
-    marginRight: 2,
-  },
-  starFilled: {
-    color: theme.colors.primary,
-  },
-  starEmpty: {
-    color: '#ccc',
-  },
+
   reviewDate: {
     color: theme.colors.textSecondary,
     fontSize: 12,

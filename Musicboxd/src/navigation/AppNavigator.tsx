@@ -3,8 +3,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
 import { RootState } from '../store';
@@ -27,6 +28,7 @@ import AuthScreen from '../screens/Auth/AuthScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
+import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 
@@ -51,7 +53,7 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
       onPress={handlePress}
       style={backButtonStyles.container}
     >
-      <Text style={[backButtonStyles.text, { color: currentTheme.colors.onSurface }]}>←</Text>
+      <Icon name="arrow-left" size={18} color={currentTheme.colors.onSurface} />
     </TouchableOpacity>
   );
 });
@@ -60,23 +62,23 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
 
 // Tab icon component to avoid creating it during render
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
-  let iconText: string;
+  let iconName: string;
 
   switch (routeName) {
     case 'Home':
-      iconText = '🏠';
+      iconName = 'home';
       break;
     case 'Search':
-      iconText = '🔍';
+      iconName = 'search';
       break;
     case 'Profile':
-      iconText = '👤';
+      iconName = 'user';
       break;
     default:
-      iconText = '❓';
+      iconName = 'question';
   }
 
-  return <Text style={{ fontSize: size, color }}>{iconText}</Text>;
+  return <Icon name={iconName} size={size} color={color} />;
 };
 
 // Create tab bar icon function outside component
@@ -233,7 +235,11 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
+        options={({ navigation }) => ({ 
+          title: 'Diary Entry', 
+          headerBackVisible: false, 
+          headerLeft: () => <BackButton navigation={navigation} />
+        })}
       />
     </HomeStack.Navigator>
   );
@@ -382,7 +388,11 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
+        options={({ navigation }) => ({ 
+          title: 'Diary Entry', 
+          headerBackVisible: false, 
+          headerLeft: () => <BackButton navigation={navigation} />
+        })}
       />
     </SearchStack.Navigator>
   );
@@ -531,7 +541,11 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={{ title: 'Diary Entry', headerBackVisible: false, headerLeft: () => null }}
+        options={({ navigation }) => ({ 
+          title: 'Diary Entry', 
+          headerBackVisible: false, 
+          headerLeft: () => <BackButton navigation={navigation} />
+        })}
       />
       <ProfileStack.Screen
         name="Settings"
@@ -555,6 +569,15 @@ function ProfileStackNavigator() {
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
           }} />,
+        })}
+      />
+      <ProfileStack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={({ navigation }) => ({
+          title: 'Edit Profile',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
         })}
       />
     </ProfileStack.Navigator>

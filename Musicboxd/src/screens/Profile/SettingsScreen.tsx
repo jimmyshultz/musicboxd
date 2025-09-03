@@ -19,6 +19,7 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList } from '../../types';
 import { RootState } from '../../store';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { logout } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
 import { colors, spacing } from '../../utils/theme';
@@ -184,7 +185,7 @@ export default function SettingsScreen() {
               <Text variant="titleMedium" style={styles.accountItemText}>
                 Follow Requests
               </Text>
-              <Text style={styles.chevron}>›</Text>
+              <Icon name="chevron-right" size={16} color="#666" />
             </TouchableOpacity>
           )}
           
@@ -222,25 +223,11 @@ export default function SettingsScreen() {
       {renderSection(
         'Account',
         <>
-          <TouchableOpacity style={styles.accountItem} onPress={() => {}}>
+          <TouchableOpacity style={styles.accountItem} onPress={() => navigation.navigate('EditProfile')}>
             <Text variant="titleMedium" style={styles.accountItemText}>
               Edit Profile
             </Text>
-            <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.accountItem} onPress={() => {}}>
-            <Text variant="titleMedium" style={styles.accountItemText}>
-              Data Export
-            </Text>
-            <Text style={styles.chevron}>›</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.accountItem} onPress={() => {}}>
-            <Text variant="titleMedium" style={styles.accountItemText}>
-              Help & Support
-            </Text>
-            <Text style={styles.chevron}>›</Text>
+            <Icon name="chevron-right" size={16} color="#666" />
           </TouchableOpacity>
           
           <Divider style={styles.divider} />

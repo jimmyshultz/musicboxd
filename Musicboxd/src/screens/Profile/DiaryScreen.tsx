@@ -11,6 +11,7 @@ import { RootState } from '../../store';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../store/slices/diarySlice';
 import { theme, spacing } from '../../utils/theme';
+import { HalfStarDisplay } from '../../components/HalfStarRating';
 
  type DiaryScreenRouteProp = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'Diary'>;
  type DiaryScreenNavProp = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
@@ -166,7 +167,7 @@ import { theme, spacing } from '../../utils/theme';
             {album ? `${album.title} (${albumYear})` : ''}
           </Text>
           {!!item.ratingAtTime && (
-            <Text variant="bodySmall" style={styles.rating}>{'★'.repeat(item.ratingAtTime)}{'☆'.repeat(5 - item.ratingAtTime)}</Text>
+            <HalfStarDisplay rating={item.ratingAtTime} size="small" />
           )}
         </View>
       </TouchableOpacity>

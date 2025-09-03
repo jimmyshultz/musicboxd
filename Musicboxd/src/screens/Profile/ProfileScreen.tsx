@@ -16,6 +16,8 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { logout } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
@@ -30,15 +32,14 @@ const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
 
 // Icon components to avoid creating them during render
-const chevronIconStyle = { fontSize: 14, color: '#666', lineHeight: 24, marginTop: 8 };
-
-const ChevronIcon = (_props: any) => <Text style={chevronIconStyle}>›</Text>;
+const ChevronIcon = (_props: any) => <Icon name="chevron-right" size={14} color="#666" />;
 
 interface UserStats {
   albumsThisYear: number;
   albumsAllTime: number;
   ratingsThisYear: number;
   ratingsAllTime: number;
+  averageRating: number;
   followers: number;
   following: number;
 }
@@ -63,6 +64,7 @@ export default function ProfileScreen() {
     albumsAllTime: 0,
     ratingsThisYear: 0,
     ratingsAllTime: 0,
+    averageRating: 0,
     followers: 0,
     following: 0,
   });
@@ -179,6 +181,7 @@ export default function ProfileScreen() {
         albumsAllTime: stats.albumsAllTime,
         ratingsThisYear: stats.ratingsThisYear,
         ratingsAllTime: stats.ratingsAllTime,
+        averageRating: stats.averageRating,
         followers: stats.followers,
         following: stats.following,
       });
@@ -231,6 +234,7 @@ export default function ProfileScreen() {
       albumsAllTime: 0,
       ratingsThisYear: 0,
       ratingsAllTime: 0,
+      averageRating: 0,
       followers: 0,
       following: 0,
     });
@@ -286,13 +290,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Text key={index} style={styles.star}>
-        {index < rating ? '★' : '☆'}
-      </Text>
-    ));
-  };
+
 
   const renderFavoriteAlbum = (album: Album) => (
     <TouchableOpacity
@@ -325,7 +323,7 @@ export default function ProfileScreen() {
       </Text>
       {activity.review && (
         <View style={styles.ratingContainer}>
-          {renderStars(activity.review.rating)}
+          <HalfStarDisplay rating={activity.review.rating} size="small" />
         </View>
       )}
     </TouchableOpacity>
@@ -470,7 +468,7 @@ export default function ProfileScreen() {
             {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
             {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
             {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating}`, () => navigateToUserReviews('alltime'))}
+            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating.toFixed(1)}`, () => navigateToUserReviews('alltime'))}
             {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
             {renderStatCard('Following', userStats.following, navigateToFollowing)}
           </View>
@@ -486,10 +484,7 @@ export default function ProfileScreen() {
               <Text style={styles.settingsText}>Account Settings</Text>
               <ChevronIcon />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => {}}>
-              <Text style={styles.settingsText}>Help & Support</Text>
-              <ChevronIcon />
-            </TouchableOpacity>
+
             <TouchableOpacity style={styles.settingsItem} onPress={handleLogout}>
               <Text style={styles.settingsText}>Logout</Text>
             </TouchableOpacity>
@@ -585,10 +580,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     justifyContent: 'flex-start',
   },
-  star: {
-    fontSize: 12,
-    color: theme.light.colors.primary,
-  },
+
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

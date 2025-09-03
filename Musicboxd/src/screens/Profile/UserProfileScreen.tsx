@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, SerializedUser } from '../../types';
 import { UserProfile } from '../../types/database';
+import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { RootState } from '../../store';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
@@ -319,13 +320,7 @@ export default function UserProfileScreen() {
     }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <Text key={index} style={styles.star}>
-        {index < rating ? '★' : '☆'}
-      </Text>
-    ));
-  };
+
 
   const renderFavoriteAlbum = (album: Album) => (
     <TouchableOpacity
@@ -358,7 +353,7 @@ export default function UserProfileScreen() {
       </Text>
       {activity.review && (
         <View style={styles.ratingContainer}>
-          {renderStars(activity.review.rating)}
+          <HalfStarDisplay rating={activity.review.rating} size="small" />
         </View>
       )}
     </TouchableOpacity>
@@ -607,10 +602,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     justifyContent: 'flex-start',
   },
-  star: {
-    fontSize: 12,
-    color: theme.light.colors.primary,
-  },
+
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

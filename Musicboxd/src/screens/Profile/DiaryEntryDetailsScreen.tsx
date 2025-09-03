@@ -1,12 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react';
+import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { captureRef } from 'react-native-view-shot';
+import Share from 'react-native-share';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
+import { HalfStarRating, HalfStarDisplay } from '../../components/HalfStarRating';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
@@ -16,9 +20,10 @@ import { theme, spacing } from '../../utils/theme';
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
 
- const Star = ({ filled }: { filled: boolean }) => (
-  <Text style={filled ? styles.starFilled : styles.starEmpty}>{filled ? '★' : '☆'}</Text>
-);
+// Menu icon component to avoid creating during render
+const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
+
+
 
  export default function DiaryEntryDetailsScreen() {
   const route = useRoute<DetailsRoute>();
@@ -32,6 +37,11 @@ import { theme, spacing } from '../../utils/theme';
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
+  const [pendingDate, setPendingDate] = useState<Date | null>(null);
+  const [_sharing, setSharing] = useState(false);
+  const [showShareView, setShowShareView] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const shareViewRef = React.useRef<View>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -65,12 +75,126 @@ import { theme, spacing } from '../../utils/theme';
 
   useEffect(() => { load(); }, [load]);
 
-  const onChangeDate = async (_: any, selected?: Date) => {
-    setShowPicker(false);
-    if (!entry || !selected) return;
+  const canEdit = entry && currentUser?.id === userId;
+
+  const handleShareDiaryEntry = useCallback(async () => {
+    if (!album || !entry) return;
+    
+    setSharing(true);
+    setShowShareView(true);
+    
+    try {
+      // Wait for the view to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const shareView = shareViewRef.current;
+      if (!shareView) {
+        throw new Error('Share view not found');
+      }
+      
+      console.log('Capturing view...');
+      // Capture the view
+      const uri = await captureRef(shareView, {
+        format: 'png',
+        quality: 1.0,
+      });
+      
+      console.log('View captured, URI:', uri);
+
+      // Try general sharing first (more reliable than Instagram-specific)
+      const shareOptions = {
+        url: `file://${uri}`,
+        type: 'image/png',
+        title: 'Share Diary Entry',
+        message: `Check out my diary entry for ${album.title} by ${album.artist}!`,
+      };
+
+      console.log('Opening share dialog...');
+      const result = await Share.open(shareOptions);
+      console.log('Share dialog result:', result);
+      
+    } catch (error) {
+      console.log('Share cancelled or failed:', error);
+      
+      // Only show error alert for actual errors, not user cancellation
+      if (error.message !== 'User did not share') {
+        Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
+      }
+    }
+    
+    setShowShareView(false);
+    setSharing(false);
+  }, [album, entry]);
+
+  const onDelete = useCallback(async () => {
+    if (!entry) return;
     setSaving(true);
     try {
-      const iso = `${selected.getFullYear()}-${String(selected.getMonth()+1).padStart(2,'0')}-${String(selected.getDate()).padStart(2,'0')}`;
+      const res = await diaryEntriesService.deleteDiaryEntry(entry.id);
+      if (res.success) {
+        dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error('Error deleting diary entry:', error);
+    }
+    setSaving(false);
+  }, [entry, navigation, dispatch, userId]);
+
+  // Set up header menu - only show if user can edit
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: canEdit ? () => (
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={
+            <IconButton
+              icon={MenuIcon}
+              onPress={() => setMenuVisible(true)}
+            />
+          }
+        >
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
+              handleShareDiaryEntry();
+            }} 
+            title="Share" 
+            leadingIcon="share" 
+          />
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
+              setShowPicker(true);
+            }} 
+            title="Edit Date" 
+            leadingIcon="calendar" 
+          />
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
+              onDelete();
+            }} 
+            title="Delete" 
+            leadingIcon="delete" 
+          />
+        </Menu>
+      ) : undefined,
+    });
+  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry, onDelete]);
+
+  const onChangeDate = (_: any, selected?: Date) => {
+    if (selected) {
+      setPendingDate(selected);
+    }
+  };
+
+  const handleSaveDate = async () => {
+    if (!entry || !pendingDate) return;
+    setSaving(true);
+    try {
+      const iso = `${pendingDate.getFullYear()}-${String(pendingDate.getMonth()+1).padStart(2,'0')}-${String(pendingDate.getDate()).padStart(2,'0')}`;
       const res = await diaryEntriesService.updateDiaryEntry(entry.id, { diaryDate: iso });
       if (res.success && res.entry) {
         // Convert from new service format to old DiaryEntry format
@@ -79,7 +203,7 @@ import { theme, spacing } from '../../utils/theme';
           userId: res.entry.user_id,
           albumId: res.entry.album_id,
           diaryDate: res.entry.diary_date,
-                  ratingAtTime: res.entry.rating || undefined,
+          ratingAtTime: res.entry.rating || undefined,
           createdAt: res.entry.created_at,
           updatedAt: res.entry.updated_at,
         };
@@ -90,6 +214,13 @@ import { theme, spacing } from '../../utils/theme';
       console.error('Error updating diary date:', error);
     }
     setSaving(false);
+    setShowPicker(false);
+    setPendingDate(null);
+  };
+
+  const handleCancelDate = () => {
+    setShowPicker(false);
+    setPendingDate(null);
   };
 
   const onChangeRating = async (newRating: number) => {
@@ -117,24 +248,9 @@ import { theme, spacing } from '../../utils/theme';
     setSaving(false);
   };
 
-  const onDelete = async () => {
-    if (!entry) return;
-    setSaving(true);
-    try {
-      const res = await diaryEntriesService.deleteDiaryEntry(entry.id);
-      if (res.success) {
-        dispatch(removeDiaryEntry({ userId, entryId: entry.id }));
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.error('Error deleting diary entry:', error);
-    }
-    setSaving(false);
-  };
-
   if (loading || !entry) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.container, styles.center]}>
         <ActivityIndicator />
         <Text style={{ marginTop: spacing.sm }}>Loading diary entry…</Text>
       </View>
@@ -144,13 +260,40 @@ import { theme, spacing } from '../../utils/theme';
   const d = new Date(entry.diaryDate + 'T00:00:00');
   const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
 
-  const canEdit = currentUser?.id === userId; // Only owner edits
-
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {/* Shareable view for Instagram - only rendered when needed */}
+      {showShareView && (
+        <View ref={shareViewRef} style={styles.shareView}>
+          {album && (
+            <View style={styles.shareContent}>
+              <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
+              <View style={styles.shareTextOverlay}>
+                <Text style={styles.shareAlbumTitle}>{album.title}</Text>
+                <Text style={styles.shareArtistName}>{album.artist}</Text>
+                <Text style={styles.shareDate}>{d.toLocaleDateString()}</Text>
+                {entry.ratingAtTime && (
+                  <View style={styles.shareRatingContainer}>
+                    <HalfStarDisplay rating={entry.ratingAtTime} size="large" />
+                    <Text style={styles.shareRatingText}>{entry.ratingAtTime.toFixed(1)} stars</Text>
+                  </View>
+                )}
+                {entry.notes && (
+                  <Text style={styles.shareNotes}>"{entry.notes}"</Text>
+                )}
+                <Text style={styles.shareAppName}>Musicboxd</Text>
+              </View>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Regular diary entry view */}
       {album && (
         <View style={styles.header}>
-          <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
+          <TouchableOpacity onPress={() => navigation.navigate('AlbumDetails', { albumId: album.id })}>
+            <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
+          </TouchableOpacity>
           <View style={styles.headerTextContainer}>
             <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
             <Text variant="bodyMedium" style={styles.subduedText}>{album.artist}</Text>
@@ -166,47 +309,143 @@ import { theme, spacing } from '../../utils/theme';
       <View style={[styles.row, styles.rowAlignCenter] }>
         <Text variant="bodyLarge">Rating</Text>
         <View style={styles.rowDirection}>
-          {[1,2,3,4,5].map(star => (
-            <Text key={star} onPress={() => canEdit && onChangeRating(star)}>
-              <Star filled={!!entry.ratingAtTime && star <= entry.ratingAtTime} />
-            </Text>
-          ))}
+          {canEdit ? (
+            <HalfStarRating
+              rating={entry.ratingAtTime || 0}
+              onRatingChange={onChangeRating}
+              size="medium"
+            />
+          ) : (
+            <HalfStarDisplay
+              rating={entry.ratingAtTime || 0}
+              size="medium"
+            />
+          )}
         </View>
       </View>
 
-      {canEdit && (
-        <View style={styles.actions}>
-          <Button mode="outlined" onPress={() => setShowPicker(v => !v)} disabled={saving}>Edit date</Button>
-          <Button mode="contained" onPress={onDelete} disabled={saving} style={{ marginLeft: spacing.sm }}>Delete entry</Button>
-        </View>
-      )}
+
 
       {showPicker && (
-        <View style={{ marginTop: spacing.md }}>
+        <View style={styles.datePickerContainer}>
           <DateTimePicker
-            value={d}
+            value={pendingDate || d}
             mode="date"
             display="spinner"
             maximumDate={new Date()}
             onChange={onChangeDate}
           />
+          <View style={styles.datePickerButtons}>
+            <Button mode="outlined" onPress={handleCancelDate} disabled={saving}>
+              Cancel
+            </Button>
+            <Button mode="contained" onPress={handleSaveDate} disabled={saving || !pendingDate}>
+              Save
+            </Button>
+          </View>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
  }
 
  const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background, padding: spacing.lg },
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  scrollContent: { 
+    padding: spacing.lg,
+    paddingBottom: spacing.xl, // Extra padding at bottom for date picker
+  },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', marginBottom: spacing.lg },
+  datePickerContainer: { 
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 8,
+  },
+  datePickerButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+
+  shareView: {
+    position: 'absolute',
+    top: 0,
+    left: -1080, // Position off-screen to the left instead of overlaying
+    width: 1080,
+    height: 1920,
+    zIndex: 1000,
+  },
+  shareContent: {
+    flex: 1,
+    backgroundColor: '#1a1a1a', // Dark background for Instagram story
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 60,
+  },
+  shareAlbumCover: {
+    width: 300,
+    height: 300,
+    borderRadius: 16,
+    marginBottom: 40,
+  },
+  shareTextOverlay: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 30,
+    borderRadius: 20,
+    maxWidth: 400,
+  },
+  shareAlbumTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  shareArtistName: {
+    fontSize: 22,
+    color: '#ccc',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  shareDate: {
+    fontSize: 18,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  shareRatingContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  shareRatingText: {
+    fontSize: 16,
+    color: '#fff',
+    marginTop: 8,
+  },
+  shareNotes: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  shareAppName: {
+    fontSize: 14,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 20,
+  },
   cover: { width: 96, height: 96, borderRadius: 8 },
   headerTextContainer: { flex: 1, marginLeft: spacing.md },
   subduedText: { color: theme.colors.textSecondary },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
   rowAlignCenter: { alignItems: 'center' },
   rowDirection: { flexDirection: 'row' },
-  actions: { flexDirection: 'row', marginTop: spacing.lg },
-  starFilled: { fontSize: 20, color: theme.colors.primary },
-  starEmpty: { fontSize: 20, color: '#ccc' },
+
+
  });

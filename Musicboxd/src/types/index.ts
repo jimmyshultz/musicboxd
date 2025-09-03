@@ -78,7 +78,7 @@ export interface Review {
   id: string;
   userId: string;
   albumId: string;
-  rating: number; // 1-5 stars
+  rating: number; // 0.5-5.0 stars in 0.5 increments
   reviewText?: string;
   dateReviewed: Date | string; // Allow both Date objects and ISO strings for Redux serialization
   likesCount: number;
@@ -120,7 +120,7 @@ export interface DiaryEntry {
   userId: string;
   albumId: string;
   diaryDate: string; // YYYY-MM-DD in user's local time
-  ratingAtTime?: number; // 1-5 optional
+  ratingAtTime?: number; // 0.5-5.0 optional, in 0.5 increments
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
 }
@@ -151,6 +151,7 @@ export type HomeStackParamList = {
   FavoriteAlbumsManagement: undefined;
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
+  EditProfile: undefined;
 };
 
 export type SearchStackParamList = {
@@ -166,6 +167,7 @@ export type SearchStackParamList = {
   FavoriteAlbumsManagement: undefined;
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
+  EditProfile: undefined;
 };
 
 export type ProfileStackParamList = {
@@ -183,6 +185,7 @@ export type ProfileStackParamList = {
   DiaryEntryDetails: { entryId: string; userId: string };
   Settings: undefined;
   FollowRequests: undefined;
+  EditProfile: undefined;
 };
 
 // Search types
