@@ -39,7 +39,6 @@ interface UserStats {
   albumsAllTime: number;
   ratingsThisYear: number;
   ratingsAllTime: number;
-  averageRating: number;
   followers: number;
   following: number;
 }
@@ -64,7 +63,6 @@ export default function ProfileScreen() {
     albumsAllTime: 0,
     ratingsThisYear: 0,
     ratingsAllTime: 0,
-    averageRating: 0,
     followers: 0,
     following: 0,
   });
@@ -181,7 +179,6 @@ export default function ProfileScreen() {
         albumsAllTime: stats.albumsAllTime,
         ratingsThisYear: stats.ratingsThisYear,
         ratingsAllTime: stats.ratingsAllTime,
-        averageRating: stats.averageRating,
         followers: stats.followers,
         following: stats.following,
       });
@@ -234,7 +231,6 @@ export default function ProfileScreen() {
       albumsAllTime: 0,
       ratingsThisYear: 0,
       ratingsAllTime: 0,
-      averageRating: 0,
       followers: 0,
       following: 0,
     });
@@ -468,7 +464,6 @@ export default function ProfileScreen() {
             {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
             {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
             {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-            {userStats.averageRating > 0 && renderStatCard('Average Rating', `★ ${userStats.averageRating.toFixed(1)}`, () => navigateToUserReviews('alltime'))}
             {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
             {renderStatCard('Following', userStats.following, navigateToFollowing)}
           </View>
