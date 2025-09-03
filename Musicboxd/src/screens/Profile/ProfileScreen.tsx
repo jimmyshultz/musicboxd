@@ -39,6 +39,7 @@ interface UserStats {
   albumsAllTime: number;
   ratingsThisYear: number;
   ratingsAllTime: number;
+  averageRating: number;
   followers: number;
   following: number;
 }
@@ -63,6 +64,7 @@ export default function ProfileScreen() {
     albumsAllTime: 0,
     ratingsThisYear: 0,
     ratingsAllTime: 0,
+    averageRating: 0,
     followers: 0,
     following: 0,
   });
@@ -179,6 +181,7 @@ export default function ProfileScreen() {
         albumsAllTime: stats.albumsAllTime,
         ratingsThisYear: stats.ratingsThisYear,
         ratingsAllTime: stats.ratingsAllTime,
+        averageRating: stats.averageRating,
         followers: stats.followers,
         following: stats.following,
       });
@@ -231,6 +234,7 @@ export default function ProfileScreen() {
       albumsAllTime: 0,
       ratingsThisYear: 0,
       ratingsAllTime: 0,
+      averageRating: 0,
       followers: 0,
       following: 0,
     });
