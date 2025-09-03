@@ -56,23 +56,28 @@ export default function FollowersScreen() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      if (activeTab === 'followers') {
-        const followersData = await userService.getUserFollowers(userId);
-        setFollowers(followersData);
-      } else {
-        const followingData = await userService.getUserFollowing(userId);
-        setFollowingUsers(followingData);
-      }
+      // Load both followers and following data simultaneously
+      console.log('Loading both followers and following for user:', userId);
+      const [followersData, followingData] = await Promise.all([
+        userService.getUserFollowers(userId),
+        userService.getUserFollowing(userId)
+      ]);
+      
+      console.log('Loaded followers:', followersData.length);
+      console.log('Loaded following:', followingData.length);
+      
+      setFollowers(followersData);
+      setFollowingUsers(followingData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
-  }, [userId, activeTab]);
+  }, [userId]); // Removed activeTab dependency since we load both
 
   useEffect(() => {
     loadData();
-  }, [userId, activeTab, loadData]);
+  }, [loadData]); // Only reload when userId changes (via loadData dependency)
 
   const isFollowing = (targetUserId: string) => {
     return following.some(user => user.id === targetUserId);
