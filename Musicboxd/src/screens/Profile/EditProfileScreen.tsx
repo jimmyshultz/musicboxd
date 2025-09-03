@@ -249,8 +249,8 @@ export default function EditProfileScreen() {
     if (newImageUri) {
       return { uri: newImageUri };
     }
-    if (profilePicture) {
-      return { uri: profilePicture };
+    if (user?.profilePicture) {
+      return { uri: user.profilePicture };
     }
     return undefined;
   };
