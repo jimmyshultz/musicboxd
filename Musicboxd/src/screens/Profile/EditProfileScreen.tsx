@@ -4,14 +4,12 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
   Alert,
 } from 'react-native';
 import {
   Text,
   TextInput,
   Button,
-  ActivityIndicator,
   Avatar,
   Card,
 } from 'react-native-paper';
@@ -43,7 +41,7 @@ export default function EditProfileScreen() {
   const { user } = useSelector((state: RootState) => state.auth);
 
   const [username, setUsername] = useState(user?.username || '');
-  const [profilePicture, setProfilePicture] = useState(user?.profilePicture || '');
+  const [_profilePicture, _setProfilePicture] = useState(user?.profilePicture || '');
   const [newImageUri, setNewImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -91,23 +89,23 @@ export default function EditProfileScreen() {
 
 
 
-  const validateUsername = (username: string): string | null => {
+  const validateUsername = (usernameToValidate: string): string | null => {
     // Length validation
-    if (username.length < 5) {
+    if (usernameToValidate.length < 5) {
       return 'Username must be at least 5 characters';
     }
-    if (username.length > 16) {
+    if (usernameToValidate.length > 16) {
       return 'Username must be 16 characters or less';
     }
 
     // Character validation
     const validChars = /^[a-zA-Z0-9._-]+$/;
-    if (!validChars.test(username)) {
+    if (!validChars.test(usernameToValidate)) {
       return 'Username can only contain letters, numbers, periods, dashes, and underscores';
     }
 
     // Profanity filter
-    const lowerUsername = username.toLowerCase();
+    const lowerUsername = usernameToValidate.toLowerCase();
     for (const word of PROFANITY_WORDS) {
       if (lowerUsername.includes(word)) {
         return 'Username contains inappropriate language';

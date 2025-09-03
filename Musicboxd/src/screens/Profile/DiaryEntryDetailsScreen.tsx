@@ -20,6 +20,9 @@ import { theme, spacing } from '../../utils/theme';
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
 
+// Menu icon component to avoid creating during render
+const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
+
 
 
  export default function DiaryEntryDetailsScreen() {
@@ -35,7 +38,7 @@ import { theme, spacing } from '../../utils/theme';
   const [saving, setSaving] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const [pendingDate, setPendingDate] = useState<Date | null>(null);
-  const [sharing, setSharing] = useState(false);
+  const [_sharing, setSharing] = useState(false);
   const [showShareView, setShowShareView] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const shareViewRef = React.useRef<View>(null);
@@ -83,7 +86,7 @@ import { theme, spacing } from '../../utils/theme';
           onDismiss={() => setMenuVisible(false)}
           anchor={
             <IconButton
-              icon={() => <Icon name="ellipsis-v" size={18} color="#666" />}
+              icon={MenuIcon}
               onPress={() => setMenuVisible(true)}
             />
           }
@@ -115,7 +118,7 @@ import { theme, spacing } from '../../utils/theme';
         </Menu>
       ) : undefined,
     });
-  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry]);
+  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry, onDelete]);
 
   const onChangeDate = (_: any, selected?: Date) => {
     if (selected) {
@@ -156,7 +159,7 @@ import { theme, spacing } from '../../utils/theme';
     setPendingDate(null);
   };
 
-  const handleShareDiaryEntry = async () => {
+  const handleShareDiaryEntry = useCallback(async () => {
     if (!album || !entry) return;
     
     setSharing(true);
@@ -203,7 +206,7 @@ import { theme, spacing } from '../../utils/theme';
     
     setShowShareView(false);
     setSharing(false);
-  };
+  }, [album, entry]);
 
 
 
@@ -232,7 +235,7 @@ import { theme, spacing } from '../../utils/theme';
     setSaving(false);
   };
 
-  const onDelete = async () => {
+  const onDelete = useCallback(async () => {
     if (!entry) return;
     setSaving(true);
     try {
@@ -245,7 +248,7 @@ import { theme, spacing } from '../../utils/theme';
       console.error('Error deleting diary entry:', error);
     }
     setSaving(false);
-  };
+  }, [entry, navigation, dispatch, userId]);
 
   if (loading || !entry) {
     return (

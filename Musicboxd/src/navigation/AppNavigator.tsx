@@ -3,9 +3,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, useColorScheme, TouchableOpacity, StyleSheet, View } from 'react-native';
+import { useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
-import { Menu, IconButton } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
