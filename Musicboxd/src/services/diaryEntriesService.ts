@@ -244,7 +244,11 @@ class DiaryEntriesService {
 
       // If startAfterMonth is provided, filter from that point
       if (params.startAfterMonth) {
-        query = query.lt('diary_date', `${params.startAfterMonth}-32`); // Start after the month
+        // Create the first day of the next month to filter correctly
+        const [year, month] = params.startAfterMonth.split('-').map(Number);
+        const nextMonth = new Date(year, month, 1); // month is 0-indexed in Date constructor
+        const nextMonthStr = nextMonth.toISOString().split('T')[0];
+        query = query.lt('diary_date', nextMonthStr);
       }
 
       // Get more entries than needed to determine if there are more
