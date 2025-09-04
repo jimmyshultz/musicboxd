@@ -152,21 +152,19 @@ Scale Phase (1000+):         $34.25/month
 
 ---
 
-### **Week 6: Performance & Polish**
-**Primary Goal**: Optimize user experience and fix issues
+### **Week 6: Essential Stability & Error Handling**
+**Primary Goal**: Implement only critical stability features for beta launch
 
 **Deliverables:**
-- ✅ Implement smart caching for frequently accessed albums
-- ✅ Search performance optimization (debouncing, result caching)
-- ✅ Loading skeletons and proper error boundaries
-- ✅ UI/UX polish based on internal testing
-- ✅ Performance profiling and optimization
-- ✅ Redux state optimization and selector improvements
+- ✅ **Error Boundaries**: Basic error catching to prevent app crashes (`src/components/ErrorBoundary.tsx`)
+- ✅ **Basic Loading States**: Simple ActivityIndicator for network operations (no complex skeletons)
+- ✅ **Critical Bug Fixes**: Address any blocking issues found during internal testing
+- ✅ **Basic UI Polish**: Fix obvious visual issues without adding complexity
 
 **Key Milestones:**
-- App feels fast and responsive
-- No major UI/UX issues or bugs
-- Memory usage and performance within acceptable ranges
+- App doesn't crash from unhandled errors (critical for beta testing)
+- Users get feedback during loading operations (basic ActivityIndicator)
+- No blocking bugs that prevent core functionality
 
 ---
 
