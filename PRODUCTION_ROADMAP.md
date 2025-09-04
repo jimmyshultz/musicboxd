@@ -44,7 +44,7 @@ This roadmap outlines the path from our current React Native MVP to a production
 - **Backend**: Supabase (PostgreSQL + Auth + Real-time)
 - **Authentication**: Google Sign-In + Apple Sign-In via Supabase
 - **File Storage**: Supabase Storage (profile pictures)
-- **Environment**: Development → Staging (Week 5) → Production (Week 7)
+- **Environment**: Development → Production (Week 7) - *Staging removed due to Supabase free tier limits*
 
 ### **External APIs**
 - **Primary**: Spotify Web API (free tier - 100 req/sec)
@@ -143,12 +143,12 @@ Scale Phase (1000+):         $34.25/month
 - ✅ Following/followers lists with user profiles
 - ✅ Basic activity feed showing friends' recent album interactions
 - ✅ Privacy controls (public/private profiles)
-- ✅ **STAGING ENVIRONMENT**: Separate Supabase project for testing
+- ✅ **STAGING ENVIRONMENT**: ~~Separate Supabase project for testing~~ *REMOVED - Optimizing for 2-project Supabase limit*
 
 **Key Milestones:**
 - Users can find and follow other users
 - Activity feed provides social value and engagement
-- Staging environment ready for comprehensive testing
+- ~~Staging environment ready for comprehensive testing~~ *Social features tested in development environment*
 
 ---
 
@@ -237,8 +237,8 @@ Scale Phase (1000+):         $34.25/month
    - **Timeline Impact**: +1 week if switching APIs required
 
 2. **Supabase Free Tier Limits Hit**
-   - **Mitigation**: Upgrade to Pro tier ($25/month)
-   - **Budget Impact**: Additional $25/month
+   - **Mitigation**: ~~Upgrade to Pro tier ($25/month)~~ *RESOLVED - Removed staging environment to stay within 2-project limit*
+   - **Budget Impact**: ~~Additional $25/month~~ *$0 - No upgrade needed*
 
 3. **iOS App Store Review Delays**
    - **Mitigation**: Submit TestFlight 2 weeks before beta launch
