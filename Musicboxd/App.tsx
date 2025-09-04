@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme, LogBox } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import { lightTheme, darkTheme } from './src/utils/theme';
 import { AuthProvider } from './src/providers/AuthProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import { Environment } from './src/config/environment';
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -26,6 +27,12 @@ function AppContent() {
     const { configured } = quickValidation();
     if (!configured) {
       console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
+    }
+    
+    // Disable React Native error overlays for beta testers
+    if (Environment.isStaging || Environment.isProduction) {
+      // Disable all LogBox warnings and errors for beta users
+      LogBox.ignoreAllLogs(true);
     }
   }, []);
 

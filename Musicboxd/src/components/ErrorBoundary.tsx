@@ -25,11 +25,14 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log the error using environment-aware logger
-    Logger.error('ErrorBoundary caught an error', { error, errorInfo });
+    // Only log errors in development - not visible to beta testers
+    if (Environment.isDevelopment) {
+      Logger.error('ErrorBoundary caught an error', { error, errorInfo });
+    }
     
-    // In staging/production, this could be sent to crash reporting service
+    // In staging/production, send to crash reporting service silently
     if (Environment.isStaging || Environment.isProduction) {
+      // Silent error tracking - no console logs visible to users
       // TODO: Send to crash reporting service (Crashlytics, Sentry, Bugsnag)
       // Example: crashReporting.recordError(error, errorInfo);
     }
