@@ -340,7 +340,7 @@ export default function HomeScreen() {
 
   const renderFriendActivityCard = (activity: FriendActivity) => (
     <TouchableOpacity
-      key={activity.album.id}
+      key={`${activity.friend.id}-${activity.album.id}-${activity.diaryEntryId}`}
       style={styles.albumCard}
       onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
     >
@@ -365,7 +365,7 @@ export default function HomeScreen() {
 
   const renderPopularWithFriendsCard = (popularAlbum: FriendPopularAlbum) => (
     <TouchableOpacity
-      key={popularAlbum.album.id}
+      key={`popular-${popularAlbum.album.id}-${popularAlbum.totalFriends}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(popularAlbum.album.id)}
     >
@@ -431,7 +431,30 @@ export default function HomeScreen() {
         {renderSectionHeader('New From Friends', () => navigation.navigate('NewFromFriends'))}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.horizontalList}>
-            {newFromFriends.map(renderFriendActivityCard)}
+            {newFromFriends.map((activity, index) => (
+              <TouchableOpacity
+                key={`friend-activity-${index}-${activity.friend.id}-${activity.album.id}`}
+                style={styles.albumCard}
+                onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
+              >
+                <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
+                <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+                  {activity.album.title}
+                </Text>
+                <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+                  {activity.album.artist}
+                </Text>
+                <View style={styles.friendBadge}>
+                  <Avatar.Image 
+                    size={16} 
+                    source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
+                  />
+                  <Text variant="bodySmall" style={styles.friendBadgeText}>
+                    @{activity.friend.username}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
           </View>
         </ScrollView>
       </View>
