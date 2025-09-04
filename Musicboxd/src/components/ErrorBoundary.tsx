@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { colors, spacing } from '../utils/theme';
+import { Environment, Logger } from '../config/environment';
 
 interface Props {
   children: ReactNode;
@@ -24,12 +25,23 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // Log the error for debugging
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log the error using environment-aware logger
+    Logger.error('ErrorBoundary caught an error', { error, errorInfo });
     
-    // In a production app, you would want to log this to a crash reporting service
-    // like Crashlytics, Sentry, or Bugsnag
-    // Example: crashReporting.recordError(error, errorInfo);
+    // Debug: Show current environment detection
+    console.log('🔍 Environment Debug:', {
+      current: Environment.current,
+      isDevelopment: Environment.isDevelopment,
+      isStaging: Environment.isStaging,
+      isProduction: Environment.isProduction,
+      processEnv: process.env.ENVIRONMENT
+    });
+    
+    // In staging/production, this could be sent to crash reporting service
+    if (Environment.isStaging || Environment.isProduction) {
+      // TODO: Send to crash reporting service (Crashlytics, Sentry, Bugsnag)
+      // Example: crashReporting.recordError(error, errorInfo);
+    }
   }
 
   handleReset = () => {
@@ -62,7 +74,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Try Again
               </Button>
               
-              {__DEV__ && this.state.error && (
+              {Environment.isDevelopment && this.state.error && (
                 <View style={styles.debugContainer}>
                   <Text variant="labelSmall" style={styles.debugTitle}>
                     Debug Info (Development Only):
