@@ -15,6 +15,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { lightTheme, darkTheme } from './src/utils/theme';
 import { AuthProvider } from './src/providers/AuthProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
+import ErrorBoundary from './src/components/ErrorBoundary';
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -47,9 +48,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ReduxProvider store={store}>
-      <AppContent />
-    </ReduxProvider>
+    <ErrorBoundary>
+      <ReduxProvider store={store}>
+        <AppContent />
+      </ReduxProvider>
+    </ErrorBoundary>
   );
 }
 
