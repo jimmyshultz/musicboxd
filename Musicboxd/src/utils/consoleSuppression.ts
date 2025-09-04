@@ -48,7 +48,6 @@ export const suppressConsoleForBetaUsers = () => {
 
     // Override React's error logging completely
     if (typeof ErrorUtils !== 'undefined') {
-      const originalSetGlobalHandler = ErrorUtils.setGlobalHandler;
       ErrorUtils.setGlobalHandler = () => {};
       ErrorUtils.getGlobalHandler = () => () => {};
       
