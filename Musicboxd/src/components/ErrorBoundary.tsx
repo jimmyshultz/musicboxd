@@ -28,15 +28,6 @@ class ErrorBoundary extends Component<Props, State> {
     // Log the error using environment-aware logger
     Logger.error('ErrorBoundary caught an error', { error, errorInfo });
     
-    // Debug: Show current environment detection
-    console.log('🔍 Environment Debug:', {
-      current: Environment.current,
-      isDevelopment: Environment.isDevelopment,
-      isStaging: Environment.isStaging,
-      isProduction: Environment.isProduction,
-      processEnv: process.env.ENVIRONMENT
-    });
-    
     // In staging/production, this could be sent to crash reporting service
     if (Environment.isStaging || Environment.isProduction) {
       // TODO: Send to crash reporting service (Crashlytics, Sentry, Bugsnag)

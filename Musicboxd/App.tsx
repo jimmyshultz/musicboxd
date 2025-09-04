@@ -16,6 +16,7 @@ import { lightTheme, darkTheme } from './src/utils/theme';
 import { AuthProvider } from './src/providers/AuthProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
+import { Environment } from './src/config/environment';
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -27,6 +28,14 @@ function AppContent() {
     if (!configured) {
       console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
     }
+    
+    // TEMPORARY: Log environment detection
+    console.log('🌍 Environment Check:', {
+      current: Environment.current,
+      isDev: Environment.isDevelopment,
+      isStaging: Environment.isStaging,
+      isProd: Environment.isProduction
+    });
   }, []);
 
   return (
