@@ -7,39 +7,73 @@ import { Environment } from '../config/environment';
 export const suppressConsoleForBetaUsers = () => {
   if (Environment.isStaging || Environment.isProduction) {
     // Store original console methods for crash reporting
-    const originalConsole = {
-      log: console.log,
-      info: console.info,
-      warn: console.warn,
-      error: console.error,
-      debug: console.debug,
-      trace: console.trace,
-      table: console.table,
-      group: console.group,
-      groupEnd: console.groupEnd,
-      time: console.time,
-      timeEnd: console.timeEnd,
-    };
-
+    const originalConsole = { ...console };
+    
     // Make original console available for crash reporting services
     (global as any).__DEV_CONSOLE__ = originalConsole;
 
-    // Suppress all console output
-    console.log = () => {};
-    console.info = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-    console.debug = () => {};
-    console.trace = () => {};
-    console.table = () => {};
-    console.group = () => {};
-    console.groupEnd = () => {};
-    console.time = () => {};
-    console.timeEnd = () => {};
+    // Create a completely silent console object
+    const silentConsole = {
+      assert: () => {},
+      clear: () => {},
+      count: () => {},
+      countReset: () => {},
+      debug: () => {},
+      dir: () => {},
+      dirxml: () => {},
+      error: () => {},
+      group: () => {},
+      groupCollapsed: () => {},
+      groupEnd: () => {},
+      info: () => {},
+      log: () => {},
+      profile: () => {},
+      profileEnd: () => {},
+      table: () => {},
+      time: () => {},
+      timeEnd: () => {},
+      timeLog: () => {},
+      timeStamp: () => {},
+      trace: () => {},
+      warn: () => {},
+    };
 
-    // Also suppress React Native specific logging
+    // Replace console completely
+    Object.assign(console, silentConsole);
+
+    // Suppress React Native specific logging
     if (global.nativeLoggingHook) {
       global.nativeLoggingHook = () => {};
+    }
+
+    // Override React's error logging completely
+    if (typeof ErrorUtils !== 'undefined') {
+      const originalSetGlobalHandler = ErrorUtils.setGlobalHandler;
+      ErrorUtils.setGlobalHandler = () => {};
+      ErrorUtils.getGlobalHandler = () => () => {};
+      
+      // Override the error reporter
+      if (ErrorUtils.reportError) {
+        ErrorUtils.reportError = () => {};
+      }
+      if (ErrorUtils.reportFatalError) {
+        ErrorUtils.reportFatalError = () => {};
+      }
+    }
+
+    // Suppress React DevTools and other development warnings
+    (global as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      isDisabled: true,
+      supportsFiber: true,
+      inject: () => {},
+      onCommitFiberRoot: () => {},
+      onCommitFiberUnmount: () => {},
+    };
+
+    // Suppress any remaining console-related properties
+    (console as any).reportErrorsAsExceptions = false;
+    if ((console as any).disableYellowBox !== undefined) {
+      (console as any).disableYellowBox = true;
     }
   }
 };
