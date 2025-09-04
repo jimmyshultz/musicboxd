@@ -2,14 +2,17 @@
  * Environment Configuration
  * Handles different environments: development, staging, production
  */
+import Config from 'react-native-config';
 
 export type EnvironmentType = 'development' | 'staging' | 'production';
 
 export const Environment = {
   // Determine current environment
   get current(): EnvironmentType {
-    if (process.env.NODE_ENV === 'production') return 'production';
-    if (process.env.NODE_ENV === 'staging') return 'staging';
+    // Check environment variable from react-native-config
+    const env = Config.ENVIRONMENT || 'development';
+    if (env === 'production') return 'production';
+    if (env === 'staging') return 'staging';
     return 'development';
   },
 

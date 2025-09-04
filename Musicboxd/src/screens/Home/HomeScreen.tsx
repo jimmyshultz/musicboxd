@@ -340,7 +340,7 @@ export default function HomeScreen() {
 
   const renderFriendActivityCard = (activity: FriendActivity) => (
     <TouchableOpacity
-      key={activity.album.id}
+      key={`${activity.friend.id}-${activity.album.id}-${activity.diaryEntryId}`}
       style={styles.albumCard}
       onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
     >
@@ -365,7 +365,7 @@ export default function HomeScreen() {
 
   const renderPopularWithFriendsCard = (popularAlbum: FriendPopularAlbum) => (
     <TouchableOpacity
-      key={popularAlbum.album.id}
+      key={`popular-${popularAlbum.album.id}-${popularAlbum.totalFriends}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(popularAlbum.album.id)}
     >

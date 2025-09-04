@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar, useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme, LogBox } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -15,6 +15,12 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { lightTheme, darkTheme } from './src/utils/theme';
 import { AuthProvider } from './src/providers/AuthProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
+import ErrorBoundary from './src/components/ErrorBoundary';
+import { Environment } from './src/config/environment';
+import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
+
+// Suppress console output for beta users immediately
+suppressConsoleForBetaUsers();
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -22,8 +28,14 @@ function AppContent() {
 
   // Validate Spotify integration on app startup
   useEffect(() => {
+    // Disable React Native error overlays for beta testers
+    if (Environment.isStaging || Environment.isProduction) {
+      LogBox.ignoreAllLogs(true);
+    }
+    
+    // Validate Spotify integration (only logs in development now)
     const { configured } = quickValidation();
-    if (!configured) {
+    if (!configured && Environment.isDevelopment) {
       console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
     }
   }, []);
@@ -47,9 +59,11 @@ function AppContent() {
 
 function App() {
   return (
-    <ReduxProvider store={store}>
-      <AppContent />
-    </ReduxProvider>
+    <ErrorBoundary>
+      <ReduxProvider store={store}>
+        <AppContent />
+      </ReduxProvider>
+    </ErrorBoundary>
   );
 }
 

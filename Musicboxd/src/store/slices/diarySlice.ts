@@ -33,8 +33,33 @@ const diarySlice = createSlice({
     ) => {
       const { userId, entries, lastMonth, hasMore, reset } = action.payload;
       const prev = state.byUserId[userId] || { entries: [], hasMore: true };
+      
+      let finalEntries: DiaryEntry[];
+      if (reset) {
+        // Remove duplicates from the new entries
+        const seen = new Set<string>();
+        finalEntries = entries.filter(entry => {
+          if (seen.has(entry.id)) {
+            return false;
+          }
+          seen.add(entry.id);
+          return true;
+        });
+      } else {
+        // Merge with existing, removing duplicates
+        const combined = [...prev.entries, ...entries];
+        const seen = new Set<string>();
+        finalEntries = combined.filter(entry => {
+          if (seen.has(entry.id)) {
+            return false;
+          }
+          seen.add(entry.id);
+          return true;
+        });
+      }
+      
       state.byUserId[userId] = {
-        entries: reset ? entries : [...prev.entries, ...entries],
+        entries: finalEntries,
         lastMonth,
         hasMore,
       };

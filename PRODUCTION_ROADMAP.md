@@ -152,21 +152,20 @@ Scale Phase (1000+):         $34.25/month
 
 ---
 
-### **Week 6: Performance & Polish**
-**Primary Goal**: Optimize user experience and fix issues
+### **Week 6: Critical Crash Prevention**
+**Primary Goal**: Implement only the essential error boundary to prevent app crashes
 
 **Deliverables:**
-- ✅ Implement smart caching for frequently accessed albums
-- ✅ Search performance optimization (debouncing, result caching)
-- ✅ Loading skeletons and proper error boundaries
-- ✅ UI/UX polish based on internal testing
-- ✅ Performance profiling and optimization
-- ✅ Redux state optimization and selector improvements
+- ✅ **Single Top-Level Error Boundary**: Wrap entire app to catch all unhandled React errors (`src/components/ErrorBoundary.tsx` + integration in `App.tsx`)
+- ✅ **Critical Bug Testing**: Manual testing of core user flows to identify any crash-causing bugs
+- ✅ **Crash Bug Fixes**: Fix only bugs that cause app crashes (not UI/UX issues)
 
 **Key Milestones:**
-- App feels fast and responsive
-- No major UI/UX issues or bugs
-- Memory usage and performance within acceptable ranges
+- **Zero app crashes** from unhandled React errors during beta testing
+- Core user flows (search, rate, follow) work without crashing
+- Error boundary shows recovery screen instead of white screen of death
+
+**Note**: Loading states are already comprehensive throughout the app - no additional work needed.
 
 ---
 

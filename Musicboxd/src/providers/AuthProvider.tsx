@@ -35,11 +35,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     // Check if app was opened with a deep link
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        handleDeepLink(url);
-      }
-    });
+    Linking.getInitialURL()
+      .then((url) => {
+        if (url) {
+          handleDeepLink(url);
+        }
+      })
+      .catch((error) => {
+        console.warn('Error getting initial URL:', error);
+      });
 
     // Set up auth state listener for real-time updates
     const { data: authListener } = AuthService.onAuthStateChange((event, _session) => {

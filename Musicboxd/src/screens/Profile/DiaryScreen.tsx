@@ -224,7 +224,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
       ) : (
         <SectionList
           sections={sections}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => `${item.id}-${index}-${item.albumId}`}
           renderSectionHeader={({ section: { title } }) => (
             <View style={styles.sectionHeader}><Text style={styles.sectionHeaderText}>{title}</Text></View>
           )}
