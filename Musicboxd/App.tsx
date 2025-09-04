@@ -17,6 +17,10 @@ import { AuthProvider } from './src/providers/AuthProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
+import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
+
+// Suppress console output for beta users immediately
+suppressConsoleForBetaUsers();
 
 function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -24,15 +28,15 @@ function AppContent() {
 
   // Validate Spotify integration on app startup
   useEffect(() => {
-    const { configured } = quickValidation();
-    if (!configured) {
-      console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
-    }
-    
     // Disable React Native error overlays for beta testers
     if (Environment.isStaging || Environment.isProduction) {
-      // Disable all LogBox warnings and errors for beta users
       LogBox.ignoreAllLogs(true);
+    }
+    
+    // Validate Spotify integration (only logs in development now)
+    const { configured } = quickValidation();
+    if (!configured && Environment.isDevelopment) {
+      console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
     }
   }, []);
 
