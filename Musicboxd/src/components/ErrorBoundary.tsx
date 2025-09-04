@@ -25,14 +25,6 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // TEMPORARY DEBUG: Check environment detection
-    console.log('🔍 Environment Debug in ErrorBoundary:', {
-      current: Environment.current,
-      isDevelopment: Environment.isDevelopment,
-      isStaging: Environment.isStaging,
-      isProduction: Environment.isProduction
-    });
-    
     // Log the error using environment-aware logger
     Logger.error('ErrorBoundary caught an error', { error, errorInfo });
     
