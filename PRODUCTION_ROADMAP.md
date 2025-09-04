@@ -152,19 +152,20 @@ Scale Phase (1000+):         $34.25/month
 
 ---
 
-### **Week 6: Essential Stability & Error Handling**
-**Primary Goal**: Implement only critical stability features for beta launch
+### **Week 6: Critical Crash Prevention**
+**Primary Goal**: Implement only the essential error boundary to prevent app crashes
 
 **Deliverables:**
-- ✅ **Error Boundaries**: Basic error catching to prevent app crashes (`src/components/ErrorBoundary.tsx`)
-- ✅ **Basic Loading States**: Simple ActivityIndicator for network operations (no complex skeletons)
-- ✅ **Critical Bug Fixes**: Address any blocking issues found during internal testing
-- ✅ **Basic UI Polish**: Fix obvious visual issues without adding complexity
+- ✅ **Single Top-Level Error Boundary**: Wrap entire app to catch all unhandled React errors (`src/components/ErrorBoundary.tsx` + integration in `App.tsx`)
+- ✅ **Critical Bug Testing**: Manual testing of core user flows to identify any crash-causing bugs
+- ✅ **Crash Bug Fixes**: Fix only bugs that cause app crashes (not UI/UX issues)
 
 **Key Milestones:**
-- App doesn't crash from unhandled errors (critical for beta testing)
-- Users get feedback during loading operations (basic ActivityIndicator)
-- No blocking bugs that prevent core functionality
+- **Zero app crashes** from unhandled React errors during beta testing
+- Core user flows (search, rate, follow) work without crashing
+- Error boundary shows recovery screen instead of white screen of death
+
+**Note**: Loading states are already comprehensive throughout the app - no additional work needed.
 
 ---
 
