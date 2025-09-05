@@ -3,7 +3,7 @@ import Config from 'react-native-config';
 export const ENV = {
   ENVIRONMENT: Config.ENVIRONMENT || 'development',
   APP_NAME: Config.APP_NAME || 'Resonare',
-  BUNDLE_ID: Config.BUNDLE_ID || 'com.resonare.app',
+  BUNDLE_ID: Config.BUNDLE_ID || 'com.jimmyshultz.resonare',
   SUPABASE_URL: Config.SUPABASE_URL!,
   SUPABASE_ANON_KEY: Config.SUPABASE_ANON_KEY!,
   SPOTIFY_CLIENT_ID: Config.SPOTIFY_CLIENT_ID!,

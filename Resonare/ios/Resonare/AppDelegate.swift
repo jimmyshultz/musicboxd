@@ -51,7 +51,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     // Handle Supabase OAuth callbacks
-    if url.scheme == "com.resonare.app" {
+    if url.scheme == "com.jimmyshultz.resonare" {
       // This will be handled by Supabase's URL handling in React Native
       return true
     }
