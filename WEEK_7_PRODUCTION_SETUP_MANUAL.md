@@ -137,7 +137,7 @@ Before starting, ensure you have:
 ### Step 3.1: Create Production Environment File
 **⏰ Time Required**: 5 minutes
 
-1. **Navigate to**: `/workspace/[YourAppFolder]/` (renamed in Phase 0)
+1. **Navigate to**: `/workspace/Resonare/` (renamed in Phase 0)
 2. **Create**: `.env.production` (this will be in your .gitignore)
 3. **Add content**:
 ```bash
@@ -160,9 +160,9 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 
 > **Note**: If you completed Phase 0 properly, this should already be done. Verify the settings match your new app identity.
 
-1. **Open**: `[YourApp].xcworkspace` in Xcode (renamed in Phase 0)
-2. **Select**: [YourApp] project in navigator
-3. **Select**: [YourApp] target
+1. **Open**: `Resonare.xcworkspace` in Xcode (renamed in Phase 0)
+2. **Select**: Resonare project in navigator
+3. **Select**: Resonare target
 4. **General tab** → **Identity**:
    - **Bundle Identifier**: `[YOUR NEW BUNDLE ID]` (should match Phase 0)
    - **Version**: `1.0`
@@ -179,8 +179,8 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 ### Step 4.1: Enable Apple Sign-In Capability
 **⏰ Time Required**: 10 minutes
 
-1. **In Xcode** ([YourApp] project open):
-2. **Select**: [YourApp] target
+1. **In Xcode** (Resonare project open):
+2. **Select**: Resonare target
 3. **Signing & Capabilities** tab
 4. **Click**: `+ Capability`
 5. **Add**: "Sign in with Apple"
@@ -236,7 +236,7 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 **⏰ Time Required**: 10 minutes
 
 1. **Visit**: https://appstoreconnect.apple.com/
-2. **Select**: Your [YourApp] app
+2. **Select**: Your Resonare app
 3. **TestFlight** tab
 4. **Wait** for build to appear (10-15 minutes after upload)
 5. **Add build** to TestFlight testing
