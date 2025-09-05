@@ -1,4 +1,4 @@
-package com.resonare
+package com.jimmyshultz.resonare
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

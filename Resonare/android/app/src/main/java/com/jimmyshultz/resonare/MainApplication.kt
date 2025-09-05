@@ -1,4 +1,4 @@
-package com.resonare
+package com.jimmyshultz.resonare
 
 import android.app.Application
 import com.facebook.react.PackageList

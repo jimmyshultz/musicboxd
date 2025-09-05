@@ -285,7 +285,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.resonare.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jimmyshultz.resonare;
 				PRODUCT_NAME = Resonare;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -312,7 +312,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.resonare.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jimmyshultz.resonare;
 				PRODUCT_NAME = Resonare;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -571,7 +571,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.resonare.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jimmyshultz.resonare;
 				PRODUCT_NAME = Resonare;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -679,7 +679,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.resonare.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jimmyshultz.resonare;
 				PRODUCT_NAME = Resonare;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -778,7 +778,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.resonare.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jimmyshultz.resonare;
 				PRODUCT_NAME = Resonare;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -876,7 +876,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.resonare.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jimmyshultz.resonare;
 				PRODUCT_NAME = Resonare;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
