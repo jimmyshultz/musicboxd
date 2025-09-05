@@ -173,6 +173,7 @@ Scale Phase (1000+):         $34.25/month
 **Primary Goal**: Prepare for beta user distribution
 
 **Deliverables:**
+- ✅ **APP NAME CHANGE**: Complete systematic rename before production setup (NEW PREREQUISITE)
 - ✅ **PRODUCTION ENVIRONMENT**: Dedicated Supabase project
 - ✅ iOS App Store Connect configuration
 - ✅ Apple Developer Program enrollment and Apple Sign-In configuration
@@ -182,6 +183,7 @@ Scale Phase (1000+):         $34.25/month
 - ✅ Beta testing documentation and feedback forms
 
 **Key Milestones:**
+- App successfully renamed with new identity (bundle ID, display name, etc.)
 - Production environment stable and monitored
 - TestFlight ready to distribute to beta testers
 - Analytics infrastructure in place for data collection

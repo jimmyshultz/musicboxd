@@ -9,6 +9,61 @@ Before starting, ensure you have:
 - [ ] Current development environment working
 - [ ] Access to your existing development Supabase project
 - [ ] Spotify API credentials
+- [ ] **NEW APP NAME DECIDED** - Must complete Phase 0 first!
+
+---
+
+## 🏷️ Phase 0: App Name Change (PREREQUISITE)
+
+> **⚠️ CRITICAL**: Complete this phase BEFORE any other Week 7 tasks. Changing the app name after App Store Connect setup is much more complex.
+
+### Step 0.1: Choose Your New App Identity
+**⏰ Time Required**: 10 minutes planning
+
+1. **Decide on**:
+   - **App Name**: e.g., "SoundDiary", "TuneTracker", "MelodyLog"
+   - **Bundle Identifier**: e.g., `com.yourname.sounddiary`
+   - **Package Name**: e.g., `com.yourname.sounddiary`
+
+2. **Verify availability**:
+   - Check App Store for name conflicts
+   - Ensure bundle ID is unique to you
+   - Consider trademark issues
+
+### Step 0.2: Systematic App Rename Process
+**⏰ Time Required**: 1-2 hours
+
+**This is a complex process involving 20+ files. Detailed rename instructions will be provided separately based on your chosen name.**
+
+**Files that will need updates**:
+- Core configuration (5 files)
+- iOS project structure (folders, schemes, project files)
+- Android package structure (Java files, manifests)
+- Documentation (30+ markdown files)
+- Build scripts and environment examples
+
+**⚠️ BACKUP RECOMMENDATION**: Create a git branch before starting the rename process.
+
+### Step 0.3: Verify Rename Success
+**⏰ Time Required**: 30 minutes
+
+1. **Test builds**:
+   ```bash
+   # Test iOS build
+   cd ios && pod install && cd ..
+   npm run ios
+   
+   # Test Android build  
+   npm run android
+   ```
+
+2. **Verify**:
+   - [ ] App launches with new name in title bar
+   - [ ] No build errors or warnings
+   - [ ] Bundle identifier updated correctly
+   - [ ] All functionality still works
+
+**✅ ONLY PROCEED to Phase 1 after successful rename verification**
 
 ---
 
@@ -32,10 +87,10 @@ Before starting, ensure you have:
 2. **Sign in** with your Apple Developer account
 3. **Create new app**:
    - **Platform**: iOS
-   - **Name**: `Musicboxd` (or your preferred name)
+   - **Name**: `[YOUR NEW APP NAME]` (from Phase 0)
    - **Primary Language**: English (US)
-   - **Bundle ID**: `com.musicboxd.app` (must match your Xcode project)
-   - **SKU**: `musicboxd-ios-app`
+   - **Bundle ID**: `[YOUR NEW BUNDLE ID]` (from Phase 0 - must match your Xcode project)
+   - **SKU**: `[your-app-name]-ios-app`
 4. **Save** and note your App Store Connect app information
 
 ---
@@ -48,7 +103,7 @@ Before starting, ensure you have:
 1. **Visit**: https://supabase.com/dashboard
 2. **Create new project**:
    - **Organization**: Your organization
-   - **Name**: `musicboxd-production`
+   - **Name**: `[your-app-name]-production`
    - **Database Password**: Generate strong password (save it!)
    - **Region**: Choose closest to your target users
 3. **Wait** for project creation (2-3 minutes)
@@ -82,14 +137,14 @@ Before starting, ensure you have:
 ### Step 3.1: Create Production Environment File
 **⏰ Time Required**: 5 minutes
 
-1. **Navigate to**: `/workspace/Musicboxd/`
+1. **Navigate to**: `/workspace/[YourAppFolder]/` (renamed in Phase 0)
 2. **Create**: `.env.production` (this will be in your .gitignore)
 3. **Add content**:
 ```bash
 # Production Environment
 ENVIRONMENT=production
-APP_NAME=Musicboxd
-BUNDLE_ID=com.musicboxd.app
+APP_NAME=[YOUR NEW APP NAME]
+BUNDLE_ID=[YOUR NEW BUNDLE ID]
 
 # Production Supabase credentials (from Step 2.3)
 SUPABASE_URL=https://your-prod-id.supabase.co
@@ -103,11 +158,13 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 ### Step 3.2: Update Bundle Identifier in Xcode
 **⏰ Time Required**: 10 minutes
 
-1. **Open**: `Musicboxd.xcworkspace` in Xcode
-2. **Select**: Musicboxd project in navigator
-3. **Select**: Musicboxd target
+> **Note**: If you completed Phase 0 properly, this should already be done. Verify the settings match your new app identity.
+
+1. **Open**: `[YourApp].xcworkspace` in Xcode (renamed in Phase 0)
+2. **Select**: [YourApp] project in navigator
+3. **Select**: [YourApp] target
 4. **General tab** → **Identity**:
-   - **Bundle Identifier**: `com.musicboxd.app`
+   - **Bundle Identifier**: `[YOUR NEW BUNDLE ID]` (should match Phase 0)
    - **Version**: `1.0`
    - **Build**: `1`
 5. **Signing & Capabilities**:
@@ -122,8 +179,8 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 ### Step 4.1: Enable Apple Sign-In Capability
 **⏰ Time Required**: 10 minutes
 
-1. **In Xcode** (Musicboxd project open):
-2. **Select**: Musicboxd target
+1. **In Xcode** ([YourApp] project open):
+2. **Select**: [YourApp] target
 3. **Signing & Capabilities** tab
 4. **Click**: `+ Capability`
 5. **Add**: "Sign in with Apple"
@@ -133,7 +190,7 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 **⏰ Time Required**: 10 minutes
 
 1. **Visit**: https://developer.apple.com/account/resources/identifiers/list
-2. **Find**: Your app's Bundle ID (`com.musicboxd.app`)
+2. **Find**: Your app's Bundle ID (`[YOUR NEW BUNDLE ID]`)
 3. **Edit**: Bundle ID configuration
 4. **Enable**: "Sign in with Apple"
 5. **Save** changes
@@ -145,7 +202,7 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 2. **Go to**: Authentication → Providers
 3. **Configure Apple provider**:
    - **Enable Apple provider**: ✅
-   - **Client ID**: `com.musicboxd.app` (your Bundle ID)
+   - **Client ID**: `[YOUR NEW BUNDLE ID]` (your Bundle ID)
    - **Team ID**: Find in Apple Developer Account → Membership
    - **Key ID**: Create new key in Apple Developer → Keys
    - **Private Key**: Download .p8 file content
@@ -179,7 +236,7 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 **⏰ Time Required**: 10 minutes
 
 1. **Visit**: https://appstoreconnect.apple.com/
-2. **Select**: Your Musicboxd app
+2. **Select**: Your [YourApp] app
 3. **TestFlight** tab
 4. **Wait** for build to appear (10-15 minutes after upload)
 5. **Add build** to TestFlight testing
