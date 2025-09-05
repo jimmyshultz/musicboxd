@@ -1,8 +1,12 @@
 # 🚀 Staging Environment Setup Guide
 
+> **⚠️ DEPRECATED AS OF WEEK 7**: This staging environment has been removed to optimize for Supabase's 2-project free tier limit. The app now uses Development → Production workflow only.
+
 ## Overview
 
-Complete guide for setting up a staging environment using React Native Config for environment management and a separate Supabase project for safe testing.
+~~Complete guide for setting up a staging environment using React Native Config for environment management and a separate Supabase project for safe testing.~~
+
+**HISTORICAL REFERENCE ONLY** - This document is preserved for reference but the staging environment is no longer part of the production roadmap.
 
 ## Purpose of Staging Environment
 
