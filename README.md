@@ -1,4 +1,4 @@
-# 🎵 Musicboxd - Social Music Discovery App
+# 🎵 Resonare - Social Music Discovery App
 
 A React Native app for discovering, tracking, and sharing music experiences, inspired by Letterboxd but for albums.
 
@@ -31,7 +31,7 @@ A React Native app for discovering, tracking, and sharing music experiences, ins
 ### **Installation:**
 ```bash
 git clone [repository-url]
-cd musicboxd/Musicboxd
+cd resonare/Resonare
 npm install
 cd ios && pod install && cd ..
 ```
@@ -49,7 +49,7 @@ ENVFILE=.env.staging npm run ios
 ## 📂 Project Structure
 
 ```
-Musicboxd/
+Resonare/
 ├── src/
 │   ├── components/          # Reusable UI components
 │   ├── screens/             # App screens

@@ -1,4 +1,4 @@
--- Musicboxd Database Schema V2 - Improved Design
+-- Resonare Database Schema V2 - Improved Design
 -- Separate tables for different activity types
 -- Run this in your Supabase SQL Editor
 

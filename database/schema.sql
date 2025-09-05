@@ -1,4 +1,4 @@
--- Musicboxd Database Schema
+-- Resonare Database Schema
 -- Run this in your Supabase SQL Editor
 
 -- Enable Row Level Security on auth.users (already enabled by default)

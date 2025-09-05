@@ -17,14 +17,14 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: 'Musicboxd/package-lock.json'
+          cache-dependency-path: 'Resonare/package-lock.json'
           
       - name: Install dependencies
-        working-directory: ./Musicboxd
+        working-directory: ./Resonare
         run: npm ci
         
       - name: Run linting
-        working-directory: ./Musicboxd
+        working-directory: ./Resonare
         run: npm run lint
         
       # This will be enabled once we have testing set up

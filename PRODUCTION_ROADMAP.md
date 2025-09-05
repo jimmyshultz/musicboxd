@@ -1,4 +1,4 @@
-# Musicboxd Production Roadmap
+# Resonare Production Roadmap
 > From MVP to Beta Launch in 8 Weeks
 
 ## 🎯 **Executive Summary**
