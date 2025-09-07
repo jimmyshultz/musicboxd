@@ -12,32 +12,32 @@
 
 -- Get all table creation statements
 SELECT 
-    'CREATE TABLE ' || schemaname || '.' || tablename || ' (' || chr(10) ||
+    'CREATE TABLE ' || t.table_schema || '.' || t.table_name || ' (' || chr(10) ||
     string_agg(
-        '    ' || column_name || ' ' || 
+        '    ' || c.column_name || ' ' || 
         -- Handle data types properly
         CASE 
-            WHEN data_type = 'character varying' THEN 'TEXT'
-            WHEN data_type = 'character' THEN 'CHAR(' || character_maximum_length || ')'
-            WHEN data_type = 'text' THEN 'TEXT'
-            WHEN data_type = 'integer' THEN 'INTEGER'
-            WHEN data_type = 'bigint' THEN 'BIGINT'
-            WHEN data_type = 'uuid' THEN 'UUID'
-            WHEN data_type = 'boolean' THEN 'BOOLEAN'
-            WHEN data_type = 'timestamp with time zone' THEN 'TIMESTAMPTZ'
-            WHEN data_type = 'timestamp without time zone' THEN 'TIMESTAMP'
-            WHEN data_type = 'date' THEN 'DATE'
-            WHEN data_type = 'ARRAY' THEN udt_name
-            ELSE upper(data_type)
+            WHEN c.data_type = 'character varying' THEN 'TEXT'
+            WHEN c.data_type = 'character' THEN 'CHAR(' || c.character_maximum_length || ')'
+            WHEN c.data_type = 'text' THEN 'TEXT'
+            WHEN c.data_type = 'integer' THEN 'INTEGER'
+            WHEN c.data_type = 'bigint' THEN 'BIGINT'
+            WHEN c.data_type = 'uuid' THEN 'UUID'
+            WHEN c.data_type = 'boolean' THEN 'BOOLEAN'
+            WHEN c.data_type = 'timestamp with time zone' THEN 'TIMESTAMPTZ'
+            WHEN c.data_type = 'timestamp without time zone' THEN 'TIMESTAMP'
+            WHEN c.data_type = 'date' THEN 'DATE'
+            WHEN c.data_type = 'ARRAY' THEN c.udt_name
+            ELSE upper(c.data_type)
         END ||
         -- Add NOT NULL constraint
-        CASE WHEN is_nullable = 'NO' THEN ' NOT NULL' ELSE '' END ||
+        CASE WHEN c.is_nullable = 'NO' THEN ' NOT NULL' ELSE '' END ||
         -- Add DEFAULT values
         CASE 
-            WHEN column_default IS NOT NULL THEN ' DEFAULT ' || column_default
+            WHEN c.column_default IS NOT NULL THEN ' DEFAULT ' || c.column_default
             ELSE ''
         END,
-        ',' || chr(10) ORDER BY ordinal_position
+        ',' || chr(10) ORDER BY c.ordinal_position
     ) || chr(10) || ');' || chr(10) || chr(10) as create_table_sql
 FROM information_schema.tables t
 JOIN information_schema.columns c ON t.table_name = c.table_name AND t.table_schema = c.table_schema
@@ -200,12 +200,14 @@ ORDER BY c.relname, t.tgname;
 
 -- Enable RLS statements
 SELECT 
-    'ALTER TABLE ' || schemaname || '.' || tablename || 
+    'ALTER TABLE ' || n.nspname || '.' || c.relname || 
     ' ENABLE ROW LEVEL SECURITY;' || chr(10) as rls_enable_sql
-FROM pg_tables 
-WHERE schemaname = 'public' 
-    AND rowsecurity = true
-ORDER BY tablename;
+FROM pg_class c
+JOIN pg_namespace n ON c.relnamespace = n.oid
+WHERE n.nspname = 'public' 
+    AND c.relkind = 'r'
+    AND c.relrowsecurity = true
+ORDER BY c.relname;
 
 -- RLS Policies
 SELECT 
