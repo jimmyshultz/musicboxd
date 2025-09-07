@@ -223,12 +223,12 @@ SELECT
     END ||
     CASE 
         WHEN pol.polqual IS NOT NULL AND pol.polwithcheck IS NOT NULL THEN
-            ' USING (' || pol.polqual || ')' || chr(10) ||
-            '    WITH CHECK (' || pol.polwithcheck || ')'
+            ' USING (' || pg_get_expr(pol.polqual, pol.polrelid) || ')' || chr(10) ||
+            '    WITH CHECK (' || pg_get_expr(pol.polwithcheck, pol.polrelid) || ')'
         WHEN pol.polqual IS NOT NULL THEN
-            ' USING (' || pol.polqual || ')'
+            ' USING (' || pg_get_expr(pol.polqual, pol.polrelid) || ')'
         WHEN pol.polwithcheck IS NOT NULL THEN
-            ' WITH CHECK (' || pol.polwithcheck || ')'
+            ' WITH CHECK (' || pg_get_expr(pol.polwithcheck, pol.polrelid) || ')'
         ELSE ''
     END || ';' || chr(10) || chr(10) as policy_sql
 FROM pg_policy pol
