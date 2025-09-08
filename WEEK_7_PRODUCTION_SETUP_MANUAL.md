@@ -289,6 +289,15 @@ npm run ios
 - Test on physical iOS device (may not work in simulator)
 - Both Google and Apple sign-in will be fully functional
 
+### 🔍 Quick Status Check
+
+Run this command to verify your setup:
+```bash
+./verify-apple-signin.sh
+```
+
+This will show you exactly what's configured and what still needs to be done.
+
 ---
 
 ## 📱 Phase 5: TestFlight Setup
