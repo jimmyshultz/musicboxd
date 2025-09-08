@@ -1,0 +1,33 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'Resonare/package-lock.json'
+          
+      - name: Install dependencies
+        working-directory: ./Resonare
+        run: npm ci
+        
+      - name: Run linting
+        working-directory: ./Resonare
+        run: npm run lint
+        
+      # This will be enabled once we have testing set up
+      # - name: Run tests
+      #   working-directory: ./Musicboxd
+      #   run: npm test 
