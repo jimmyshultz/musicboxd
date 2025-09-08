@@ -61,6 +61,55 @@ export const signInWithGoogle = createAsyncThunk(
   }
 );
 
+export const signInWithApple = createAsyncThunk(
+  'auth/signInWithApple',
+  async (_, { rejectWithValue }) => {
+    try {
+      // Check if Apple Sign-In is available
+      const isAvailable = await AuthService.isAppleSignInAvailable();
+      if (!isAvailable) {
+        throw new Error('Apple Sign-In is not available on this device');
+      }
+
+      const result = await AuthService.signInWithApple();
+      if (result.user) {
+        // Get the actual user profile from the database
+        const profile = await userService.getCurrentUserProfile();
+        if (profile) {
+          // Convert to SerializedUser format for Redux
+          const user: SerializedUser = {
+            id: profile.id,
+            username: profile.username,
+            email: result.user.email || '',
+            bio: profile.bio || '',
+            profilePicture: profile.avatar_url || '',
+            joinedDate: profile.created_at, // Already a string from database
+            lastActiveDate: new Date().toISOString(),
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                reviewLikes: true,
+                friendActivity: true,
+              },
+              privacy: {
+                profileVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                activityVisibility: profile.is_private ? 'private' as const : 'public' as const,
+              },
+            },
+          };
+          console.log('Loaded real user profile for Redux:', user.username);
+          return user;
+        }
+      }
+      throw new Error('Failed to get user data from Apple Sign-In');
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Apple Sign-In failed');
+    }
+  }
+);
+
 export const signOutUser = createAsyncThunk(
   'auth/signOut',
   async (_, { rejectWithValue }) => {
@@ -198,6 +247,32 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signInWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload as string;
+      })
+      // Apple Sign-In
+      .addCase(signInWithApple.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(signInWithApple.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        if (action.payload.joinedDate instanceof Date && action.payload.lastActiveDate instanceof Date) {
+          const user = action.payload as User;
+          state.user = {
+            ...user,
+            joinedDate: user.joinedDate.toISOString(),
+            lastActiveDate: user.lastActiveDate.toISOString(),
+          };
+        } else {
+          state.user = action.payload as SerializedUser;
+        }
+        state.error = null;
+      })
+      .addCase(signInWithApple.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;

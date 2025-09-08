@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { userService } from './userService';
 
 export class AuthService {
@@ -158,12 +159,119 @@ export class AuthService {
   }
 
   /**
+   * Sign in with Apple
+   * Uses Apple's native authentication and creates Supabase user
+   */
+  static async signInWithApple() {
+    try {
+      console.log('Starting Apple Sign-In...');
+      
+      // Perform the Apple Sign-In request
+      const appleAuthRequestResponse = await appleAuth.performRequest({
+        requestedOperation: appleAuth.Operation.LOGIN,
+        requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
+      });
+
+      console.log('Apple Sign-In response:', appleAuthRequestResponse);
+
+      // Ensure we have the required data
+      if (!appleAuthRequestResponse.identityToken) {
+        throw new Error('Apple Sign-In failed - no identity token received');
+      }
+
+      // Extract user information
+      const { identityToken, email, fullName } = appleAuthRequestResponse;
+      
+      // Create a display name from fullName if available
+      let displayName = 'Apple User';
+      if (fullName?.givenName || fullName?.familyName) {
+        displayName = `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim();
+      }
+
+      console.log('Apple Sign-In successful, creating Supabase user...');
+
+      // Try to sign up the user (this will fail if they already exist)
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: email || `apple_${appleAuthRequestResponse.user}@appleid.private`,
+        password: `apple_oauth_${appleAuthRequestResponse.user}`, // Use Apple user ID as password
+        options: {
+          data: {
+            name: displayName,
+            provider: 'apple',
+            apple_user_id: appleAuthRequestResponse.user,
+          },
+        },
+      });
+
+      if (signUpError && !signUpError.message.includes('already registered')) {
+        throw signUpError;
+      }
+
+      // Now sign in the user
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email || `apple_${appleAuthRequestResponse.user}@appleid.private`,
+        password: `apple_oauth_${appleAuthRequestResponse.user}`,
+      });
+
+      if (error) {
+        console.error('Supabase sign-in error:', error);
+        throw error;
+      }
+
+      console.log('Supabase auth successful:', data.user?.email);
+
+      // Check if user profile exists, create if not
+      if (data.user) {
+        let profile = await userService.getUserProfile(data.user.id);
+        
+        if (!profile) {
+          // Generate a unique username
+          const uniqueUsername = await this.generateUniqueUsername(displayName);
+          
+          // Create new user profile
+          profile = await userService.upsertUserProfile({
+            id: data.user.id,
+            username: uniqueUsername,
+            bio: '',
+            avatar_url: '',
+            is_private: false,
+            created_at: new Date().toISOString(),
+          });
+          console.log('Created new user profile:', profile.username);
+        } else {
+          console.log('Found existing user profile:', profile.username);
+        }
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Apple Sign-In error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if Apple Sign-In is available on the current device
+   */
+  static async isAppleSignInAvailable(): Promise<boolean> {
+    try {
+      return await appleAuth.isAvailableAsync();
+    } catch (error) {
+      console.error('Error checking Apple Sign-In availability:', error);
+      return false;
+    }
+  }
+
+  /**
    * Sign out user
    */
   static async signOut() {
     try {
       // Sign out from Google
       await GoogleSignin.signOut();
+      
+      // Note: Apple doesn't require explicit sign-out from their service
+      // The user would need to revoke access from their Apple ID settings
       
       // Sign out from Supabase
       const { error } = await supabase.auth.signOut();
