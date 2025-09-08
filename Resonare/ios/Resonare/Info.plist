@@ -81,10 +81,10 @@
 		</dict>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.resonare.app</string>
+			<string>com.jimmyshultz.resonare</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.resonare.app</string>
+				<string>com.jimmyshultz.resonare</string>
 			</array>
 		</dict>
 	</array>

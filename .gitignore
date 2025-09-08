@@ -71,3 +71,6 @@ yarn-error.log
 .expo/
 web-build/
 dist/ 
+
+# P8
+Resonare/ios/*.p8
