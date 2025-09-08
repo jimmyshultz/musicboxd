@@ -1,7 +1,14 @@
 import { supabase } from './supabase';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { userService } from './userService';
+
+// Safely import Apple Authentication with fallback
+let appleAuth: any = null;
+try {
+  appleAuth = require('@invertase/react-native-apple-authentication').appleAuth;
+} catch (error) {
+  console.log('Apple Authentication library not available:', error);
+}
 
 export class AuthService {
   /**
@@ -166,6 +173,11 @@ export class AuthService {
     try {
       console.log('Starting Apple Sign-In...');
       
+      // Check if Apple Auth is properly loaded
+      if (!appleAuth || typeof appleAuth.performRequest !== 'function') {
+        throw new Error('Apple Authentication library not properly linked. Please run "cd ios && pod install" and rebuild the app.');
+      }
+      
       // Perform the Apple Sign-In request
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
@@ -255,6 +267,11 @@ export class AuthService {
    */
   static async isAppleSignInAvailable(): Promise<boolean> {
     try {
+      // Check if the appleAuth module is properly loaded
+      if (!appleAuth || typeof appleAuth.isAvailableAsync !== 'function') {
+        console.log('Apple Authentication library not properly linked');
+        return false;
+      }
       return await appleAuth.isAvailableAsync();
     } catch (error) {
       console.error('Error checking Apple Sign-In availability:', error);

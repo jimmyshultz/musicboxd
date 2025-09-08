@@ -260,7 +260,16 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret_here
 
 ### Next Steps for Development Environment
 
-When you return to your development environment, run:
+**🚨 IMPORTANT**: The Apple Sign-In library requires native iOS linking. Follow these steps:
+
+**Option 1 - Quick Setup:**
+```bash
+cd Resonare
+./install-pods.sh
+npm run ios
+```
+
+**Option 2 - Manual Setup:**
 ```bash
 cd Resonare/ios
 pod install
@@ -268,7 +277,17 @@ cd ..
 npm run ios
 ```
 
-This will install the Apple Authentication pod and build the app with Apple Sign-In functionality.
+### Troubleshooting
+
+**If you see "appleAuth.isAvailableAsync is not a function":**
+1. ✅ **Already Fixed**: The app now gracefully handles missing Apple Auth library
+2. 📱 **Shows Message**: iOS users see "Apple Sign-In will be available after running: cd ios && pod install"
+3. 🔄 **Fallback**: App continues to work with Google Sign-In only until pods are installed
+
+**After Pod Installation:**
+- Apple Sign-In button will appear automatically on iOS devices
+- Test on physical iOS device (may not work in simulator)
+- Both Google and Apple sign-in will be fully functional
 
 ---
 

@@ -12,12 +12,19 @@ import {
   Button,
 } from 'react-native-paper';
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
-import { AppleButton } from '@invertase/react-native-apple-authentication';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
 import { AuthService } from '../../services/authService';
 import { theme, spacing } from '../../utils/theme';
+
+// Safely import Apple Button with fallback
+let AppleButton: any = null;
+try {
+  AppleButton = require('@invertase/react-native-apple-authentication').AppleButton;
+} catch (error) {
+  console.log('Apple Authentication UI components not available:', error);
+}
 
 export default function AuthScreen() {
   const dispatch = useDispatch<AppDispatch>();
@@ -97,7 +104,7 @@ export default function AuthScreen() {
             />
             
             {/* Show Apple Sign-In button only on iOS and when available */}
-            {Platform.OS === 'ios' && isAppleSignInAvailable && (
+            {Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton && (
               <AppleButton
                 buttonStyle={AppleButton.Style.BLACK}
                 buttonType={AppleButton.Type.SIGN_IN}
@@ -105,6 +112,13 @@ export default function AuthScreen() {
                 onPress={handleAppleSignIn}
                 disabled={loading}
               />
+            )}
+            
+            {/* Show helpful message when Apple Sign-In is not available but should be */}
+            {Platform.OS === 'ios' && !AppleButton && (
+              <Text variant="bodySmall" style={styles.infoText}>
+                Apple Sign-In will be available after running: cd ios && pod install
+              </Text>
             )}
           </View>
         )}
@@ -175,5 +189,11 @@ const styles = StyleSheet.create({
   appleButton: {
     width: '100%',
     height: 48,
+  },
+  infoText: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    marginTop: spacing.sm,
+    fontSize: 12,
   },
 });
