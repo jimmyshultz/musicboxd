@@ -3,16 +3,16 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "android": "react-native run-android",
-    "android:dev": "ENVFILE=.env.development react-native run-android --variant=debugDevelopment",
-    "android:staging": "ENVFILE=.env.staging react-native run-android --variant=debugStaging",
-    "ios": "react-native run-ios",
-    "ios:dev": "ENVFILE=.env.development react-native run-ios --scheme Resonare",
-    "ios:staging": "ENVFILE=.env.staging react-native run-ios --scheme Resonare",
+    "android": "npx react-native run-android",
+    "android:dev": "ENVFILE=.env.development npx react-native run-android --variant=debugDevelopment",
+    "android:staging": "ENVFILE=.env.staging npx react-native run-android --variant=debugStaging",
+    "ios": "npx react-native run-ios",
+    "ios:dev": "ENVFILE=.env.development npx react-native run-ios --scheme Resonare",
+    "ios:staging": "ENVFILE=.env.staging npx react-native run-ios --scheme Resonare",
     "ios:setup": "cd ios && pod install && cd ..",
     "setup": "npm install && npm run ios:setup",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "npx react-native start",
     "test": "jest"
   },
   "dependencies": {
