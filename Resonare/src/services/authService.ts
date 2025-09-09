@@ -192,6 +192,7 @@ export class AuthService {
       }
       
       // Perform the Apple Sign-In request
+      console.log('🍎 [DEBUG] Requesting Apple Sign-In with scopes: EMAIL, FULL_NAME');
       const appleAuthRequestResponse = await appleAuth.performRequest({
         requestedOperation: appleAuth.Operation.LOGIN,
         requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
@@ -212,10 +213,56 @@ export class AuthService {
       // Extract user information
       const { identityToken, email, fullName } = appleAuthRequestResponse;
       
+      console.log('🍎 [DEBUG] Full Apple response data:', {
+        email,
+        fullName,
+        givenName: fullName?.givenName,
+        familyName: fullName?.familyName,
+      });
+      
       // Create a display name from fullName if available
       let displayName = 'Apple User';
+      
+      // Try multiple ways to get the name
       if (fullName?.givenName || fullName?.familyName) {
-        displayName = `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim();
+        const firstName = fullName.givenName || '';
+        const lastName = fullName.familyName || '';
+        displayName = `${firstName} ${lastName}`.trim();
+        console.log('🍎 [DEBUG] Using fullName data:', displayName);
+      } else if (email && email.includes('@') && !email.includes('appleid.private')) {
+        // If we have a real email, try to extract name from it
+        const emailPrefix = email.split('@')[0];
+        if (emailPrefix && emailPrefix !== 'apple') {
+          displayName = emailPrefix.replace(/[._]/g, ' ');
+          console.log('🍎 [DEBUG] Using email prefix as name:', displayName);
+        }
+      } else {
+        console.log('🍎 [DEBUG] No name data available, trying to decode identity token');
+        
+        // Try to decode the identity token to get more info
+        try {
+          // Decode JWT token (just the payload, we don't need to verify signature)
+          const tokenPayload = identityToken.split('.')[1];
+          const decodedPayload = JSON.parse(atob(tokenPayload));
+          console.log('🍎 [DEBUG] Identity token payload:', decodedPayload);
+          
+          // Apple sometimes puts name info in the token
+          if (decodedPayload.email && !decodedPayload.email.includes('appleid.private')) {
+            const emailPrefix = decodedPayload.email.split('@')[0];
+            if (emailPrefix && emailPrefix !== 'apple') {
+              displayName = emailPrefix.replace(/[._]/g, ' ');
+              console.log('🍎 [DEBUG] Using email from token:', displayName);
+            }
+          }
+        } catch (tokenError) {
+          console.log('🍎 [DEBUG] Could not decode identity token:', tokenError);
+        }
+        
+        // Final fallback - use a generic but unique identifier
+        if (displayName === 'Apple User') {
+          displayName = `AppleUser${appleAuthRequestResponse.user.substring(0, 8)}`;
+          console.log('🍎 [DEBUG] Using fallback name:', displayName);
+        }
       }
 
       console.log('Apple Sign-In successful, checking for existing user...');
