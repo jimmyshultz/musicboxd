@@ -60,8 +60,14 @@ export default function AuthScreen() {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('🔍 [DEBUG] AuthScreen: handleGoogleSignIn called');
+      console.log('🔍 [DEBUG] AuthScreen: About to dispatch signInWithGoogle');
       await dispatch(signInWithGoogle()).unwrap();
+      console.log('🔍 [DEBUG] AuthScreen: signInWithGoogle completed successfully');
     } catch (signInError: any) {
+      console.log('🔍 [DEBUG] AuthScreen: signInWithGoogle failed:', signInError);
+      console.log('🔍 [DEBUG] AuthScreen: Error message:', signInError.message);
+      console.log('🔍 [DEBUG] AuthScreen: Full error object:', JSON.stringify(signInError, null, 2));
       Alert.alert(
         'Sign In Failed',
         signInError.message || 'An error occurred during sign in. Please try again.',
@@ -72,8 +78,14 @@ export default function AuthScreen() {
 
   const handleAppleSignIn = async () => {
     try {
+      console.log('🍎 [DEBUG] AuthScreen: handleAppleSignIn called');
+      console.log('🍎 [DEBUG] AuthScreen: About to dispatch signInWithApple');
       await dispatch(signInWithApple()).unwrap();
+      console.log('🍎 [DEBUG] AuthScreen: signInWithApple completed successfully');
     } catch (signInError: any) {
+      console.log('🍎 [DEBUG] AuthScreen: signInWithApple failed:', signInError);
+      console.log('🍎 [DEBUG] AuthScreen: Error message:', signInError.message);
+      console.log('🍎 [DEBUG] AuthScreen: Full error object:', JSON.stringify(signInError, null, 2));
       Alert.alert(
         'Sign In Failed',
         signInError.message || 'An error occurred during Apple sign in. Please try again.',
@@ -121,7 +133,10 @@ export default function AuthScreen() {
                 buttonStyle={AppleButton.Style.BLACK}
                 buttonType={AppleButton.Type.SIGN_IN}
                 style={styles.appleButton}
-                onPress={handleAppleSignIn}
+                onPress={() => {
+                  console.log('🍎 [DEBUG] AuthScreen: Apple button pressed');
+                  handleAppleSignIn();
+                }}
                 disabled={loading}
               />
             )}

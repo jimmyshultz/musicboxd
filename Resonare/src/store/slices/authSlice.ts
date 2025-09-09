@@ -22,7 +22,10 @@ export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('🔍 [DEBUG] authSlice: signInWithGoogle thunk started');
+      console.log('🔍 [DEBUG] authSlice: Calling AuthService.signInWithGoogle');
       const result = await AuthService.signInWithGoogle();
+      console.log('🔍 [DEBUG] authSlice: AuthService.signInWithGoogle completed');
       if (result.user) {
         // Get the actual user profile from the database (real Supabase session now!)
         const profile = await userService.getCurrentUserProfile();
@@ -56,6 +59,8 @@ export const signInWithGoogle = createAsyncThunk(
       }
       throw new Error('Failed to get user data from Google Sign-In');
     } catch (error: any) {
+      console.log('🔍 [DEBUG] authSlice: signInWithGoogle failed with error:', error);
+      console.log('🔍 [DEBUG] authSlice: Error message:', error.message);
       return rejectWithValue(error.message || 'Google Sign-In failed');
     }
   }
@@ -65,13 +70,19 @@ export const signInWithApple = createAsyncThunk(
   'auth/signInWithApple',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('🍎 [DEBUG] authSlice: signInWithApple thunk started');
+      
       // Check if Apple Sign-In is available
+      console.log('🍎 [DEBUG] authSlice: Checking Apple Sign-In availability');
       const isAvailable = await AuthService.isAppleSignInAvailable();
+      console.log('🍎 [DEBUG] authSlice: Apple Sign-In available:', isAvailable);
       if (!isAvailable) {
         throw new Error('Apple Sign-In is not available on this device');
       }
 
+      console.log('🍎 [DEBUG] authSlice: Calling AuthService.signInWithApple');
       const result = await AuthService.signInWithApple();
+      console.log('🍎 [DEBUG] authSlice: AuthService.signInWithApple completed');
       if (result.user) {
         // Get the actual user profile from the database
         const profile = await userService.getCurrentUserProfile();
@@ -105,6 +116,8 @@ export const signInWithApple = createAsyncThunk(
       }
       throw new Error('Failed to get user data from Apple Sign-In');
     } catch (error: any) {
+      console.log('🍎 [DEBUG] authSlice: signInWithApple failed with error:', error);
+      console.log('🍎 [DEBUG] authSlice: Error message:', error.message);
       return rejectWithValue(error.message || 'Apple Sign-In failed');
     }
   }
