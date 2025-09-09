@@ -276,7 +276,28 @@ export class AuthService {
           if (decodedPayload.email && !decodedPayload.email.includes('appleid.private')) {
             const emailPrefix = decodedPayload.email.split('@')[0];
             if (emailPrefix && emailPrefix !== 'apple') {
-              displayName = emailPrefix.replace(/[._]/g, ' ');
+              // Better email parsing to extract full name
+              let extractedName = emailPrefix.replace(/[._-]/g, ' ');
+              
+              // Check if we can extract surname from domain
+              const domain = decodedPayload.email.split('@')[1];
+              if (domain) {
+                // For emails like "jimmy@shultz-kc.com", extract "shultz"
+                const domainParts = domain.split('.')[0].split('-');
+                const potentialSurname = domainParts.find(part => 
+                  part.length > 2 && 
+                  part !== 'com' && part !== 'net' && part !== 'org' && 
+                  part !== 'kc' && part !== 'co' && part !== 'us' &&
+                  !extractedName.toLowerCase().includes(part.toLowerCase())
+                );
+                
+                if (potentialSurname) {
+                  extractedName = `${extractedName} ${potentialSurname}`;
+                  console.log('🍎 [DEBUG] Added surname from domain:', potentialSurname);
+                }
+              }
+              
+              displayName = extractedName.trim();
               console.log('🍎 [DEBUG] Using email from token:', displayName);
             }
           }
