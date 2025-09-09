@@ -10,9 +10,9 @@
 
 ## The Solution Applied
 
-✅ **Enhanced email parsing** to extract full name from email address
-✅ **Domain analysis** to extract surname from domain name
-✅ **Smart filtering** to avoid common domain words
+✅ **Simple email parsing** - use whatever is before the @ sign
+✅ **Remove separators** - clean up dots, underscores, hyphens
+✅ **Add numbers for uniqueness** - if username is taken, add numbers
 
 ## How It Works Now
 
@@ -20,33 +20,30 @@
 
 **Processing**:
 1. Extract prefix: `jimmy`
-2. Extract domain: `shultz-kc.com`
-3. Split domain: `['shultz', 'kc']`
-4. Find potential surname: `shultz` (filters out `kc`)
-5. Combine: `jimmy shultz`
-6. Generate username: `jimmyshultz`
+2. Remove separators: `jimmy` (already clean)
+3. Generate username: `jimmy`
+4. If taken, try: `jimmy2`, `jimmy3`, etc.
 
 ## Expected Result
 
 **Next time you sign in with Apple:**
-- Display name: `jimmy shultz`
-- Username: `jimmyshultz` (or `jimmyshultz2` if taken)
+- Display name: `jimmy`
+- Username: `jimmy` (or `jimmy2` if taken)
 
 ## Debug Output You'll See
 
 ```
-🍎 [DEBUG] Using email from token: jimmy shultz
-🍎 [DEBUG] Added surname from domain: shultz
-🍎 [DEBUG] generateUniqueUsername input: jimmy shultz
-🍎 [DEBUG] Cleaned name: jimmyshultz
-🍎 [DEBUG] Found unique username: jimmyshultz
+🍎 [DEBUG] Using email prefix from token: jimmy
+🍎 [DEBUG] generateUniqueUsername input: jimmy
+🍎 [DEBUG] Cleaned name: jimmy
+🍎 [DEBUG] Found unique username: jimmy (or jimmy2 if taken)
 ```
 
 ## Test It!
 
 1. **Delete your current Apple account** (if you want to test)
 2. **Sign in with Apple again**
-3. **Should create username**: `@jimmyshultz`
+3. **Should create username**: `@jimmy` (or `@jimmy2` if taken)
 4. **Edit if needed** - will persist across sign-ins
 
-The fix handles your specific email format and should work for similar personal domain emails! 🎯
+The fix is simple and universal - works for any email format! 🎯
