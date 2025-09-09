@@ -15,7 +15,7 @@ echo ""
 
 # Clean React Native cache
 echo "📱 Cleaning React Native cache..."
-npx react-native start --reset-cache &
+./node_modules/.bin/react-native start --reset-cache &
 METRO_PID=$!
 sleep 3
 kill $METRO_PID 2>/dev/null || true
