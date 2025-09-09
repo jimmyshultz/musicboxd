@@ -305,7 +305,7 @@ Run this command to verify your setup:
 ./rebuild-with-apple-signin.sh
 
 # Or manual rebuild
-npx react-native start --reset-cache
+npx @react-native-community/cli start --reset-cache
 npm run ios:dev
 ```
 

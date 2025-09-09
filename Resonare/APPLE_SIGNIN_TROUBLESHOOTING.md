@@ -23,7 +23,7 @@ The app is running from a build that was created **before** the pods were instal
 # Stop the current Metro bundler (Ctrl+C if running)
 
 # Clean and rebuild
-npx react-native start --reset-cache &
+npx @react-native-community/cli start --reset-cache &
 # Wait 3 seconds then kill Metro
 pkill -f "react-native start" || pkill -f "metro"
 
