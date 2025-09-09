@@ -21,25 +21,34 @@ export class AuthService {
    * Format: firstnamelastname, firstnamelastname2, firstnamelastname3, etc.
    */
   static async generateUniqueUsername(displayName: string): Promise<string> {
+    console.log('🍎 [DEBUG] generateUniqueUsername input:', displayName);
+    
     // Clean the display name: remove spaces, special chars, convert to lowercase
     const cleanName = displayName
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '') // Remove all non-alphanumeric characters
       .substring(0, 20); // Limit length
     
+    console.log('🍎 [DEBUG] Cleaned name:', cleanName);
+    
     let baseUsername = cleanName || 'user';
     let username = baseUsername;
     let counter = 1;
+    
+    console.log('🍎 [DEBUG] Base username:', baseUsername);
     
     // Keep trying until we find a unique username
     while (true) {
       try {
         // Check if username is available
+        console.log('🍎 [DEBUG] Checking if username is available:', username);
         const isAvailable = await userService.isUsernameAvailable(username);
         if (isAvailable) {
-          console.log('Generated unique username:', username);
+          console.log('🍎 [DEBUG] Found unique username:', username);
           return username;
         }
+        
+        console.log('🍎 [DEBUG] Username taken, trying next:', username);
         
         // Username taken, try with number suffix
         counter++;
@@ -227,7 +236,24 @@ export class AuthService {
       if (fullName?.givenName || fullName?.familyName) {
         const firstName = fullName.givenName || '';
         const lastName = fullName.familyName || '';
-        displayName = `${firstName} ${lastName}`.trim();
+        
+        console.log('🍎 [DEBUG] Name parts:', {
+          givenName: fullName.givenName,
+          familyName: fullName.familyName,
+          firstName,
+          lastName
+        });
+        
+        // Ensure we concatenate first and last name properly
+        if (firstName && lastName) {
+          displayName = `${firstName} ${lastName}`;
+        } else if (firstName) {
+          displayName = firstName;
+        } else if (lastName) {
+          displayName = lastName;
+        }
+        
+        displayName = displayName.trim();
         console.log('🍎 [DEBUG] Using fullName data:', displayName);
       } else if (email && email.includes('@') && !email.includes('appleid.private')) {
         // If we have a real email, try to extract name from it
@@ -326,7 +352,9 @@ export class AuthService {
         
         if (!profile) {
           // Generate a unique username
+          console.log('🍎 [DEBUG] About to generate username from displayName:', displayName);
           const uniqueUsername = await this.generateUniqueUsername(displayName);
+          console.log('🍎 [DEBUG] Generated unique username:', uniqueUsername);
           
           // Create new user profile
           profile = await userService.upsertUserProfile({
