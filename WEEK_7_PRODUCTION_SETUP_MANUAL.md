@@ -285,6 +285,7 @@ npm run ios
 3. 🔄 **Fallback**: App continues to work with Google Sign-In only until pods are installed
 
 **After Pod Installation:**
+- **IMPORTANT**: You must rebuild the app to see Apple Sign-In
 - Apple Sign-In button will appear automatically on iOS devices
 - Test on physical iOS device (may not work in simulator)
 - Both Google and Apple sign-in will be fully functional
@@ -296,7 +297,19 @@ Run this command to verify your setup:
 ./verify-apple-signin.sh
 ```
 
-This will show you exactly what's configured and what still needs to be done.
+### 🔨 Rebuild After Pod Installation
+
+**CRITICAL**: After `pod install`, you must rebuild the app:
+```bash
+# Quick rebuild (recommended)
+./rebuild-with-apple-signin.sh
+
+# Or manual rebuild
+npx react-native start --reset-cache
+npm run ios
+```
+
+**Why?** React Native needs to rebuild to link the new native Apple Authentication module.
 
 ---
 
