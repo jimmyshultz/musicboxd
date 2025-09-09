@@ -50,16 +50,19 @@ fi
 if [ -d "ios/Pods" ]; then
     echo "✅ CocoaPods dependencies installed"
     
-    # Check if Apple Authentication pod is installed
-    if [ -d "ios/Pods/RNAppleAuthentication" ]; then
+    # Check if Apple Authentication pod is installed (React Native 0.60+ uses auto-linking)
+    if [ -d "ios/Pods/RNAppleAuthentication" ] || grep -q "RNAppleAuthentication" ios/Podfile.lock 2>/dev/null; then
         echo "✅ Apple Authentication pod properly installed"
+        PODS_LINKED=true
     else
         echo "⚠️  Apple Authentication pod not found in Pods directory"
         echo "   Run: cd ios && pod install"
+        PODS_LINKED=false
     fi
 else
     echo "⚠️  CocoaPods not installed yet"
     echo "   Run: cd ios && pod install"
+    PODS_LINKED=false
 fi
 
 # Check entitlements
@@ -94,7 +97,7 @@ echo ""
 echo "📋 Summary:"
 echo ""
 
-if [ -d "ios/Pods/RNAppleAuthentication" ]; then
+if [ "$PODS_LINKED" = true ]; then
     echo "🎉 Apple Sign-In is READY!"
     echo "   - Dependencies installed ✅"
     echo "   - iOS pods linked ✅"
