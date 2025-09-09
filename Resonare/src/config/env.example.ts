@@ -1,13 +1,13 @@
 import Config from 'react-native-config';
 
-export const ENV = {
+export const ENV_CONFIG = {
   ENVIRONMENT: Config.ENVIRONMENT || 'development',
   APP_NAME: Config.APP_NAME || 'Resonare',
   BUNDLE_ID: Config.BUNDLE_ID || 'com.jimmyshultz.resonare',
   SUPABASE_URL: Config.SUPABASE_URL!,
   SUPABASE_ANON_KEY: Config.SUPABASE_ANON_KEY!,
   SPOTIFY_CLIENT_ID: Config.SPOTIFY_CLIENT_ID!,
-  SPOTIFY_CLIENT_SECRET: 'secret_here',
+  SPOTIFY_CLIENT_SECRET: Config.SPOTIFY_CLIENT_SECRET || 'secret_here',
 };
 
 // Environment checking helpers
