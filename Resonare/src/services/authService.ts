@@ -179,8 +179,16 @@ export class AuthService {
       console.log('Starting Apple Sign-In...');
       
       // Check if Apple Auth is properly loaded
-      if (!appleAuth || typeof appleAuth.performRequest !== 'function') {
-        throw new Error('Apple Authentication library not properly linked. Please run "cd ios && pod install" and rebuild the app.');
+      if (!appleAuth) {
+        throw new Error('Apple Authentication library not imported. Please check the installation.');
+      }
+      
+      if (!appleAuth.native) {
+        throw new Error('Apple Authentication native module not linked. The app needs to be rebuilt after pod install.');
+      }
+      
+      if (typeof appleAuth.performRequest !== 'function') {
+        throw new Error('Apple Authentication performRequest method not available. Please rebuild the app.');
       }
       
       // Perform the Apple Sign-In request
@@ -282,10 +290,32 @@ export class AuthService {
       }
       
       // Check if the appleAuth module is properly loaded
-      if (!appleAuth || typeof appleAuth.isAvailableAsync !== 'function') {
-        console.log('🍎 [DEBUG] Apple Authentication library not properly linked');
+      if (!appleAuth) {
+        console.log('🍎 [DEBUG] Apple Authentication library not imported');
+        return false;
+      }
+      
+      // Check if native module is linked by looking for the native property
+      if (!appleAuth.native) {
+        console.log('🍎 [DEBUG] Apple Authentication native module not linked');
         console.log('🍎 [DEBUG] - appleAuth exists:', !!appleAuth);
-        console.log('🍎 [DEBUG] - isAvailableAsync type:', typeof appleAuth?.isAvailableAsync);
+        console.log('🍎 [DEBUG] - appleAuth.native exists:', !!appleAuth.native);
+        console.log('🍎 [DEBUG] This means pod install worked but app needs rebuild');
+        return false;
+      }
+      
+      // Check if isAvailableAsync method exists
+      if (typeof appleAuth.isAvailableAsync !== 'function') {
+        console.log('🍎 [DEBUG] isAvailableAsync method not available');
+        console.log('🍎 [DEBUG] - isAvailableAsync type:', typeof appleAuth.isAvailableAsync);
+        console.log('🍎 [DEBUG] - Available methods:', Object.keys(appleAuth));
+        
+        // Try to check if we're on iOS as a fallback
+        const { Platform } = require('react-native');
+        if (Platform.OS === 'ios') {
+          console.log('🍎 [DEBUG] Fallback: Assuming available on iOS since native module exists');
+          return true; // Assume available on iOS if native module exists
+        }
         return false;
       }
       
