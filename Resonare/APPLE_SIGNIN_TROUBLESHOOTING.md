@@ -32,8 +32,8 @@ cd ios
 xcodebuild clean -workspace Resonare.xcworkspace -scheme Resonare
 cd ..
 
-# Rebuild app
-npm run ios
+# Rebuild app (use development environment)
+npm run ios:dev
 ```
 
 #### Option 3: Nuclear Option (If above doesn't work)
@@ -50,8 +50,8 @@ cd ios
 pod install
 cd ..
 
-# Rebuild
-npm run ios
+# Rebuild (use development environment)
+npm run ios:dev
 ```
 
 ### **Expected Results After Rebuild:**

@@ -31,8 +31,8 @@ echo "🔨 Rebuilding with Apple Sign-In..."
 echo ""
 
 # Rebuild the app
-echo "📱 Starting fresh build..."
-npm run ios
+echo "📱 Starting fresh build with development environment..."
+npm run ios:dev
 
 echo ""
 echo "✅ Build complete! Apple Sign-In should now be available."

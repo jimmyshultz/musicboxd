@@ -306,7 +306,7 @@ Run this command to verify your setup:
 
 # Or manual rebuild
 npx react-native start --reset-cache
-npm run ios
+npm run ios:dev
 ```
 
 **Why?** React Native needs to rebuild to link the new native Apple Authentication module.
