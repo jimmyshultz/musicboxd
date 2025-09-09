@@ -4,8 +4,8 @@ echo "🔧 Testing React Native CLI..."
 echo ""
 
 # Test if React Native CLI is available
-echo "Testing npx @react-native-community/cli..."
-npx @react-native-community/cli --version 2>/dev/null
+echo "Testing npx react-native..."
+npx react-native --version 2>/dev/null
 
 if [ $? -eq 0 ]; then
     echo "✅ React Native CLI is working!"
@@ -20,11 +20,8 @@ if [ $? -eq 0 ]; then
 else
     echo "❌ React Native CLI not working"
     echo ""
-    echo "Try installing the CLI:"
-    echo "  npm install -g @react-native-community/cli"
-    echo ""
-    echo "Or use npx directly:"
-    echo "  ENVFILE=.env.development npx @react-native-community/cli run-ios --scheme Resonare-Development"
+    echo "Try using npx directly:"
+    echo "  ENVFILE=.env.development npx react-native run-ios --scheme Resonare-Development"
 fi
 
 echo ""
