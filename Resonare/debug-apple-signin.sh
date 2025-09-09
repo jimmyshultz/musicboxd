@@ -63,11 +63,14 @@ fi
 if [ -d "ios/Pods" ]; then
     echo "✅ ios/Pods directory exists"
     if [ -d "ios/Pods/RNAppleAuthentication" ]; then
-        echo "✅ RNAppleAuthentication pod installed"
+        echo "✅ RNAppleAuthentication pod installed (separate directory)"
     else
-        echo "❌ RNAppleAuthentication pod NOT found in ios/Pods"
-        echo "📁 Available pods:"
-        ls ios/Pods/ | grep -i apple || echo "   No Apple-related pods found"
+        echo "ℹ️  RNAppleAuthentication pod not found as separate directory"
+        echo "   This is normal for React Native 0.60+ auto-linking"
+        echo "📁 Checking for Apple-related files in other pods:"
+        find ios/Pods -name "*Apple*" -type f 2>/dev/null | head -3 || echo "   No Apple files found"
+        echo "📁 Checking build files for RNAppleAuthentication:"
+        find ios -name "*RNApple*" 2>/dev/null | head -3 || echo "   No RNApple build files found"
     fi
 else
     echo "❌ ios/Pods directory not found"
@@ -98,10 +101,13 @@ if [ ! -d "ios/Pods" ]; then
     echo ""
 fi
 
-if [ -d "ios/Pods" ] && [ ! -d "ios/Pods/RNAppleAuthentication" ]; then
-    echo "⚠️  ISSUE: Apple Authentication pod not installed"
+# Check if auto-linking worked by looking at Podfile.lock
+if [ -f "ios/Podfile.lock" ] && grep -q "RNAppleAuthentication" ios/Podfile.lock; then
+    echo "✅ RNAppleAuthentication found in Podfile.lock (auto-linked)"
+    echo "   The module should be available - try restarting the app"
+else
+    echo "⚠️  ISSUE: RNAppleAuthentication not found in Podfile.lock"
     echo "   SOLUTION: Run 'cd ios && pod install' and rebuild app"
-    echo ""
 fi
 
 echo "🎯 Next Steps:"
