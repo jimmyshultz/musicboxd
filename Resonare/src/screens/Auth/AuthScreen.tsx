@@ -17,7 +17,7 @@ import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
 import { AuthService } from '../../services/authService';
 import { theme, spacing } from '../../utils/theme';
-import AppleSignInDebug from '../../components/AppleSignInDebug';
+// import AppleSignInDebug from '../../components/AppleSignInDebug'; // Removed - Apple Sign-In working
 
 // Safely import Apple Button with fallback
 let AppleButton: any = null;
@@ -84,7 +84,6 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
-      <AppleSignInDebug />
       <View style={styles.content}>
         <Text variant="headlineLarge" style={styles.title}>
           Resonare
@@ -118,28 +117,16 @@ export default function AuthScreen() {
             
             {/* Show Apple Sign-In button only on iOS and when available */}
             {Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton && (
-              <>
-                {console.log('🍎 [DEBUG] AuthScreen: Rendering Apple Sign-In button')}
-                <AppleButton
-                  buttonStyle={AppleButton.Style.BLACK}
-                  buttonType={AppleButton.Type.SIGN_IN}
-                  style={styles.appleButton}
-                  onPress={handleAppleSignIn}
-                  disabled={loading}
-                />
-              </>
+              <AppleButton
+                buttonStyle={AppleButton.Style.BLACK}
+                buttonType={AppleButton.Type.SIGN_IN}
+                style={styles.appleButton}
+                onPress={handleAppleSignIn}
+                disabled={loading}
+              />
             )}
             
-            {/* Debug info for Apple Sign-In */}
-            {Platform.OS === 'ios' && (
-              <>
-                {console.log('🍎 [DEBUG] AuthScreen: Render conditions:')}
-                {console.log('🍎 [DEBUG] - Platform.OS === "ios":', Platform.OS === 'ios')}
-                {console.log('🍎 [DEBUG] - isAppleSignInAvailable:', isAppleSignInAvailable)}
-                {console.log('🍎 [DEBUG] - AppleButton exists:', !!AppleButton)}
-                {console.log('🍎 [DEBUG] - Should show button:', Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton)}
-              </>
-            )}
+            {/* Debug info removed - Apple Sign-In working */}
             
             {/* Show helpful message when Apple Sign-In is not available but should be */}
             {Platform.OS === 'ios' && !AppleButton && (

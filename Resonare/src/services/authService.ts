@@ -197,7 +197,12 @@ export class AuthService {
         requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
       });
 
-      console.log('Apple Sign-In response:', appleAuthRequestResponse);
+      console.log('🍎 [DEBUG] Apple Sign-In response:', {
+        user: appleAuthRequestResponse.user,
+        email: appleAuthRequestResponse.email,
+        fullName: appleAuthRequestResponse.fullName,
+        hasIdentityToken: !!appleAuthRequestResponse.identityToken,
+      });
 
       // Ensure we have the required data
       if (!appleAuthRequestResponse.identityToken) {
@@ -213,30 +218,53 @@ export class AuthService {
         displayName = `${fullName.givenName || ''} ${fullName.familyName || ''}`.trim();
       }
 
-      console.log('Apple Sign-In successful, creating Supabase user...');
+      console.log('Apple Sign-In successful, checking for existing user...');
 
-      // Try to sign up the user (this will fail if they already exist)
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: email || `apple_${appleAuthRequestResponse.user}@appleid.private`,
-        password: `apple_oauth_${appleAuthRequestResponse.user}`, // Use Apple user ID as password
-        options: {
-          data: {
-            name: displayName,
-            provider: 'apple',
-            apple_user_id: appleAuthRequestResponse.user,
-          },
-        },
+      // Use Apple User ID as the primary identifier for consistent login
+      const appleUserId = appleAuthRequestResponse.user;
+      const appleEmail = email || `apple_${appleUserId}@appleid.private`;
+      const applePassword = `apple_oauth_${appleUserId}`;
+
+      console.log('🍎 [DEBUG] Apple User ID:', appleUserId);
+      console.log('🍎 [DEBUG] Using email:', appleEmail);
+      console.log('🍎 [DEBUG] Display name:', displayName);
+
+      // Try to sign in first (in case user already exists)
+      let authResult = await supabase.auth.signInWithPassword({
+        email: appleEmail,
+        password: applePassword,
       });
 
-      if (signUpError && !signUpError.message.includes('already registered')) {
-        throw signUpError;
+      // If sign-in fails, try to create the user
+      if (authResult.error) {
+        console.log('User does not exist, creating new account...');
+        
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: appleEmail,
+          password: applePassword,
+          options: {
+            data: {
+              name: displayName,
+              provider: 'apple',
+              apple_user_id: appleUserId,
+            },
+          },
+        });
+
+        if (signUpError && !signUpError.message.includes('already registered')) {
+          throw signUpError;
+        }
+
+        // Now sign in the newly created user
+        authResult = await supabase.auth.signInWithPassword({
+          email: appleEmail,
+          password: applePassword,
+        });
+      } else {
+        console.log('Found existing user, signed in successfully');
       }
 
-      // Now sign in the user
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email || `apple_${appleAuthRequestResponse.user}@appleid.private`,
-        password: `apple_oauth_${appleAuthRequestResponse.user}`,
-      });
+      const { data, error } = authResult;
 
       if (error) {
         console.error('Supabase sign-in error:', error);
