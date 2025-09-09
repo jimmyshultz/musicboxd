@@ -5,9 +5,14 @@ import { userService } from './userService';
 // Safely import Apple Authentication with fallback
 let appleAuth: any = null;
 try {
-  appleAuth = require('@invertase/react-native-apple-authentication').appleAuth;
+  console.log('🍎 [DEBUG] Attempting to import Apple Authentication library...');
+  const appleAuthModule = require('@invertase/react-native-apple-authentication');
+  console.log('🍎 [DEBUG] Apple Authentication module imported:', Object.keys(appleAuthModule));
+  appleAuth = appleAuthModule.appleAuth;
+  console.log('🍎 [DEBUG] appleAuth object:', typeof appleAuth, appleAuth ? 'available' : 'null');
 } catch (error) {
-  console.log('Apple Authentication library not available:', error);
+  console.log('🍎 [DEBUG] Apple Authentication library import failed:', error.message);
+  console.log('🍎 [DEBUG] Full error:', error);
 }
 
 export class AuthService {
@@ -267,14 +272,29 @@ export class AuthService {
    */
   static async isAppleSignInAvailable(): Promise<boolean> {
     try {
+      console.log('🍎 [DEBUG] Checking Apple Sign-In availability...');
+      console.log('🍎 [DEBUG] appleAuth object exists:', !!appleAuth);
+      console.log('🍎 [DEBUG] appleAuth type:', typeof appleAuth);
+      
+      if (appleAuth) {
+        console.log('🍎 [DEBUG] appleAuth methods:', Object.keys(appleAuth));
+        console.log('🍎 [DEBUG] isAvailableAsync exists:', typeof appleAuth.isAvailableAsync);
+      }
+      
       // Check if the appleAuth module is properly loaded
       if (!appleAuth || typeof appleAuth.isAvailableAsync !== 'function') {
-        console.log('Apple Authentication library not properly linked');
+        console.log('🍎 [DEBUG] Apple Authentication library not properly linked');
+        console.log('🍎 [DEBUG] - appleAuth exists:', !!appleAuth);
+        console.log('🍎 [DEBUG] - isAvailableAsync type:', typeof appleAuth?.isAvailableAsync);
         return false;
       }
-      return await appleAuth.isAvailableAsync();
+      
+      console.log('🍎 [DEBUG] Calling appleAuth.isAvailableAsync()...');
+      const isAvailable = await appleAuth.isAvailableAsync();
+      console.log('🍎 [DEBUG] Apple Sign-In availability result:', isAvailable);
+      return isAvailable;
     } catch (error) {
-      console.error('Error checking Apple Sign-In availability:', error);
+      console.error('🍎 [DEBUG] Error checking Apple Sign-In availability:', error);
       return false;
     }
   }

@@ -17,13 +17,18 @@ import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
 import { AuthService } from '../../services/authService';
 import { theme, spacing } from '../../utils/theme';
+import AppleSignInDebug from '../../components/AppleSignInDebug';
 
 // Safely import Apple Button with fallback
 let AppleButton: any = null;
 try {
-  AppleButton = require('@invertase/react-native-apple-authentication').AppleButton;
+  console.log('🍎 [DEBUG] AuthScreen: Attempting to import AppleButton...');
+  const appleAuthModule = require('@invertase/react-native-apple-authentication');
+  console.log('🍎 [DEBUG] AuthScreen: Apple Auth module keys:', Object.keys(appleAuthModule));
+  AppleButton = appleAuthModule.AppleButton;
+  console.log('🍎 [DEBUG] AuthScreen: AppleButton imported:', typeof AppleButton, AppleButton ? 'available' : 'null');
 } catch (error) {
-  console.log('Apple Authentication UI components not available:', error);
+  console.log('🍎 [DEBUG] AuthScreen: Apple Authentication UI components not available:', error.message);
 }
 
 export default function AuthScreen() {
@@ -35,10 +40,17 @@ export default function AuthScreen() {
     // Check if Apple Sign-In is available on this device
     const checkAppleSignInAvailability = async () => {
       try {
+        console.log('🍎 [DEBUG] AuthScreen: Starting Apple Sign-In availability check...');
+        console.log('🍎 [DEBUG] AuthScreen: Platform.OS:', Platform.OS);
+        console.log('🍎 [DEBUG] AuthScreen: AppleButton available:', !!AppleButton);
+        
         const available = await AuthService.isAppleSignInAvailable();
+        console.log('🍎 [DEBUG] AuthScreen: Apple Sign-In availability result:', available);
         setIsAppleSignInAvailable(available);
+        
+        console.log('🍎 [DEBUG] AuthScreen: State updated - isAppleSignInAvailable:', available);
       } catch (error) {
-        console.log('Error checking Apple Sign-In availability:', error);
+        console.log('🍎 [DEBUG] AuthScreen: Error checking Apple Sign-In availability:', error);
         setIsAppleSignInAvailable(false);
       }
     };
@@ -72,6 +84,7 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
+      <AppleSignInDebug />
       <View style={styles.content}>
         <Text variant="headlineLarge" style={styles.title}>
           Resonare
@@ -105,20 +118,37 @@ export default function AuthScreen() {
             
             {/* Show Apple Sign-In button only on iOS and when available */}
             {Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton && (
-              <AppleButton
-                buttonStyle={AppleButton.Style.BLACK}
-                buttonType={AppleButton.Type.SIGN_IN}
-                style={styles.appleButton}
-                onPress={handleAppleSignIn}
-                disabled={loading}
-              />
+              <>
+                {console.log('🍎 [DEBUG] AuthScreen: Rendering Apple Sign-In button')}
+                <AppleButton
+                  buttonStyle={AppleButton.Style.BLACK}
+                  buttonType={AppleButton.Type.SIGN_IN}
+                  style={styles.appleButton}
+                  onPress={handleAppleSignIn}
+                  disabled={loading}
+                />
+              </>
+            )}
+            
+            {/* Debug info for Apple Sign-In */}
+            {Platform.OS === 'ios' && (
+              <>
+                {console.log('🍎 [DEBUG] AuthScreen: Render conditions:')}
+                {console.log('🍎 [DEBUG] - Platform.OS === "ios":', Platform.OS === 'ios')}
+                {console.log('🍎 [DEBUG] - isAppleSignInAvailable:', isAppleSignInAvailable)}
+                {console.log('🍎 [DEBUG] - AppleButton exists:', !!AppleButton)}
+                {console.log('🍎 [DEBUG] - Should show button:', Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton)}
+              </>
             )}
             
             {/* Show helpful message when Apple Sign-In is not available but should be */}
             {Platform.OS === 'ios' && !AppleButton && (
-              <Text variant="bodySmall" style={styles.infoText}>
-                Apple Sign-In will be available after running: cd ios && pod install
-              </Text>
+              <>
+                {console.log('🍎 [DEBUG] AuthScreen: Showing fallback message')}
+                <Text variant="bodySmall" style={styles.infoText}>
+                  Apple Sign-In will be available after running: cd ios && pod install
+                </Text>
+              </>
             )}
           </View>
         )}
