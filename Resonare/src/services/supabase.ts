@@ -20,8 +20,8 @@ const getSupabaseConfig = () => {
     Logger.log('Using staging Supabase configuration');
   } else if (Environment.isProduction) {
     // Use production environment variables from .env.production
-    config.url = ENV_CONFIG.SUPABASE_URL;
-    config.anonKey = ENV_CONFIG.SUPABASE_ANON_KEY;
+    // config.url = ENV_CONFIG.SUPABASE_URL;
+    // config.anonKey = ENV_CONFIG.SUPABASE_ANON_KEY;
     Logger.log('Using production Supabase configuration', config.url);
   } else {
     Logger.log('Using development Supabase configuration');
