@@ -680,6 +680,31 @@ export class UserService {
 
     return 'follow';
   }
+
+  /**
+   * Calculate mutual followers between current user and target user
+   */
+  async getMutualFollowersCount(currentUserId: string, targetUserId: string): Promise<number> {
+    try {
+      // Get followers of current user
+      const currentUserFollowers = await this.getFollowers(currentUserId);
+      const currentUserFollowerIds = currentUserFollowers.map(user => user.id);
+
+      // Get followers of target user
+      const targetUserFollowers = await this.getFollowers(targetUserId);
+      const targetUserFollowerIds = targetUserFollowers.map(user => user.id);
+
+      // Find intersection (mutual followers)
+      const mutualFollowerIds = currentUserFollowerIds.filter(id => 
+        targetUserFollowerIds.includes(id)
+      );
+
+      return mutualFollowerIds.length;
+    } catch (error) {
+      console.error('Error calculating mutual followers:', error);
+      return 0;
+    }
+  }
 }
 
 // Export singleton instance

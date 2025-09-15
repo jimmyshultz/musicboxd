@@ -268,14 +268,29 @@ export default function HomeScreen() {
           return;
         }
         
-        const potentialFriends: PotentialFriend[] = potentialUsers.map((user, _index) => ({
-          user,
-          mutualFollowers: Math.floor(Math.random() * 12) + 1, // 1-12 mutual followers
-        })).slice(0, 20);
+        // Calculate real mutual followers for each potential friend
+        const potentialFriends: PotentialFriend[] = [];
         
-        // Sort by mutual followers count (descending)
+        for (const user of potentialUsers) {
+          try {
+            const mutualFollowersCount = await userService.getMutualFollowersCount(currentUserId, user.id);
+            potentialFriends.push({
+              user,
+              mutualFollowers: mutualFollowersCount,
+            });
+          } catch (error) {
+            console.error(`Error calculating mutual followers for user ${user.username}:`, error);
+            // If calculation fails, still include the user but with 0 mutual followers
+            potentialFriends.push({
+              user,
+              mutualFollowers: 0,
+            });
+          }
+        }
+        
+        // Sort by mutual followers count (descending) and limit to 20
         potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
-        setDiscoverFriends(potentialFriends);
+        setDiscoverFriends(potentialFriends.slice(0, 20));
       } else {
         setDiscoverFriends([]);
       }
