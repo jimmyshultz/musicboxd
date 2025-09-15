@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, Platform } from 'react-native';
+import { View, Text, Platform, StyleSheet } from 'react-native';
 
 export const AppleSignInDebug: React.FC = () => {
   useEffect(() => {
@@ -37,8 +37,6 @@ export const AppleSignInDebug: React.FC = () => {
     
     // Test node_modules presence
     try {
-      const fs = require('fs');
-      const path = require('path');
       console.log('🍎 [DEBUG] AppleSignInDebug: Checking node_modules...');
       // This might not work in React Native, but let's try
     } catch (error) {
@@ -51,12 +49,24 @@ export const AppleSignInDebug: React.FC = () => {
   }
 
   return (
-    <View style={{ padding: 10, backgroundColor: '#f0f0f0', margin: 10 }}>
-      <Text style={{ fontSize: 12, color: '#666' }}>
+    <View style={styles.container}>
+      <Text style={styles.text}>
         🍎 Apple Sign-In Debug Component (Check console for detailed logs)
       </Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    margin: 10,
+  },
+  text: {
+    fontSize: 12,
+    color: '#666',
+  },
+});
 
 export default AppleSignInDebug;

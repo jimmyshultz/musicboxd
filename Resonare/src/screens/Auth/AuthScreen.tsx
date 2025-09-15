@@ -9,7 +9,6 @@ import {
   Text,
   Card,
   ActivityIndicator,
-  Button,
 } from 'react-native-paper';
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { useDispatch, useSelector } from 'react-redux';
@@ -49,8 +48,8 @@ export default function AuthScreen() {
         setIsAppleSignInAvailable(available);
         
         console.log('🍎 [DEBUG] AuthScreen: State updated - isAppleSignInAvailable:', available);
-      } catch (error) {
-        console.log('🍎 [DEBUG] AuthScreen: Error checking Apple Sign-In availability:', error);
+      } catch (availabilityError) {
+        console.log('🍎 [DEBUG] AuthScreen: Error checking Apple Sign-In availability:', availabilityError);
         setIsAppleSignInAvailable(false);
       }
     };
