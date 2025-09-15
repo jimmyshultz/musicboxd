@@ -4,13 +4,14 @@ import {
   StyleSheet,
   Alert,
   Platform,
+  TouchableOpacity,
+  Image,
 } from 'react-native';
 import {
   Text,
   Card,
   ActivityIndicator,
 } from 'react-native-paper';
-import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
@@ -118,13 +119,22 @@ export default function AuthScreen() {
           <ActivityIndicator size="large" style={styles.loader} />
         ) : (
           <View style={styles.buttonContainer}>
-            <GoogleSigninButton
-              style={styles.googleButton}
-              size={GoogleSigninButton.Size.Wide}
-              color={GoogleSigninButton.Color.Dark}
+            <TouchableOpacity
+              style={[styles.signInButton, styles.googleButton, loading && styles.disabledButton]}
               onPress={handleGoogleSignIn}
               disabled={loading}
-            />
+            >
+              <View style={styles.buttonContent}>
+                <View style={styles.googleIconContainer}>
+                  <View style={styles.googleIconBg}>
+                    <Text style={styles.googleIcon}>G</Text>
+                  </View>
+                </View>
+                <Text style={[styles.buttonText, styles.googleButtonText]}>
+                  Continue with Google
+                </Text>
+              </View>
+            </TouchableOpacity>
             
             {/* Show Apple Sign-In button only on iOS and when available */}
             {Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton && (
@@ -213,13 +223,65 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: spacing.md,
   },
-  googleButton: {
+  signInButton: {
     width: '100%',
     height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  googleButton: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#DADCE0',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  googleButtonText: {
+    color: '#3C4043',
+  },
+  googleIconContainer: {
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.xs,
+  },
+  googleIconBg: {
+    width: 18,
+    height: 18,
+    borderRadius: 2,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  googleIcon: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+    fontFamily: Platform.OS === 'ios' ? 'Arial' : 'sans-serif',
   },
   appleButton: {
     width: '100%',
     height: 48,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   infoText: {
     textAlign: 'center',
