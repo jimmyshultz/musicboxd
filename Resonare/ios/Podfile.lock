@@ -1706,9 +1706,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-config (1.5.7):
-    - react-native-config/App (= 1.5.7)
-  - react-native-config/App (1.5.7):
+  - react-native-config (1.5.9):
+    - react-native-config/App (= 1.5.9)
+  - react-native-config/App (1.5.9):
     - React-Core
   - react-native-image-picker (8.2.1):
     - boost
@@ -1858,7 +1858,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-webview (13.15.0):
+  - react-native-webview (13.16.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2361,6 +2361,8 @@ PODS:
     - React-perflogger (= 0.80.1)
     - React-utils (= 0.80.1)
     - SocketRocket
+  - RNAppleAuthentication (2.4.1):
+    - React-Core
   - RNCAsyncStorage (2.2.0):
     - boost
     - DoubleConversion
@@ -2719,7 +2721,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNScreens (4.15.2):
+  - RNScreens (4.16.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2747,10 +2749,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 4.15.2)
+    - RNScreens/common (= 4.16.0)
     - SocketRocket
     - Yoga
-  - RNScreens/common (4.15.2):
+  - RNScreens/common (4.16.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2922,6 +2924,7 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - "RNAppleAuthentication (from `../node_modules/@invertase/react-native-apple-authentication`)"
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
@@ -3103,6 +3106,8 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNAppleAuthentication:
+    :path: "../node_modules/@invertase/react-native-apple-authentication"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNDateTimePicker:
@@ -3175,11 +3180,11 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 0c045c844ce6d85cde53e85ab163294c6adad349
   React-microtasksnativemodule: d9499269ad1f484ae71319bac1d9231447f2094e
   react-native-cameraroll: a7fa8c67dfbe4fcdf32293b7504e2e751f0db796
-  react-native-config: 963b5efabc864cf69412e54b5de49b6a23e4af03
+  react-native-config: d08b60865268872495a43e211059b4606131fe01
   react-native-image-picker: e9d833df19e87e25e38ddc0be3bad92f57307765
   react-native-safe-area-context: 8ed800930eb7d0b6651218f69656e823d37b6ef7
   react-native-view-shot: 86844f7d310b4a26d84102a2c5078203c627b3be
-  react-native-webview: 9a8ea59197aa76145b8ce72aa3eea69f1e89dd38
+  react-native-webview: 38b7d49cbe748b6fa02381be0a097d3922caf94a
   React-NativeModulesApple: 983f3483ef0a3446b56d490f09d579fba2442e17
   React-oscompat: 114036cd8f064558c9c1a0c04fc9ae5e1453706a
   React-perflogger: e7287fee27c16e3c8bd4d470f2361572b63be16b
@@ -3211,6 +3216,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: afd905e84ee36e1678016ae04d7370c75ed539be
   ReactCodegen: f8d5fb047c4cd9d2caade972cad9edac22521362
   ReactCommon: 17fd88849a174bf9ce45461912291aca711410fc
+  RNAppleAuthentication: c3dddf5918126c9aae85dc2e2ce9fb87835e9e04
   RNCAsyncStorage: 1f04c8d56558e533277beda29187f571cf7eecb2
   RNDateTimePicker: e7e2718eb18be7435bfa6d6c8c84e336dde80334
   RNGestureHandler: db29d3e7edf41a11d133cc3ffd4029762376ed1a
@@ -3218,13 +3224,13 @@ SPEC CHECKSUMS:
   RNImageCropPicker: c62ac5036fb9813c15221611043de4405101eee9
   RNKeychain: 9c0d0b73682506249067e6b0a13ef65635c241fa
   RNReanimated: 4c869be3fca0533e45c5ba1d5cc5079c322e95d4
-  RNScreens: 5217f22bdb7bf62fe76ff5bec2b4bb9aebb11eeb
+  RNScreens: 3fc29af06302e1f1c18a7829fe57cbc2c0259912
   RNShare: 62222988438e013762940bef766afb980b53c734
   RNVectorIcons: be4d047a76ad307ffe54732208fb0498fcb8477f
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   TOCropViewController: 80b8985ad794298fb69d3341de183f33d1853654
   Yoga: daa1e4de4b971b977b23bc842aaa3e135324f1f3
 
-PODFILE CHECKSUM: c9b3bc70ddbf2d9fc37dbca7d90b7a6c0ccf6711
+PODFILE CHECKSUM: 66bcf8e6ae71fc09e1e052db56f5c27cae00da3c
 
 COCOAPODS: 1.16.2

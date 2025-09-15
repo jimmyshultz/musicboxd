@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
   Alert,
+  Platform,
 } from 'react-native';
 import {
   Text,
@@ -12,20 +13,81 @@ import {
 import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-import { signInWithGoogle } from '../../store/slices/authSlice';
+import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
+import { AuthService } from '../../services/authService';
 import { theme, spacing } from '../../utils/theme';
+// import AppleSignInDebug from '../../components/AppleSignInDebug'; // Removed - Apple Sign-In working
+
+// Safely import Apple Button with fallback
+let AppleButton: any = null;
+try {
+  console.log('🍎 [DEBUG] AuthScreen: Attempting to import AppleButton...');
+  const appleAuthModule = require('@invertase/react-native-apple-authentication');
+  console.log('🍎 [DEBUG] AuthScreen: Apple Auth module keys:', Object.keys(appleAuthModule));
+  AppleButton = appleAuthModule.AppleButton;
+  console.log('🍎 [DEBUG] AuthScreen: AppleButton imported:', typeof AppleButton, AppleButton ? 'available' : 'null');
+} catch (error) {
+  console.log('🍎 [DEBUG] AuthScreen: Apple Authentication UI components not available:', error.message);
+}
 
 export default function AuthScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.auth);
+  const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
+
+  useEffect(() => {
+    // Check if Apple Sign-In is available on this device
+    const checkAppleSignInAvailability = async () => {
+      try {
+        console.log('🍎 [DEBUG] AuthScreen: Starting Apple Sign-In availability check...');
+        console.log('🍎 [DEBUG] AuthScreen: Platform.OS:', Platform.OS);
+        console.log('🍎 [DEBUG] AuthScreen: AppleButton available:', !!AppleButton);
+        
+        const available = await AuthService.isAppleSignInAvailable();
+        console.log('🍎 [DEBUG] AuthScreen: Apple Sign-In availability result:', available);
+        setIsAppleSignInAvailable(available);
+        
+        console.log('🍎 [DEBUG] AuthScreen: State updated - isAppleSignInAvailable:', available);
+      } catch (availabilityError) {
+        console.log('🍎 [DEBUG] AuthScreen: Error checking Apple Sign-In availability:', availabilityError);
+        setIsAppleSignInAvailable(false);
+      }
+    };
+
+    checkAppleSignInAvailability();
+  }, []);
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log('🔍 [DEBUG] AuthScreen: handleGoogleSignIn called');
+      console.log('🔍 [DEBUG] AuthScreen: About to dispatch signInWithGoogle');
       await dispatch(signInWithGoogle()).unwrap();
+      console.log('🔍 [DEBUG] AuthScreen: signInWithGoogle completed successfully');
     } catch (signInError: any) {
+      console.log('🔍 [DEBUG] AuthScreen: signInWithGoogle failed:', signInError);
+      console.log('🔍 [DEBUG] AuthScreen: Error message:', signInError.message);
+      console.log('🔍 [DEBUG] AuthScreen: Full error object:', JSON.stringify(signInError, null, 2));
       Alert.alert(
         'Sign In Failed',
         signInError.message || 'An error occurred during sign in. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      console.log('🍎 [DEBUG] AuthScreen: handleAppleSignIn called');
+      console.log('🍎 [DEBUG] AuthScreen: About to dispatch signInWithApple');
+      await dispatch(signInWithApple()).unwrap();
+      console.log('🍎 [DEBUG] AuthScreen: signInWithApple completed successfully');
+    } catch (signInError: any) {
+      console.log('🍎 [DEBUG] AuthScreen: signInWithApple failed:', signInError);
+      console.log('🍎 [DEBUG] AuthScreen: Error message:', signInError.message);
+      console.log('🍎 [DEBUG] AuthScreen: Full error object:', JSON.stringify(signInError, null, 2));
+      Alert.alert(
+        'Sign In Failed',
+        signInError.message || 'An error occurred during Apple sign in. Please try again.',
         [{ text: 'OK' }]
       );
     }
@@ -55,13 +117,41 @@ export default function AuthScreen() {
         {loading ? (
           <ActivityIndicator size="large" style={styles.loader} />
         ) : (
-          <GoogleSigninButton
-            style={styles.googleButton}
-            size={GoogleSigninButton.Size.Wide}
-            color={GoogleSigninButton.Color.Dark}
-            onPress={handleGoogleSignIn}
-            disabled={loading}
-          />
+          <View style={styles.buttonContainer}>
+            <GoogleSigninButton
+              style={styles.googleButton}
+              size={GoogleSigninButton.Size.Wide}
+              color={GoogleSigninButton.Color.Dark}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+            />
+            
+            {/* Show Apple Sign-In button only on iOS and when available */}
+            {Platform.OS === 'ios' && isAppleSignInAvailable && AppleButton && (
+              <AppleButton
+                buttonStyle={AppleButton.Style.BLACK}
+                buttonType={AppleButton.Type.SIGN_IN}
+                style={styles.appleButton}
+                onPress={() => {
+                  console.log('🍎 [DEBUG] AuthScreen: Apple button pressed');
+                  handleAppleSignIn();
+                }}
+                disabled={loading}
+              />
+            )}
+            
+            {/* Debug info removed - Apple Sign-In working */}
+            
+            {/* Show helpful message when Apple Sign-In is not available but should be */}
+            {Platform.OS === 'ios' && !AppleButton && (
+              <>
+                {console.log('🍎 [DEBUG] AuthScreen: Showing fallback message')}
+                <Text variant="bodySmall" style={styles.infoText}>
+                  Apple Sign-In will be available after running: cd ios && pod install
+                </Text>
+              </>
+            )}
+          </View>
         )}
         
         {error && (
@@ -119,8 +209,22 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 20,
   },
+  buttonContainer: {
+    width: '100%',
+    gap: spacing.md,
+  },
   googleButton: {
     width: '100%',
     height: 48,
+  },
+  appleButton: {
+    width: '100%',
+    height: 48,
+  },
+  infoText: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    marginTop: spacing.sm,
+    fontSize: 12,
   },
 });

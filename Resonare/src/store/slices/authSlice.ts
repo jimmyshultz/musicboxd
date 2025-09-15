@@ -22,7 +22,10 @@ export const signInWithGoogle = createAsyncThunk(
   'auth/signInWithGoogle',
   async (_, { rejectWithValue }) => {
     try {
+      console.log('🔍 [DEBUG] authSlice: signInWithGoogle thunk started');
+      console.log('🔍 [DEBUG] authSlice: Calling AuthService.signInWithGoogle');
       const result = await AuthService.signInWithGoogle();
+      console.log('🔍 [DEBUG] authSlice: AuthService.signInWithGoogle completed');
       if (result.user) {
         // Get the actual user profile from the database (real Supabase session now!)
         const profile = await userService.getCurrentUserProfile();
@@ -56,7 +59,66 @@ export const signInWithGoogle = createAsyncThunk(
       }
       throw new Error('Failed to get user data from Google Sign-In');
     } catch (error: any) {
+      console.log('🔍 [DEBUG] authSlice: signInWithGoogle failed with error:', error);
+      console.log('🔍 [DEBUG] authSlice: Error message:', error.message);
       return rejectWithValue(error.message || 'Google Sign-In failed');
+    }
+  }
+);
+
+export const signInWithApple = createAsyncThunk(
+  'auth/signInWithApple',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('🍎 [DEBUG] authSlice: signInWithApple thunk started');
+      
+      // Check if Apple Sign-In is available
+      console.log('🍎 [DEBUG] authSlice: Checking Apple Sign-In availability');
+      const isAvailable = await AuthService.isAppleSignInAvailable();
+      console.log('🍎 [DEBUG] authSlice: Apple Sign-In available:', isAvailable);
+      if (!isAvailable) {
+        throw new Error('Apple Sign-In is not available on this device');
+      }
+
+      console.log('🍎 [DEBUG] authSlice: Calling AuthService.signInWithApple');
+      const result = await AuthService.signInWithApple();
+      console.log('🍎 [DEBUG] authSlice: AuthService.signInWithApple completed');
+      if (result.user) {
+        // Get the actual user profile from the database
+        const profile = await userService.getCurrentUserProfile();
+        if (profile) {
+          // Convert to SerializedUser format for Redux
+          const user: SerializedUser = {
+            id: profile.id,
+            username: profile.username,
+            email: result.user.email || '',
+            bio: profile.bio || '',
+            profilePicture: profile.avatar_url || '',
+            joinedDate: profile.created_at, // Already a string from database
+            lastActiveDate: new Date().toISOString(),
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                reviewLikes: true,
+                friendActivity: true,
+              },
+              privacy: {
+                profileVisibility: profile.is_private ? 'private' as const : 'public' as const,
+                activityVisibility: profile.is_private ? 'private' as const : 'public' as const,
+              },
+            },
+          };
+          console.log('Loaded real user profile for Redux:', user.username);
+          return user;
+        }
+      }
+      throw new Error('Failed to get user data from Apple Sign-In');
+    } catch (error: any) {
+      console.log('🍎 [DEBUG] authSlice: signInWithApple failed with error:', error);
+      console.log('🍎 [DEBUG] authSlice: Error message:', error.message);
+      return rejectWithValue(error.message || 'Apple Sign-In failed');
     }
   }
 );
@@ -198,6 +260,32 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signInWithGoogle.rejected, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+        state.error = action.payload as string;
+      })
+      // Apple Sign-In
+      .addCase(signInWithApple.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(signInWithApple.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        if (action.payload.joinedDate instanceof Date && action.payload.lastActiveDate instanceof Date) {
+          const user = action.payload as User;
+          state.user = {
+            ...user,
+            joinedDate: user.joinedDate.toISOString(),
+            lastActiveDate: user.lastActiveDate.toISOString(),
+          };
+        } else {
+          state.user = action.payload as SerializedUser;
+        }
+        state.error = null;
+      })
+      .addCase(signInWithApple.rejected, (state, action) => {
         state.loading = false;
         state.isAuthenticated = false;
         state.user = null;

@@ -19,9 +19,10 @@ const getSupabaseConfig = () => {
     //config.anonKey = ENV.SUPABASE_STAGING_ANON_KEY;
     Logger.log('Using staging Supabase configuration');
   } else if (Environment.isProduction) {
-    //config.url = ENV.SUPABASE_PRODUCTION_URL;
-    //config.anonKey = ENV.SUPABASE_PRODUCTION_ANON_KEY;
-    Logger.log('Using production Supabase configuration');
+    // Use production environment variables from .env.production
+    // config.url = ENV_CONFIG.SUPABASE_URL;
+    // config.anonKey = ENV_CONFIG.SUPABASE_ANON_KEY;
+    Logger.log('Using production Supabase configuration', config.url);
   } else {
     Logger.log('Using development Supabase configuration');
   }
@@ -31,6 +32,14 @@ const getSupabaseConfig = () => {
 
 const config = getSupabaseConfig();
 
+// Debug Supabase configuration
+console.log('🔧 [DEBUG] Supabase Configuration:');
+console.log('🔧 [DEBUG] Environment:', ENV_CONFIG.ENVIRONMENT);
+console.log('🔧 [DEBUG] isProduction:', Environment.isProduction);
+console.log('🔧 [DEBUG] isStaging:', Environment.isStaging);
+console.log('🔧 [DEBUG] Supabase URL:', config.url);
+console.log('🔧 [DEBUG] Supabase Anon Key (first 20 chars):', config.anonKey?.substring(0, 20) + '...');
+
 export const supabase = createClient<Database>(config.url, config.anonKey, {
   auth: {
     storage: AsyncStorage,
@@ -39,6 +48,20 @@ export const supabase = createClient<Database>(config.url, config.anonKey, {
     detectSessionInUrl: false,
   },
 });
+
+// Test Supabase connection
+setTimeout(() => {
+  supabase.auth.getSession().then(({ data, error }) => {
+    if (error) {
+      console.log('🔧 [DEBUG] Supabase connection test failed:', error.message);
+    } else {
+      console.log('🔧 [DEBUG] Supabase connection test successful');
+      console.log('🔧 [DEBUG] Current session exists:', !!data.session);
+    }
+  }).catch((err) => {
+    console.log('🔧 [DEBUG] Supabase connection test error:', err);
+  });
+}, 1000);
 
 // Export types for TypeScript support
 export type { User, Session } from '@supabase/supabase-js';

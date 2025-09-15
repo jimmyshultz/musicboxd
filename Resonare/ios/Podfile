@@ -25,6 +25,8 @@ target 'Resonare' do
 
   # Add this line for Google Sign-In
   pod 'GoogleSignIn'
+  
+  # Note: Apple Sign-In (RNAppleAuthentication) is auto-linked by React Native 0.60+
 
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
