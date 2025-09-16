@@ -161,14 +161,9 @@ export class AuthService {
         } else {
           console.log('Found existing user profile:', profile.username);
           
-          // Update existing profile with Google data if needed (but keep existing username)
-          if (profile.avatar_url !== googleUser.photo) {
-            console.log('Updating profile avatar...');
-            profile = await userService.updateUserProfile(data.user.id, {
-              avatar_url: googleUser.photo || profile.avatar_url,
-            });
-            console.log('Updated user avatar');
-          }
+          // Don't automatically overwrite avatar_url on subsequent sign-ins
+          // Users should be able to update their profile picture in the app without it being overwritten
+          console.log('Keeping existing user profile data - not overwriting avatar_url');
         }
       }
 

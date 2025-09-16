@@ -12,6 +12,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, User, Album } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
@@ -52,7 +53,7 @@ interface FriendPopularAlbum {
 }
 
 interface PotentialFriend {
-  user: User;
+  user: UserProfile;
   mutualFollowers: number;
 }
 
@@ -407,7 +408,7 @@ export default function HomeScreen() {
     >
       <Avatar.Image 
         size={60} 
-        source={{ uri: potentialFriend.user.profilePicture || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
+        source={{ uri: potentialFriend.user.avatar_url || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
       />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{potentialFriend.user.username}
