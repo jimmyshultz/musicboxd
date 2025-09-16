@@ -229,7 +229,7 @@
 				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
 				"${PODS_ROOT}/Manifest.lock",
 			);
-			name = "[CP] Auto-Install Pods";
+			name = "[CP] Check Pods Manifest.lock";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -237,7 +237,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Auto-install CocoaPods if needed\nset -e\n\necho \"🔍 Checking CocoaPods synchronization...\"\n\nPODS_ROOT=\"${PODS_ROOT}\"\nPODFILE_DIR=\"${PODS_PODFILE_DIR_PATH}\"\nPODFILE_LOCK=\"${PODFILE_DIR}/Podfile.lock\"\nMANIFEST_LOCK=\"${PODS_ROOT}/Manifest.lock\"\n\n# Check if pods need to be installed\nif [ ! -d \"${PODS_ROOT}\" ] || [ ! -f \"${MANIFEST_LOCK}\" ] || ! diff \"${PODFILE_LOCK}\" \"${MANIFEST_LOCK}\" > /dev/null 2>&1; then\n  echo \"⚠️  CocoaPods out of sync. Running pod install...\"\n  \n  cd \"${PODFILE_DIR}\"\n  \n  # Check if pod command exists\n  if ! command -v pod &> /dev/null; then\n    echo \"❌ Error: pod command not found. Please install CocoaPods:\"\n    echo \"   sudo gem install cocoapods\"\n    exit 1\n  fi\n  \n  # Run pod install\n  pod install\n  \n  if [ $? -eq 0 ]; then\n    echo \"✅ CocoaPods installation completed successfully\"\n  else\n    echo \"❌ Error: pod install failed\"\n    exit 1\n  fi\nelse\n  echo \"✅ CocoaPods already in sync\"\nfi\n\n# Output success for Xcode\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		F702C01C2E79CFB0000BD4E1 /* Set Production Environment */ = {
