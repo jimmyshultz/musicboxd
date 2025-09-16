@@ -418,7 +418,7 @@ export default function UserProfileScreen() {
         <View style={styles.profileHeader}>
           <Avatar.Image 
             size={80} 
-            source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
+            source={{ uri: user.avatar_url || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
             style={styles.profilePicture}
           />
           <Text variant="headlineMedium" style={styles.username}>

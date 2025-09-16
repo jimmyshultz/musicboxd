@@ -216,9 +216,9 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
       ) : entries.length === 0 ? (
         <View style={styles.center}> 
           {currentUser?.id === userId ? (
-            <Text>No diary entries yet. Mark albums as listened and add them to your diary.</Text>
+            <Text style={styles.emptyStateText}>No diary entries yet. Mark albums as listened and add them to your diary.</Text>
           ) : (
-            <Text>No diary entries to show.</Text>
+            <Text style={styles.emptyStateText}>No diary entries to show.</Text>
           )}
         </View>
       ) : (
@@ -251,4 +251,10 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   rowTextContainer: { flex: 1 },
   title: { fontWeight: '600' },
   rating: { color: theme.colors.primary, marginTop: 2 },
+  emptyStateText: {
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    paddingHorizontal: spacing.xl,
+    lineHeight: 20,
+  },
 });

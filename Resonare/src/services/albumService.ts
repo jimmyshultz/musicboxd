@@ -283,11 +283,11 @@ export class AlbumService {
 
       if (error) {
         console.error('Error getting popular albums:', error);
-        // Fallback: return some mock albums
+        // Return empty array instead of fallback mock data
         return {
-          data: this.mockAlbums.slice(0, 10), 
+          data: [], 
           success: true,
-          message: 'Using fallback data',
+          message: 'No popular albums data available',
         };
       }
 
@@ -313,12 +313,12 @@ export class AlbumService {
         .slice(0, 15)
         .map(item => this.mapDatabaseAlbumToApp(item.album));
 
-      // If no real data, return some mock albums for testing
+      // If no real data, return empty array
       if (popularAlbums.length === 0) {
         return {
-          data: mockAlbums.slice(0, 10),
+          data: [],
           success: true,
-          message: 'Using mock data - no recent activity found',
+          message: 'No recent activity found - no popular albums available',
         };
       }
 
@@ -329,11 +329,11 @@ export class AlbumService {
       };
     } catch (error) {
       console.error('Error in getPopularAlbums:', error);
-      // Fallback to mock data
+      // Return empty array instead of fallback mock data
       return {
-        data: mockAlbums.slice(0, 10),
+        data: [],
         success: true,
-        message: 'Using fallback mock data due to error',
+        message: 'Error loading popular albums - no data available',
       };
     }
   }
@@ -556,13 +556,12 @@ export class AlbumService {
       };
       
     } catch (error) {
-      // Fallback to basic mock data on error
+      // Return empty array instead of mock data fallback
       await delay(300);
-      const shuffled = [...mockAlbums].sort(() => 0.5 - Math.random());
       return {
-        data: shuffled.slice(0, 4),
+        data: [],
         success: true,
-        message: 'Trending albums fetched (fallback)',
+        message: 'Trending albums not available - error occurred',
       };
     }
   }

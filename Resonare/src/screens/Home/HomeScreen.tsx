@@ -11,7 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, User, Album } from '../../types';
+import { HomeStackParamList, Album } from '../../types';
+import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
@@ -52,7 +53,7 @@ interface FriendPopularAlbum {
 }
 
 interface PotentialFriend {
-  user: User;
+  user: UserProfile;
   mutualFollowers: number;
 }
 
@@ -268,14 +269,29 @@ export default function HomeScreen() {
           return;
         }
         
-        const potentialFriends: PotentialFriend[] = potentialUsers.map((user, _index) => ({
-          user,
-          mutualFollowers: Math.floor(Math.random() * 12) + 1, // 1-12 mutual followers
-        })).slice(0, 20);
+        // Calculate real mutual followers for each potential friend
+        const potentialFriends: PotentialFriend[] = [];
         
-        // Sort by mutual followers count (descending)
+        for (const user of potentialUsers) {
+          try {
+            const mutualFollowersCount = await userService.getMutualFollowersCount(currentUserId, user.id);
+            potentialFriends.push({
+              user,
+              mutualFollowers: mutualFollowersCount,
+            });
+          } catch (error) {
+            console.error(`Error calculating mutual followers for user ${user.username}:`, error);
+            // If calculation fails, still include the user but with 0 mutual followers
+            potentialFriends.push({
+              user,
+              mutualFollowers: 0,
+            });
+          }
+        }
+        
+        // Sort by mutual followers count (descending) and limit to 20
         potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
-        setDiscoverFriends(potentialFriends);
+        setDiscoverFriends(potentialFriends.slice(0, 20));
       } else {
         setDiscoverFriends([]);
       }
@@ -392,7 +408,7 @@ export default function HomeScreen() {
     >
       <Avatar.Image 
         size={60} 
-        source={{ uri: potentialFriend.user.profilePicture || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
+        source={{ uri: potentialFriend.user.avatar_url || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
       />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{potentialFriend.user.username}
