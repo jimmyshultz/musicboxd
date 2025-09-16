@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, User, Album } from '../../types';
+import { HomeStackParamList, Album } from '../../types';
 import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
