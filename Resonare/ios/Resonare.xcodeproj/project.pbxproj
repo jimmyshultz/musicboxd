@@ -190,9 +190,12 @@
 			inputPaths = (
 				"$(SRCROOT)/.xcode.env.local",
 				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/../.env",
 			);
 			name = "Bundle React Native code and images";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/main.jsbundle",
+				"$(DERIVED_FILE_DIR)/main.jsbundle.map",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -245,15 +248,17 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/../.env.production",
 			);
 			name = "Set Production Environment";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(SRCROOT)/../.env",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  export ENVFILE=.env.production\n  echo \"Using production environment: $ENVFILE\"\nelse\n  echo \"Using default environment for configuration: $CONFIGURATION\"\nfi\n";
+			shellScript = "# Set up environment file for React Native Config\nPROJECT_ROOT=\"$SRCROOT/..\"\n\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV_SOURCE=\"$PROJECT_ROOT/.env.production\"\n  ENV_TARGET=\"$PROJECT_ROOT/.env\"\n  \n  if [ -f \"$ENV_SOURCE\" ]; then\n    echo \"✅ Archive Build: Copying .env.production for Release configuration\"\n    cp \"$ENV_SOURCE\" \"$ENV_TARGET\"\n    echo \"✅ Production environment activated\"\n  else\n    echo \"⚠️  Warning: .env.production not found at $ENV_SOURCE\"\n    echo \"⚠️  Archive build will use default .env file\"\n  fi\nelse\n  echo \"ℹ️  Development Build: Using default .env for configuration: $CONFIGURATION\"\nfi\n";
 		};
 		F87123382962DA8264C910C1 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -413,7 +418,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -482,7 +490,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -559,7 +570,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -666,7 +680,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -765,7 +782,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
@@ -862,7 +882,10 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = "$(inherited)  ";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					" ",
+				);
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				USE_HERMES = true;
