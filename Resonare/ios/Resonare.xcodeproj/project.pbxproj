@@ -12,7 +12,7 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		AE8CE8DD0CBFD15F740CDEE4 /* libPods-Resonare.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 262EDBEE4F3FFDF1E05C48E3 /* libPods-Resonare.a */; };
 		DF7AC3DC0B5E35225C2CDEEC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		F7F4B8D62E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist in Resources */ = {isa = PBXBuildFile; fileRef = F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */; };
+		F7F4B8D62E556ED200F59A12 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F7F4B8D52E556ED200F59A12 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +30,7 @@
 		CD2F50B61E436B0A84F6D07A /* Pods-Resonare.debug-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug-development.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug-development.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F74FFFB42E6E6008003EBE14 /* Resonare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Resonare.entitlements; path = Resonare/Resonare.entitlements; sourceTree = "<group>"; };
-		F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist"; sourceTree = "<group>"; };
+		F7F4B8D52E556ED200F59A12 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		FDE72B57C922407527E27E99 /* Pods-Resonare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -78,7 +78,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */,
+				F7F4B8D52E556ED200F59A12 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* Resonare */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,

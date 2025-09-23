@@ -36,8 +36,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let clientId = plist["CLIENT_ID"] as? String {
           let config = GIDConfiguration(clientID: clientId)
           GIDSignIn.sharedInstance.configuration = config
+          print("✅ Google Sign-In configured successfully")
+        } else {
+          print("⚠️ CLIENT_ID not found in GoogleService-Info.plist")
         }
+      } else {
+        print("⚠️ Could not read GoogleService-Info.plist")
       }
+    } else {
+      print("⚠️ GoogleService-Info.plist not found in bundle")
     }
 
     return true
