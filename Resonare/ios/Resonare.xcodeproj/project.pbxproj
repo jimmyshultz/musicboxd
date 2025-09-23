@@ -10,9 +10,9 @@
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		AE8CE8DD0CBFD15F740CDEE4 /* libPods-Resonare.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 262EDBEE4F3FFDF1E05C48E3 /* libPods-Resonare.a */; };
 		DF7AC3DC0B5E35225C2CDEEC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		F7F4B8D62E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist in Resources */ = {isa = PBXBuildFile; fileRef = F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */; };
+		EC8E4BE26B5526BD16868D60 /* libPods-Resonare.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1BF7BFA7FAEA4B00760BCC83 /* libPods-Resonare.a */; };
+		F7F4B8D62E556ED200F59A12 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F7F4B8D52E556ED200F59A12 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,18 +20,18 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Resonare/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Resonare/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = Resonare/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		262EDBEE4F3FFDF1E05C48E3 /* libPods-Resonare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Resonare.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		4528DBA1D93E0474F1D1C8A4 /* Pods-Resonare.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release-development.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release-development.xcconfig"; sourceTree = "<group>"; };
+		13E7B2D285D1D06397EEDA4D /* Pods-Resonare.release-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release-staging.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release-staging.xcconfig"; sourceTree = "<group>"; };
+		1BF7BFA7FAEA4B00760BCC83 /* libPods-Resonare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Resonare.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		49C69130382E8898DC6BFEDD /* Pods-Resonare.debug-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug-development.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug-development.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Resonare/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = Resonare/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		84BFD24839A3FA91D6922EA3 /* Pods-Resonare.release-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release-staging.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release-staging.xcconfig"; sourceTree = "<group>"; };
-		9C7555469BFAFFB0A0858512 /* Pods-Resonare.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug-staging.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug-staging.xcconfig"; sourceTree = "<group>"; };
-		A077342AC24B8F53E59A53FB /* Pods-Resonare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug.xcconfig"; sourceTree = "<group>"; };
-		CD2F50B61E436B0A84F6D07A /* Pods-Resonare.debug-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug-development.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug-development.xcconfig"; sourceTree = "<group>"; };
+		8E1EEAADAEC13787F1E20788 /* Pods-Resonare.release-development.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release-development.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release-development.xcconfig"; sourceTree = "<group>"; };
+		B250438095B5F4B3739F6515 /* Pods-Resonare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug.xcconfig"; sourceTree = "<group>"; };
+		BBE6673B2AF28C6257BC904E /* Pods-Resonare.debug-staging.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.debug-staging.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.debug-staging.xcconfig"; sourceTree = "<group>"; };
+		DF9338397B97962FCC0E05F8 /* Pods-Resonare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F74FFFB42E6E6008003EBE14 /* Resonare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = Resonare.entitlements; path = Resonare/Resonare.entitlements; sourceTree = "<group>"; };
-		F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist"; sourceTree = "<group>"; };
-		FDE72B57C922407527E27E99 /* Pods-Resonare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Resonare.release.xcconfig"; path = "Target Support Files/Pods-Resonare/Pods-Resonare.release.xcconfig"; sourceTree = "<group>"; };
+		F7F4B8D52E556ED200F59A12 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,7 +39,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AE8CE8DD0CBFD15F740CDEE4 /* libPods-Resonare.a in Frameworks */,
+				EC8E4BE26B5526BD16868D60 /* libPods-Resonare.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,7 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				262EDBEE4F3FFDF1E05C48E3 /* libPods-Resonare.a */,
+				1BF7BFA7FAEA4B00760BCC83 /* libPods-Resonare.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -78,7 +78,7 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				F7F4B8D52E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist */,
+				F7F4B8D52E556ED200F59A12 /* GoogleService-Info.plist */,
 				13B07FAE1A68108700A75B9A /* Resonare */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
@@ -101,12 +101,12 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				A077342AC24B8F53E59A53FB /* Pods-Resonare.debug.xcconfig */,
-				FDE72B57C922407527E27E99 /* Pods-Resonare.release.xcconfig */,
-				9C7555469BFAFFB0A0858512 /* Pods-Resonare.debug-staging.xcconfig */,
-				CD2F50B61E436B0A84F6D07A /* Pods-Resonare.debug-development.xcconfig */,
-				84BFD24839A3FA91D6922EA3 /* Pods-Resonare.release-staging.xcconfig */,
-				4528DBA1D93E0474F1D1C8A4 /* Pods-Resonare.release-development.xcconfig */,
+				B250438095B5F4B3739F6515 /* Pods-Resonare.debug.xcconfig */,
+				BBE6673B2AF28C6257BC904E /* Pods-Resonare.debug-staging.xcconfig */,
+				49C69130382E8898DC6BFEDD /* Pods-Resonare.debug-development.xcconfig */,
+				DF9338397B97962FCC0E05F8 /* Pods-Resonare.release.xcconfig */,
+				13E7B2D285D1D06397EEDA4D /* Pods-Resonare.release-staging.xcconfig */,
+				8E1EEAADAEC13787F1E20788 /* Pods-Resonare.release-development.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -118,14 +118,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Resonare" */;
 			buildPhases = (
-				EE28668903A24D6BC3BB1CC6 /* [CP] Check Pods Manifest.lock */,
+				F31EFC6A4FA81D6F34F9F282 /* [CP] Check Pods Manifest.lock */,
 				F702C01C2E79CFB0000BD4E1 /* Set Production Environment */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				46EB59C8607A513B27479D86 /* [CP] Embed Pods Frameworks */,
-				F87123382962DA8264C910C1 /* [CP] Copy Pods Resources */,
+				D6653210E0140C917DD419CD /* [CP] Embed Pods Frameworks */,
+				86DF983498E0C3DF5CE96F8B /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -172,7 +172,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F7F4B8D62E556ED200F59A12 /* client_148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com(1).plist in Resources */,
+				F7F4B8D62E556ED200F59A12 /* GoogleService-Info.plist in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				DF7AC3DC0B5E35225C2CDEEC /* PrivacyInfo.xcprivacy in Resources */,
@@ -201,7 +201,24 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		46EB59C8607A513B27479D86 /* [CP] Embed Pods Frameworks */ = {
+		86DF983498E0C3DF5CE96F8B /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		D6653210E0140C917DD419CD /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -218,7 +235,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		EE28668903A24D6BC3BB1CC6 /* [CP] Check Pods Manifest.lock */ = {
+		F31EFC6A4FA81D6F34F9F282 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -258,24 +275,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Set up environment file for React Native Config\nPROJECT_ROOT=\"$SRCROOT/..\"\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV_SOURCE=\"$PROJECT_ROOT/.env.production\"\n  ENV_TARGET=\"$PROJECT_ROOT/.env\"\n  \n  if [ -f \"$ENV_SOURCE\" ]; then\n    echo \"✅ Archive Build: Copying .env.production for Release configuration\"\n    cp \"$ENV_SOURCE\" \"$ENV_TARGET\"\n    echo \"✅ Production environment activated\"\n  else\n    echo \"⚠️  Warning: .env.production not found at $ENV_SOURCE\"\n    echo \"⚠️  Archive build will use default .env file\"\n  fi\n  \n  # Install CocoaPods for Release/Archive builds\n  echo \"🔧 Archive Build: Installing CocoaPods dependencies...\"\n  cd \"$SRCROOT\"\n  \n  # Check if pod command exists\n  if command -v pod >/dev/null 2>&1; then\n    pod install --repo-update\n    echo \"✅ CocoaPods installation completed\"\n  else\n    echo \"❌ Error: CocoaPods not found. Please install CocoaPods first.\"\n    exit 1\n  fi\n  \nelse\n  echo \"ℹ️  Development Build: Using default .env for configuration: $CONFIGURATION\"\n  echo \"ℹ️  Development Build: Skipping CocoaPods installation (assuming already done)\"\nfi\n";
-		};
-		F87123382962DA8264C910C1 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Copy Pods Resources";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources.sh\"\n";
-			showEnvVarsInLog = 0;
+			shellScript = "# Set up environment file for React Native Config\nPROJECT_ROOT=\"$SRCROOT/..\"\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV_SOURCE=\"$PROJECT_ROOT/.env.production\"\n  ENV_TARGET=\"$PROJECT_ROOT/.env\"\n  \n  if [ -f \"$ENV_SOURCE\" ]; then\n    echo \"✅ Archive Build: Copying .env.production for Release configuration\"\n    cp \"$ENV_SOURCE\" \"$ENV_TARGET\"\n    echo \"✅ Production environment activated\"\n  else\n    echo \"⚠️  Warning: .env.production not found at $ENV_SOURCE\"\n    echo \"⚠️  Archive build will use default .env file\"\n  fi\n  \n  echo \"✅ Environment setup completed for Release build\"\n  \nelse\n  echo \"ℹ️  Development Build: Using default .env for configuration: $CONFIGURATION\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -293,7 +293,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = A077342AC24B8F53E59A53FB /* Pods-Resonare.debug.xcconfig */;
+			baseConfigurationReference = B250438095B5F4B3739F6515 /* Pods-Resonare.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -323,7 +323,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = FDE72B57C922407527E27E99 /* Pods-Resonare.release.xcconfig */;
+			baseConfigurationReference = DF9338397B97962FCC0E05F8 /* Pods-Resonare.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -583,7 +583,7 @@
 		};
 		F724EDF42E621D0F00EB0059 /* Debug-Development */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = CD2F50B61E436B0A84F6D07A /* Pods-Resonare.debug-development.xcconfig */;
+			baseConfigurationReference = 49C69130382E8898DC6BFEDD /* Pods-Resonare.debug-development.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -693,7 +693,7 @@
 		};
 		F724EDF62E621D2500EB0059 /* Debug-Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 9C7555469BFAFFB0A0858512 /* Pods-Resonare.debug-staging.xcconfig */;
+			baseConfigurationReference = BBE6673B2AF28C6257BC904E /* Pods-Resonare.debug-staging.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -795,7 +795,7 @@
 		};
 		F724EDF82E621D2D00EB0059 /* Release-Development */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 4528DBA1D93E0474F1D1C8A4 /* Pods-Resonare.release-development.xcconfig */;
+			baseConfigurationReference = 8E1EEAADAEC13787F1E20788 /* Pods-Resonare.release-development.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -895,7 +895,7 @@
 		};
 		F724EDFA2E621D3600EB0059 /* Release-Staging */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 84BFD24839A3FA91D6922EA3 /* Pods-Resonare.release-staging.xcconfig */;
+			baseConfigurationReference = 13E7B2D285D1D06397EEDA4D /* Pods-Resonare.release-staging.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
