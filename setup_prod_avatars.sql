@@ -12,9 +12,9 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES (
     'avatars',
     'avatars',
-    false, -- Change to true if your dev bucket is public
-    NULL,  -- Set file size limit in bytes if your dev bucket has one (e.g., 5242880 for 5MB)
-    NULL   -- Set array of MIME types if restricted (e.g., ARRAY['image/jpeg', 'image/png'])
+    true,  -- Based on dev config: public = true
+    NULL,  -- Based on dev config: file_size_limit = null
+    NULL   -- Based on dev config: allowed_mime_types = null
 )
 ON CONFLICT (id) DO NOTHING;
 
@@ -22,45 +22,31 @@ ON CONFLICT (id) DO NOTHING;
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
 -- STEP 3: Create RLS policies
--- CUSTOMIZE THESE POLICIES based on your development environment!
+-- Based on exact development environment configuration
 
--- Policy 1: Users can upload their own avatars to profile-pictures folder
-CREATE POLICY "Users can upload avatars" ON storage.objects
-    FOR INSERT WITH CHECK (
-        bucket_id = 'avatars' 
-        AND auth.uid()::text = (storage.foldername(name))[1]
-        AND (storage.foldername(name))[2] = 'profile-pictures'
-    );
+-- Policy 1: Delete avatars (authenticated users only)
+CREATE POLICY "Delete avatars 1oj01fe_0" ON storage.objects
+    FOR DELETE 
+    TO authenticated
+    USING (bucket_id = 'avatars'::text);
 
--- Policy 2: Users can view their own avatars
-CREATE POLICY "Users can view own avatars" ON storage.objects
-    FOR SELECT USING (
-        bucket_id = 'avatars'
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
+-- Policy 2: Read avatars (public access)
+CREATE POLICY "Read avatars 1oj01fe_0" ON storage.objects
+    FOR SELECT 
+    TO public
+    USING (bucket_id = 'avatars'::text);
 
--- Policy 3: Users can update/replace their own avatars
-CREATE POLICY "Users can update own avatars" ON storage.objects
-    FOR UPDATE USING (
-        bucket_id = 'avatars'
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
+-- Policy 3: Update avatars (authenticated users only)
+CREATE POLICY "Update avatars 1oj01fe_0" ON storage.objects
+    FOR UPDATE 
+    TO authenticated
+    USING (bucket_id = 'avatars'::text);
 
--- Policy 4: Users can delete their own avatars
-CREATE POLICY "Users can delete own avatars" ON storage.objects
-    FOR DELETE USING (
-        bucket_id = 'avatars'
-        AND auth.uid()::text = (storage.foldername(name))[1]
-    );
-
--- Policy 5: Public read access (ONLY add this if your dev environment allows public access)
--- Uncomment the following if your avatars should be publicly readable:
-/*
-CREATE POLICY "Public avatar access" ON storage.objects
-    FOR SELECT USING (
-        bucket_id = 'avatars'
-    );
-*/
+-- Policy 4: Upload to avatars (authenticated users only)
+CREATE POLICY "Upload to avatars 1oj01fe_0" ON storage.objects
+    FOR INSERT 
+    TO authenticated
+    WITH CHECK (bucket_id = 'avatars'::text);
 
 -- STEP 4: Verification queries
 -- Check that everything was created correctly
@@ -83,11 +69,25 @@ WHERE schemaname = 'storage'
 AND tablename = 'objects';
 
 -- ============================================================================
--- CUSTOMIZATION NOTES:
+-- CUSTOMIZATION COMPLETE:
 -- 
--- 1. Run extract_dev_config.sql in your dev environment first
--- 2. Update the bucket INSERT statement with your dev bucket settings
--- 3. Replace the CREATE POLICY statements with the exact policies from your dev environment
--- 4. Pay special attention to the USING and WITH CHECK expressions
--- 5. Test thoroughly before going live
+-- This script has been customized based on the development environment configuration:
+-- 
+-- BUCKET CONFIGURATION:
+-- - Name: avatars
+-- - Public: true (allows public read access)
+-- - File size limit: null (no limit)
+-- - Allowed MIME types: null (no restrictions)
+-- 
+-- POLICIES CREATED:
+-- - Delete avatars 1oj01fe_0: DELETE for authenticated users
+-- - Read avatars 1oj01fe_0: SELECT for public (anyone can read)
+-- - Update avatars 1oj01fe_0: UPDATE for authenticated users  
+-- - Upload to avatars 1oj01fe_0: INSERT for authenticated users
+-- 
+-- FILE STRUCTURE EXPECTED:
+-- - Files stored in profile-pictures/ folder
+-- - Naming pattern: profile-pictures/{uuid}_{timestamp}.{ext}
+-- 
+-- READY TO RUN IN PRODUCTION SUPABASE SQL EDITOR
 -- ============================================================================
