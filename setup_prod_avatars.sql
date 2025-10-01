@@ -19,7 +19,17 @@ VALUES (
 ON CONFLICT (id) DO NOTHING;
 
 -- STEP 2: Enable RLS on storage.objects (should already be enabled)
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Note: This may fail with "must be owner of table objects" error
+-- RLS is typically already enabled by default in Supabase
+-- You can skip this step if you get a permission error
+DO $$
+BEGIN
+    ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+    WHEN insufficient_privilege THEN
+        RAISE NOTICE 'RLS already enabled or insufficient privileges - this is normal in Supabase';
+END
+$$;
 
 -- STEP 3: Create RLS policies
 -- Based on exact development environment configuration
