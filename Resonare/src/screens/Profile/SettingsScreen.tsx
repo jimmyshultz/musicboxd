@@ -22,7 +22,7 @@ import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { logout } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type SettingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -37,6 +37,8 @@ export default function SettingsScreen() {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
   
   const [settings, setSettings] = useState<UserSettings>({
     isPrivate: false,

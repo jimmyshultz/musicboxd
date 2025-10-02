@@ -24,32 +24,65 @@ interface ThemeProviderProps {
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const currentTheme = getTheme(isDark);
+  
+  try {
+    const currentTheme = getTheme(isDark);
+    
+    // Validate theme before using
+    if (!currentTheme || !currentTheme.colors) {
+      throw new Error(`Invalid theme returned from getTheme(${isDark})`);
+    }
 
-  const contextValue: ThemeContextType = {
-    theme: currentTheme,
-    isDark,
-    spacing,
-    typography,
-    borderRadius,
-    shadows,
-  };
+    const contextValue: ThemeContextType = {
+      theme: currentTheme,
+      isDark,
+      spacing,
+      typography,
+      borderRadius,
+      shadows,
+    };
 
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      <PaperProvider theme={currentTheme}>
-        {children}
-      </PaperProvider>
-    </ThemeContext.Provider>
-  );
+    return (
+      <ThemeContext.Provider value={contextValue}>
+        <PaperProvider theme={currentTheme}>
+          {children}
+        </PaperProvider>
+      </ThemeContext.Provider>
+    );
+  } catch (error) {
+    console.error('🎨 [ERROR] ThemeProvider failed:', error);
+    // Return a fallback theme
+    return (
+      <ThemeContext.Provider value={{
+        theme: lightTheme,
+        isDark: false,
+        spacing,
+        typography,
+        borderRadius,
+        shadows,
+      }}>
+        <PaperProvider theme={lightTheme}>
+          {children}
+        </PaperProvider>
+      </ThemeContext.Provider>
+    );
+  }
 };
 
 // Custom hook to use theme
 export const useAppTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
+  
   if (context === undefined) {
+    console.error('🎨 [ERROR] useAppTheme must be used within a ThemeProvider');
     throw new Error('useAppTheme must be used within a ThemeProvider');
   }
+  
+  // Debug only when colors are missing
+  if (!context.theme?.colors) {
+    console.error('🎨 [ERROR] useAppTheme - context.theme.colors is undefined!', context);
+  }
+  
   return context;
 };
 

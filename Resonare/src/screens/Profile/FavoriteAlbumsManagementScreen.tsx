@@ -16,14 +16,16 @@ import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { AlbumService } from '../../services/albumService';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
-import { colors, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
-
 
 export default function FavoriteAlbumsManagementScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
+  
+  const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Album[]>([]);

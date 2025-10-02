@@ -201,5 +201,16 @@ export const theme = {
   shadows,
 };
 
+// Debug only on error
+try {
+  if (!theme.colors.background) {
+    throw new Error('theme.colors.background is undefined');
+  }
+  console.log('🎨 [DEBUG] Theme initialized successfully');
+} catch (error) {
+  console.error('🎨 [ERROR] Theme initialization failed:', error);
+  console.error('🎨 [ERROR] theme.colors:', theme.colors);
+}
+
 // Theme utility functions
 export const getTheme = (isDark: boolean) => isDark ? darkTheme : lightTheme;

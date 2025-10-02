@@ -17,17 +17,12 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type PopularWithFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
 const CARDS_PER_ROW = 3;
-const HORIZONTAL_SPACING = spacing.lg;
-const CARD_MARGIN = spacing.sm;
-const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 
@@ -44,6 +39,13 @@ interface FriendPopularAlbum {
 export default function PopularWithFriendsScreen() {
   const navigation = useNavigation<PopularWithFriendsNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
+  
+  const HORIZONTAL_SPACING = spacing.lg;
+  const CARD_MARGIN = spacing.sm;
+  const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
+  
   const [albums, setAlbums] = useState<FriendPopularAlbum[]>([]);
   const [loading, setLoading] = useState(true);
 

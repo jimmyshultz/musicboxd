@@ -13,12 +13,12 @@ import { useSelector } from 'react-redux';
 import { FollowRequest } from '../../types/database';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 export default function FollowRequestsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
   
   const [requests, setRequests] = useState<FollowRequest[]>([]);
   const [loading, setLoading] = useState(true);

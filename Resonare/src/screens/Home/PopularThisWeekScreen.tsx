@@ -14,21 +14,21 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 import { HomeStackParamList, Album } from '../../types';
 import { AlbumService } from '../../services/albumService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type PopularThisWeekNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
 const CARDS_PER_ROW = 3;
-const HORIZONTAL_SPACING = spacing.lg;
-const CARD_MARGIN = spacing.sm;
-const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
-
 
 export default function PopularThisWeekScreen() {
   const navigation = useNavigation<PopularThisWeekNavigationProp>();
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
+  
+  const HORIZONTAL_SPACING = spacing.lg;
+  const CARD_MARGIN = spacing.sm;
+  const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
 

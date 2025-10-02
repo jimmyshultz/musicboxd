@@ -17,17 +17,12 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const { width } = Dimensions.get('window');
 const CARDS_PER_ROW = 3;
-const HORIZONTAL_SPACING = spacing.lg;
-const CARD_MARGIN = spacing.sm;
-const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 interface FriendActivity {
@@ -46,6 +41,13 @@ interface FriendActivity {
 export default function NewFromFriendsScreen() {
   const navigation = useNavigation<NewFromFriendsNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
+  
+  const HORIZONTAL_SPACING = spacing.lg;
+  const CARD_MARGIN = spacing.sm;
+  const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
+  
   const [activities, setActivities] = useState<FriendActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
