@@ -70,7 +70,10 @@
     "typescript": "^5.9.2"
   },
   "devDependencies": {
-    "@react-native-community/cli": "latest"
+    "@react-native-community/cli": "latest",
+    "@react-native/metro-config": "latest",
+    "metro": "latest",
+    "metro-resolver": "latest"
   },
   "engines": {
     "node": ">=18"
