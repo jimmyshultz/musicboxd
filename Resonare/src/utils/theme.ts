@@ -1,28 +1,42 @@
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 
-// Color palette based on project plan
+// Enhanced color palette
 export const colors = {
-  primary: '#6200EE',
-  secondary: '#03DAC6',
-  error: '#B00020',
-  surface: '#FFFFFF',
-  background: '#F5F5F5',
-  text: '#000000',
-  textSecondary: '#666666',
-  border: '#E0E0E0',
-  card: '#FFFFFF',
-  
-  // Dark mode colors
+  light: {
+    primary: '#6200EE',
+    secondary: '#03DAC6',
+    error: '#B00020',
+    surface: '#FFFFFF',
+    background: '#F5F5F5',
+    surfaceVariant: '#E7E0EC',
+    text: '#000000',
+    textSecondary: '#666666',
+    border: '#E0E0E0',
+    card: '#FFFFFF',
+    onBackground: '#1C1B1F',
+    onSurface: '#1C1B1F',
+    onSurfaceVariant: '#49454F',
+    onPrimary: '#FFFFFF',
+    accent: '#6200EE',
+    warning: '#FF9500',
+  },
   dark: {
     primary: '#BB86FC',
     secondary: '#03DAC6',
     error: '#CF6679',
     surface: '#121212',
     background: '#000000',
+    surfaceVariant: '#49454F',
     text: '#FFFFFF',
     textSecondary: '#AAAAAA',
     border: '#333333',
     card: '#1E1E1E',
+    onBackground: '#E6E1E5',
+    onSurface: '#E6E1E5',
+    onSurfaceVariant: '#CAC4D0',
+    onPrimary: '#381E72',
+    accent: '#BB86FC',
+    warning: '#FFB74D',
   }
 };
 
@@ -30,12 +44,23 @@ export const lightTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: colors.primary,
-    secondary: colors.secondary,
-    surface: colors.surface,
-    background: colors.background,
-    error: colors.error,
-    onSurface: colors.text,
+    primary: colors.light.primary,
+    secondary: colors.light.secondary,
+    surface: colors.light.surface,
+    background: colors.light.background,
+    surfaceVariant: colors.light.surfaceVariant,
+    error: colors.light.error,
+    onSurface: colors.light.onSurface,
+    onBackground: colors.light.onBackground,
+    onSurfaceVariant: colors.light.onSurfaceVariant,
+    onPrimary: colors.light.onPrimary,
+    // Custom colors
+    text: colors.light.text,
+    textSecondary: colors.light.textSecondary,
+    border: colors.light.border,
+    card: colors.light.card,
+    accent: colors.light.accent,
+    warning: colors.light.warning,
   },
 };
 
@@ -47,8 +72,19 @@ export const darkTheme = {
     secondary: colors.dark.secondary,
     surface: colors.dark.surface,
     background: colors.dark.background,
+    surfaceVariant: colors.dark.surfaceVariant,
     error: colors.dark.error,
-    onSurface: colors.dark.text,
+    onSurface: colors.dark.onSurface,
+    onBackground: colors.dark.onBackground,
+    onSurfaceVariant: colors.dark.onSurfaceVariant,
+    onPrimary: colors.dark.onPrimary,
+    // Custom colors
+    text: colors.dark.text,
+    textSecondary: colors.dark.textSecondary,
+    border: colors.dark.border,
+    card: colors.dark.card,
+    accent: colors.dark.accent,
+    warning: colors.dark.warning,
   },
 };
 
@@ -158,3 +194,6 @@ export const theme = {
   borderRadius,
   shadows,
 };
+
+// Theme utility functions
+export const getTheme = (isDark: boolean) => isDark ? darkTheme : lightTheme;

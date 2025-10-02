@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from 'react-native-paper';
 import { DevUtils } from '../config/environment';
-import { colors, spacing } from '../utils/theme';
+import { useAppTheme } from '../providers/ThemeProvider';
 
 /**
  * Environment Badge Component
@@ -10,9 +10,29 @@ import { colors, spacing } from '../utils/theme';
  * identify which environment they're using
  */
 export const EnvironmentBadge: React.FC = () => {
+  const { theme, spacing } = useAppTheme();
+  
   if (!DevUtils.shouldShowEnvironmentBadge()) {
     return null;
   }
+
+  const styles = StyleSheet.create({
+    badge: {
+      position: 'absolute',
+      top: 50, // Below status bar
+      right: spacing.md,
+      backgroundColor: theme.colors.warning || '#FF9500',
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 4,
+      borderRadius: 12,
+      zIndex: 9999,
+    },
+    badgeText: {
+      color: '#FFFFFF',
+      fontWeight: 'bold',
+      fontSize: 10,
+    },
+  });
 
   return (
     <View style={styles.badge}>
@@ -22,21 +42,3 @@ export const EnvironmentBadge: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  badge: {
-    position: 'absolute',
-    top: 50, // Below status bar
-    right: spacing.md,
-    backgroundColor: colors.warning || '#FF9500',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: 12,
-    zIndex: 9999,
-  },
-  badgeText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 10,
-  },
-});

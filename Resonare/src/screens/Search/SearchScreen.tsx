@@ -32,7 +32,7 @@ import {
 } from '../../store/slices/searchSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
 
@@ -50,11 +50,13 @@ const CustomSearchbar = ({
   value: string;
   style?: any;
 }) => {
+  const { theme } = useAppTheme();
+  
   return (
-    <View style={[styles.searchInputContainer, style]}>
-      <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
+    <View style={[styles.searchInputContainer, { backgroundColor: theme.colors.surface }, style]}>
+      <Icon name="search" size={18} color={theme.colors.textSecondary} style={styles.searchIcon} />
       <TextInput
-        style={styles.searchInput}
+        style={[styles.searchInput, { color: theme.colors.text }]}
         placeholder={placeholder}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
@@ -64,7 +66,7 @@ const CustomSearchbar = ({
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Icon name="times" size={16} color="#666" />
+          <Icon name="times" size={16} color={theme.colors.textSecondary} />
         </TouchableOpacity>
       )}
     </View>
@@ -74,6 +76,7 @@ const CustomSearchbar = ({
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const dispatch = useDispatch();
+  const { theme, spacing } = useAppTheme();
   
   const {
     searchQuery,

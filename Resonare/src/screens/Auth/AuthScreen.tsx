@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
 import { AuthService } from '../../services/authService';
-import { theme, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 // import AppleSignInDebug from '../../components/AppleSignInDebug'; // Removed - Apple Sign-In working
 
 // Safely import Apple Button with fallback
@@ -34,6 +34,7 @@ export default function AuthScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.auth);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
+  const { theme, spacing } = useAppTheme();
 
   useEffect(() => {
     // Check if Apple Sign-In is available on this device

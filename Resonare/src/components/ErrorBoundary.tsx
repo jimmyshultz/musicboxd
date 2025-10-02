@@ -1,11 +1,16 @@
 import React, { Component, ReactNode } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
-import { colors, spacing } from '../utils/theme';
+import { useAppTheme } from '../providers/ThemeProvider';
 import { Environment, Logger } from '../config/environment';
 
 interface Props {
   children: ReactNode;
+}
+
+interface ErrorBoundaryInternalProps extends Props {
+  theme: any;
+  spacing: any;
 }
 
 interface State {
@@ -13,8 +18,8 @@ interface State {
   error: Error | null;
 }
 
-class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+class ErrorBoundaryInternal extends Component<ErrorBoundaryInternalProps, State> {
+  constructor(props: ErrorBoundaryInternalProps) {
     super(props);
     this.state = { hasError: false, error: null };
   }
@@ -43,6 +48,9 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
+    const { theme, spacing } = this.props;
+    const styles = createStyles(theme, spacing);
+
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
@@ -88,10 +96,10 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any, spacing: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.lg,
@@ -105,19 +113,19 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   title: {
-    color: colors.error,
+    color: theme.colors.error,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
   message: {
     textAlign: 'center',
     marginBottom: spacing.sm,
-    color: colors.text,
+    color: theme.colors.text,
   },
   suggestion: {
     textAlign: 'center',
     marginBottom: spacing.lg,
-    color: colors.textSecondary,
+    color: theme.colors.textSecondary,
   },
   retryButton: {
     marginTop: spacing.md,
@@ -126,20 +134,31 @@ const styles = StyleSheet.create({
   debugContainer: {
     marginTop: spacing.lg,
     padding: spacing.md,
-    backgroundColor: colors.border,
+    backgroundColor: theme.colors.border,
     borderRadius: 8,
     width: '100%',
   },
   debugTitle: {
     fontWeight: 'bold',
     marginBottom: spacing.xs,
-    color: colors.text,
+    color: theme.colors.text,
   },
   debugText: {
     fontFamily: 'monospace',
     fontSize: 11,
-    color: colors.textSecondary,
+    color: theme.colors.textSecondary,
   },
 });
+
+// Wrapper component to inject theme
+const ErrorBoundary: React.FC<Props> = ({ children }) => {
+  const { theme, spacing } = useAppTheme();
+  
+  return (
+    <ErrorBoundaryInternal theme={theme} spacing={spacing}>
+      {children}
+    </ErrorBoundaryInternal>
+  );
+};
 
 export default ErrorBoundary;

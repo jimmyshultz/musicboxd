@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
-  useColorScheme,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
 // SafeAreaView import removed - using regular View since header handles safe area
@@ -23,7 +22,7 @@ import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 import { SegmentedButtons } from 'react-native-paper';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
@@ -53,8 +52,7 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const isDarkMode = useColorScheme() === 'dark';
-  const currentTheme = isDarkMode ? theme.dark : theme.light;
+  const { theme: currentTheme, spacing, shadows } = useAppTheme();
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);

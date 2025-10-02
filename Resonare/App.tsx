@@ -6,13 +6,12 @@
  */
 
 import React, { useEffect } from 'react';
-import { StatusBar, useColorScheme, LogBox } from 'react-native';
+import { StatusBar, LogBox } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
-import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
-import { lightTheme, darkTheme } from './src/utils/theme';
+import { ThemeProvider, useAppTheme } from './src/providers/ThemeProvider';
 import { AuthProvider } from './src/providers/AuthProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
@@ -23,8 +22,7 @@ import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
 suppressConsoleForBetaUsers();
 
 function AppContent() {
-  const isDarkMode = useColorScheme() === 'dark';
-  const currentTheme = isDarkMode ? darkTheme : lightTheme;
+  const { theme, isDark } = useAppTheme();
 
   // Validate Spotify integration on app startup
   useEffect(() => {
@@ -42,17 +40,13 @@ function AppContent() {
 
   return (
     <SafeAreaProvider>
-      <PaperProvider 
-        theme={currentTheme}
-      >
-        <StatusBar
-          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-          backgroundColor={currentTheme.colors.surface}
-        />
-        <AuthProvider>
-          <AppNavigator />
-        </AuthProvider>
-      </PaperProvider>
+      <StatusBar
+        barStyle={isDark ? 'light-content' : 'dark-content'}
+        backgroundColor={theme.colors.surface}
+      />
+      <AuthProvider>
+        <AppNavigator />
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }
@@ -61,7 +55,9 @@ function App() {
   return (
     <ErrorBoundary>
       <ReduxProvider store={store}>
-        <AppContent />
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
       </ReduxProvider>
     </ErrorBoundary>
   );

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from 'react-native-paper';
+import { useThemeColors } from '../providers/ThemeProvider';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 interface HalfStarRatingProps {
@@ -16,7 +16,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
   disabled = false,
   size = 'medium'
 }) => {
-  const theme = useTheme();
+  const colors = useThemeColors();
 
   const getIconSize = () => {
     switch (size) {
@@ -66,7 +66,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
     const halfStarThreshold = starNumber - 0.5;
     
     if (rating >= halfStarThreshold) {
-      return theme.colors.primary;
+      return colors.primary;
     } else {
       return '#ddd';
     }
@@ -102,7 +102,7 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
   rating,
   size = 'medium'
 }) => {
-  const theme = useTheme();
+  const colors = useThemeColors();
 
   const getIconSize = () => {
     switch (size) {
@@ -134,7 +134,7 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
     const halfStarThreshold = starNumber - 0.5;
     
     if (rating >= halfStarThreshold) {
-      return theme.colors.primary;
+      return colors.primary;
     } else {
       return '#ddd';
     }

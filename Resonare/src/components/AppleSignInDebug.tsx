@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { View, Text, Platform, StyleSheet } from 'react-native';
+import { useThemeColors } from '../providers/ThemeProvider';
 
 export const AppleSignInDebug: React.FC = () => {
+  const colors = useThemeColors();
   useEffect(() => {
     console.log('🍎 [DEBUG] AppleSignInDebug: Component mounted');
     console.log('🍎 [DEBUG] AppleSignInDebug: Platform.OS:', Platform.OS);
@@ -48,6 +50,18 @@ export const AppleSignInDebug: React.FC = () => {
     return null;
   }
 
+  const styles = StyleSheet.create({
+    container: {
+      padding: 10,
+      backgroundColor: colors.surfaceVariant,
+      margin: 10,
+    },
+    text: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+  });
+
   return (
     <View style={styles.container}>
       <Text style={styles.text}>
@@ -56,17 +70,5 @@ export const AppleSignInDebug: React.FC = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 10,
-    backgroundColor: '#f0f0f0',
-    margin: 10,
-  },
-  text: {
-    fontSize: 12,
-    color: '#666',
-  },
-});
 
 export default AppleSignInDebug;

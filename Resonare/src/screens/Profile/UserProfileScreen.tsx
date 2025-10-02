@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
-  useColorScheme,
 } from 'react-native';
 
 import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons } from 'react-native-paper';
@@ -23,7 +22,7 @@ import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
@@ -51,8 +50,7 @@ export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
   const navigation = useNavigation<UserProfileScreenNavigationProp>();
   const dispatch = useDispatch();
-  const isDarkMode = useColorScheme() === 'dark';
-  const currentTheme = isDarkMode ? theme.dark : theme.light;
+  const { theme: currentTheme, spacing, shadows } = useAppTheme();
   const insets = useSafeAreaInsets();
   
   const { userId } = route.params;

@@ -19,9 +19,7 @@ import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSl
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -60,6 +58,8 @@ interface PotentialFriend {
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const dispatch = useDispatch();
+  const { theme, spacing } = useAppTheme();
+  const colors = theme.colors;
   
   const { loading } = useSelector((state: RootState) => state.albums);
   const { user: currentUser } = useSelector((state: RootState) => state.auth);

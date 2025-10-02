@@ -3,13 +3,13 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
 import { RootState } from '../store';
-import { theme } from '../utils/theme';
+import { useAppTheme } from '../providers/ThemeProvider';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -37,8 +37,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Back button component
 const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const { theme: currentTheme } = useAppTheme();
   
   const handlePress = React.useCallback(() => {
     if (customOnPress) {
@@ -92,8 +91,7 @@ const SearchStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
 function HomeStackNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const { theme: currentTheme } = useAppTheme();
 
   return (
     <HomeStack.Navigator
@@ -246,8 +244,7 @@ function HomeStackNavigator() {
 }
 
 function SearchStackNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const { theme: currentTheme } = useAppTheme();
 
   return (
     <SearchStack.Navigator
@@ -399,8 +396,7 @@ function SearchStackNavigator() {
 }
 
 function ProfileStackNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const { theme: currentTheme } = useAppTheme();
 
   return (
     <ProfileStack.Navigator
@@ -585,8 +581,7 @@ function ProfileStackNavigator() {
 }
 
 function MainTabNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const { theme: currentTheme, isDark } = useAppTheme();
 
   return (
     <Tab.Navigator
@@ -617,8 +612,7 @@ function MainTabNavigator() {
 }
 
 export default function AppNavigator() {
-  const colorScheme = useColorScheme();
-  const currentTheme = colorScheme === 'dark' ? theme.dark : theme.light;
+  const { theme: currentTheme } = useAppTheme();
   const { user } = useSelector((state: RootState) => state.auth);
 
   return (
