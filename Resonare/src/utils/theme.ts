@@ -1,7 +1,7 @@
 import { MD3LightTheme, MD3DarkTheme } from 'react-native-paper';
 
-// Enhanced color palette
-export const colors = {
+// Internal color definitions (not exported to avoid circular refs)
+const colorDefinitions = {
   light: {
     primary: '#6200EE',
     secondary: '#03DAC6',
@@ -44,23 +44,23 @@ export const lightTheme = {
   ...MD3LightTheme,
   colors: {
     ...MD3LightTheme.colors,
-    primary: colors.light.primary,
-    secondary: colors.light.secondary,
-    surface: colors.light.surface,
-    background: colors.light.background,
-    surfaceVariant: colors.light.surfaceVariant,
-    error: colors.light.error,
-    onSurface: colors.light.onSurface,
-    onBackground: colors.light.onBackground,
-    onSurfaceVariant: colors.light.onSurfaceVariant,
-    onPrimary: colors.light.onPrimary,
+    primary: colorDefinitions.light.primary,
+    secondary: colorDefinitions.light.secondary,
+    surface: colorDefinitions.light.surface,
+    background: colorDefinitions.light.background,
+    surfaceVariant: colorDefinitions.light.surfaceVariant,
+    error: colorDefinitions.light.error,
+    onSurface: colorDefinitions.light.onSurface,
+    onBackground: colorDefinitions.light.onBackground,
+    onSurfaceVariant: colorDefinitions.light.onSurfaceVariant,
+    onPrimary: colorDefinitions.light.onPrimary,
     // Custom colors
-    text: colors.light.text,
-    textSecondary: colors.light.textSecondary,
-    border: colors.light.border,
-    card: colors.light.card,
-    accent: colors.light.accent,
-    warning: colors.light.warning,
+    text: colorDefinitions.light.text,
+    textSecondary: colorDefinitions.light.textSecondary,
+    border: colorDefinitions.light.border,
+    card: colorDefinitions.light.card,
+    accent: colorDefinitions.light.accent,
+    warning: colorDefinitions.light.warning,
   },
 };
 
@@ -68,23 +68,23 @@ export const darkTheme = {
   ...MD3DarkTheme,
   colors: {
     ...MD3DarkTheme.colors,
-    primary: colors.dark.primary,
-    secondary: colors.dark.secondary,
-    surface: colors.dark.surface,
-    background: colors.dark.background,
-    surfaceVariant: colors.dark.surfaceVariant,
-    error: colors.dark.error,
-    onSurface: colors.dark.onSurface,
-    onBackground: colors.dark.onBackground,
-    onSurfaceVariant: colors.dark.onSurfaceVariant,
-    onPrimary: colors.dark.onPrimary,
+    primary: colorDefinitions.dark.primary,
+    secondary: colorDefinitions.dark.secondary,
+    surface: colorDefinitions.dark.surface,
+    background: colorDefinitions.dark.background,
+    surfaceVariant: colorDefinitions.dark.surfaceVariant,
+    error: colorDefinitions.dark.error,
+    onSurface: colorDefinitions.dark.onSurface,
+    onBackground: colorDefinitions.dark.onBackground,
+    onSurfaceVariant: colorDefinitions.dark.onSurfaceVariant,
+    onPrimary: colorDefinitions.dark.onPrimary,
     // Custom colors
-    text: colors.dark.text,
-    textSecondary: colors.dark.textSecondary,
-    border: colors.dark.border,
-    card: colors.dark.card,
-    accent: colors.dark.accent,
-    warning: colors.dark.warning,
+    text: colorDefinitions.dark.text,
+    textSecondary: colorDefinitions.dark.textSecondary,
+    border: colorDefinitions.dark.border,
+    card: colorDefinitions.dark.card,
+    accent: colorDefinitions.dark.accent,
+    warning: colorDefinitions.dark.warning,
   },
 };
 
@@ -187,9 +187,12 @@ export const shadows = {
 
 // Legacy colors for backward compatibility
 const legacyColors = {
-  ...colors.light,
-  dark: colors.dark,
+  ...colorDefinitions.light,
+  dark: colorDefinitions.dark,
 };
+
+// Export colors for external use (after legacyColors is defined)
+export const colors = colorDefinitions;
 
 export const theme = {
   light: lightTheme,
@@ -200,17 +203,6 @@ export const theme = {
   borderRadius,
   shadows,
 };
-
-// Debug only on error
-try {
-  if (!theme.colors.background) {
-    throw new Error('theme.colors.background is undefined');
-  }
-  console.log('🎨 [DEBUG] Theme initialized successfully');
-} catch (error) {
-  console.error('🎨 [ERROR] Theme initialization failed:', error);
-  console.error('🎨 [ERROR] theme.colors:', theme.colors);
-}
 
 // Theme utility functions
 export const getTheme = (isDark: boolean) => isDark ? darkTheme : lightTheme;
