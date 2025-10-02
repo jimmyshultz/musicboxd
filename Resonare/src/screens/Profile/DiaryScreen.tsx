@@ -10,7 +10,7 @@ import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParam
 import { RootState } from '../../store';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../store/slices/diarySlice';
-import { theme, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 
  type DiaryScreenRouteProp = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'Diary'>;
@@ -22,6 +22,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   const dispatch = useDispatch();
   const { userId } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
   const diaryState = useSelector((state: RootState) => state.diary.byUserId[userId]);
   const loading = useSelector((state: RootState) => state.diary.loading);
 

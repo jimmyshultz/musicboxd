@@ -15,7 +15,7 @@ import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
 import { RootState } from '../../store';
-import { theme, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
@@ -31,6 +31,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   const dispatch = useDispatch();
   const { entryId, userId } = route.params;
   const { user: currentUser } = useSelector((s: RootState) => s.auth);
+  const { theme, spacing } = useAppTheme();
 
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
   const [album, setAlbum] = useState<Album | null>(null);

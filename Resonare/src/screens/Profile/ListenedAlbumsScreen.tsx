@@ -16,7 +16,7 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
 
-import { theme, spacing, shadows } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 import { Listen, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { RootState } from '../../store';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
@@ -41,6 +41,7 @@ export default function ListenedAlbumsScreen() {
   const navigation = useNavigation<ListenedAlbumsScreenNavigationProp>();
   const { userId, username } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing, shadows } = useAppTheme();
 
   const [listenedAlbums, setListenedAlbums] = useState<ListenedAlbumData[]>([]);
   const [loading, setLoading] = useState(true);

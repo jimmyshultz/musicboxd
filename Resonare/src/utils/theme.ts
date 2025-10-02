@@ -185,10 +185,16 @@ export const shadows = {
   },
 };
 
+// Legacy colors for backward compatibility
+const legacyColors = {
+  ...colors.light,
+  dark: colors.dark,
+};
+
 export const theme = {
   light: lightTheme,
   dark: darkTheme,
-  colors,
+  colors: legacyColors, // Backward compatible colors
   typography,
   spacing,
   borderRadius,

@@ -33,7 +33,7 @@ import { AlbumService } from '../../services/albumService';
 import { albumListensService } from '../../services/albumListensService';
 import { albumRatingsService } from '../../services/albumRatingsService';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Portal, Dialog, Switch } from 'react-native-paper';
 
@@ -75,6 +75,7 @@ export default function AlbumDetailsScreen() {
   const route = useRoute<AlbumDetailsRouteProp>();
   const dispatch = useDispatch();
   const { albumId } = route.params;
+  const { theme, spacing, shadows } = useAppTheme();
   
   const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } = useSelector((state: RootState) => state.albums);
   const { user } = useSelector((state: RootState) => state.auth);

@@ -17,7 +17,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { updateProfile } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 
 interface ProfileSetupScreenProps {
   navigation: any;
@@ -26,6 +26,7 @@ interface ProfileSetupScreenProps {
 export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing } = useAppTheme();
   
   const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');

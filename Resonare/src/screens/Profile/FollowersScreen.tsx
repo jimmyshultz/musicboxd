@@ -17,7 +17,7 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { theme, spacing } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 import { RootState } from '../../store';
 import { SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { UserProfile } from '../../types/database';
@@ -43,6 +43,7 @@ export default function FollowersScreen() {
   const route = useRoute<FollowersScreenRouteProp>();
   const navigation = useNavigation<FollowersScreenNavigationProp>();
   const dispatch = useDispatch();
+  const { theme, spacing } = useAppTheme();
   
   const { userId, username, initialTab = 'followers' } = route.params;
   const { following } = useSelector((state: RootState) => state.user);

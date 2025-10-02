@@ -16,7 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { useSelector } from 'react-redux';
 
-import { theme, spacing, shadows } from '../../utils/theme';
+import { useAppTheme } from '../../providers/ThemeProvider';
 import { Review, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { RootState } from '../../store';
@@ -41,6 +41,7 @@ export default function UserReviewsScreen() {
   const navigation = useNavigation<UserReviewsScreenNavigationProp>();
   const { userId, username } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const { theme, spacing, shadows } = useAppTheme();
 
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
