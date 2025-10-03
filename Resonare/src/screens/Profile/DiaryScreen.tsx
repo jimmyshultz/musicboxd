@@ -3,14 +3,14 @@ import { View, SectionList, StyleSheet, TouchableOpacity, Image } from 'react-na
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { Text, ActivityIndicator, SegmentedButtons } from 'react-native-paper';
+import { Text, ActivityIndicator, SegmentedButtons, useTheme } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../store/slices/diarySlice';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 
  type DiaryScreenRouteProp = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'Diary'>;
@@ -20,6 +20,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   const route = useRoute<DiaryScreenRouteProp>();
   const navigation = useNavigation<DiaryScreenNavProp>();
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { userId } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const diaryState = useSelector((state: RootState) => state.diary.byUserId[userId]);
@@ -175,6 +176,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   };
 
   if (!canView) {
+    const styles = createStyles(theme);
     return (
       <View style={styles.center}>
         <Text>Diary is not available due to privacy settings.</Text>
@@ -184,6 +186,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
 
   const entries = diaryState?.entries || [];
   const sections = groupIntoSections(entries);
+  const styles = createStyles(theme);
 
   return (
     <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
@@ -238,22 +241,22 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   );
  }
 
- const styles = StyleSheet.create({
+ const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  headerToggle: { padding: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  headerToggle: { padding: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.outline },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingBottom: spacing.xl },
   sectionHeader: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, backgroundColor: theme.colors.surface },
   sectionHeaderText: { fontWeight: 'bold' },
-  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border, backgroundColor: theme.colors.background },
-  dayNumber: { width: 32, textAlign: 'right', marginRight: spacing.md, color: theme.colors.textSecondary },
+  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.outline, backgroundColor: theme.colors.background },
+  dayNumber: { width: 32, textAlign: 'right', marginRight: spacing.md, color: theme.colors.onSurfaceVariant },
   cover: { width: 36, height: 36, borderRadius: 4, marginRight: spacing.md },
   rowTextContainer: { flex: 1 },
   title: { fontWeight: '600' },
   rating: { color: theme.colors.primary, marginTop: 2 },
   emptyStateText: {
     textAlign: 'center',
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     paddingHorizontal: spacing.xl,
     lineHeight: 20,
   },

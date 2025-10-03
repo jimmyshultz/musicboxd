@@ -53,6 +53,15 @@ export default function UserProfileScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   
+  // Safety check - if theme is not ready, show loading
+  if (!theme || !theme.colors) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+  
   const { userId } = route.params;
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
