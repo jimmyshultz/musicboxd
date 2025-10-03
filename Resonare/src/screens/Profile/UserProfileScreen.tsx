@@ -607,7 +607,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
   },
   ratingContainer: {
@@ -639,14 +639,14 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   statLabel: {
     textAlign: 'center',
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   emptyFavoritesContainer: {
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
     ...shadows.small,
@@ -656,7 +656,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
   emptyFavoritesSubtext: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
   },
@@ -664,7 +664,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
     ...shadows.small,
@@ -674,7 +674,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
   emptyActivitySubtext: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
   },
