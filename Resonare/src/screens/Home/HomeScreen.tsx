@@ -67,6 +67,8 @@ export default function HomeScreen() {
   const [newFromFriends, setNewFromFriends] = useState<FriendActivity[]>([]);
   const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
   const [discoverFriends, setDiscoverFriends] = useState<PotentialFriend[]>([]);
+  
+  const styles = createStyles(theme);
 
   const loadPopularThisWeek = useCallback(async () => {
     try {
@@ -428,8 +430,6 @@ export default function HomeScreen() {
       </View>
     );
   }
-
-  const styles = createStyles(theme);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
