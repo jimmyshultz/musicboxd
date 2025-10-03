@@ -56,13 +56,15 @@ export default function UserProfileScreen() {
   // Safety check - if theme is not ready, show loading
   if (!theme || !theme.colors) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
         <ActivityIndicator size="large" />
+        <Text style={{ marginTop: 16, color: '#666' }}>Loading...</Text>
       </View>
     );
   }
   
   const { userId } = route.params;
+  const styles = createStyles(theme);
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
@@ -404,12 +406,10 @@ export default function UserProfileScreen() {
     );
   }
 
-  const styles = createStyles(theme);
-
   return (
     <View style={styles.container}>
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline }]}>
+      <View style={styles.segmentHeader}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -556,7 +556,9 @@ const createStyles = (theme: any) => StyleSheet.create({
 
   segmentHeader: {
     padding: spacing.md,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline,
   },
   profileHeader: {
     alignItems: 'center',

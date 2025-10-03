@@ -53,6 +53,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
@@ -362,12 +363,10 @@ export default function ProfileScreen() {
     );
   }
 
-  const styles = createStyles(theme);
-
   return (
     <View style={styles.safeArea}>
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline }]}> 
+      <View style={styles.segmentHeader}> 
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
