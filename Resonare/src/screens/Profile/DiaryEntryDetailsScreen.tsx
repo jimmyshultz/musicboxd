@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react'
 import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator, Menu, IconButton } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
@@ -15,7 +15,7 @@ import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
 import { RootState } from '../../store';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
@@ -28,6 +28,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
  export default function DiaryEntryDetailsScreen() {
   const route = useRoute<DetailsRoute>();
   const navigation = useNavigation<DetailsNav>();
+  const theme = useTheme();
   const dispatch = useDispatch();
   const { entryId, userId } = route.params;
   const { user: currentUser } = useSelector((s: RootState) => s.auth);
@@ -249,6 +250,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   };
 
   if (loading || !entry) {
+    const styles = createStyles(theme);
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator />
@@ -259,6 +261,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
 
   const d = new Date(entry.diaryDate + 'T00:00:00');
   const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
+  const styles = createStyles(theme);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
@@ -349,7 +352,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   );
  }
 
- const styles = StyleSheet.create({
+ const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   scrollContent: { 
     padding: spacing.lg,
@@ -442,8 +445,8 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   },
   cover: { width: 96, height: 96, borderRadius: 8 },
   headerTextContainer: { flex: 1, marginLeft: spacing.md },
-  subduedText: { color: theme.colors.textSecondary },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.border },
+  subduedText: { color: theme.colors.onSurfaceVariant },
+  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.outline },
   rowAlignCenter: { alignItems: 'center' },
   rowDirection: { flexDirection: 'row' },
 

@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
   Chip,
   Divider,
+  useTheme,
 } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -33,7 +34,7 @@ import { AlbumService } from '../../services/albumService';
 import { albumListensService } from '../../services/albumListensService';
 import { albumRatingsService } from '../../services/albumRatingsService';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Portal, Dialog, Switch } from 'react-native-paper';
 
@@ -48,32 +49,36 @@ const COVER_SIZE = width * 0.6;
 
 
 
-const TrackListItem = ({ track }: { track: Track; albumArtist: string }) => (
-  <View style={styles.trackItem}>
-    <View style={styles.trackNumber}>
-      <Text variant="bodySmall" style={styles.trackNumberText}>
-        {track.trackNumber}
-      </Text>
-    </View>
-    <View style={styles.trackInfo}>
-      <Text variant="bodyMedium" style={styles.trackTitle}>
-        {track.title}
-      </Text>
-      {track.artist && (
-        <Text variant="bodySmall" style={styles.trackArtist}>
-          {track.artist}
+const TrackListItem = ({ track, theme }: { track: Track; albumArtist: string; theme: any }) => {
+  const styles = createStyles(theme);
+  return (
+    <View style={styles.trackItem}>
+      <View style={styles.trackNumber}>
+        <Text variant="bodySmall" style={styles.trackNumberText}>
+          {track.trackNumber}
         </Text>
-      )}
+      </View>
+      <View style={styles.trackInfo}>
+        <Text variant="bodyMedium" style={styles.trackTitle}>
+          {track.title}
+        </Text>
+        {track.artist && (
+          <Text variant="bodySmall" style={styles.trackArtist}>
+            {track.artist}
+          </Text>
+        )}
+      </View>
+      <Text variant="bodySmall" style={styles.trackDuration}>
+        {AlbumService.formatDuration(track.duration)}
+      </Text>
     </View>
-    <Text variant="bodySmall" style={styles.trackDuration}>
-      {AlbumService.formatDuration(track.duration)}
-    </Text>
-  </View>
-);
+  );
+};
 
 export default function AlbumDetailsScreen() {
   const route = useRoute<AlbumDetailsRouteProp>();
   const dispatch = useDispatch();
+  const theme = useTheme();
   const { albumId } = route.params;
   
   const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } = useSelector((state: RootState) => state.albums);
@@ -242,6 +247,7 @@ export default function AlbumDetailsScreen() {
   };
 
   if (loading || !currentAlbum) {
+    const styles = createStyles(theme);
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" />
@@ -254,6 +260,7 @@ export default function AlbumDetailsScreen() {
 
   const totalDuration = AlbumService.getTotalDuration(currentAlbum);
   const albumYear = AlbumService.getAlbumYear(currentAlbum.releaseDate);
+  const styles = createStyles(theme);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -360,7 +367,7 @@ export default function AlbumDetailsScreen() {
           </Text>
           {currentAlbum.trackList.map((track, index) => (
             <View key={track.id}>
-              <TrackListItem track={track} albumArtist={currentAlbum.artist} />
+              <TrackListItem track={track} albumArtist={currentAlbum.artist} theme={theme} />
               {index < currentAlbum.trackList.length - 1 && <Divider style={styles.trackDivider} />}
             </View>
           ))}
@@ -445,7 +452,7 @@ export default function AlbumDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -458,7 +465,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     padding: spacing.lg,
@@ -481,12 +488,12 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.sm,
   },
   albumMeta: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.md,
   },
@@ -523,11 +530,11 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     textAlign: 'center',
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   loginPrompt: {
     textAlign: 'center',
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontStyle: 'italic',
     marginTop: spacing.sm,
   },
@@ -563,7 +570,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   trackNumberText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '500',
   },
   trackInfo: {
@@ -575,11 +582,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   trackArtist: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   trackDuration: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '500',
     minWidth: 40,
     textAlign: 'right',

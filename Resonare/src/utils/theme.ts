@@ -36,6 +36,7 @@ export const lightTheme = {
     background: colors.background,
     error: colors.error,
     onSurface: colors.text,
+    // Keep MD3's onSurfaceVariant and outline - they're already good
   },
 };
 
@@ -49,6 +50,7 @@ export const darkTheme = {
     background: colors.dark.background,
     error: colors.dark.error,
     onSurface: colors.dark.text,
+    // Keep MD3's onSurfaceVariant and outline - they're already good for dark mode
   },
 };
 

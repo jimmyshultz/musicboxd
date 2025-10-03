@@ -6,7 +6,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { Text, ActivityIndicator, Avatar } from 'react-native-paper';
+import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,9 +19,7 @@ import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSl
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { spacing } from '../../utils/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -60,6 +58,7 @@ interface PotentialFriend {
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const dispatch = useDispatch();
+  const theme = useTheme();
   
   const { loading } = useSelector((state: RootState) => state.albums);
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
@@ -68,6 +67,8 @@ export default function HomeScreen() {
   const [newFromFriends, setNewFromFriends] = useState<FriendActivity[]>([]);
   const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
   const [discoverFriends, setDiscoverFriends] = useState<PotentialFriend[]>([]);
+  
+  const styles = createStyles(theme);
 
   const loadPopularThisWeek = useCallback(async () => {
     try {
@@ -475,20 +476,20 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   section: {
     marginBottom: spacing.xl,
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   sectionDescription: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.md,
   },
@@ -514,7 +515,7 @@ const styles = StyleSheet.create({
   },
   seeAllText: {
     fontSize: 20,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: 'bold',
   },
   horizontalList: {
@@ -538,25 +539,25 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
   },
   friendBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.xs,
-    backgroundColor: colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: 8,
     padding: 4,
   },
   friendBadgeText: {
     marginLeft: 4,
     fontSize: 10,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   friendsCounter: {
     marginTop: spacing.xs,
-    backgroundColor: colors.primary,
+    backgroundColor: theme.colors.primary,
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -564,13 +565,13 @@ const styles = StyleSheet.create({
   },
   friendsCountText: {
     fontSize: 10,
-    color: 'white',
+    color: theme.colors.onPrimary,
     fontWeight: 'bold',
   },
   userCard: {
     width: USER_CARD_WIDTH,
     marginRight: spacing.md,
-    backgroundColor: colors.card,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: spacing.md,
     alignItems: 'center',
@@ -582,7 +583,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   mutualFollowers: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 12,
   },

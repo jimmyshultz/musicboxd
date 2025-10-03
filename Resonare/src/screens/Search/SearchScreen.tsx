@@ -13,6 +13,7 @@ import {
   Chip,
   ActivityIndicator,
   Divider,
+  useTheme,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -32,7 +33,7 @@ import {
 } from '../../store/slices/searchSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
 
@@ -42,29 +43,33 @@ const CustomSearchbar = ({
   onChangeText, 
   onSubmitEditing, 
   value, 
-  style 
+  style,
+  theme
 }: {
   placeholder: string;
   onChangeText: (text: string) => void;
   onSubmitEditing: () => void;
   value: string;
   style?: any;
+  theme: any;
 }) => {
+  const styles = createSearchInputStyles(theme);
+  
   return (
     <View style={[styles.searchInputContainer, style]}>
-      <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
+      <Icon name="search" size={18} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
       <TextInput
         style={styles.searchInput}
         placeholder={placeholder}
         onChangeText={onChangeText}
         onSubmitEditing={onSubmitEditing}
         value={value}
-        placeholderTextColor={theme.colors.textSecondary}
+        placeholderTextColor={theme.colors.onSurfaceVariant}
         returnKeyType="search"
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
-          <Icon name="times" size={16} color="#666" />
+          <Icon name="times" size={16} color={theme.colors.onSurfaceVariant} />
         </TouchableOpacity>
       )}
     </View>
@@ -74,6 +79,7 @@ const CustomSearchbar = ({
 export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const dispatch = useDispatch();
+  const theme = useTheme();
   
   const {
     searchQuery,
@@ -241,6 +247,8 @@ export default function SearchScreen() {
     ((searchMode === 'albums' && searchResults && searchResults.albums.length === 0) ||
      (searchMode === 'users' && userSearchResults.length === 0));
 
+  const styles = createStyles(theme);
+
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -250,6 +258,7 @@ export default function SearchScreen() {
           onSubmitEditing={handleSearchSubmit}
           value={searchQuery}
           style={styles.searchbar}
+          theme={theme}
         />
         
         {/* Search Mode Toggle */}
@@ -376,7 +385,7 @@ export default function SearchScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -441,11 +450,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginBottom: spacing.xs,
   },
   albumYear: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   userResultItem: {
@@ -475,7 +484,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   userBio: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   emptyStateContainer: {
@@ -490,7 +499,7 @@ const styles = StyleSheet.create({
   },
   emptyStateSubtext: {
     textAlign: 'center',
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   discoveryContainer: {
     flex: 1,
@@ -534,8 +543,11 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   trendingArtist: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
+});
+
+const createSearchInputStyles = (theme: any) => StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -544,14 +556,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.outline,
   },
   searchInput: {
     flex: 1,
     paddingVertical: 0,
     paddingHorizontal: spacing.sm,
     fontSize: 16,
-    color: theme.colors.text,
+    color: theme.colors.onSurface,
   },
   searchIcon: {
     fontSize: 24,
