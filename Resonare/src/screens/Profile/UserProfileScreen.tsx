@@ -370,7 +370,7 @@ export default function UserProfileScreen() {
 
   const renderStatCard = (title: string, value: number, onPress?: () => void) => (
     <TouchableOpacity
-      style={[styles.statCard, { backgroundColor: currentTheme.colors.surface }]}
+      style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
       onPress={onPress}
       disabled={!onPress}
     >
