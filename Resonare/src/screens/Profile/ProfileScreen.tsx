@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
-// SafeAreaView import removed - using regular View since header handles safe area
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -53,6 +53,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = createStyles(theme);
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
@@ -342,7 +343,7 @@ export default function ProfileScreen() {
   if (loading && user) {
     const styles = createStyles(theme);
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" />
         <Text variant="bodyLarge" style={styles.loadingText}>
           Loading profile...
@@ -355,7 +356,7 @@ export default function ProfileScreen() {
   if (!user) {
     const styles = createStyles(theme);
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <Text variant="bodyLarge" style={styles.loadingText}>
           Please log in to view your profile.
         </Text>
@@ -657,5 +658,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    color: theme.colors.onSurfaceVariant,
   },
 });
