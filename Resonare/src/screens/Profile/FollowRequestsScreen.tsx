@@ -296,9 +296,4 @@ const createStyles = (theme: any) => StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-});: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
 });
