@@ -339,7 +339,7 @@ export default function EditProfileScreen() {
                 style={styles.previewAvatar}
               />
               <View style={styles.previewText}>
-                <Text variant="titleMedium">{username}</Text>
+                <Text variant="titleMedium" style={styles.previewUsername}>{username}</Text>
                 <Text variant="bodySmall" style={styles.previewLabel}>
                   This is how your profile will look
                 </Text>
@@ -413,7 +413,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: theme.colors.surface,
   },
   avatarHint: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
   removeImageButton: {
@@ -427,7 +427,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
   usernameHint: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   previewContainer: {
     flexDirection: 'row',
@@ -443,7 +443,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
   },
   previewLabel: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   buttonContainer: {
