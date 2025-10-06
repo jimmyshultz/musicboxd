@@ -10,6 +10,7 @@ import {
 import {
   Text,
   ActivityIndicator,
+  useTheme,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
