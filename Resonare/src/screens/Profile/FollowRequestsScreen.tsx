@@ -5,7 +5,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import { Text, ActivityIndicator, Button, Avatar, Card } from 'react-native-paper';
+import { Text, ActivityIndicator, Button, Avatar, Card, useTheme } from 'react-native-paper';
 
 import { useSelector } from 'react-redux';
 
@@ -13,9 +13,7 @@ import { useSelector } from 'react-redux';
 import { FollowRequest } from '../../types/database';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { spacing } from '../../utils/theme';
 
 export default function FollowRequestsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
@@ -208,20 +206,20 @@ export default function FollowRequestsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
-    color: colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
   },
   scrollContainer: {
     flex: 1,
@@ -231,12 +229,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: spacing.lg,
-    color: colors.onBackground,
+    color: theme.colors.onBackground,
     fontWeight: 'bold',
   },
   requestCard: {
     marginBottom: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
   requestContent: {
     padding: spacing.md,
@@ -253,15 +251,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   username: {
-    color: colors.onSurface,
+    color: theme.colors.onSurface,
     fontWeight: '600',
   },
   displayName: {
-    color: colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   requestTime: {
-    color: colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   actionButtons: {
@@ -273,13 +271,13 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   rejectButton: {
-    borderColor: colors.outline,
+    borderColor: theme.colors.outline,
   },
   rejectButtonText: {
-    color: colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
   },
   acceptButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: theme.colors.primary,
   },
   emptyContainer: {
     flex: 1,
@@ -289,12 +287,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.xl * 2,
   },
   emptyTitle: {
-    color: colors.onBackground,
+    color: theme.colors.onBackground,
     marginBottom: spacing.md,
     textAlign: 'center',
   },
   emptyMessage: {
-    color: colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+});: {
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 24,
   },

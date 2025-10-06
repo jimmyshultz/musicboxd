@@ -12,12 +12,13 @@ import {
   Avatar,
   Card,
   Switch,
+  useTheme,
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { updateProfile } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
 interface ProfileSetupScreenProps {
   navigation: any;
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   subtitle: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.xl,
   },
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   privacyDescription: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 16,
   },
   buttonContainer: {
@@ -236,6 +237,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   skipButton: {
+    paddingVertical: spacing.xs,
+  },
+});cing.xs,
+  },
+}); {
     paddingVertical: spacing.xs,
   },
 });
