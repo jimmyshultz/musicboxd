@@ -38,6 +38,8 @@ export default function SettingsScreen() {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   
   const [settings, setSettings] = useState<UserSettings>({
     isPrivate: false,
