@@ -273,7 +273,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   section: {
     marginBottom: spacing.xl,
@@ -302,7 +302,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
   settingDescription: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 16,
   },
   accountItem: {
@@ -315,10 +315,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   accountItemText: {
     fontWeight: '500',
+    color: theme.colors.onSurface,
   },
   chevron: {
     fontSize: 20,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   divider: {
     backgroundColor: theme.colors.border,
@@ -337,7 +338,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   footerText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.xs,
   },
