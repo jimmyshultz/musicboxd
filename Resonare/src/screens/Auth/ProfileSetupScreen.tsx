@@ -181,7 +181,7 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
