@@ -3,13 +3,13 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useColorScheme, TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
+import { useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
 import { RootState } from '../store';
-import { theme } from '../utils/theme';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -37,8 +37,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Back button component
 const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const theme = useTheme();
   
   const handlePress = React.useCallback(() => {
     if (customOnPress) {
@@ -53,7 +52,7 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
       onPress={handlePress}
       style={backButtonStyles.container}
     >
-      <Icon name="arrow-left" size={18} color={currentTheme.colors.onSurface} />
+      <Icon name="arrow-left" size={18} color={theme.colors.onSurface} />
     </TouchableOpacity>
   );
 });
@@ -92,16 +91,15 @@ const SearchStack = createStackNavigator();
 const ProfileStack = createStackNavigator();
 
 function HomeStackNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const theme = useTheme();
 
   return (
     <HomeStack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: currentTheme.colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: currentTheme.colors.onSurface,
+        headerTintColor: theme.colors.onSurface,
       }}
     >
       <HomeStack.Screen
@@ -246,16 +244,15 @@ function HomeStackNavigator() {
 }
 
 function SearchStackNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const theme = useTheme();
 
   return (
     <SearchStack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: currentTheme.colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: currentTheme.colors.onSurface,
+        headerTintColor: theme.colors.onSurface,
       }}
     >
       <SearchStack.Screen
@@ -399,16 +396,15 @@ function SearchStackNavigator() {
 }
 
 function ProfileStackNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const theme = useTheme();
 
   return (
     <ProfileStack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: currentTheme.colors.surface,
+          backgroundColor: theme.colors.surface,
         },
-        headerTintColor: currentTheme.colors.onSurface,
+        headerTintColor: theme.colors.onSurface,
       }}
     >
       <ProfileStack.Screen
@@ -586,16 +582,16 @@ function ProfileStackNavigator() {
 
 function MainTabNavigator() {
   const isDark = useColorScheme() === 'dark';
-  const currentTheme = isDark ? theme.dark : theme.light;
+  const theme = isDark ? theme.dark : theme.light;
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: createTabBarIcon(route.name),
-        tabBarActiveTintColor: currentTheme.colors.primary,
+        tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: isDark ? '#666' : '#999',
         tabBarStyle: {
-          backgroundColor: currentTheme.colors.surface,
+          backgroundColor: theme.colors.surface,
         },
         headerShown: false, // Hide headers since they're handled by stack navigators
       })}
@@ -618,7 +614,7 @@ function MainTabNavigator() {
 
 export default function AppNavigator() {
   const colorScheme = useColorScheme();
-  const currentTheme = colorScheme === 'dark' ? theme.dark : theme.light;
+  const theme = colorScheme === 'dark' ? theme.dark : theme.light;
   const { user } = useSelector((state: RootState) => state.auth);
 
   return (
@@ -626,9 +622,9 @@ export default function AppNavigator() {
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: currentTheme.colors.surface,
+            backgroundColor: theme.colors.surface,
           },
-          headerTintColor: currentTheme.colors.onSurface,
+          headerTintColor: theme.colors.onSurface,
         }}
       >
         {user ? (
