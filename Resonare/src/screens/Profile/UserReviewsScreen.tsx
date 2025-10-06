@@ -197,7 +197,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     flexDirection: 'row',
@@ -214,9 +214,10 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   headerTitle: {
     fontWeight: 'bold',
+    color: theme.colors.onSurface,
   },
   headerSubtitle: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   scrollView: {
@@ -250,7 +251,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -259,7 +260,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
 
   reviewDate: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   emptyContainer: {
@@ -272,9 +273,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: spacing.md,
     textAlign: 'center',
+    color: theme.colors.onSurface,
   },
   emptyText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
   },
