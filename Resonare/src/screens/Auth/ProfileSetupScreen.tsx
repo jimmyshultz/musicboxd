@@ -239,9 +239,4 @@ const createStyles = (theme: any) => StyleSheet.create({
   skipButton: {
     paddingVertical: spacing.xs,
   },
-});cing.xs,
-  },
-}); {
-    paddingVertical: spacing.xs,
-  },
 });
