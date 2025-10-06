@@ -24,7 +24,7 @@ import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { storageService } from '../../services/storageService';
 import { updateProfile } from '../../store/slices/authSlice';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
 type EditProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -39,6 +39,8 @@ export default function EditProfileScreen() {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [username, setUsername] = useState(user?.username || '');
   const [_profilePicture, _setProfilePicture] = useState(user?.profilePicture || '');
@@ -370,7 +372,7 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
