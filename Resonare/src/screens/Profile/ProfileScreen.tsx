@@ -341,7 +341,6 @@ export default function ProfileScreen() {
   );
 
   if (loading && user) {
-    const styles = createStyles(theme);
     return (
       <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" />
@@ -354,7 +353,6 @@ export default function ProfileScreen() {
 
   // This case should never happen with proper auth flow, but just in case
   if (!user) {
-    const styles = createStyles(theme);
     return (
       <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <Text variant="bodyLarge" style={styles.loadingText}>

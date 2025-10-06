@@ -27,6 +27,8 @@ interface ProfileSetupScreenProps {
 export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   
   const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');

@@ -17,6 +17,8 @@ import { spacing } from '../../utils/theme';
 
 export default function FollowRequestsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   
   const [requests, setRequests] = useState<FollowRequest[]>([]);
   const [loading, setLoading] = useState(true);

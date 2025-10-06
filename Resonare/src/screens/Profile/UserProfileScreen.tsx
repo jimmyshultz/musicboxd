@@ -53,19 +53,8 @@ export default function UserProfileScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   
-  // Safety check - if theme is not ready, show loading
-  if (!theme || !theme.colors) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
-        <ActivityIndicator size="large" />
-        <Text style={{ marginTop: 16, color: '#666' }}>Loading...</Text>
-      </View>
-    );
-  }
-  
   const { userId } = route.params;
   const styles = createStyles(theme);
-
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -396,7 +385,6 @@ export default function UserProfileScreen() {
   }
 
   if (!user) {
-    const styles = createStyles(theme);
     return (
       <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <Text variant="bodyLarge" style={styles.loadingText}>
@@ -669,6 +657,21 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginHorizontal: spacing.lg,
     ...shadows.small,
   },
+  emptyActivityText: {
+    fontWeight: 'bold',
+    marginBottom: spacing.xs,
+  },
+  emptyActivitySubtext: {
+    color: theme.colors.onSurfaceVariant,
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.lg,
+  },
+});,
   emptyActivityText: {
     fontWeight: 'bold',
     marginBottom: spacing.xs,
