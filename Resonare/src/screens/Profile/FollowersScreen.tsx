@@ -271,7 +271,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
   userInfo: {
     flexDirection: 'row',
@@ -289,7 +289,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
   bio: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   followButton: {
     minWidth: 100,
@@ -301,7 +301,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingTop: spacing.xl * 2,
   },
   emptyText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
 });

@@ -205,7 +205,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     padding: spacing.lg,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
 
   headerContent: {

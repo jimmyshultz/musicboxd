@@ -316,7 +316,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
   },
   removeButton: {
@@ -367,7 +367,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
   searchResultsGrid: {

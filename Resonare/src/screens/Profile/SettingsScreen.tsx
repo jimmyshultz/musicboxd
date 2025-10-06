@@ -322,7 +322,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
   },
   divider: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.outline,
     height: 1,
   },
   logoutSection: {
