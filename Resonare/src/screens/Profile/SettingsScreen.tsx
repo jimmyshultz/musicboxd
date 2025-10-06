@@ -12,6 +12,7 @@ import {
   Divider,
   ActivityIndicator,
   Button,
+  useTheme,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
