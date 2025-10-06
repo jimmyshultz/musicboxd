@@ -666,6 +666,4 @@ const backButtonStyles = StyleSheet.create({
   text: {
     fontSize: 18,
   },
-});,
-  },
 });
