@@ -581,8 +581,7 @@ function ProfileStackNavigator() {
 }
 
 function MainTabNavigator() {
-  const isDark = useColorScheme() === 'dark';
-  const theme = isDark ? theme.dark : theme.light;
+  const theme = useTheme();
 
   return (
     <Tab.Navigator
