@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
+import { Text, ActivityIndicator, Searchbar, useTheme } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 
 import { Album } from '../../types';
