@@ -613,8 +613,7 @@ function MainTabNavigator() {
 }
 
 export default function AppNavigator() {
-  const colorScheme = useColorScheme();
-  const theme = colorScheme === 'dark' ? theme.dark : theme.light;
+  const theme = useTheme();
   const { user } = useSelector((state: RootState) => state.auth);
 
   return (
@@ -666,5 +665,7 @@ const backButtonStyles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
+  },
+});,
   },
 });
