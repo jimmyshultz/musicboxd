@@ -214,21 +214,21 @@ export default function NewFromFriendsScreen() {
 const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.theme.colors.surface,
+    backgroundColor: theme.colors.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: theme.theme.colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.theme.colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.theme.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     flexDirection: 'row',
