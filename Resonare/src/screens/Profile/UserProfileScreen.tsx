@@ -671,19 +671,4 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
   },
-});,
-  emptyActivityText: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  emptyActivitySubtext: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
 });
