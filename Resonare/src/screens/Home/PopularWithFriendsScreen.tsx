@@ -314,7 +314,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   friendAvatar: {
     borderWidth: 2,
-    borderColor: colors.background,
+    borderColor: theme.colors.background,
   },
   overlappingAvatar: {
     marginLeft: -8, // Adjust for overlapping avatars
