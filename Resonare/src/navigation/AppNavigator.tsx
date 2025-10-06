@@ -588,7 +588,7 @@ function MainTabNavigator() {
       screenOptions={({ route }) => ({
         tabBarIcon: createTabBarIcon(route.name),
         tabBarActiveTintColor: theme.colors.primary,
-        tabBarInactiveTintColor: isDark ? '#666' : '#999',
+        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarStyle: {
           backgroundColor: theme.colors.surface,
         },
