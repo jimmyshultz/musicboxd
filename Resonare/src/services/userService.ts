@@ -344,14 +344,17 @@ export class UserService {
     if (!currentUserId) return [];
     
     const user = await this.getCurrentUser();
-    if (!user || user.id !== currentUserId) return [];
+    if (!user) return [];
+    
+    // Use the authenticated user's ID instead of the parameter to avoid session/timing issues
+    const authenticatedUserId = user.id;
 
     try {
       // Get users that the current user is not following
       const { data: followingData } = await this.client
         .from('user_follows')
         .select('following_id')
-        .eq('follower_id', currentUserId);
+        .eq('follower_id', authenticatedUserId);
 
       const followingIds = followingData?.map(f => f.following_id) || [];
       
@@ -360,7 +363,7 @@ export class UserService {
         .from('user_profiles')
         .select('*')
         .eq('is_private', false)
-        .not('id', 'eq', currentUserId)
+        .not('id', 'eq', authenticatedUserId)
         .limit(limit);
 
       // Only add the NOT IN clause if there are following IDs
