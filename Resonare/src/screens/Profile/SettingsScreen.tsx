@@ -12,6 +12,7 @@ import {
   Divider,
   ActivityIndicator,
   Button,
+  useTheme,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -22,7 +23,7 @@ import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { logout } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
-import { colors, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
 type SettingsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -37,6 +38,8 @@ export default function SettingsScreen() {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   
   const [settings, setSettings] = useState<UserSettings>({
     isPrivate: false,
@@ -238,7 +241,7 @@ export default function SettingsScreen() {
         <Button
           mode="outlined"
           onPress={handleLogout}
-          textColor={colors.error}
+          textColor={theme.colors.error}
           buttonColor="transparent"
           style={styles.logoutButton}
         >
@@ -258,10 +261,10 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
@@ -270,7 +273,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   section: {
     marginBottom: spacing.xl,
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.md,
     fontWeight: '600',
-    color: colors.primary,
+    color: theme.colors.primary,
   },
   settingItem: {
     flexDirection: 'row',
@@ -288,7 +291,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
   settingContent: {
     flex: 1,
@@ -299,7 +302,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   settingDescription: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 16,
   },
   accountItem: {
@@ -308,17 +311,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
   accountItemText: {
     fontWeight: '500',
+    color: theme.colors.onSurface,
   },
   chevron: {
     fontSize: 20,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   divider: {
-    backgroundColor: colors.border,
+    backgroundColor: theme.colors.outline,
     height: 1,
   },
   logoutSection: {
@@ -326,7 +330,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   logoutButton: {
-    borderColor: colors.error,
+    borderColor: theme.colors.error,
   },
   footer: {
     alignItems: 'center',
@@ -334,7 +338,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   footerText: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.xs,
   },

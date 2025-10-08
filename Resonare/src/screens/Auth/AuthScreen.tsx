@@ -10,12 +10,13 @@ import {
   Text,
   Card,
   ActivityIndicator,
+  useTheme,
 } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { signInWithGoogle, signInWithApple } from '../../store/slices/authSlice';
 import { AuthService } from '../../services/authService';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 // import AppleSignInDebug from '../../components/AppleSignInDebug'; // Removed - Apple Sign-In working
 
 // Safely import Apple Button with fallback
@@ -33,6 +34,8 @@ try {
 export default function AuthScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const [isAppleSignInAvailable, setIsAppleSignInAvailable] = useState(false);
 
   useEffect(() => {
@@ -173,7 +176,7 @@ export default function AuthScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -191,7 +194,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginBottom: spacing.xl,
     textAlign: 'center',
   },
@@ -215,7 +218,7 @@ const styles = StyleSheet.create({
   },
   description: {
     textAlign: 'center',
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 20,
   },
   buttonContainer: {
@@ -284,7 +287,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     textAlign: 'center',
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.sm,
     fontSize: 12,
   },

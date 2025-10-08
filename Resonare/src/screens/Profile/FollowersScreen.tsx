@@ -12,12 +12,13 @@ import {
   Button,
   ActivityIndicator,
   SegmentedButtons,
+  useTheme,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 import { RootState } from '../../store';
 import { SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { UserProfile } from '../../types/database';
@@ -43,6 +44,8 @@ export default function FollowersScreen() {
   const route = useRoute<FollowersScreenRouteProp>();
   const navigation = useNavigation<FollowersScreenNavigationProp>();
   const dispatch = useDispatch();
+  const theme = useTheme();
+  const styles = createStyles(theme);
   
   const { userId, username, initialTab = 'followers' } = route.params;
   const { following } = useSelector((state: RootState) => state.user);
@@ -220,7 +223,7 @@ export default function FollowersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
   userInfo: {
     flexDirection: 'row',
@@ -286,7 +289,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   bio: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   followButton: {
     minWidth: 100,
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl * 2,
   },
   emptyText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
 });

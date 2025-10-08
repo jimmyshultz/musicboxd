@@ -11,12 +11,13 @@ import {
 import {
   Text,
   ActivityIndicator,
+  useTheme,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
 
-import { theme, spacing, shadows } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
 import { Listen, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { RootState } from '../../store';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
@@ -41,6 +42,8 @@ export default function ListenedAlbumsScreen() {
   const navigation = useNavigation<ListenedAlbumsScreenNavigationProp>();
   const { userId, username } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [listenedAlbums, setListenedAlbums] = useState<ListenedAlbumData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,7 +183,7 @@ export default function ListenedAlbumsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -197,7 +200,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     flexDirection: 'row',
@@ -205,7 +208,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
 
   headerContent: {
@@ -216,7 +219,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   scrollView: {
@@ -250,7 +253,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginBottom: spacing.xs,
   },
   listenDate: {
@@ -276,7 +279,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   emptyText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
   },

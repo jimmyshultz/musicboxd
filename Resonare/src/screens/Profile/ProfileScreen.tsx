@@ -6,10 +6,9 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
-  useColorScheme,
 } from 'react-native';
-import { Text, Avatar, ActivityIndicator } from 'react-native-paper';
-// SafeAreaView import removed - using regular View since header handles safe area
+import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -23,7 +22,7 @@ import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
 import { SegmentedButtons } from 'react-native-paper';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
@@ -53,8 +52,9 @@ export default function ProfileScreen() {
   const dispatch = useDispatch();
   const navigation = useNavigation<ProfileScreenNavigationProp>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const isDarkMode = useColorScheme() === 'dark';
-  const currentTheme = isDarkMode ? theme.dark : theme.light;
+  const theme = useTheme();
+  const insets = useSafeAreaInsets();
+  const styles = createStyles(theme);
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
@@ -327,7 +327,7 @@ export default function ProfileScreen() {
 
   const renderStatCard = (title: string, value: number, onPress?: () => void) => (
     <TouchableOpacity
-      style={[styles.statCard, { backgroundColor: currentTheme.colors.surface }]}
+      style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
       onPress={onPress}
       disabled={!onPress}
     >
@@ -342,7 +342,7 @@ export default function ProfileScreen() {
 
   if (loading && user) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" />
         <Text variant="bodyLarge" style={styles.loadingText}>
           Loading profile...
@@ -354,7 +354,7 @@ export default function ProfileScreen() {
   // This case should never happen with proper auth flow, but just in case
   if (!user) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <Text variant="bodyLarge" style={styles.loadingText}>
           Please log in to view your profile.
         </Text>
@@ -365,7 +365,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.safeArea}>
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}> 
+      <View style={styles.segmentHeader}> 
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -490,7 +490,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -501,9 +501,9 @@ const styles = StyleSheet.create({
   },
   segmentHeader: {
     padding: spacing.md,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
   profileHeader: {
     alignItems: 'center',
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     paddingBottom: 0, // Container handles bottom padding
   },
   editButton: {
-    color: theme.light.colors.primary,
+    color: theme.colors.primary,
     fontWeight: '600',
   },
   horizontalList: {
@@ -567,7 +567,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
   },
   ratingContainer: {
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     textAlign: 'center',
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   settingsContainer: {
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
   },
   settingsText: {
     fontSize: 16,
-    color: theme.light.colors.onSurface,
+    color: theme.colors.onSurface,
   },
   settingsItem: {
     flexDirection: 'row',
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
     ...shadows.small,
@@ -630,7 +630,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   emptyFavoritesSubtext: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
   },
@@ -638,7 +638,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
     ...shadows.small,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   emptyActivitySubtext: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
   },
@@ -656,5 +656,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+  },
+  loadingText: {
+    marginTop: spacing.md,
+    color: theme.colors.onSurfaceVariant,
   },
 });

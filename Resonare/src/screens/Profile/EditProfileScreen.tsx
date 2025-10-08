@@ -12,6 +12,7 @@ import {
   Button,
   Avatar,
   Card,
+  useTheme,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -24,7 +25,7 @@ import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { storageService } from '../../services/storageService';
 import { updateProfile } from '../../store/slices/authSlice';
-import { theme, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
 type EditProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -39,6 +40,8 @@ export default function EditProfileScreen() {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [username, setUsername] = useState(user?.username || '');
   const [_profilePicture, _setProfilePicture] = useState(user?.profilePicture || '');
@@ -336,7 +339,7 @@ export default function EditProfileScreen() {
                 style={styles.previewAvatar}
               />
               <View style={styles.previewText}>
-                <Text variant="titleMedium">{username}</Text>
+                <Text variant="titleMedium" style={styles.previewUsername}>{username}</Text>
                 <Text variant="bodySmall" style={styles.previewLabel}>
                   This is how your profile will look
                 </Text>
@@ -370,7 +373,7 @@ export default function EditProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -410,7 +413,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.surface,
   },
   avatarHint: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
   removeImageButton: {
@@ -424,7 +427,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   usernameHint: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   previewContainer: {
     flexDirection: 'row',
@@ -439,8 +442,12 @@ const styles = StyleSheet.create({
   previewText: {
     flex: 1,
   },
+  previewUsername: {
+    color: theme.colors.onSurface,
+    fontWeight: '600',
+  },
   previewLabel: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   buttonContainer: {

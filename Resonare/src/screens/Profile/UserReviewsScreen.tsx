@@ -10,13 +10,14 @@ import {
 import {
   Text,
   ActivityIndicator,
+  useTheme,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { useSelector } from 'react-redux';
 
-import { theme, spacing, shadows } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
 import { Review, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { RootState } from '../../store';
@@ -41,6 +42,8 @@ export default function UserReviewsScreen() {
   const navigation = useNavigation<UserReviewsScreenNavigationProp>();
   const { userId, username } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
 
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -181,7 +184,7 @@ export default function UserReviewsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -194,7 +197,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     flexDirection: 'row',
@@ -202,7 +205,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
 
   headerContent: {
@@ -211,9 +214,10 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontWeight: 'bold',
+    color: theme.colors.onSurface,
   },
   headerSubtitle: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
   },
   scrollView: {
@@ -247,7 +251,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   artistName: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   ratingRow: {
     flexDirection: 'row',
@@ -256,7 +260,7 @@ const styles = StyleSheet.create({
   },
 
   reviewDate: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   emptyContainer: {
@@ -269,9 +273,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: spacing.md,
     textAlign: 'center',
+    color: theme.colors.onSurface,
   },
   emptyText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     lineHeight: 22,
   },

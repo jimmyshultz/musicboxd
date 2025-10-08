@@ -6,10 +6,9 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
-  useColorScheme,
 } from 'react-native';
 
-import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -23,7 +22,7 @@ import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
-import { theme, spacing, shadows } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
 
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
@@ -51,12 +50,11 @@ export default function UserProfileScreen() {
   const route = useRoute<UserProfileScreenRouteProp>();
   const navigation = useNavigation<UserProfileScreenNavigationProp>();
   const dispatch = useDispatch();
-  const isDarkMode = useColorScheme() === 'dark';
-  const currentTheme = isDarkMode ? theme.dark : theme.light;
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   
   const { userId } = route.params;
-
+  const styles = createStyles(theme);
   const currentUser = useSelector((state: RootState) => state.auth.user);
   
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -361,7 +359,7 @@ export default function UserProfileScreen() {
 
   const renderStatCard = (title: string, value: number, onPress?: () => void) => (
     <TouchableOpacity
-      style={[styles.statCard, { backgroundColor: currentTheme.colors.surface }]}
+      style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
       onPress={onPress}
       disabled={!onPress}
     >
@@ -375,6 +373,7 @@ export default function UserProfileScreen() {
   );
 
   if (loading) {
+    const styles = createStyles(theme);
     return (
       <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" />
@@ -398,7 +397,7 @@ export default function UserProfileScreen() {
   return (
     <View style={styles.container}>
       {/* Segmented Control */}
-      <View style={[styles.segmentHeader, { backgroundColor: currentTheme.colors.surface, borderBottomColor: theme.colors.border }]}>
+      <View style={styles.segmentHeader}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -514,38 +513,40 @@ export default function UserProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.light.colors.background,
+    backgroundColor: theme.colors.background,
   },
   scrollContainer: {
     flex: 1,
-    backgroundColor: theme.light.colors.background,
+    backgroundColor: theme.colors.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: theme.light.colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingBottom: spacing.xs,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.outline,
   },
 
   segmentHeader: {
     padding: spacing.md,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline,
   },
   profileHeader: {
     alignItems: 'center',
@@ -594,7 +595,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
   },
   ratingContainer: {
@@ -626,14 +627,14 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     textAlign: 'center',
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },
   emptyFavoritesContainer: {
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
     ...shadows.small,
@@ -643,7 +644,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   emptyFavoritesSubtext: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
   },
@@ -651,7 +652,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing.xl,
     paddingHorizontal: spacing.lg,
-    backgroundColor: theme.light.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginHorizontal: spacing.lg,
     ...shadows.small,
@@ -661,7 +662,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   emptyActivitySubtext: {
-    color: theme.light.colors.onSurfaceVariant,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 14,
   },

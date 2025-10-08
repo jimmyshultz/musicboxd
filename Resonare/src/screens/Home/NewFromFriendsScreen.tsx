@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { Text, ActivityIndicator, Avatar } from 'react-native-paper';
+import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
@@ -17,9 +17,7 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { theme, spacing } from '../../utils/theme';
-
-const colors = theme.colors;
+import { spacing } from '../../utils/theme';
 
 type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -46,6 +44,8 @@ interface FriendActivity {
 export default function NewFromFriendsScreen() {
   const navigation = useNavigation<NewFromFriendsNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   const [activities, setActivities] = useState<FriendActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -211,24 +211,24 @@ export default function NewFromFriendsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   header: {
     flexDirection: 'row',
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
 
   headerTitle: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
     marginBottom: spacing.sm,
   },
@@ -296,11 +296,11 @@ const styles = StyleSheet.create({
   friendName: {
     fontSize: 11,
     fontWeight: '500',
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   timeAgo: {
     fontSize: 10,
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     opacity: 0.7,
   },
 });

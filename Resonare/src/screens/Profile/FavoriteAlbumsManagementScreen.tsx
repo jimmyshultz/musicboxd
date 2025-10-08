@@ -8,7 +8,7 @@ import {
   Dimensions,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
+import { Text, ActivityIndicator, Searchbar, useTheme } from 'react-native-paper';
 import { useSelector } from 'react-redux';
 
 import { Album } from '../../types';
@@ -16,7 +16,7 @@ import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { AlbumService } from '../../services/albumService';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
-import { colors, spacing } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 
 const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
@@ -24,6 +24,8 @@ const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
 
 export default function FavoriteAlbumsManagementScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const theme = useTheme();
+  const styles = createStyles(theme);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Album[]>([]);
@@ -247,14 +249,14 @@ export default function FavoriteAlbumsManagementScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -263,7 +265,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
     paddingBottom: spacing.lg,
-    backgroundColor: colors.surface,
+    backgroundColor: theme.colors.surface,
   },
 
   headerTitle: {
@@ -314,7 +316,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   artistName: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     lineHeight: 14,
   },
   removeButton: {
@@ -337,7 +339,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.sm,
     left: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: theme.colors.primary,
     borderRadius: 12,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
@@ -351,7 +353,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   limitWarning: {
-    color: colors.error || '#ff6b6b',
+    color: theme.colors.error || '#ff6b6b',
     textAlign: 'center',
     fontStyle: 'italic',
     marginBottom: spacing.md,
@@ -365,7 +367,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
   },
   searchResultsGrid: {
@@ -386,7 +388,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: spacing.sm,
     right: spacing.sm,
-    backgroundColor: colors.primary,
+    backgroundColor: theme.colors.primary,
     borderRadius: 12,
     width: 24,
     height: 24,
