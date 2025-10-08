@@ -340,16 +340,18 @@ export class UserService {
    * Get suggested users to follow (basic implementation)
    * In a real app, this would use a recommendation algorithm
    */
-  async getSuggestedUsers(limit: number = 5): Promise<UserProfile[]> {
+  async getSuggestedUsers(currentUserId: string, limit: number = 5): Promise<UserProfile[]> {
+    if (!currentUserId) return [];
+    
     const user = await this.getCurrentUser();
-    if (!user) return [];
+    if (!user || user.id !== currentUserId) return [];
 
     try {
       // Get users that the current user is not following
       const { data: followingData } = await this.client
         .from('user_follows')
         .select('following_id')
-        .eq('follower_id', user.id);
+        .eq('follower_id', currentUserId);
 
       const followingIds = followingData?.map(f => f.following_id) || [];
       
@@ -358,7 +360,7 @@ export class UserService {
         .from('user_profiles')
         .select('*')
         .eq('is_private', false)
-        .not('id', 'eq', user.id)
+        .not('id', 'eq', currentUserId)
         .limit(limit);
 
       // Only add the NOT IN clause if there are following IDs

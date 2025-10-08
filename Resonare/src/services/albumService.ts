@@ -29,37 +29,7 @@ function serializeListen(listen: Listen): any {
 export class AlbumService {
   // Store user interactions in memory (in real app, this would be API calls)
   private static userListens: Listen[] = [
-    // Add some demo data for testing
-    {
-      id: 'listen_demo_1',
-      userId: 'current-user-id',
-      albumId: '1',
-      dateListened: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    },
-    {
-      id: 'listen_demo_2',
-      userId: 'current-user-id',
-      albumId: '3',
-      dateListened: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-    },
-    {
-      id: 'listen_demo_3',
-      userId: 'current-user-id',
-      albumId: '4',
-      dateListened: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
-    },
-    {
-      id: 'listen_demo_4',
-      userId: 'current-user-id',
-      albumId: '2',
-      dateListened: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
-    },
-    {
-      id: 'listen_demo_5',
-      userId: 'current-user-id',
-      albumId: '5',
-      dateListened: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), // 20 days ago
-    },
+    // Demo data removed - will be populated dynamically when user is authenticated
     // Add data for user1 (indierocklover)
     {
       id: 'listen_user1_1',
@@ -144,43 +114,7 @@ export class AlbumService {
   ];
   
   private static userReviews: Review[] = [
-    // Add some demo ratings data for testing
-    {
-      id: 'review_demo_1',
-      userId: 'current-user-id',
-      albumId: '1',
-      rating: 5,
-      dateReviewed: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      likesCount: 0,
-      commentsCount: 0,
-    },
-    {
-      id: 'review_demo_2',
-      userId: 'current-user-id',
-      albumId: '3',
-      rating: 4,
-      dateReviewed: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      likesCount: 0,
-      commentsCount: 0,
-    },
-    {
-      id: 'review_demo_3',
-      userId: 'current-user-id',
-      albumId: '4',
-      rating: 5,
-      dateReviewed: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      likesCount: 0,
-      commentsCount: 0,
-    },
-    {
-      id: 'review_demo_4',
-      userId: 'current-user-id',
-      albumId: '2',
-      rating: 5,
-      dateReviewed: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-      likesCount: 0,
-      commentsCount: 0,
-    },
+    // Demo review data removed - will be populated dynamically when user is authenticated
     // Add review data for user1 (indierocklover)
     {
       id: 'review_user1_1',
