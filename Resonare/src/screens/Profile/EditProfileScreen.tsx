@@ -442,6 +442,10 @@ const createStyles = (theme: any) => StyleSheet.create({
   previewText: {
     flex: 1,
   },
+  previewUsername: {
+    color: theme.colors.onSurface,
+    fontWeight: '600',
+  },
   previewLabel: {
     color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
