@@ -257,7 +257,12 @@ export default function HomeScreen() {
 
   const loadDiscoverFriends = useCallback(async () => {
     try {
-      const currentUserId = currentUser?.id || 'current-user-id';
+      const currentUserId = currentUser?.id;
+      if (!currentUserId) {
+        setDiscoverFriends([]);
+        return;
+      }
+      
       const users = await userService.getSuggestedUsers(currentUserId, 20);
       
       if (users.length > 0) {
