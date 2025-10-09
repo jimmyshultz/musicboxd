@@ -18,6 +18,7 @@ import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
 import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
+import { initializeCrashAnalytics } from './src/services/crashAnalytics';
 
 // Suppress console output for beta users immediately
 suppressConsoleForBetaUsers();
@@ -26,18 +27,29 @@ function AppContent() {
   const isDarkMode = useColorScheme() === 'dark';
   const currentTheme = isDarkMode ? darkTheme : lightTheme;
 
-  // Validate Spotify integration on app startup
+  // Initialize app services and validate integrations
   useEffect(() => {
-    // Disable React Native error overlays for beta testers
-    if (Environment.isStaging || Environment.isProduction) {
-      LogBox.ignoreAllLogs(true);
-    }
-    
-    // Validate Spotify integration (only logs in development now)
-    const { configured } = quickValidation();
-    if (!configured && Environment.isDevelopment) {
-      console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
-    }
+    const initializeApp = async () => {
+      try {
+        // Initialize crash analytics first
+        await initializeCrashAnalytics();
+        
+        // Disable React Native error overlays for beta testers
+        if (Environment.isStaging || Environment.isProduction) {
+          LogBox.ignoreAllLogs(true);
+        }
+        
+        // Validate Spotify integration (only logs in development now)
+        const { configured } = quickValidation();
+        if (!configured && Environment.isDevelopment) {
+          console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
+        }
+      } catch (error) {
+        console.error('Failed to initialize app services:', error);
+      }
+    };
+
+    initializeApp();
   }, []);
 
   return (

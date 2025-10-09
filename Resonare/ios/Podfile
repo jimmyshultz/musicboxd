@@ -26,6 +26,9 @@ target 'Resonare' do
   # Add this line for Google Sign-In
   pod 'GoogleSignIn'
   
+  # Firebase Crashlytics
+  pod 'Firebase/Crashlytics'
+  
   # Note: Apple Sign-In (RNAppleAuthentication) is auto-linked by React Native 0.60+
 
   post_install do |installer|

@@ -13,13 +13,16 @@
     "setup": "npm install && npm run ios:setup",
     "lint": "eslint .",
     "start": "npx react-native start",
-    "test": "jest"
+    "test": "jest",
+    "verify:crash-analytics": "node scripts/verify-crash-analytics.js"
   },
   "dependencies": {
     "@invertase/react-native-apple-authentication": "^2.4.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-camera-roll/camera-roll": "^7.10.2",
     "@react-native-community/datetimepicker": "^8.2.0",
+    "@react-native-firebase/app": "^23.4.0",
+    "@react-native-firebase/crashlytics": "^23.4.0",
     "@react-native-google-signin/google-signin": "^15.0.0",
     "@react-native/new-app-screen": "0.80.1",
     "@react-navigation/bottom-tabs": "^7.4.2",

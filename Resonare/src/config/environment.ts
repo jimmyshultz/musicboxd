@@ -72,9 +72,21 @@ export const Logger = {
   error: (message: string, error?: any) => {
     console.error(`[${Environment.getDisplayName()}] ${message}`, error);
     
-    // In staging/production, this could send to error tracking service
+    // Send to crash reporting service
     if (Environment.isStaging || Environment.isProduction) {
-      // TODO: Integrate with error tracking service (Sentry, Bugsnag, etc.)
+      try {
+        // Import dynamically to avoid circular dependencies
+        import('../services/crashAnalytics').then(({ recordNonFatalError }) => {
+          const errorObj = error instanceof Error ? error : new Error(message);
+          recordNonFatalError(errorObj, {
+            logger_message: message,
+            environment: Environment.current,
+            timestamp: new Date().toISOString(),
+          });
+        });
+      } catch (importError) {
+        // Fail silently if crash analytics is not available
+      }
     }
   },
 

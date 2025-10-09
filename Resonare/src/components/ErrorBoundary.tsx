@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { colors, spacing } from '../utils/theme';
 import { Environment, Logger } from '../config/environment';
+import { recordError } from '../services/crashAnalytics';
 
 interface Props {
   children: ReactNode;
@@ -30,11 +31,17 @@ class ErrorBoundary extends Component<Props, State> {
       Logger.error('ErrorBoundary caught an error', { error, errorInfo });
     }
     
-    // In staging/production, send to crash reporting service silently
-    if (Environment.isStaging || Environment.isProduction) {
-      // Silent error tracking - no console logs visible to users
-      // TODO: Send to crash reporting service (Crashlytics, Sentry, Bugsnag)
-      // Example: crashReporting.recordError(error, errorInfo);
+    // Send to crash reporting service in all environments
+    try {
+      recordError(error, {
+        component_stack: errorInfo.componentStack,
+        error_boundary: 'ErrorBoundary',
+        environment: Environment.current,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (crashReportingError) {
+      // Fail silently - don't crash the error boundary itself
+      console.error('Failed to report error to crash analytics:', crashReportingError);
     }
   }
 
