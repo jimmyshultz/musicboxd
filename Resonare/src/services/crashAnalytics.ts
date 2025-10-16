@@ -20,10 +20,15 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
   async initialize(): Promise<void> {
     try {
-      // Enable crash collection based on environment
+      // In development, skip Firebase initialization entirely to avoid issues
+      if (Environment.isDevelopment) {
+        console.log('[CrashAnalytics] Skipping Firebase initialization in development environment');
+        this.isInitialized = true;
+        return;
+      }
+
+      // Enable crash collection for staging/production
       const shouldCollect = Environment.isStaging || Environment.isProduction;
-      
-      // Always initialize Firebase, but disable collection in development
       await crashlytics().setCrashlyticsCollectionEnabled(shouldCollect);
       
       if (shouldCollect) {
@@ -38,8 +43,6 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
         crashlytics().log('Crashlytics initialized successfully');
         
         console.log(`[CrashAnalytics] Initialized for ${Environment.current} environment`);
-      } else {
-        console.log('[CrashAnalytics] Initialized but disabled in development environment');
       }
       
       this.isInitialized = true;

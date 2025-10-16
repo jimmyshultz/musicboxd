@@ -19,7 +19,7 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
 import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
 import { initializeCrashAnalytics } from './src/services/crashAnalytics';
-import firebase from '@react-native-firebase/app';
+import { getApps } from '@react-native-firebase/app';
 
 // Suppress console output for beta users immediately
 suppressConsoleForBetaUsers();
@@ -33,14 +33,19 @@ function AppContent() {
     const initializeApp = async () => {
       try {
         // Initialize Firebase app first (required for all Firebase services)
-        if (!firebase.apps.length) {
-          console.log('[Firebase] Initializing Firebase app...');
+        const apps = getApps();
+        if (apps.length === 0) {
+          console.log('[Firebase] No Firebase apps found - Firebase will auto-initialize from config files');
         } else {
           console.log('[Firebase] Firebase app already initialized');
         }
         
-        // Initialize crash analytics
-        await initializeCrashAnalytics();
+        // Initialize crash analytics (with error handling for development)
+        try {
+          await initializeCrashAnalytics();
+        } catch (crashError) {
+          console.warn('[CrashAnalytics] Failed to initialize, continuing without crash analytics:', crashError.message);
+        }
         
         // Disable React Native error overlays for beta testers
         if (Environment.isStaging || Environment.isProduction) {
