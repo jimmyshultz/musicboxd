@@ -19,6 +19,7 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
 import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
 import { initializeCrashAnalytics } from './src/services/crashAnalytics';
+import firebase from '@react-native-firebase/app';
 
 // Suppress console output for beta users immediately
 suppressConsoleForBetaUsers();
@@ -31,7 +32,14 @@ function AppContent() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Initialize crash analytics first
+        // Initialize Firebase app first (required for all Firebase services)
+        if (!firebase.apps.length) {
+          console.log('[Firebase] Initializing Firebase app...');
+        } else {
+          console.log('[Firebase] Firebase app already initialized');
+        }
+        
+        // Initialize crash analytics
         await initializeCrashAnalytics();
         
         // Disable React Native error overlays for beta testers

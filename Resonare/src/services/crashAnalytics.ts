@@ -22,10 +22,12 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
     try {
       // Enable crash collection based on environment
       const shouldCollect = Environment.isStaging || Environment.isProduction;
+      
+      // Always initialize Firebase, but disable collection in development
       await crashlytics().setCrashlyticsCollectionEnabled(shouldCollect);
       
       if (shouldCollect) {
-        // Set initial app info
+        // Set initial app info for production/staging
         crashlytics().setAttributes({
           environment: Environment.current,
           app_version: '1.0.0', // TODO: Get from package.json or build config
@@ -37,13 +39,19 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
         
         console.log(`[CrashAnalytics] Initialized for ${Environment.current} environment`);
       } else {
-        console.log('[CrashAnalytics] Disabled in development environment');
+        console.log('[CrashAnalytics] Initialized but disabled in development environment');
       }
       
       this.isInitialized = true;
     } catch (error) {
       console.error('[CrashAnalytics] Failed to initialize:', error);
-      throw error;
+      // Don't throw in development - just log and continue
+      if (Environment.isDevelopment) {
+        console.warn('[CrashAnalytics] Continuing without crash analytics in development');
+        this.isInitialized = true;
+      } else {
+        throw error;
+      }
     }
   }
 
