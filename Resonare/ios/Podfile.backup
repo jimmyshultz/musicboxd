@@ -26,14 +26,8 @@ target 'Resonare' do
   # Add this line for Google Sign-In
   pod 'GoogleSignIn'
   
-  # Firebase Crashlytics with specific modular headers for dependencies
+  # Firebase Crashlytics
   pod 'Firebase/Crashlytics'
-  pod 'GoogleUtilities', :modular_headers => true
-  pod 'FirebaseCore', :modular_headers => true
-  pod 'FirebaseInstallations', :modular_headers => true
-  pod 'GoogleDataTransport', :modular_headers => true
-  pod 'nanopb', :modular_headers => true
-  pod 'FirebaseCoreExtension', :modular_headers => true
   
   # Note: Apple Sign-In (RNAppleAuthentication) is auto-linked by React Native 0.60+
 
@@ -55,16 +49,6 @@ target 'Resonare' do
           config.build_settings = config.build_settings.merge(installer.pods_project.build_configurations.find { |c| c.name == 'Debug' }.build_settings)
         when 'Release-Development', 'Release-Staging'
           config.build_settings = config.build_settings.merge(installer.pods_project.build_configurations.find { |c| c.name == 'Release' }.build_settings)
-        end
-      end
-    end
-
-    # Ensure Firebase Swift modules are properly configured
-    installer.pods_project.targets.each do |target|
-      if ['FirebaseCoreInternal', 'FirebaseCrashlytics', 'FirebaseSessions', 'GoogleUtilities', 'FirebaseCore', 'FirebaseInstallations', 'GoogleDataTransport', 'nanopb', 'FirebaseCoreExtension'].include?(target.name)
-        target.build_configurations.each do |config|
-          config.build_settings['DEFINES_MODULE'] = 'YES'
-          config.build_settings['SWIFT_VERSION'] = '5.0'
         end
       end
     end

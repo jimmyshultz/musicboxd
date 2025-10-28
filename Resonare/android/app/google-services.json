@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "148204198310",
+    "project_id": "resonare-app",
+    "storage_bucket": "resonare-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:148204198310:android:8f0c7c7cc175fc084e5cd6",
+        "android_client_info": {
+          "package_name": "com.jimmyshultz.resonare"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
