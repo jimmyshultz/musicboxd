@@ -373,11 +373,11 @@ export default function UserProfileScreen() {
   );
 
   if (loading) {
-    const styles = createStyles(theme);
+    const loadingStyles = createStyles(theme);
     return (
-      <View style={[styles.centerContainer, { paddingTop: insets.top }]}>
+      <View style={[loadingStyles.centerContainer, { paddingTop: insets.top }]}>
         <ActivityIndicator size="large" />
-        <Text variant="bodyLarge" style={styles.loadingText}>
+        <Text variant="bodyLarge" style={loadingStyles.loadingText}>
           Loading profile...
         </Text>
       </View>

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react'
 import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
@@ -42,6 +42,8 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   const [_sharing, setSharing] = useState(false);
   const [showShareView, setShowShareView] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [editingReview, setEditingReview] = useState(false);
+  const [pendingReview, setPendingReview] = useState<string>('');
   const shareViewRef = React.useRef<View>(null);
 
   const load = useCallback(async () => {
@@ -56,6 +58,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           albumId: e.album_id,
           diaryDate: e.diary_date,
           ratingAtTime: e.rating || undefined,
+          review: e.notes || undefined,
           createdAt: e.created_at,
           updatedAt: e.updated_at,
         };
@@ -175,6 +178,14 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           <Menu.Item 
             onPress={() => {
               setMenuVisible(false);
+              handleEditReview();
+            }} 
+            title="Edit Review" 
+            leadingIcon="pencil" 
+          />
+          <Menu.Item 
+            onPress={() => {
+              setMenuVisible(false);
               onDelete();
             }} 
             title="Delete" 
@@ -183,7 +194,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
         </Menu>
       ) : undefined,
     });
-  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry, onDelete]);
+  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry, onDelete, handleEditReview]);
 
   const onChangeDate = (_: any, selected?: Date) => {
     if (selected) {
@@ -236,7 +247,8 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           userId: res.entry.user_id,
           albumId: res.entry.album_id,
           diaryDate: res.entry.diary_date,
-                  ratingAtTime: res.entry.rating || undefined,
+          ratingAtTime: res.entry.rating || undefined,
+          review: res.entry.notes || undefined,
           createdAt: res.entry.created_at,
           updatedAt: res.entry.updated_at,
         };
@@ -248,6 +260,45 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     }
     setSaving(false);
   };
+
+  const handleEditReview = useCallback(() => {
+    setPendingReview(entry?.review || '');
+    setEditingReview(true);
+  }, [entry?.review]);
+
+  const handleCancelReview = useCallback(() => {
+    setEditingReview(false);
+    setPendingReview('');
+  }, []);
+
+  const handleSaveReview = useCallback(async () => {
+    if (!entry) return;
+    setSaving(true);
+    try {
+      const reviewText = pendingReview.trim() || undefined;
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { notes: reviewText });
+      if (res.success && res.entry) {
+        // Convert from new service format to old DiaryEntry format
+        const convertedEntry: DiaryEntry = {
+          id: res.entry.id,
+          userId: res.entry.user_id,
+          albumId: res.entry.album_id,
+          diaryDate: res.entry.diary_date,
+          ratingAtTime: res.entry.rating || undefined,
+          review: res.entry.notes || undefined,
+          createdAt: res.entry.created_at,
+          updatedAt: res.entry.updated_at,
+        };
+        setEntry(convertedEntry);
+        dispatch(upsertDiaryEntry(convertedEntry));
+      }
+    } catch (error) {
+      console.error('Error updating diary review:', error);
+    }
+    setSaving(false);
+    setEditingReview(false);
+    setPendingReview('');
+  }, [entry, dispatch, pendingReview]);
 
   if (loading || !entry) {
     const styles = createStyles(theme);
@@ -281,8 +332,8 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
                     <Text style={styles.shareRatingText}>{entry.ratingAtTime.toFixed(1)} stars</Text>
                   </View>
                 )}
-                {entry.notes && (
-                  <Text style={styles.shareNotes}>"{entry.notes}"</Text>
+                {entry.review && (
+                  <Text style={styles.shareNotes}>"{entry.review}"</Text>
                 )}
                 <Text style={styles.shareAppName}>Resonare</Text>
               </View>
@@ -327,7 +378,53 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
         </View>
       </View>
 
-
+      {/* Review Section - Only show if there's a review or user can edit */}
+      {(entry.review || canEdit) && (
+        <View style={styles.reviewSection}>
+          <Text variant="titleMedium" style={styles.reviewTitle}>Review</Text>
+          {editingReview && canEdit ? (
+            <View style={styles.reviewEditContainer}>
+              <TextInput
+                mode="outlined"
+                placeholder="Share your thoughts about this album..."
+                value={pendingReview}
+                onChangeText={(text) => {
+                  if (text.length <= 280) {
+                    setPendingReview(text);
+                  }
+                }}
+                multiline
+                numberOfLines={4}
+                maxLength={280}
+                style={styles.reviewInput}
+              />
+              <Text variant="bodySmall" style={styles.characterCount}>
+                {pendingReview.length}/280
+              </Text>
+              <View style={styles.reviewButtons}>
+                <Button mode="outlined" onPress={handleCancelReview} disabled={saving}>
+                  Cancel
+                </Button>
+                <Button mode="contained" onPress={handleSaveReview} disabled={saving}>
+                  Save
+                </Button>
+              </View>
+            </View>
+          ) : (
+            <View>
+              {entry.review ? (
+                <Text variant="bodyMedium" style={styles.reviewText}>
+                  {entry.review}
+                </Text>
+              ) : (
+                <Text variant="bodyMedium" style={styles.noReviewText}>
+                  Tap "Edit Review" to add your thoughts
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
+      )}
 
       {showPicker && (
         <View style={styles.datePickerContainer}>
@@ -449,6 +546,39 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.outline },
   rowAlignCenter: { alignItems: 'center' },
   rowDirection: { flexDirection: 'row' },
-
+  reviewSection: {
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+  },
+  reviewTitle: {
+    fontWeight: '600',
+    marginBottom: spacing.md,
+  },
+  reviewText: {
+    lineHeight: 22,
+    color: theme.colors.onSurface,
+  },
+  noReviewText: {
+    lineHeight: 22,
+    color: theme.colors.onSurfaceVariant,
+    fontStyle: 'italic',
+  },
+  reviewEditContainer: {
+    marginTop: spacing.sm,
+  },
+  reviewInput: {
+    minHeight: 100,
+  },
+  reviewButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  characterCount: {
+    textAlign: 'right',
+    marginTop: spacing.xs,
+    color: theme.colors.onSurfaceVariant,
+  },
 
  });
