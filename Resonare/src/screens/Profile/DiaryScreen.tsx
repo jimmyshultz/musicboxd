@@ -64,6 +64,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
         albumId: entry.album_id,
         diaryDate: entry.diary_date,
         ratingAtTime: entry.rating || undefined,
+        review: entry.notes || undefined,
         createdAt: entry.created_at,
         updatedAt: entry.updated_at,
       }));
@@ -79,10 +80,8 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
             releaseDate: entry.albums.release_date || '',
             genre: entry.albums.genres || [],
             coverImageUrl: entry.albums.image_url || '',
-            spotifyUrl: entry.albums.spotify_url || '',
-            totalTracks: entry.albums.total_tracks || 0,
-            albumType: entry.albums.album_type || 'album',
             trackList: [], // Empty for now
+            externalIds: {},
           };
         }
       });
@@ -112,6 +111,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
         albumId: entry.album_id,
         diaryDate: entry.diary_date,
         ratingAtTime: entry.rating || undefined,
+        review: entry.notes || undefined,
         createdAt: entry.created_at,
         updatedAt: entry.updated_at,
       }));
@@ -127,10 +127,8 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
             releaseDate: entry.albums.release_date || '',
             genre: entry.albums.genres || [],
             coverImageUrl: entry.albums.image_url || '',
-            spotifyUrl: entry.albums.spotify_url || '',
-            totalTracks: entry.albums.total_tracks || 0,
-            albumType: entry.albums.album_type || 'album',
             trackList: [], // Empty for now
+            externalIds: {},
           };
         }
       });

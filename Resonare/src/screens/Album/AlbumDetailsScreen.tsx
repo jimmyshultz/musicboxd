@@ -16,6 +16,7 @@ import {
   Chip,
   Divider,
   useTheme,
+  TextInput,
 } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
@@ -93,12 +94,14 @@ export default function AlbumDetailsScreen() {
   const [addToDiary, setAddToDiary] = useState(true);
   const [diaryDate, setDiaryDate] = useState<Date>(new Date());
   const [diaryRating, setDiaryRating] = useState<number | undefined>(undefined);
+  const [diaryReview, setDiaryReview] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const openDiaryModal = () => {
     setAddToDiary(true);
     setDiaryDate(new Date());
     setDiaryRating(undefined);
+    setDiaryReview('');
     setShowDiaryModal(true);
   };
 
@@ -108,7 +111,8 @@ export default function AlbumDetailsScreen() {
     try {
       if (addToDiary) {
         const iso = `${diaryDate.getFullYear()}-${String(diaryDate.getMonth()+1).padStart(2,'0')}-${String(diaryDate.getDate()).padStart(2,'0')}`;
-        const res = await diaryEntriesService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating);
+        const reviewText = diaryReview.trim() || undefined;
+        const res = await diaryEntriesService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating, reviewText);
         if (!res.success) {
           console.warn(res.message);
         } else {
@@ -121,8 +125,10 @@ export default function AlbumDetailsScreen() {
                 userId: user.id,
                 albumId: currentAlbum.id,
                 rating: diaryRating,
-                review: '',
+                reviewText: '',
                 dateReviewed: new Date().toISOString(),
+                likesCount: 0,
+                commentsCount: 0,
               };
               dispatch(setCurrentAlbumUserReview(newReview));
             } catch (e) {
@@ -138,6 +144,7 @@ export default function AlbumDetailsScreen() {
     } finally {
       setShowDiaryModal(false);
       setSubmitting(false);
+      setDiaryReview('');
     }
   };
 
@@ -191,8 +198,10 @@ export default function AlbumDetailsScreen() {
                 userId: user.id,
                 albumId: albumId,
                 rating: userRating.rating,
-                review: userRating.review || '',
+                reviewText: userRating.review || '',
                 dateReviewed: userRating.updated_at,
+                likesCount: 0,
+                commentsCount: 0,
               };
               dispatch(setCurrentAlbumUserReview(reviewData));
             }
@@ -234,8 +243,10 @@ export default function AlbumDetailsScreen() {
           userId: user.id,
           albumId: currentAlbum.id,
           rating,
-          review: '',
+          reviewText: '',
           dateReviewed: new Date().toISOString(),
+          likesCount: 0,
+          commentsCount: 0,
         };
         dispatch(setCurrentAlbumUserReview(newReview));
       }
@@ -414,6 +425,26 @@ export default function AlbumDetailsScreen() {
             <View style={styles.diaryRatingContainer}>
               <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
               <HalfStarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
+            </View>
+            <View style={styles.diaryReviewContainer}>
+              <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Review (optional)</Text>
+              <TextInput
+                mode="outlined"
+                placeholder="Share your thoughts about this album..."
+                value={diaryReview}
+                onChangeText={(text) => {
+                  if (text.length <= 280) {
+                    setDiaryReview(text);
+                  }
+                }}
+                multiline
+                numberOfLines={3}
+                maxLength={280}
+                style={styles.diaryReviewInput}
+              />
+              <Text variant="bodySmall" style={styles.characterCount}>
+                {diaryReview.length}/280
+              </Text>
             </View>
           </Dialog.Content>
           <Dialog.Actions>
@@ -616,6 +647,17 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   diaryRatingContainer: {
     alignItems: 'center',
+  },
+  diaryReviewContainer: {
+    marginTop: spacing.md,
+  },
+  diaryReviewInput: {
+    minHeight: 80,
+  },
+  characterCount: {
+    textAlign: 'right',
+    marginTop: spacing.xs,
+    color: theme.colors.onSurfaceVariant,
   },
   modalBackdrop: {
     flex: 1,

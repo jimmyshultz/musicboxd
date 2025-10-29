@@ -121,6 +121,7 @@ export interface DiaryEntry {
   albumId: string;
   diaryDate: string; // YYYY-MM-DD in user's local time
   ratingAtTime?: number; // 0.5-5.0 optional, in 0.5 increments
+  review?: string; // Optional review/notes about the album
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
 }
