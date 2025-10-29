@@ -12,7 +12,6 @@ import {
   Text,
   Chip,
   ActivityIndicator,
-  Divider,
   useTheme,
 } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -29,7 +28,6 @@ import {
   searchStart,
   searchSuccess,
   addRecentSearch,
-  setTrendingAlbums,
 } from '../../store/slices/searchSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
@@ -85,37 +83,13 @@ export default function SearchScreen() {
     searchQuery,
     searchResults,
     recentSearches,
-    trendingAlbums,
     loading,
   } = useSelector((state: RootState) => state.search);
 
-  const [popularGenres, setPopularGenres] = useState<string[]>([]);
   const [searchMode, setSearchMode] = useState<'albums' | 'users'>('albums');
   const [userSearchResults, setUserSearchResults] = useState<UserProfile[]>([]);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
 
-  const loadInitialData = useCallback(async () => {
-    try {
-      const [trendingResponse, genresResponse] = await Promise.all([
-        AlbumService.getTrendingAlbums(),
-        AlbumService.getPopularGenres(),
-      ]);
-
-      if (trendingResponse.success) {
-        dispatch(setTrendingAlbums(trendingResponse.data));
-      }
-
-      if (genresResponse.success) {
-        setPopularGenres(genresResponse.data);
-      }
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
 
   const performSearch = useCallback(async (query: string) => {
     if (query.trim()) {
@@ -170,11 +144,6 @@ export default function SearchScreen() {
     navigation.navigate('UserProfile', { userId });
   };
 
-  const handleGenrePress = (genre: string) => {
-    dispatch(setSearchQuery(genre));
-    debouncedSearch(genre);
-  };
-
   const handleRecentSearchPress = (query: string) => {
     dispatch(setSearchQuery(query));
     debouncedSearch(query);
@@ -222,22 +191,6 @@ export default function SearchScreen() {
           </Text>
         )}
       </View>
-    </TouchableOpacity>
-  );
-
-  const renderTrendingAlbum = (album: Album) => (
-    <TouchableOpacity
-      key={album.id}
-      style={styles.trendingAlbum}
-      onPress={() => navigateToAlbum(album.id)}
-    >
-      <Image source={{ uri: album.coverImageUrl }} style={styles.trendingCover} />
-      <Text variant="bodySmall" numberOfLines={2} style={styles.trendingTitle}>
-        {album.title}
-      </Text>
-      <Text variant="bodySmall" numberOfLines={1} style={styles.trendingArtist}>
-        {album.artist}
-      </Text>
     </TouchableOpacity>
   );
 
@@ -346,39 +299,6 @@ export default function SearchScreen() {
               </View>
             </View>
           )}
-
-          {/* Popular Genres */}
-          <View style={styles.section}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Popular Genres
-            </Text>
-            <View style={styles.chipsContainer}>
-              {popularGenres.slice(0, 8).map((genre, index) => (
-                <Chip
-                  key={index}
-                  onPress={() => handleGenrePress(genre)}
-                  style={styles.chip}
-                  mode="outlined"
-                >
-                  {genre}
-                </Chip>
-              ))}
-            </View>
-          </View>
-
-          <Divider style={styles.divider} />
-
-          {/* Trending Albums */}
-          <View style={styles.section}>
-            <Text variant="titleMedium" style={styles.sectionTitle}>
-              Trending Albums
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.trendingContainer}>
-                {trendingAlbums.map((album) => renderTrendingAlbum(album))}
-              </View>
-            </ScrollView>
-          </View>
         </ScrollView>
       )}
     </View>
@@ -519,31 +439,6 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   chip: {
     marginBottom: spacing.sm,
-  },
-  divider: {
-    marginVertical: spacing.md,
-  },
-  trendingContainer: {
-    flexDirection: 'row',
-    paddingLeft: spacing.lg,
-  },
-  trendingAlbum: {
-    width: 120,
-    marginRight: spacing.md,
-  },
-  trendingCover: {
-    width: 120,
-    height: 120,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  trendingTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  trendingArtist: {
-    color: theme.colors.onSurfaceVariant,
   },
 });
 
