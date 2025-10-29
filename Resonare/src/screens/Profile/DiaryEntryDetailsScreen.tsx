@@ -261,17 +261,17 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     setSaving(false);
   };
 
-  const handleEditReview = () => {
+  const handleEditReview = useCallback(() => {
     setPendingReview(entry?.review || '');
     setEditingReview(true);
-  };
+  }, [entry?.review]);
 
-  const handleCancelReview = () => {
+  const handleCancelReview = useCallback(() => {
     setEditingReview(false);
     setPendingReview('');
-  };
+  }, []);
 
-  const handleSaveReview = async () => {
+  const handleSaveReview = useCallback(async () => {
     if (!entry) return;
     setSaving(true);
     try {
@@ -298,7 +298,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     setSaving(false);
     setEditingReview(false);
     setPendingReview('');
-  };
+  }, [entry, dispatch, pendingReview]);
 
   if (loading || !entry) {
     const styles = createStyles(theme);
