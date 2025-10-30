@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import {
@@ -47,6 +48,7 @@ export default function ListenedAlbumsScreen() {
 
   const [listenedAlbums, setListenedAlbums] = useState<ListenedAlbumData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadListenedAlbums = useCallback(async () => {
     setLoading(true);
@@ -86,6 +88,15 @@ export default function ListenedAlbumsScreen() {
 
   useEffect(() => {
     loadListenedAlbums();
+  }, [loadListenedAlbums]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadListenedAlbums();
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadListenedAlbums]);
 
   const navigateToAlbum = (albumId: string) => {
@@ -171,7 +182,13 @@ export default function ListenedAlbumsScreen() {
             </Text>
           </View>
         ) : (
-          <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+          <ScrollView 
+            style={styles.scrollView} 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+          >
             <View style={styles.albumGrid}>
               {displayData.map((item, index) => renderAlbumCard(item, index))}
             </View>

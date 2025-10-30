@@ -7,6 +7,7 @@ import {
   Dimensions,
   Platform,
   Modal,
+  RefreshControl,
 } from 'react-native';
 import {
   Text,
@@ -96,6 +97,7 @@ export default function AlbumDetailsScreen() {
   const [diaryRating, setDiaryRating] = useState<number | undefined>(undefined);
   const [diaryReview, setDiaryReview] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const openDiaryModal = () => {
     setAddToDiary(true);
@@ -224,6 +226,15 @@ export default function AlbumDetailsScreen() {
     };
   }, [loadAlbumDetails, dispatch]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadAlbumDetails();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadAlbumDetails]);
+
   const handleRating = async (rating: number) => {
     if (!user || !currentAlbum || submitting) return;
     
@@ -274,7 +285,13 @@ export default function AlbumDetailsScreen() {
   const styles = createStyles(theme);
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {/* Album Header */}
       <View style={styles.header}>
         <Image source={{ uri: currentAlbum.coverImageUrl }} style={styles.albumCover} />

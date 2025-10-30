@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import {
@@ -47,6 +48,7 @@ export default function UserReviewsScreen() {
 
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadUserReviews = useCallback(async () => {
     setLoading(true);
@@ -90,6 +92,15 @@ export default function UserReviewsScreen() {
 
   useEffect(() => {
     loadUserReviews();
+  }, [loadUserReviews]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadUserReviews();
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadUserReviews]);
 
   const navigateToAlbum = (albumId: string) => {
@@ -173,7 +184,13 @@ export default function UserReviewsScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.scrollView} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.reviewsList}>
             {reviews.map(renderReviewCard)}
           </View>

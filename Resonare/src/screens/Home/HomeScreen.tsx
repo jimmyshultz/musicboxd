@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -67,6 +68,7 @@ export default function HomeScreen() {
   const [newFromFriends, setNewFromFriends] = useState<FriendActivity[]>([]);
   const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
   const [discoverFriends, setDiscoverFriends] = useState<PotentialFriend[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   
   const styles = createStyles(theme);
 
@@ -319,6 +321,20 @@ export default function HomeScreen() {
     });
   }, [dispatch, loadPopularThisWeek, loadNewFromFriends, loadPopularWithFriends, loadDiscoverFriends]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        loadPopularThisWeek(),
+        loadNewFromFriends(),
+        loadPopularWithFriends(),
+        loadDiscoverFriends(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadPopularThisWeek, loadNewFromFriends, loadPopularWithFriends, loadDiscoverFriends]);
+
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
   };
@@ -437,7 +453,13 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {/* Popular This Week */}
       <View style={styles.section}>
         {renderSectionHeader('Popular This Week', () => navigation.navigate('PopularThisWeek'))}

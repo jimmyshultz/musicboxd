@@ -4,6 +4,7 @@ import {
   FlatList,
   StyleSheet,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import {
@@ -55,6 +56,7 @@ export default function FollowersScreen() {
   const [followers, setFollowers] = useState<UserProfile[]>([]);
   const [followingUsers, setFollowingUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -81,6 +83,15 @@ export default function FollowersScreen() {
   useEffect(() => {
     loadData();
   }, [loadData]); // Only reload when userId changes (via loadData dependency)
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadData();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadData]);
 
   const isFollowing = (targetUserId: string) => {
     return following.some(user => user.id === targetUserId);
@@ -217,6 +228,9 @@ export default function FollowersScreen() {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={<EmptyState activeTab={activeTab} username={username} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </View>

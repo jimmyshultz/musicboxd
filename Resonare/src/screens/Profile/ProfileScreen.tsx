@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -68,6 +69,7 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadFavoriteAlbums = useCallback(async () => {
     if (!user?.id) {
@@ -236,6 +238,19 @@ export default function ProfileScreen() {
     });
   }, [user?.id]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        loadRecentActivity(),
+        loadUserStats(),
+        loadFavoriteAlbums(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadRecentActivity, loadUserStats, loadFavoriteAlbums]);
+
   const handleLogout = () => {
     dispatch(logout());
   };
@@ -380,7 +395,14 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentInsetAdjustmentBehavior="never">
+      <ScrollView 
+        style={styles.container} 
+        showsVerticalScrollIndicator={false} 
+        contentInsetAdjustmentBehavior="never"
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Avatar.Image 
