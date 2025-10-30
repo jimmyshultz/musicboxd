@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, SectionList, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, SectionList, StyleSheet, TouchableOpacity, Image, RefreshControl } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -29,6 +29,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   const [albumsById, setAlbumsById] = useState<Record<string, Album>>({});
   const [selectedTab, setSelectedTab] = useState<'profile' | 'diary'>('diary');
   const [initialReady, setInitialReady] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     // Reset readiness when switching users
@@ -146,6 +147,15 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
     loadInitial();
   }, [loadInitial]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadInitial();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadInitial]);
+
 
 
   const renderRow = ({ item }: { item: DiaryEntry }) => {
@@ -233,6 +243,9 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
           onEndReachedThreshold={0.3}
           onEndReached={loadMore}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
     </SafeAreaView>

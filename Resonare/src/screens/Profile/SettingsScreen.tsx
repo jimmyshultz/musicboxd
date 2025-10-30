@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import {
   Text,
@@ -49,10 +50,7 @@ export default function SettingsScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadSettings = useCallback(async () => {
     if (!user) return;
@@ -73,6 +71,19 @@ export default function SettingsScreen() {
       setLoading(false);
     }
   }, [user]);
+
+  React.useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadSettings();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadSettings]);
 
   const updateSetting = async (key: keyof UserSettings, value: boolean) => {
     if (!user) return;
@@ -161,7 +172,13 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       {renderSection(
         'Privacy',
         <>

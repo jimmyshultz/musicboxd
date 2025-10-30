@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 
 import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme } from 'react-native-paper';
@@ -72,6 +73,7 @@ export default function UserProfileScreen() {
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [followActionType, setFollowActionType] = useState<'follow' | 'request' | 'requested' | 'following'>('follow');
   const [followLoading, setFollowLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
 
   const isOwnProfile = useMemo(() => 
@@ -217,6 +219,23 @@ export default function UserProfileScreen() {
       following: 0,
     });
   }, [userId]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const userData = await loadUserProfile();
+      if (userData) {
+        await Promise.all([
+          loadFavoriteAlbums(userData),
+          loadRecentActivity(userData),
+          loadUserStats(userData),
+          loadFollowActionType(),
+        ]);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats, loadFollowActionType]);
 
   const handleFollowToggle = async () => {
     if (!user || !currentUser || followLoading) return;
@@ -412,7 +431,13 @@ export default function UserProfileScreen() {
         />
       </View>
 
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollContainer} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <Avatar.Image 

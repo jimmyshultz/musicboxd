@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
@@ -31,6 +32,7 @@ export default function PopularThisWeekScreen() {
   const styles = createStyles(theme);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadPopularAlbums = useCallback(async () => {
     setLoading(true);
@@ -49,6 +51,15 @@ export default function PopularThisWeekScreen() {
 
   useEffect(() => {
     loadPopularAlbums();
+  }, [loadPopularAlbums]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadPopularAlbums();
+    } finally {
+      setRefreshing(false);
+    }
   }, [loadPopularAlbums]);
 
   const navigateToAlbum = (albumId: string) => {
@@ -98,7 +109,13 @@ export default function PopularThisWeekScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.scrollContainer} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.grid}>
             {albums.map((album, index) => renderAlbumCard(album, index))}
           </View>

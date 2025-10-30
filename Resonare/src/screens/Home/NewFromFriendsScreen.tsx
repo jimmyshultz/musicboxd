@@ -6,6 +6,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
@@ -48,6 +49,7 @@ export default function NewFromFriendsScreen() {
   const styles = createStyles(theme);
   const [activities, setActivities] = useState<FriendActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadFriendActivities = useCallback(async () => {
     setLoading(true);
@@ -129,6 +131,15 @@ export default function NewFromFriendsScreen() {
     loadFriendActivities();
   }, [loadFriendActivities]);
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadFriendActivities();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadFriendActivities]);
+
 
 
   const navigateToUserProfile = (userId: string) => {
@@ -201,7 +212,13 @@ export default function NewFromFriendsScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.scrollContainer} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.grid}>
             {activities.map((activity, index) => renderActivityCard(activity, index))}
           </View>

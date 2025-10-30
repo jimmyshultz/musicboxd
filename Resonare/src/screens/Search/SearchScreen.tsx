@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
   TextInput,
+  RefreshControl,
 } from 'react-native';
 import {
   Text,
@@ -89,6 +90,7 @@ export default function SearchScreen() {
   const [searchMode, setSearchMode] = useState<'albums' | 'users'>('albums');
   const [userSearchResults, setUserSearchResults] = useState<UserProfile[]>([]);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
 
   const performSearch = useCallback(async (query: string) => {
@@ -148,6 +150,17 @@ export default function SearchScreen() {
     dispatch(setSearchQuery(query));
     debouncedSearch(query);
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      if (searchQuery.trim()) {
+        await performSearch(searchQuery);
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [searchQuery, performSearch]);
 
   const renderAlbumItem = ({ item }: { item: Album }) => (
     <TouchableOpacity
@@ -248,6 +261,9 @@ export default function SearchScreen() {
           keyExtractor={(item) => item.id}
           style={styles.searchResults}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
 
@@ -258,6 +274,9 @@ export default function SearchScreen() {
           keyExtractor={(item) => item.id}
           style={styles.searchResults}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         />
       )}
 
@@ -279,7 +298,13 @@ export default function SearchScreen() {
       )}
 
       {!searchQuery.trim() && (
-        <ScrollView style={styles.discoveryContainer} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          style={styles.discoveryContainer} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           {/* Recent Searches */}
           {recentSearches.length > 0 && (
             <View style={styles.section}>
