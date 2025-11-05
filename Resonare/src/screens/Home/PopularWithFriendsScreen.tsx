@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
@@ -22,11 +22,7 @@ import { spacing } from '../../utils/theme';
 
 type PopularWithFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
-const { width } = Dimensions.get('window');
 const CARDS_PER_ROW = 3;
-const HORIZONTAL_SPACING = spacing.lg;
-const CARD_MARGIN = spacing.sm;
-const ALBUM_CARD_WIDTH = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
 
 
 
@@ -44,7 +40,14 @@ export default function PopularWithFriendsScreen() {
   const navigation = useNavigation<PopularWithFriendsNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const { width } = useWindowDimensions();
+  
+  // Responsive spacing calculation: use percentage-based approach for consistent layout
+  const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
+  const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
+  
+  const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
+  const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
   const [albums, setAlbums] = useState<FriendPopularAlbum[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -247,7 +250,7 @@ export default function PopularWithFriendsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, albumCardWidth: number, horizontalSpacing: number, cardMargin: number) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -290,23 +293,23 @@ const createStyles = (theme: any) => StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: HORIZONTAL_SPACING,
+    paddingHorizontal: horizontalSpacing,
     paddingTop: spacing.lg,
     paddingBottom: spacing.lg,
     justifyContent: 'flex-start',
   },
   albumCard: {
-    width: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
     marginBottom: spacing.lg,
-    marginRight: CARD_MARGIN,
+    marginRight: cardMargin,
     position: 'relative',
   },
   albumCardLastInRow: {
     marginRight: 0,
   },
   albumCover: {
-    width: ALBUM_CARD_WIDTH,
-    height: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
+    height: albumCardWidth,
     borderRadius: 8,
     marginBottom: spacing.sm,
     resizeMode: 'cover',
