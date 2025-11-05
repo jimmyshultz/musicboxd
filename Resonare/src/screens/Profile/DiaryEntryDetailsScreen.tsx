@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput } from 'react-native-paper';
@@ -275,8 +275,11 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     if (!entry) return;
     setSaving(true);
     try {
-      const reviewText = pendingReview.trim() || undefined;
-      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { notes: reviewText });
+      // Allow empty reviews - trim and explicitly set to null if empty to clear the database field
+      const reviewText = pendingReview.trim();
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { 
+        notes: reviewText.length > 0 ? reviewText : null as any
+      });
       if (res.success && res.entry) {
         // Convert from new service format to old DiaryEntry format
         const convertedEntry: DiaryEntry = {
@@ -315,9 +318,21 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   const styles = createStyles(theme);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      {/* Shareable view for Instagram - only rendered when needed */}
-      {showShareView && (
+    <KeyboardAvoidingView 
+      style={{ flex: 1 }} 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={[
+          styles.scrollContent, 
+          editingReview && styles.scrollContentWithKeyboard
+        ]}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Shareable view for Instagram - only rendered when needed */}
+        {showShareView && (
         <View ref={shareViewRef} style={styles.shareView}>
           {album && (
             <View style={styles.shareContent}>
@@ -445,15 +460,19 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           </View>
         </View>
       )}
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
- }
+}
 
  const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   scrollContent: { 
     padding: spacing.lg,
     paddingBottom: spacing.xl, // Extra padding at bottom for date picker
+  },
+  scrollContentWithKeyboard: {
+    paddingBottom: 300, // Extra padding when keyboard is visible to allow scrolling past keyboard
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', marginBottom: spacing.lg },
