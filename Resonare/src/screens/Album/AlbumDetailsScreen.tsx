@@ -8,6 +8,8 @@ import {
   Platform,
   Modal,
   RefreshControl,
+  KeyboardAvoidingView,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Text,
@@ -38,7 +40,7 @@ import { albumRatingsService } from '../../services/albumRatingsService';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { spacing, shadows } from '../../utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Portal, Dialog, Switch } from 'react-native-paper';
+import { Switch } from 'react-native-paper';
 
 type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
 
@@ -425,51 +427,88 @@ export default function AlbumDetailsScreen() {
 
       <View style={styles.bottomPadding} />
 
-      <Portal>
-        <Dialog visible={showDiaryModal} onDismiss={() => setShowDiaryModal(false)}>
-          <Dialog.Title>Add to Diary</Dialog.Title>
-          <Dialog.Content>
-            <View style={styles.diaryToggleRow}>
-              <Text>Add to diary?</Text>
-              <Switch value={addToDiary} onValueChange={setAddToDiary} />
+      {/* Full-screen Diary Modal */}
+      <Modal
+        visible={showDiaryModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDiaryModal(false)}
+      >
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={0}
+        >
+          <View style={[styles.diaryModalContainer, { backgroundColor: theme.colors.background }]}>
+            {/* Header */}
+            <View style={[styles.diaryModalHeader, { borderBottomColor: theme.colors.outline }]}>
+              <TouchableOpacity onPress={() => setShowDiaryModal(false)}>
+                <Text variant="bodyLarge" style={{ color: theme.colors.primary }}>Cancel</Text>
+              </TouchableOpacity>
+              <Text variant="titleLarge" style={styles.diaryModalTitle}>Add to Diary</Text>
+              <TouchableOpacity onPress={handleConfirmDiaryModal} disabled={submitting}>
+                <Text 
+                  variant="bodyLarge" 
+                  style={{ 
+                    color: submitting ? theme.colors.onSurfaceDisabled : theme.colors.primary,
+                    fontWeight: '600'
+                  }}
+                >
+                  Save
+                </Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.diaryDateContainer}>
-              <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
-              <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
-                {diaryDate.toLocaleDateString()}
-              </Button>
-            </View>
-            <View style={styles.diaryRatingContainer}>
-              <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
-              <HalfStarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
-            </View>
-            <View style={styles.diaryReviewContainer}>
-              <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Review (optional)</Text>
-              <TextInput
-                mode="outlined"
-                placeholder="Share your thoughts about this album..."
-                value={diaryReview}
-                onChangeText={(text) => {
-                  if (text.length <= 280) {
-                    setDiaryReview(text);
-                  }
-                }}
-                multiline
-                numberOfLines={3}
-                maxLength={280}
-                style={styles.diaryReviewInput}
-              />
-              <Text variant="bodySmall" style={styles.characterCount}>
-                {diaryReview.length}/280
-              </Text>
-            </View>
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setShowDiaryModal(false)}>Cancel</Button>
-            <Button onPress={handleConfirmDiaryModal}>Save</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+
+            {/* Scrollable Content */}
+            <ScrollView 
+              style={styles.diaryModalScroll}
+              contentContainerStyle={styles.diaryModalContent}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={styles.diaryToggleRow}>
+                <Text variant="bodyLarge">Add to diary?</Text>
+                <Switch value={addToDiary} onValueChange={setAddToDiary} />
+              </View>
+
+              <View style={styles.diaryDateContainer}>
+                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
+                <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
+                  {diaryDate.toLocaleDateString()}
+                </Button>
+              </View>
+
+              <View style={styles.diaryRatingContainer}>
+                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
+                <HalfStarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
+              </View>
+
+              <View style={styles.diaryReviewContainer}>
+                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Review (optional)</Text>
+                <TextInput
+                  mode="outlined"
+                  placeholder="Share your thoughts about this album..."
+                  value={diaryReview}
+                  onChangeText={(text) => {
+                    if (text.length <= 280) {
+                      setDiaryReview(text);
+                    }
+                  }}
+                  multiline
+                  numberOfLines={4}
+                  maxLength={280}
+                  style={styles.diaryReviewInput}
+                />
+                <Text variant="bodySmall" style={styles.characterCount}>
+                  {diaryReview.length}/280
+                </Text>
+              </View>
+
+              {/* Extra padding at bottom for keyboard */}
+              <View style={{ height: 200 }} />
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* Platform native date picker modal to avoid Dialog portal conflicts */}
       {showDatePicker && (
@@ -653,23 +692,44 @@ const createStyles = (theme: any) => StyleSheet.create({
   bottomPadding: {
     height: spacing.xl,
   },
+  diaryModalContainer: {
+    flex: 1,
+  },
+  diaryModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+  },
+  diaryModalTitle: {
+    fontWeight: '600',
+  },
+  diaryModalScroll: {
+    flex: 1,
+  },
+  diaryModalContent: {
+    padding: spacing.lg,
+  },
   diaryToggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   diaryDateContainer: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
   diaryRatingContainer: {
     alignItems: 'center',
+    marginBottom: spacing.lg,
   },
   diaryReviewContainer: {
     marginTop: spacing.md,
   },
   diaryReviewInput: {
-    minHeight: 80,
+    minHeight: 100,
   },
   characterCount: {
     textAlign: 'right',

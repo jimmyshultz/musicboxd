@@ -137,11 +137,11 @@ class DiaryEntriesService {
    */
   async updateDiaryEntry(
     entryId: string,
-    updates: { diaryDate?: string; rating?: number; notes?: string }
+    updates: { diaryDate?: string; rating?: number | null; notes?: string | null }
   ): Promise<{ success: boolean; entry?: DiaryEntry; message?: string }> {
     try {
       // Validate rating if provided (must be in 0.5 increments between 0.5 and 5.0)
-      if (updates.rating !== undefined && (updates.rating < 0.5 || updates.rating > 5.0 || (updates.rating * 2) !== Math.floor(updates.rating * 2))) {
+      if (updates.rating !== undefined && updates.rating !== null && (updates.rating < 0.5 || updates.rating > 5.0 || (updates.rating * 2) !== Math.floor(updates.rating * 2))) {
         return { success: false, message: 'Rating must be between 0.5 and 5.0 in 0.5 increments' };
       }
 
@@ -153,9 +153,11 @@ class DiaryEntriesService {
         updateData.diary_date = updates.diaryDate;
       }
       if (updates.rating !== undefined) {
+        // Allow null to clear rating
         updateData.rating = updates.rating;
       }
       if (updates.notes !== undefined) {
+        // Allow null to clear notes
         updateData.notes = updates.notes;
       }
 
