@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   RefreshControl,
 } from 'react-native';
 import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
@@ -28,8 +28,8 @@ import { SegmentedButtons } from 'react-native-paper';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-const { width } = Dimensions.get('window');
 const ALBUM_CARD_WIDTH = 120;
+const STATS_CARDS_PER_ROW = 3;
 
 // Icon components to avoid creating them during render
 const ChevronIcon = (_props: any) => <Icon name="chevron-right" size={14} color="#666" />;
@@ -55,7 +55,14 @@ export default function ProfileScreen() {
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const styles = createStyles(theme);
+  const { width } = useWindowDimensions();
+  
+  // Responsive spacing calculation for stats grid
+  const STATS_HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
+  const STATS_CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
+  
+  const statCardWidth = (width - (STATS_HORIZONTAL_SPACING * 2) - (STATS_CARD_MARGIN * (STATS_CARDS_PER_ROW - 1))) / STATS_CARDS_PER_ROW;
+  const styles = createStyles(theme, statCardWidth, STATS_HORIZONTAL_SPACING, STATS_CARD_MARGIN);
 
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
@@ -340,12 +347,18 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderStatCard = (title: string, value: number, onPress?: () => void) => (
-    <TouchableOpacity
-      style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
-      onPress={onPress}
-      disabled={!onPress}
-    >
+  const renderStatCard = (title: string, value: number, onPress?: () => void, index?: number) => {
+    const isLastInRow = index !== undefined && (index + 1) % STATS_CARDS_PER_ROW === 0;
+    return (
+      <TouchableOpacity
+        style={[
+          styles.statCard, 
+          { backgroundColor: theme.colors.surface },
+          isLastInRow && styles.statCardLastInRow
+        ]}
+        onPress={onPress}
+        disabled={!onPress}
+      >
       <Text variant="headlineMedium" style={styles.statValue}>
         {value.toLocaleString()}
       </Text>
@@ -353,7 +366,8 @@ export default function ProfileScreen() {
         {title}
       </Text>
     </TouchableOpacity>
-  );
+    );
+  };
 
   if (loading && user) {
     return (
@@ -482,12 +496,12 @@ export default function ProfileScreen() {
             Stats & Social
           </Text>
           <View style={styles.statsGrid}>
-            {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
-            {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
-            {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
-            {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-            {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
-            {renderStatCard('Following', userStats.following, navigateToFollowing)}
+            {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'), 0)}
+            {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'), 1)}
+            {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'), 2)}
+            {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'), 3)}
+            {renderStatCard('Followers', userStats.followers, navigateToFollowers, 4)}
+            {renderStatCard('Following', userStats.following, navigateToFollowing, 5)}
           </View>
         </View>
 
@@ -512,7 +526,7 @@ export default function ProfileScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, statCardWidth: number, statsHorizontalSpacing: number, statsCardMargin: number) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -601,18 +615,22 @@ const createStyles = (theme: any) => StyleSheet.create({
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
-    justifyContent: 'space-between',
+    paddingHorizontal: statsHorizontalSpacing,
+    justifyContent: 'flex-start',
   },
   statCard: {
-    width: (width - spacing.lg * 3) / 3, // 3 columns with spacing
+    width: statCardWidth,
     aspectRatio: 1.2,
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.md,
+    marginRight: statsCardMargin,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.small,
+  },
+  statCardLastInRow: {
+    marginRight: 0,
   },
   statValue: {
     fontWeight: 'bold',

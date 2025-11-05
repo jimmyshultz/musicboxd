@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, Searchbar, useTheme } from 'react-native-paper';
@@ -18,14 +18,19 @@ import { AlbumService } from '../../services/albumService';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { spacing } from '../../utils/theme';
 
-const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 4) / 3; // 3 columns
-
+const CARDS_PER_ROW = 3;
 
 export default function FavoriteAlbumsManagementScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const { width } = useWindowDimensions();
+  
+  // Responsive spacing calculation: use percentage-based approach for consistent layout
+  const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
+  const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
+  
+  const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
+  const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Album[]>([]);
@@ -151,14 +156,19 @@ export default function FavoriteAlbumsManagementScreen() {
     </View>
   );
 
-  const renderSearchResult = (album: Album) => {
+  const renderSearchResult = (album: Album, index: number) => {
     const isAlreadyFavorite = favoriteAlbums.find(fav => fav.id === album.id);
     const canAddMore = favoriteAlbums.length < 5;
+    const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
     
     return (
       <TouchableOpacity
         key={album.id}
-        style={[styles.searchResultCard, isAlreadyFavorite && styles.searchResultCardSelected]}
+        style={[
+          styles.searchResultCard, 
+          isAlreadyFavorite && styles.searchResultCardSelected,
+          isLastInRow && styles.searchResultCardLastInRow
+        ]}
         onPress={() => canAddMore && !isAlreadyFavorite ? addToFavorites(album) : null}
         disabled={!!isAlreadyFavorite || !canAddMore}
       >
@@ -241,7 +251,7 @@ export default function FavoriteAlbumsManagementScreen() {
 
         {searchResults.length > 0 && (
           <View style={styles.searchResultsGrid}>
-            {searchResults.map(renderSearchResult)}
+            {searchResults.map((album, index) => renderSearchResult(album, index))}
           </View>
         )}
       </ScrollView>
@@ -249,7 +259,7 @@ export default function FavoriteAlbumsManagementScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, albumCardWidth: number, horizontalSpacing: number, cardMargin: number) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -292,20 +302,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingRight: spacing.lg,
   },
   favoriteAlbumCard: {
-    width: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
     marginRight: spacing.md,
     position: 'relative',
   },
   albumCover: {
-    width: ALBUM_CARD_WIDTH,
-    height: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
+    height: albumCardWidth,
     borderRadius: 8,
     marginBottom: spacing.sm,
     resizeMode: 'cover',
   },
   searchAlbumCover: {
-    width: ALBUM_CARD_WIDTH,
-    height: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
+    height: albumCardWidth,
     borderRadius: 8,
     marginBottom: spacing.sm,
     resizeMode: 'cover',
@@ -373,13 +383,17 @@ const createStyles = (theme: any) => StyleSheet.create({
   searchResultsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: spacing.lg,
-    justifyContent: 'space-between',
+    paddingHorizontal: horizontalSpacing,
+    justifyContent: 'flex-start',
   },
   searchResultCard: {
-    width: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
     marginBottom: spacing.lg,
+    marginRight: cardMargin,
     position: 'relative',
+  },
+  searchResultCardLastInRow: {
+    marginRight: 0,
   },
   searchResultCardSelected: {
     opacity: 0.5,

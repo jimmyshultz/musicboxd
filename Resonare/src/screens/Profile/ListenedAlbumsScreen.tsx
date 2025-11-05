@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Dimensions,
+  useWindowDimensions,
   RefreshControl,
 } from 'react-native';
 // SafeAreaView import removed - using regular View since header handles safe area
@@ -29,9 +29,7 @@ type ListenedAlbumsScreenRouteProp = RouteProp<
 >;
 type ListenedAlbumsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
-
-const { width } = Dimensions.get('window');
-const ALBUM_CARD_WIDTH = (width - spacing.lg * 3) / 2;
+const CARDS_PER_ROW = 2;
 
 interface ListenedAlbumData {
   listen: Listen;
@@ -44,7 +42,14 @@ export default function ListenedAlbumsScreen() {
   const { userId, username } = route.params;
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
-  const styles = createStyles(theme);
+  const { width } = useWindowDimensions();
+  
+  // Responsive spacing calculation: use percentage-based approach for consistent layout
+  const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
+  const CARD_MARGIN = Math.max(spacing.xs, width * 0.02); // 2% of screen width, minimum 4
+  
+  const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
+  const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
 
   const [listenedAlbums, setListenedAlbums] = useState<ListenedAlbumData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -121,10 +126,12 @@ export default function ListenedAlbumsScreen() {
   };
 
   const renderAlbumCard = (data: ListenedAlbumData, index: number) => {
+    const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
+    
     return (
       <TouchableOpacity
         key={`${data.album.id}-${index}`}
-        style={styles.albumCard}
+        style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
         onPress={() => navigateToAlbum(data.album.id)}
       >
         <Image source={{ uri: data.album.coverImageUrl || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image' }} style={styles.albumCover} />
@@ -200,7 +207,7 @@ export default function ListenedAlbumsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any, albumCardWidth: number, horizontalSpacing: number, cardMargin: number) => StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: theme.colors.surface,
@@ -245,15 +252,21 @@ const createStyles = (theme: any) => StyleSheet.create({
   albumGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: spacing.lg,
-    justifyContent: 'space-between',
+    paddingHorizontal: horizontalSpacing,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+    justifyContent: 'flex-start',
   },
   albumCard: {
-    width: ALBUM_CARD_WIDTH,
+    width: albumCardWidth,
     backgroundColor: theme.colors.surface,
     borderRadius: 12,
     marginBottom: spacing.lg,
+    marginRight: cardMargin,
     ...shadows.small,
+  },
+  albumCardLastInRow: {
+    marginRight: 0,
   },
   albumCover: {
     width: '100%',
