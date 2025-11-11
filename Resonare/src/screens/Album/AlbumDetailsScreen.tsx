@@ -470,9 +470,33 @@ export default function AlbumDetailsScreen() {
 
               <View style={styles.diaryDateContainer}>
                 <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
-                <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
-                  {diaryDate.toLocaleDateString()}
-                </Button>
+                {Platform.OS === 'ios' ? (
+                  <>
+                    <Button mode="outlined" onPress={() => setShowDatePicker(!showDatePicker)}>
+                      {diaryDate.toLocaleDateString()}
+                    </Button>
+                    {showDatePicker && (
+                      <View style={styles.datePickerContainer}>
+                        <DateTimePicker
+                          value={diaryDate}
+                          mode="date"
+                          display="spinner"
+                          maximumDate={new Date()}
+                          onChange={(_: any, selected?: Date) => {
+                            if (selected) {
+                              setDiaryDate(selected);
+                            }
+                          }}
+                          style={styles.datePicker}
+                        />
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
+                    {diaryDate.toLocaleDateString()}
+                  </Button>
+                )}
               </View>
 
               <View style={styles.diaryRatingContainer}>
@@ -508,30 +532,20 @@ export default function AlbumDetailsScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Platform native date picker modal to avoid Dialog portal conflicts */}
-      {showDatePicker && (
-        <Modal visible transparent animationType="slide" onRequestClose={() => setShowDatePicker(false)}
-               presentationStyle="overFullScreen"
-        >
-          <View style={styles.modalBackdrop}>
-            <View style={styles.modalSheet}>
-              <View style={styles.modalHeader}>
-                <Button onPress={() => setShowDatePicker(false)}>Cancel</Button>
-                <Button onPress={() => setShowDatePicker(false)}>Done</Button>
-              </View>
-              <DateTimePicker
-                value={diaryDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                themeVariant={Platform.OS === 'ios' ? 'light' : undefined}
-                maximumDate={new Date()}
-                onChange={(_: any, selected?: Date) => {
-                  if (selected) setDiaryDate(selected);
-                }}
-              />
-            </View>
-          </View>
-        </Modal>
+      {/* Android native date picker dialog */}
+      {Platform.OS === 'android' && showDatePicker && (
+        <DateTimePicker
+          value={diaryDate}
+          mode="date"
+          display="default"
+          maximumDate={new Date()}
+          onChange={(_: any, selected?: Date) => {
+            setShowDatePicker(false);
+            if (selected) {
+              setDiaryDate(selected);
+            }
+          }}
+        />
       )}
     </ScrollView>
   );
@@ -719,6 +733,16 @@ const createStyles = (theme: any) => StyleSheet.create({
   diaryDateContainer: {
     marginBottom: spacing.lg,
   },
+  datePickerContainer: {
+    marginTop: spacing.md,
+    backgroundColor: theme.colors.surfaceVariant,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  datePicker: {
+    width: '100%',
+    height: 200,
+  },
   diaryRatingContainer: {
     alignItems: 'center',
     marginBottom: spacing.lg,
@@ -733,24 +757,5 @@ const createStyles = (theme: any) => StyleSheet.create({
     textAlign: 'right',
     marginTop: spacing.xs,
     color: theme.colors.onSurfaceVariant,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: theme.colors.surface,
-    paddingBottom: spacing.lg,
-    width: '100%',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
   },
 });
