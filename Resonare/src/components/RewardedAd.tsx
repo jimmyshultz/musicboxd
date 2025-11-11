@@ -58,10 +58,10 @@ export const useRewardedAd = (adUnitId?: string) => {
 
     const unsubscribeEarned = ad.addAdEventListener(
       RewardedAdEventType.EARNED_REWARD,
-      (reward) => {
-        setReward(reward);
+      (rewardEvent) => {
+        setReward(rewardEvent);
         if (__DEV__) {
-          console.log('User earned reward:', reward);
+          console.log('User earned reward:', rewardEvent);
         }
       }
     );
