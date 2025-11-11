@@ -21,6 +21,7 @@ import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
 import { spacing } from '../../utils/theme';
+import BannerAdComponent from '../../components/BannerAd';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -499,6 +500,11 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       </View>
+
+      {/* Banner Ad */}
+      <View style={styles.adContainer}>
+        <BannerAdComponent />
+      </View>
     </ScrollView>
   );
 }
@@ -613,5 +619,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     fontSize: 12,
+  },
+  adContainer: {
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+    paddingBottom: spacing.lg,
   },
 });

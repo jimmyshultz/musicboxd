@@ -33,6 +33,7 @@ import {
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { spacing } from '../../utils/theme';
+import BannerAdComponent from '../../components/BannerAd';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
 
@@ -223,7 +224,6 @@ export default function SearchScreen() {
           onChangeText={handleSearchChange}
           onSubmitEditing={handleSearchSubmit}
           value={searchQuery}
-          style={styles.searchbar}
           theme={theme}
         />
         
@@ -264,6 +264,11 @@ export default function SearchScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
+          ListFooterComponent={
+            <View style={styles.adContainer}>
+              <BannerAdComponent />
+            </View>
+          }
         />
       )}
 
@@ -276,6 +281,11 @@ export default function SearchScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListFooterComponent={
+            <View style={styles.adContainer}>
+              <BannerAdComponent />
+            </View>
           }
         />
       )}
@@ -324,6 +334,11 @@ export default function SearchScreen() {
               </View>
             </View>
           )}
+          
+          {/* Banner Ad */}
+          <View style={styles.adContainer}>
+            <BannerAdComponent />
+          </View>
         </ScrollView>
       )}
     </View>
@@ -464,6 +479,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   chip: {
     marginBottom: spacing.sm,
+  },
+  adContainer: {
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+    paddingBottom: spacing.lg,
   },
 });
 
