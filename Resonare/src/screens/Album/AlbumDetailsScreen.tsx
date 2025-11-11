@@ -139,8 +139,6 @@ export default function AlbumDetailsScreen() {
               console.error('Error applying diary rating to album rating:', e);
             }
           }
-          // Reload details so UI reflects any rating changes
-          await loadAlbumDetails();
         }
       }
     } catch (e) {
