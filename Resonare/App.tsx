@@ -19,6 +19,7 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
 import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
 import { initializeCrashAnalytics } from './src/services/crashAnalytics';
+import { initializeAdMob } from './src/services/adMobService';
 
 // Suppress console output for beta users immediately
 suppressConsoleForBetaUsers();
@@ -33,6 +34,9 @@ function AppContent() {
       try {
         // Initialize crash analytics (handles Firebase internally)
         await initializeCrashAnalytics();
+        
+        // Initialize AdMob
+        await initializeAdMob();
         
         // Disable React Native error overlays for beta testers
         if (Environment.isStaging || Environment.isProduction) {

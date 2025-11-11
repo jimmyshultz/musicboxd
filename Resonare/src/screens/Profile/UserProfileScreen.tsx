@@ -24,6 +24,7 @@ import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { spacing, shadows } from '../../utils/theme';
+import BannerAdComponent from '../../components/BannerAd';
 
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
@@ -532,6 +533,11 @@ export default function UserProfileScreen() {
           )}
         </View>
 
+        {/* Banner Ad */}
+        <View style={styles.adContainer}>
+          <BannerAdComponent />
+        </View>
+
         {/* Stats Grid */}
         <View style={styles.section}>
           <Text variant="headlineSmall" style={styles.sectionTitle}>
@@ -712,5 +718,10 @@ const createStyles = (theme: any, statCardWidth: number, statsHorizontalSpacing:
     alignItems: 'center',
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
+  },
+  adContainer: {
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+    paddingBottom: spacing.lg,
   },
 });

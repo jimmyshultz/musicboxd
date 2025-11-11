@@ -25,6 +25,7 @@ import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
 import { spacing, shadows } from '../../utils/theme';
 import { SegmentedButtons } from 'react-native-paper';
+import BannerAdComponent from '../../components/BannerAd';
 
 type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 
@@ -490,6 +491,11 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Banner Ad */}
+        <View style={styles.adContainer}>
+          <BannerAdComponent />
+        </View>
+
         {/* Stats Grid */}
         <View style={styles.section}>
           <Text variant="headlineSmall" style={styles.sectionTitle}>
@@ -706,5 +712,10 @@ const createStyles = (theme: any, statCardWidth: number, statsHorizontalSpacing:
   loadingText: {
     marginTop: spacing.md,
     color: theme.colors.onSurfaceVariant,
+  },
+  adContainer: {
+    marginVertical: spacing.lg,
+    alignItems: 'center',
+    paddingBottom: spacing.lg,
   },
 });
