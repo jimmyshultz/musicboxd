@@ -195,7 +195,7 @@ export default function SearchScreen() {
         <Text variant="titleMedium" numberOfLines={2} style={styles.albumTitle}>
           {item.title}
         </Text>
-        <Text variant="bodyMedium" style={styles.artistName}>
+        <Text variant="bodyMedium" style={styles.albumArtistName}>
           {item.artist}
         </Text>
         <Text variant="bodySmall" style={styles.albumYear}>
@@ -500,7 +500,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     marginBottom: spacing.xs,
   },
-  artistName: {
+  albumArtistName: {
     color: theme.colors.onSurfaceVariant,
     marginBottom: spacing.xs,
   },

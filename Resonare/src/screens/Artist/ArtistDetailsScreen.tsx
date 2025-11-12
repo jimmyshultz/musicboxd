@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -23,7 +23,6 @@ import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album 
 import { RootState } from '../../store';
 import {
   setCurrentArtist,
-  clearCurrentArtist,
   setCurrentArtistAlbums,
   setLoading,
   setAlbumsLoading,
@@ -71,7 +70,7 @@ export default function ArtistDetailsScreen() {
   const navigation = useNavigation<ArtistDetailsNavigationProp>();
   const dispatch = useDispatch();
   const theme = useTheme();
-  const { artistId, artistName } = route.params;
+  const { artistId } = route.params;
 
   const { currentArtist, currentArtistAlbums, loading, albumsLoading, error } = useSelector(
     (state: RootState) => state.artist

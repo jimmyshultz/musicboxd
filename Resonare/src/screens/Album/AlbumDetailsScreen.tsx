@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -31,7 +31,6 @@ import { HalfStarRating } from '../../components/HalfStarRating';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { 
   setCurrentAlbum, 
-  clearCurrentAlbum, 
   setCurrentAlbumUserReview, 
   setCurrentAlbumIsListened
 } from '../../store/slices/albumSlice';
@@ -472,7 +471,7 @@ export default function AlbumDetailsScreen() {
         onRequestClose={() => setShowDiaryModal(false)}
       >
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={styles.keyboardAvoidingView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={0}
         >
@@ -480,16 +479,13 @@ export default function AlbumDetailsScreen() {
             {/* Header */}
             <View style={[styles.diaryModalHeader, { borderBottomColor: theme.colors.outline }]}>
               <TouchableOpacity onPress={() => setShowDiaryModal(false)}>
-                <Text variant="bodyLarge" style={{ color: theme.colors.primary }}>Cancel</Text>
+                <Text variant="bodyLarge" style={styles.cancelButton}>Cancel</Text>
               </TouchableOpacity>
               <Text variant="titleLarge" style={styles.diaryModalTitle}>Add to Diary</Text>
               <TouchableOpacity onPress={handleConfirmDiaryModal} disabled={submitting}>
                 <Text 
                   variant="bodyLarge" 
-                  style={{ 
-                    color: submitting ? theme.colors.onSurfaceDisabled : theme.colors.primary,
-                    fontWeight: '600'
-                  }}
+                  style={submitting ? styles.saveButtonDisabled : styles.saveButton}
                 >
                   Save
                 </Text>
@@ -565,7 +561,7 @@ export default function AlbumDetailsScreen() {
               </View>
 
               {/* Extra padding at bottom for keyboard */}
-              <View style={{ height: 200 }} />
+              <View style={styles.keyboardPaddingView} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -800,5 +796,22 @@ const createStyles = (theme: any) => StyleSheet.create({
     textAlign: 'right',
     marginTop: spacing.xs,
     color: theme.colors.onSurfaceVariant,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  cancelButton: {
+    color: theme.colors.primary,
+  },
+  saveButton: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  saveButtonDisabled: {
+    color: theme.colors.onSurfaceDisabled,
+    fontWeight: '600',
+  },
+  keyboardPaddingView: {
+    height: 200,
   },
 });
