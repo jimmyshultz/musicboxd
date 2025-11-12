@@ -8,8 +8,9 @@ Resonare is a mobile application inspired by Letterboxd, designed for music enth
 
 ### Core Features (Implemented)
 - ✅ **Album Discovery**: Browse popular albums with beautiful cover art
-- ✅ **Real-time Search**: Search Spotify's entire catalog with instant results
-- ✅ **Album Details**: Comprehensive album view with track listings, metadata, and ratings
+- ✅ **Artist Details**: Dedicated artist pages with full discographies and album grids
+- ✅ **Real-time Search**: Search albums, artists, and users with instant results
+- ✅ **Album Details**: Comprehensive album view with track listings, metadata, and clickable artist names
 - ✅ **Interactive Rating System**: 5-star rating system for albums
 - ✅ **Professional UI**: Material Design 3 with consistent theming and navigation
 - ✅ **Dark/Light Mode**: Automatic theme switching based on system preferences
@@ -50,11 +51,12 @@ Resonare is a mobile application inspired by Letterboxd, designed for music enth
 ## 📱 Current App Flow
 
 1. **Home Screen**: Browse popular albums with cover art and metadata
-2. **Album Details**: Tap any album → View comprehensive details with track listings
-3. **Search**: Real-time album search with trending suggestions and genre filters
-4. **Profile**: User profile with statistics and menu options
-5. **Rating System**: Interactive 5-star rating for albums
-6. **Theme Support**: Automatic dark/light mode switching
+2. **Search**: Real-time search for albums, artists, and users with tabbed interface
+3. **Album Details**: Tap any album → View comprehensive details with track listings
+4. **Artist Details**: Tap artist names → View artist profile with full discography
+5. **Profile**: User profile with statistics and menu options
+6. **Rating System**: Interactive 5-star rating for albums
+7. **Theme Support**: Automatic dark/light mode switching
 
 ## 🚀 Getting Started
 
@@ -142,13 +144,14 @@ src/
 ├── navigation/          # Navigation configuration
 ├── screens/            # Screen components
 │   ├── Home/           # Home screen
-│   ├── Search/         # Search functionality
+│   ├── Search/         # Search functionality (albums, artists, users)
 │   ├── Album/          # Album details
+│   ├── Artist/         # Artist details and discography
 │   ├── Profile/        # User profile
 │   └── Auth/           # Authentication
 ├── store/              # Redux store configuration
-│   └── slices/         # Redux slices
-├── services/           # API services and mock data
+│   └── slices/         # Redux slices (albums, artists, search, user, auth)
+├── services/           # API services (Spotify, Supabase)
 ├── types/              # TypeScript type definitions
 └── utils/              # Utility functions and theme
 ```
@@ -185,13 +188,15 @@ The app includes comprehensive mock data featuring:
 The app uses Redux Toolkit with the following slices:
 - `authSlice`: User authentication and profile data
 - `albumSlice`: Album data and user interactions (ratings, listens)
-- `searchSlice`: Search functionality and trending data
+- `artistSlice`: Artist data and discographies
+- `searchSlice`: Search functionality for albums, artists, and users
 - `userSlice`: Social features and activity feeds
 
 ### Services
-- `AlbumService`: Handles album data fetching and search
-- Mock API responses with realistic delays
-- Extensible architecture for real API integration
+- `AlbumService`: Handles album data fetching and caching
+- `ArtistService`: Manages artist data, discographies, and Spotify integration
+- `SpotifyService`: Direct Spotify Web API integration
+- Supabase integration for data persistence and caching
 
 ### Type Safety
 Full TypeScript integration with:
@@ -199,6 +204,17 @@ Full TypeScript integration with:
 - Navigation parameter types
 - Component prop interfaces
 - API response types
+
+### Database Schema (Supabase)
+Key tables for data persistence:
+- **`albums`**: Album metadata with `artist_id` foreign key
+- **`artists`**: Artist profiles, genres, and follower counts (indexed by Spotify ID)
+- **`album_listens`**: User listening history
+- **`album_ratings`**: User ratings and reviews
+- **`diary_entries`**: User diary entries for albums
+- **`user_profiles`**: User accounts and social data
+
+Artist data is automatically cached from Spotify when viewed, with albums linked to artists for fast navigation.
 
 ## 🚧 Future Development
 

@@ -278,6 +278,7 @@ export class AlbumService {
       id: dbAlbum.id,
       title: dbAlbum.name,
       artist: dbAlbum.artist_name,
+      artistId: dbAlbum.artist_id,
       releaseDate: dbAlbum.release_date || '',
       genre: dbAlbum.genres || [],
       coverImageUrl: dbAlbum.image_url || '',
@@ -285,6 +286,9 @@ export class AlbumService {
       totalTracks: dbAlbum.total_tracks || 0,
       albumType: dbAlbum.album_type || 'album',
       trackList: [], // Empty for now
+      externalIds: {
+        spotify: dbAlbum.id,
+      },
     };
   }
 
@@ -301,6 +305,23 @@ export class AlbumService {
           
           if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
             const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
+            
+            // Save artist to database if we have artist data
+            if (spotifyAlbum.artists && spotifyAlbum.artists[0]) {
+              try {
+                const primaryArtist = spotifyAlbum.artists[0];
+                // Fetch full artist data to get images, genres, etc.
+                const fullArtistData = await SpotifyService.getArtist(primaryArtist.id);
+                const artistDbFormat = SpotifyMapper.mapArtistToDatabase(fullArtistData);
+                
+                const { supabase } = await import('./supabase');
+                await supabase.from('artists').upsert(artistDbFormat);
+              } catch (artistError) {
+                // Don't fail album fetch if artist save fails
+                console.warn('Could not save artist data:', artistError);
+              }
+            }
+            
             return {
               data: album,
               success: true,

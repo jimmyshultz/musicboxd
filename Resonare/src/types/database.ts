@@ -12,10 +12,23 @@ export interface UserProfile {
   updated_at: string;
 }
 
+export interface Artist {
+  id: string; // Spotify artist ID
+  name: string;
+  image_url?: string;
+  spotify_url?: string;
+  genres?: string[];
+  follower_count?: number;
+  popularity?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Album {
   id: string; // Spotify album ID
   name: string;
   artist_name: string;
+  artist_id?: string; // Link to artists table (Spotify artist ID)
   release_date?: string;
   image_url?: string;
   spotify_url?: string;
@@ -24,6 +37,8 @@ export interface Album {
   genres?: string[];
   created_at: string;
   updated_at: string;
+  // Relations (populated when joining)
+  artist?: Artist;
 }
 
 // Schema V2: Separate tables for different activity types
@@ -105,6 +120,7 @@ export interface UserActivity {
 // Database table names for type safety (Schema V2)
 export const TableNames = {
   USER_PROFILES: 'user_profiles',
+  ARTISTS: 'artists',
   ALBUMS: 'albums',
   ALBUM_LISTENS: 'album_listens',
   ALBUM_RATINGS: 'album_ratings',
@@ -123,6 +139,11 @@ export interface Database {
           id: string;
         };
         Update: Partial<Omit<UserProfile, 'id' | 'created_at' | 'updated_at'>>;
+      };
+      artists: {
+        Row: Artist;
+        Insert: Omit<Artist, 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<Artist, 'id' | 'created_at' | 'updated_at'>>;
       };
       albums: {
         Row: Album;

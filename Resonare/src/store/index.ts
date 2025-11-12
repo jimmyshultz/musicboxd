@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authSlice from './slices/authSlice';
 import albumSlice from './slices/albumSlice';
+import artistSlice from './slices/artistSlice';
 import userSlice from './slices/userSlice';
 import searchSlice from './slices/searchSlice';
 import diarySlice from './slices/diarySlice';
@@ -10,6 +11,7 @@ export const store = configureStore({
   reducer: {
     auth: authSlice,
     albums: albumSlice,
+    artist: artistSlice,
     user: userSlice,
     search: searchSlice,
     diary: diarySlice,

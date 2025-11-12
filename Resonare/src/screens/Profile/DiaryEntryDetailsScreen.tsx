@@ -319,7 +319,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
 
   return (
     <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
+      style={styles.keyboardAvoidingView} 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
@@ -599,5 +599,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     marginTop: spacing.xs,
     color: theme.colors.onSurfaceVariant,
   },
-
- });
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+});

@@ -1,9 +1,10 @@
-import { Album, Track, SearchResult } from '../types';
+import { Album, Track, SearchResult, Artist } from '../types';
 import {
   SpotifyAlbum,
   SpotifyTrack,
   SpotifySearchResponse,
   SpotifyImage,
+  SpotifyArtistFull,
 } from '../types/spotify';
 
 export class SpotifyMapper {
@@ -88,6 +89,7 @@ export class SpotifyMapper {
       id: spotifyAlbum.id,
       title: spotifyAlbum.name,
       artist: spotifyAlbum.artists.map(artist => artist.name).join(', '),
+      artistId: spotifyAlbum.artists[0]?.id, // Primary artist ID
       releaseDate: spotifyAlbum.release_date,
       genre: SpotifyMapper.extractGenres(spotifyAlbum),
       coverImageUrl: SpotifyMapper.getBestImageUrl(spotifyAlbum.images),
@@ -228,6 +230,7 @@ export class SpotifyMapper {
       id: spotifyAlbum.id,
       name: spotifyAlbum.name,
       artist_name: spotifyAlbum.artists.map(artist => artist.name).join(', '),
+      artist_id: spotifyAlbum.artists[0]?.id || null, // Primary artist ID
       release_date: spotifyAlbum.release_date || null,
       image_url: this.getBestImageUrl(spotifyAlbum.images),
       spotify_url: spotifyAlbum.external_urls?.spotify || null,
@@ -237,5 +240,49 @@ export class SpotifyMapper {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
+  }
+
+  /**
+   * Convert Spotify artist to our Artist interface
+   */
+  static mapSpotifyArtistToArtist(spotifyArtist: SpotifyArtistFull): Artist {
+    return {
+      id: spotifyArtist.id,
+      name: spotifyArtist.name,
+      imageUrl: this.getBestImageUrl(spotifyArtist.images || []),
+      genres: spotifyArtist.genres || [],
+      spotifyUrl: spotifyArtist.external_urls?.spotify,
+      followerCount: spotifyArtist.followers?.total,
+      popularity: spotifyArtist.popularity,
+    };
+  }
+
+  /**
+   * Map Spotify artist to database artist format
+   */
+  static mapArtistToDatabase(spotifyArtist: SpotifyArtistFull) {
+    return {
+      id: spotifyArtist.id,
+      name: spotifyArtist.name,
+      image_url: this.getBestImageUrl(spotifyArtist.images || []),
+      spotify_url: spotifyArtist.external_urls?.spotify || null,
+      genres: spotifyArtist.genres || [],
+      follower_count: spotifyArtist.followers?.total || null,
+      popularity: spotifyArtist.popularity || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Validate that a Spotify artist has minimum required data
+   */
+  static isValidSpotifyArtist(spotifyArtist: SpotifyArtistFull): boolean {
+    return !!(
+      spotifyArtist.id &&
+      spotifyArtist.name &&
+      spotifyArtist.images &&
+      spotifyArtist.images.length > 0
+    );
   }
 }

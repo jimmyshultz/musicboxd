@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -21,16 +21,16 @@ import {
   useTheme,
   TextInput,
 } from 'react-native-paper';
-import { RouteProp, useRoute } from '@react-navigation/native';
+import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, Track } from '../../types';
+import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
 import { HalfStarRating } from '../../components/HalfStarRating';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { 
   setCurrentAlbum, 
-  clearCurrentAlbum, 
   setCurrentAlbumUserReview, 
   setCurrentAlbumIsListened
 } from '../../store/slices/albumSlice';
@@ -42,7 +42,15 @@ import { spacing, shadows } from '../../utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Switch } from 'react-native-paper';
 
-type AlbumDetailsRouteProp = RouteProp<HomeStackParamList | SearchStackParamList, 'AlbumDetails'>;
+type AlbumDetailsRouteProp = RouteProp<
+  HomeStackParamList | SearchStackParamList | ProfileStackParamList,
+  'AlbumDetails'
+>;
+
+type AlbumDetailsNavigationProp = StackNavigationProp<
+  HomeStackParamList | SearchStackParamList | ProfileStackParamList,
+  'AlbumDetails'
+>;
 
 // Icon components to avoid creating them during render
 const CheckIcon = (props: any) => <Icon name="check" size={16} color={props.color || '#666'} />;
@@ -81,6 +89,7 @@ const TrackListItem = ({ track, theme }: { track: Track; albumArtist: string; th
 
 export default function AlbumDetailsScreen() {
   const route = useRoute<AlbumDetailsRouteProp>();
+  const navigation = useNavigation<AlbumDetailsNavigationProp>();
   const dispatch = useDispatch();
   const theme = useTheme();
   const { albumId } = route.params;
@@ -178,6 +187,20 @@ export default function AlbumDetailsScreen() {
     openDiaryModal();
   };
 
+  const handleArtistPress = () => {
+    if (!currentAlbum) return;
+
+    // If we have artistId, navigate to artist details
+    if (currentAlbum.artistId) {
+      navigation.push('ArtistDetails', {
+        artistId: currentAlbum.artistId,
+        artistName: currentAlbum.artist,
+      });
+    }
+    // If no artistId, could potentially search for artist by name
+    // But for now, we'll just not navigate if artistId is missing
+  };
+
   const loadAlbumDetails = useCallback(async () => {
     setLoading(true);
     try {
@@ -219,12 +242,13 @@ export default function AlbumDetailsScreen() {
     }
   }, [albumId, dispatch, user]);
 
-  useEffect(() => {
-    loadAlbumDetails();
-    return () => {
-      dispatch(clearCurrentAlbum());
-    };
-  }, [loadAlbumDetails, dispatch]);
+  // Use useFocusEffect to reload when screen comes into focus
+  // This ensures the correct album is loaded when navigating back
+  useFocusEffect(
+    useCallback(() => {
+      loadAlbumDetails();
+    }, [loadAlbumDetails])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -268,7 +292,9 @@ export default function AlbumDetailsScreen() {
     }
   };
 
-  if (loading || !currentAlbum) {
+  // Show loading if we're fetching data OR if the currentAlbum doesn't match the requested albumId
+  // This prevents showing the wrong album data when navigating between albums
+  if (loading || !currentAlbum || currentAlbum.id !== albumId) {
     const styles = createStyles(theme);
     return (
       <View style={styles.centerContainer}>
@@ -299,9 +325,21 @@ export default function AlbumDetailsScreen() {
           <Text variant="headlineMedium" style={styles.albumTitle}>
             {currentAlbum.title}
           </Text>
-          <Text variant="titleLarge" style={styles.artistName}>
-            {currentAlbum.artist}
-          </Text>
+          <TouchableOpacity
+            onPress={handleArtistPress}
+            disabled={!currentAlbum.artistId}
+            activeOpacity={currentAlbum.artistId ? 0.7 : 1}
+          >
+            <Text
+              variant="titleLarge"
+              style={[
+                styles.artistName,
+                currentAlbum.artistId && styles.artistNameClickable,
+              ]}
+            >
+              {currentAlbum.artist}
+            </Text>
+          </TouchableOpacity>
           <Text variant="bodyMedium" style={styles.albumMeta}>
             {albumYear} • {currentAlbum.trackList.length} tracks • {AlbumService.formatDuration(totalDuration)}
           </Text>
@@ -433,7 +471,7 @@ export default function AlbumDetailsScreen() {
         onRequestClose={() => setShowDiaryModal(false)}
       >
         <KeyboardAvoidingView
-          style={{ flex: 1 }}
+          style={styles.keyboardAvoidingView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={0}
         >
@@ -441,16 +479,13 @@ export default function AlbumDetailsScreen() {
             {/* Header */}
             <View style={[styles.diaryModalHeader, { borderBottomColor: theme.colors.outline }]}>
               <TouchableOpacity onPress={() => setShowDiaryModal(false)}>
-                <Text variant="bodyLarge" style={{ color: theme.colors.primary }}>Cancel</Text>
+                <Text variant="bodyLarge" style={styles.cancelButton}>Cancel</Text>
               </TouchableOpacity>
               <Text variant="titleLarge" style={styles.diaryModalTitle}>Add to Diary</Text>
               <TouchableOpacity onPress={handleConfirmDiaryModal} disabled={submitting}>
                 <Text 
                   variant="bodyLarge" 
-                  style={{ 
-                    color: submitting ? theme.colors.onSurfaceDisabled : theme.colors.primary,
-                    fontWeight: '600'
-                  }}
+                  style={submitting ? styles.saveButtonDisabled : styles.saveButton}
                 >
                   Save
                 </Text>
@@ -526,7 +561,7 @@ export default function AlbumDetailsScreen() {
               </View>
 
               {/* Extra padding at bottom for keyboard */}
-              <View style={{ height: 200 }} />
+              <View style={styles.keyboardPaddingView} />
             </ScrollView>
           </View>
         </KeyboardAvoidingView>
@@ -590,6 +625,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.sm,
+  },
+  artistNameClickable: {
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
   },
   albumMeta: {
     color: theme.colors.onSurfaceVariant,
@@ -757,5 +796,22 @@ const createStyles = (theme: any) => StyleSheet.create({
     textAlign: 'right',
     marginTop: spacing.xs,
     color: theme.colors.onSurfaceVariant,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  cancelButton: {
+    color: theme.colors.primary,
+  },
+  saveButton: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  saveButtonDisabled: {
+    color: theme.colors.onSurfaceDisabled,
+    fontWeight: '600',
+  },
+  keyboardPaddingView: {
+    height: 200,
   },
 });
