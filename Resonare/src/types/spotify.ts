@@ -24,7 +24,7 @@ export interface SpotifyExternalIds {
   upc?: string;
 }
 
-// Spotify Artist
+// Spotify Artist (simplified - used in album/track responses)
 export interface SpotifyArtist {
   external_urls: SpotifyExternalUrls;
   href: string;
@@ -39,6 +39,17 @@ export interface SpotifyArtist {
   genres?: string[];
   images?: SpotifyImage[];
   popularity?: number;
+}
+
+// Spotify Artist Full (complete artist object from GET /artists/{id})
+export interface SpotifyArtistFull extends SpotifyArtist {
+  followers: {
+    href: string | null;
+    total: number;
+  };
+  genres: string[];
+  images: SpotifyImage[];
+  popularity: number;
 }
 
 // Spotify Album
@@ -129,6 +140,25 @@ export interface SpotifyAlbumParams {
 export interface SpotifyMultipleAlbumsParams {
   ids: string[];
   market?: string;
+}
+
+// Artist albums response (from GET /artists/{id}/albums)
+export interface SpotifyArtistAlbumsResponse {
+  href: string;
+  items: SpotifyAlbum[];
+  limit: number;
+  next: string | null;
+  offset: number;
+  previous: string | null;
+  total: number;
+}
+
+// Artist parameters
+export interface SpotifyArtistAlbumsParams {
+  include_groups?: 'album' | 'single' | 'appears_on' | 'compilation' | string;
+  market?: string;
+  limit?: number;
+  offset?: number;
 }
 
 // Utility type to check if response is an error

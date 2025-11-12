@@ -24,6 +24,7 @@ import ListenedAlbumsScreen from '../screens/Profile/ListenedAlbumsScreen';
 import UserReviewsScreen from '../screens/Profile/UserReviewsScreen';
 import FavoriteAlbumsManagementScreen from '../screens/Profile/FavoriteAlbumsManagementScreen';
 import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
+import ArtistDetailsScreen from '../screens/Artist/ArtistDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
@@ -149,6 +150,15 @@ function HomeStackNavigator() {
         component={AlbumDetailsScreen}
         options={({ navigation }) => ({
           title: 'Album Details',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
+      />
+      <HomeStack.Screen
+        name="ArtistDetails"
+        component={ArtistDetailsScreen}
+        options={({ navigation }) => ({
+          title: 'Artist',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} />,
         })}
@@ -306,6 +316,15 @@ function SearchStackNavigator() {
         })}
       />
       <SearchStack.Screen
+        name="ArtistDetails"
+        component={ArtistDetailsScreen}
+        options={({ navigation }) => ({
+          title: 'Artist',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
+      />
+      <SearchStack.Screen
         name="UserProfile"
         component={UserProfileScreen}
         options={({ navigation }) => ({
@@ -453,6 +472,15 @@ function ProfileStackNavigator() {
         component={AlbumDetailsScreen}
         options={({ navigation }) => ({
           title: 'Album Details',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} />,
+        })}
+      />
+      <ProfileStack.Screen
+        name="ArtistDetails"
+        component={ArtistDetailsScreen}
+        options={({ navigation }) => ({
+          title: 'Artist',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} />,
         })}

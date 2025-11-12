@@ -6,6 +6,9 @@ import {
   SpotifySearchParams,
   SpotifyAlbumParams,
   SpotifyMultipleAlbumsParams,
+  SpotifyArtistFull,
+  SpotifyArtistAlbumsResponse,
+  SpotifyArtistAlbumsParams,
   isSpotifyError,
 } from '../types/spotify';
 import { Buffer } from 'buffer';
@@ -255,6 +258,56 @@ export class SpotifyService {
       `${SPOTIFY_CONFIG.ENDPOINTS.ALBUMS}/${albumId}/tracks`,
       requestParams
     );
+  }
+
+  /**
+   * Get artist details by ID
+   */
+  static async getArtist(artistId: string): Promise<SpotifyArtistFull> {
+    return this.makeRequest<SpotifyArtistFull>(
+      `${SPOTIFY_CONFIG.ENDPOINTS.ARTISTS}/${artistId}`
+    );
+  }
+
+  /**
+   * Get artist's albums
+   */
+  static async getArtistAlbums(
+    artistId: string,
+    params?: SpotifyArtistAlbumsParams
+  ): Promise<SpotifyArtistAlbumsResponse> {
+    const requestParams: Record<string, string> = {
+      include_groups: params?.include_groups || 'album,single',
+      limit: (params?.limit || 50).toString(),
+      offset: (params?.offset || 0).toString(),
+    };
+
+    if (params?.market) {
+      requestParams.market = params.market;
+    }
+
+    return this.makeRequest<SpotifyArtistAlbumsResponse>(
+      `${SPOTIFY_CONFIG.ENDPOINTS.ARTISTS}/${artistId}/albums`,
+      requestParams
+    );
+  }
+
+  /**
+   * Search specifically for artists
+   */
+  static async searchArtists(
+    query: string,
+    limit: number = SPOTIFY_CONFIG.SEARCH.DEFAULT_LIMIT,
+    offset: number = 0,
+    market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET
+  ): Promise<SpotifySearchResponse> {
+    return this.search({
+      q: query,
+      type: SPOTIFY_CONFIG.SEARCH.TYPES.ARTIST,
+      limit,
+      offset,
+      market,
+    });
   }
 
   /**

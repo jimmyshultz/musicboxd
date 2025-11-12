@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import { SearchStackParamList, Album } from '../../types';
+import { SearchStackParamList, Album, Artist } from '../../types';
 import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
 import {
@@ -31,6 +31,7 @@ import {
   addRecentSearch,
 } from '../../store/slices/searchSlice';
 import { AlbumService } from '../../services/albumService';
+import { ArtistService } from '../../services/artistService';
 import { userService } from '../../services/userService';
 import { spacing } from '../../utils/theme';
 import BannerAdComponent from '../../components/BannerAd';
@@ -88,8 +89,10 @@ export default function SearchScreen() {
     loading,
   } = useSelector((state: RootState) => state.search);
 
-  const [searchMode, setSearchMode] = useState<'albums' | 'users'>('albums');
+  const [searchMode, setSearchMode] = useState<'albums' | 'artists' | 'users'>('albums');
+  const [artistSearchResults, setArtistSearchResults] = useState<Artist[]>([]);
   const [userSearchResults, setUserSearchResults] = useState<UserProfile[]>([]);
+  const [artistSearchLoading, setArtistSearchLoading] = useState(false);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -105,6 +108,21 @@ export default function SearchScreen() {
           }
         } catch (error) {
           console.error('Album search error:', error);
+        }
+      } else if (searchMode === 'artists') {
+        setArtistSearchLoading(true);
+        try {
+          const response = await ArtistService.searchArtists(query, 20);
+          if (response.success) {
+            setArtistSearchResults(response.data);
+          } else {
+            setArtistSearchResults([]);
+          }
+        } catch (error) {
+          console.error('Artist search error:', error);
+          setArtistSearchResults([]);
+        } finally {
+          setArtistSearchLoading(false);
         }
       } else {
         setUserSearchLoading(true);
@@ -141,6 +159,10 @@ export default function SearchScreen() {
 
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
+  };
+
+  const navigateToArtist = (artistId: string, artistName: string) => {
+    navigation.navigate('ArtistDetails', { artistId, artistName });
   };
 
   const navigateToUserProfile = (userId: string) => {
@@ -183,6 +205,37 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
+  const renderArtistItem = ({ item }: { item: Artist }) => (
+    <TouchableOpacity
+      style={styles.artistResultItem}
+      onPress={() => navigateToArtist(item.id, item.name)}
+    >
+      <Image 
+        source={{ uri: item.imageUrl || 'https://via.placeholder.com/60' }} 
+        style={styles.artistImage} 
+      />
+      <View style={styles.artistDetailsContainer}>
+        <Text variant="titleMedium" numberOfLines={1} style={styles.artistName}>
+          {item.name}
+        </Text>
+        {item.genres && item.genres.length > 0 && (
+          <Text variant="bodySmall" numberOfLines={1} style={styles.artistGenres}>
+            {item.genres.slice(0, 3).join(', ')}
+          </Text>
+        )}
+        {item.followerCount !== undefined && (
+          <Text variant="bodySmall" style={styles.artistFollowers}>
+            {item.followerCount >= 1000000 
+              ? `${(item.followerCount / 1000000).toFixed(1)}M` 
+              : item.followerCount >= 1000 
+              ? `${(item.followerCount / 1000).toFixed(1)}K` 
+              : item.followerCount} followers
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
   const renderUserItem = ({ item }: { item: UserProfile }) => (
     <TouchableOpacity
       style={styles.userResultItem}
@@ -209,9 +262,11 @@ export default function SearchScreen() {
   );
 
   const showAlbumResults = searchMode === 'albums' && searchQuery.trim() && searchResults;
+  const showArtistResults = searchMode === 'artists' && searchQuery.trim() && artistSearchResults.length > 0;
   const showUserResults = searchMode === 'users' && searchQuery.trim() && userSearchResults.length > 0;
   const showEmptyState = searchQuery.trim() && 
     ((searchMode === 'albums' && searchResults && searchResults.albums.length === 0) ||
+     (searchMode === 'artists' && artistSearchResults.length === 0) ||
      (searchMode === 'users' && userSearchResults.length === 0));
 
   const styles = createStyles(theme);
@@ -220,7 +275,13 @@ export default function SearchScreen() {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <CustomSearchbar
-          placeholder={searchMode === 'albums' ? "Search albums, artists, genres..." : "Search users..."}
+          placeholder={
+            searchMode === 'albums' 
+              ? "Search albums..." 
+              : searchMode === 'artists'
+              ? "Search artists..."
+              : "Search users..."
+          }
           onChangeText={handleSearchChange}
           onSubmitEditing={handleSearchSubmit}
           value={searchQuery}
@@ -238,6 +299,14 @@ export default function SearchScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.modeToggle, searchMode === 'artists' && styles.activeModeToggle]}
+            onPress={() => setSearchMode('artists')}
+          >
+            <Text style={[styles.modeToggleText, searchMode === 'artists' && styles.activeModeToggleText]}>
+              Artists
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.modeToggle, searchMode === 'users' && styles.activeModeToggle]}
             onPress={() => setSearchMode('users')}
           >
@@ -248,7 +317,7 @@ export default function SearchScreen() {
         </View>
       </View>
 
-      {(loading || userSearchLoading) && (
+      {(loading || artistSearchLoading || userSearchLoading) && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" />
         </View>
@@ -258,6 +327,24 @@ export default function SearchScreen() {
         <FlatList
           data={searchResults.albums}
           renderItem={renderAlbumItem}
+          keyExtractor={(item) => item.id}
+          style={styles.searchResults}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          ListFooterComponent={
+            <View style={styles.adContainer}>
+              <BannerAdComponent />
+            </View>
+          }
+        />
+      )}
+
+      {showArtistResults && !artistSearchLoading && (
+        <FlatList
+          data={artistSearchResults}
+          renderItem={renderArtistItem}
           keyExtractor={(item) => item.id}
           style={styles.searchResults}
           showsVerticalScrollIndicator={false}
@@ -290,17 +377,21 @@ export default function SearchScreen() {
         />
       )}
 
-      {showEmptyState && !loading && !userSearchLoading && (
+      {showEmptyState && !loading && !artistSearchLoading && !userSearchLoading && (
         <View style={styles.emptyStateContainer}>
           <Text variant="bodyLarge" style={styles.emptyStateText}>
             {searchMode === 'albums' 
               ? `No albums found for "${searchQuery}"`
+              : searchMode === 'artists'
+              ? `No artists found for "${searchQuery}"`
               : `No users found for "${searchQuery}"`
             }
           </Text>
           <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
             {searchMode === 'albums'
-              ? "Try searching for a different artist or album name"
+              ? "Try searching for a different album name"
+              : searchMode === 'artists'
+              ? "Try searching for a different artist name"
               : "Try searching for a different username or display name"
             }
           </Text>
@@ -414,6 +505,37 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginBottom: spacing.xs,
   },
   albumYear: {
+    color: theme.colors.onSurfaceVariant,
+    fontSize: 12,
+  },
+  artistResultItem: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    backgroundColor: theme.colors.surface,
+    marginBottom: spacing.sm,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  artistImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    resizeMode: 'cover',
+  },
+  artistDetailsContainer: {
+    flex: 1,
+    marginLeft: spacing.md,
+  },
+  artistName: {
+    fontWeight: '600',
+    marginBottom: spacing.xs,
+  },
+  artistGenres: {
+    color: theme.colors.onSurfaceVariant,
+    marginBottom: spacing.xs,
+    fontSize: 12,
+  },
+  artistFollowers: {
     color: theme.colors.onSurfaceVariant,
     fontSize: 12,
   },

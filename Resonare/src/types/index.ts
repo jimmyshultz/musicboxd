@@ -45,6 +45,7 @@ export interface Album {
   id: string;
   title: string;
   artist: string;
+  artistId?: string; // Link to artists table (Spotify artist ID)
   releaseDate: string;
   genre: string[];
   coverImageUrl: string;
@@ -55,6 +56,22 @@ export interface Album {
     appleMusic?: string;
     lastfm?: string;
   };
+}
+
+// Artist types
+export interface Artist {
+  id: string;
+  name: string;
+  imageUrl: string;
+  genres: string[];
+  spotifyUrl?: string;
+  followerCount?: number;
+  popularity?: number;
+}
+
+export interface ArtistWithAlbums extends Artist {
+  albums: Album[];
+  totalAlbums: number;
 }
 
 export interface Track {
@@ -142,6 +159,7 @@ export type MainTabParamList = {
 export type HomeStackParamList = {
   HomeMain: undefined;
   AlbumDetails: { albumId: string };
+  ArtistDetails: { artistId: string; artistName?: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };
@@ -158,6 +176,7 @@ export type HomeStackParamList = {
 export type SearchStackParamList = {
   SearchMain: undefined;
   AlbumDetails: { albumId: string };
+  ArtistDetails: { artistId: string; artistName?: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };
@@ -174,6 +193,7 @@ export type SearchStackParamList = {
 export type ProfileStackParamList = {
   ProfileMain: undefined;
   AlbumDetails: { albumId: string };
+  ArtistDetails: { artistId: string; artistName?: string };
   UserProfile: { userId: string };
   Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
   ListenedAlbums: { userId: string; username: string };
