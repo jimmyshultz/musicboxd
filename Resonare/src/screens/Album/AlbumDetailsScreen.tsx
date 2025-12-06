@@ -221,9 +221,6 @@ export default function AlbumDetailsScreen() {
       if (response.success && response.data) {
         dispatch(setCurrentAlbum(response.data));
         
-        // Show album immediately, then load interactions in parallel
-        setLoading(false);
-        
         // Load user's interactions if user is logged in
         if (user) {
           setLoadingInteractions(true);
@@ -280,6 +277,7 @@ export default function AlbumDetailsScreen() {
       }
     } catch (error) {
       console.error('Error loading album details:', error);
+    } finally {
       setLoading(false);
     }
   }, [albumId, dispatch, user]);
