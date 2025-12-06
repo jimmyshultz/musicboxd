@@ -20,6 +20,7 @@ import {
   Divider,
   useTheme,
   TextInput,
+  Avatar,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -37,7 +38,7 @@ import {
 import { AlbumService } from '../../services/albumService';
 import { albumListensService } from '../../services/albumListensService';
 import { albumRatingsService } from '../../services/albumRatingsService';
-import { diaryEntriesService } from '../../services/diaryEntriesService';
+import { diaryEntriesService, DiaryEntry, DiaryEntryWithUserProfile } from '../../services/diaryEntriesService';
 import { spacing, shadows } from '../../utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Switch } from 'react-native-paper';
@@ -109,11 +110,15 @@ export default function AlbumDetailsScreen() {
   const [diaryReview, setDiaryReview] = useState<string>('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [userDiaryEntries, setUserDiaryEntries] = useState<DiaryEntry[]>([]);
+  const [friendsDiaryEntries, setFriendsDiaryEntries] = useState<DiaryEntryWithUserProfile[]>([]);
 
   const openDiaryModal = () => {
     setAddToDiary(true);
     setDiaryDate(new Date());
-    setDiaryRating(undefined);
+    // Pre-fill rating from existing album rating if available
+    const existingRating = currentAlbumInteraction?.rating || currentAlbumUserReview?.rating;
+    setDiaryRating(existingRating || undefined);
     setDiaryReview('');
     setShowDiaryModal(true);
   };
@@ -147,6 +152,12 @@ export default function AlbumDetailsScreen() {
             } catch (e) {
               console.error('Error applying diary rating to album rating:', e);
             }
+          }
+
+          // Reload user's diary entries after successful creation
+          if (res.success) {
+            const userEntries = await diaryEntriesService.getUserDiaryEntriesForAlbum(user.id, currentAlbum.id);
+            setUserDiaryEntries(userEntries);
           }
         }
       }
@@ -230,6 +241,14 @@ export default function AlbumDetailsScreen() {
               };
               dispatch(setCurrentAlbumUserReview(reviewData));
             }
+
+            // Load user's diary entries for this album
+            const userEntries = await diaryEntriesService.getUserDiaryEntriesForAlbum(user.id, albumId);
+            setUserDiaryEntries(userEntries);
+
+            // Load friends' diary entries for this album
+            const friendsEntries = await diaryEntriesService.getFriendsDiaryEntriesForAlbum(user.id, albumId, 10);
+            setFriendsDiaryEntries(friendsEntries);
           } catch (error) {
             console.error('Error loading user album interactions:', error);
           }
@@ -460,6 +479,102 @@ export default function AlbumDetailsScreen() {
           </View>
         </Card.Content>
       </Card>
+
+      {/* Your Diary Entries */}
+      {user && userDiaryEntries.length > 0 && (
+        <Card style={styles.diaryEntriesCard} elevation={1}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              Your Diary Entries
+            </Text>
+            {userDiaryEntries.slice(0, 1).map((entry) => (
+              <TouchableOpacity
+                key={entry.id}
+                onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: user.id })}
+                style={styles.diaryEntryItem}
+              >
+                <View style={styles.diaryEntryContent}>
+                  <View style={styles.diaryEntryHeader}>
+                    <Text variant="bodyMedium" style={styles.diaryEntryDate}>
+                      {new Date(entry.diary_date).toLocaleDateString()}
+                    </Text>
+                    {entry.rating && (
+                      <View style={styles.diaryEntryRating}>
+                        <Icon name="star" size={14} color={theme.colors.primary} />
+                        <Text variant="bodyMedium" style={styles.ratingValue}>
+                          {entry.rating.toFixed(1)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                  {entry.notes && (
+                    <Text variant="bodySmall" numberOfLines={2} style={styles.diaryEntryNotes}>
+                      {entry.notes}
+                    </Text>
+                  )}
+                </View>
+                <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            ))}
+            {userDiaryEntries.length > 1 && (
+              <Text variant="bodySmall" style={styles.moreEntriesText}>
+                You have {userDiaryEntries.length} {userDiaryEntries.length === 1 ? 'entry' : 'entries'} for this album
+              </Text>
+            )}
+          </Card.Content>
+        </Card>
+      )}
+
+      {/* Friends' Diary Entries */}
+      {user && friendsDiaryEntries.length > 0 && (
+        <Card style={styles.diaryEntriesCard} elevation={1}>
+          <Card.Content>
+            <Text variant="titleMedium" style={styles.sectionTitle}>
+              Friends' Entries
+            </Text>
+            {friendsDiaryEntries.map((entry) => (
+              <TouchableOpacity
+                key={entry.id}
+                onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: entry.user_id })}
+                style={styles.friendDiaryEntryItem}
+              >
+                <View style={styles.friendDiaryEntryContent}>
+                  {entry.user_profiles?.avatar_url ? (
+                    <Avatar.Image 
+                      size={32} 
+                      source={{ uri: entry.user_profiles.avatar_url }} 
+                    />
+                  ) : (
+                    <Avatar.Icon 
+                      size={32} 
+                      icon="account" 
+                    />
+                  )}
+                  <View style={styles.friendDiaryInfo}>
+                    <Text variant="bodyMedium" style={styles.friendUsername}>
+                      {entry.user_profiles?.username || 'Unknown'}
+                    </Text>
+                    <View style={styles.friendDiaryDateRatingRow}>
+                      <Text variant="bodySmall" style={styles.friendDiaryDate}>
+                        {new Date(entry.diary_date).toLocaleDateString()}
+                      </Text>
+                      {entry.rating && (
+                        <View style={styles.friendDiaryRating}>
+                          <Icon name="star" size={14} color={theme.colors.primary} />
+                          <Text variant="bodyMedium" style={styles.ratingValue}>
+                            {entry.rating.toFixed(1)}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </View>
+                <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+              </TouchableOpacity>
+            ))}
+          </Card.Content>
+        </Card>
+      )}
 
       <View style={styles.bottomPadding} />
 
@@ -813,5 +928,83 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   keyboardPaddingView: {
     height: 200,
+  },
+  diaryEntriesCard: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    backgroundColor: theme.colors.surface,
+  },
+  diaryEntryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outlineVariant,
+  },
+  diaryEntryContent: {
+    flex: 1,
+  },
+  diaryEntryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  diaryEntryDate: {
+    fontWeight: '500',
+  },
+  diaryEntryRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingValue: {
+    fontWeight: '500',
+    color: theme.colors.primary,
+  },
+  diaryEntryNotes: {
+    color: theme.colors.onSurfaceVariant,
+    marginTop: spacing.xs,
+  },
+  moreEntriesText: {
+    color: theme.colors.onSurfaceVariant,
+    marginTop: spacing.md,
+    fontStyle: 'italic',
+  },
+  friendDiaryEntryItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outlineVariant,
+  },
+  friendDiaryEntryContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  friendDiaryInfo: {
+    flex: 1,
+  },
+  friendUsername: {
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  friendDiaryDateRatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  friendDiaryDate: {
+    color: theme.colors.onSurfaceVariant,
+    fontSize: 12,
+  },
+  friendDiaryRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });

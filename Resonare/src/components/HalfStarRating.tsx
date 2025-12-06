@@ -34,18 +34,24 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
   const handleStarPress = (starNumber: number, event: any) => {
     if (disabled) return;
 
-    // Get touch position relative to the star
-    const { locationX } = event.nativeEvent;
-    const starWidth = iconSize + 4; // Icon size + paddingHorizontal (2px * 2 sides = 4px total)
-    const isLeftSide = locationX < starWidth / 2;
+    // Letterboxd-style behavior:
+    // - First tap on a star: give full star
+    // - Second tap on same full star: change to half star
+    // - Third tap on same half star: remove rating (0)
+    // - Tapping different star: give new full star
     
-    const newRating = isLeftSide ? starNumber - 0.5 : starNumber;
+    const fullStarRating = starNumber;
+    const halfStarRating = starNumber - 0.5;
     
-    // If clicking on the currently selected rating, remove it
-    if (newRating === rating) {
+    if (rating === fullStarRating) {
+      // Currently at full star, change to half star
+      onRatingChange(halfStarRating);
+    } else if (rating === halfStarRating) {
+      // Currently at half star, remove rating
       onRatingChange(0);
     } else {
-      onRatingChange(newRating);
+      // Different star or no rating, set to full star
+      onRatingChange(fullStarRating);
     }
   };
 
