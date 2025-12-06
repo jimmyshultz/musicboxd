@@ -70,11 +70,18 @@ export default function HomeScreen() {
   const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
   const [discoverFriends, setDiscoverFriends] = useState<PotentialFriend[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingStates, setLoadingStates] = useState({
+    popularThisWeek: true,
+    newFromFriends: true,
+    popularWithFriends: true,
+    discoverFriends: true,
+  });
   
   const styles = createStyles(theme);
 
   const loadPopularThisWeek = useCallback(async () => {
     try {
+      setLoadingStates(prev => ({ ...prev, popularThisWeek: true }));
       // Get popular albums for this week
       const response = await AlbumService.getPopularAlbums();
       if (response.success) {
@@ -84,14 +91,18 @@ export default function HomeScreen() {
       }
     } catch (error) {
       console.error('Error loading popular this week:', error);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, popularThisWeek: false }));
     }
   }, []);
 
   const loadNewFromFriends = useCallback(async () => {
     try {
+      setLoadingStates(prev => ({ ...prev, newFromFriends: true }));
       const currentUserId = currentUser?.id;
       if (!currentUserId) {
         setNewFromFriends([]);
+        setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
         return;
       }
       
@@ -105,13 +116,14 @@ export default function HomeScreen() {
       // Early return if no friends available
       if (friendsOnly.length === 0) {
         setNewFromFriends([]);
+        setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
         return;
       }
       
       const friendActivities: FriendActivity[] = [];
       
-      // Get real diary entries for each friend
-      for (const friend of friendsOnly) {
+      // Get real diary entries for each friend - Process in parallel
+      const diaryPromises = friendsOnly.map(async (friend) => {
         try {
           const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
           
@@ -122,7 +134,7 @@ export default function HomeScreen() {
               .slice(0, 3);
             
             // Create activities for each recent diary entry
-            for (const entry of recentEntries) {
+            return recentEntries.map(entry => {
               if (entry.albums) {
                 const album: Album = {
                   id: entry.albums.id,
@@ -137,7 +149,7 @@ export default function HomeScreen() {
                   trackList: [], // Empty for now
                 };
                 
-                friendActivities.push({
+                return {
                   album: {
                     ...album,
                     // Use unique ID for each activity instance to allow duplicates
@@ -153,14 +165,20 @@ export default function HomeScreen() {
                   diaryDate: new Date(entry.diary_date),
                   rating: entry.rating,
                   notes: entry.notes,
-                });
+                };
               }
-            }
+              return null;
+            }).filter(Boolean) as FriendActivity[];
           }
+          return [];
         } catch (error) {
           console.error(`Error loading diary entries for friend ${friend.username}:`, error);
+          return [];
         }
-      }
+      });
+
+      const results = await Promise.all(diaryPromises);
+      results.forEach(activities => friendActivities.push(...activities));
       
       // Sort by most recent first and limit to 10 total activities for home page preview
       friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
@@ -168,14 +186,18 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error loading new from friends:', error);
       setNewFromFriends([]);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
     }
   }, [currentUser]);
 
   const loadPopularWithFriends = useCallback(async () => {
     try {
+      setLoadingStates(prev => ({ ...prev, popularWithFriends: true }));
       const currentUserId = currentUser?.id;
       if (!currentUserId) {
         setPopularWithFriends([]);
+        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
         return;
       }
       
@@ -189,6 +211,7 @@ export default function HomeScreen() {
       // Early return if no friends available
       if (friendsOnly.length === 0) {
         setPopularWithFriends([]);
+        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
         return;
       }
       
@@ -199,47 +222,91 @@ export default function HomeScreen() {
         friendData: { id: string; username: string; profilePicture?: string; }[];
       }>();
       
-      // Collect listen data from all friends
-      for (const friend of friendsOnly) {
-        try {
-          const userListens = await AlbumService.getUserListens(friend.id);
-          
-          for (const listen of userListens) {
-            // Get or create album entry
-            if (!albumPopularity.has(listen.albumId)) {
-              const albumResponse = await AlbumService.getAlbumById(listen.albumId);
-              if (albumResponse.success && albumResponse.data) {
-                albumPopularity.set(listen.albumId, {
-                  album: albumResponse.data,
-                  friendsWhoListened: new Set(),
-                  friendData: [],
-                });
-              } else {
-                continue; // Skip if album not found
-              }
-            }
-            
-            const entry = albumPopularity.get(listen.albumId)!;
-            // Add friend to this album's listeners
-            if (!entry.friendsWhoListened.has(friend.id)) {
-              entry.friendsWhoListened.add(friend.id);
-              entry.friendData.push({
-                id: friend.id,
-                username: friend.username,
-                profilePicture: friend.avatar_url,
-              });
-            }
-          }
-        } catch (error) {
+      // Fetch all friends' listens in parallel
+      const friendListensPromises = friendsOnly.map(friend => 
+        AlbumService.getUserListens(friend.id).catch(error => {
           console.error(`Error loading listens for friend ${friend.username}:`, error);
-        }
+          return [];
+        })
+      );
+      
+      const allFriendsListens = await Promise.all(friendListensPromises);
+      
+      // Collect all unique album IDs
+      const allAlbumIds = new Set<string>();
+      allFriendsListens.forEach(listens => {
+        listens.forEach(listen => allAlbumIds.add(listen.albumId));
+      });
+      
+      if (allAlbumIds.size === 0) {
+        setPopularWithFriends([]);
+        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
+        return;
       }
+      
+      // Batch query albums from database
+      const { supabase } = await import('../../services/supabase');
+      const { data: dbAlbums, error: dbError } = await supabase
+        .from('albums')
+        .select('*')
+        .in('id', Array.from(allAlbumIds));
+      
+      if (dbError) {
+        console.error('Error fetching albums from database:', dbError);
+      }
+      
+      // Create a map of albums from database
+      const albumsMap = new Map<string, Album>();
+      dbAlbums?.forEach(dbAlbum => {
+        albumsMap.set(dbAlbum.id, {
+          id: dbAlbum.id,
+          title: dbAlbum.name,
+          artist: dbAlbum.artist_name,
+          releaseDate: dbAlbum.release_date || '',
+          genre: dbAlbum.genres || [],
+          coverImageUrl: dbAlbum.image_url || '',
+          spotifyUrl: dbAlbum.spotify_url || '',
+          totalTracks: dbAlbum.total_tracks || 0,
+          albumType: dbAlbum.album_type || 'album',
+          trackList: [],
+        });
+      });
+      
+      // Process each friend's listens
+      allFriendsListens.forEach((listens, index) => {
+        const friend = friendsOnly[index];
+        
+        listens.forEach(listen => {
+          const album = albumsMap.get(listen.albumId);
+          if (!album) return; // Skip if album not in database
+          
+          // Get or create album entry
+          if (!albumPopularity.has(listen.albumId)) {
+            albumPopularity.set(listen.albumId, {
+              album,
+              friendsWhoListened: new Set(),
+              friendData: [],
+            });
+          }
+          
+          const entry = albumPopularity.get(listen.albumId)!;
+          // Add friend to this album's listeners
+          if (!entry.friendsWhoListened.has(friend.id)) {
+            entry.friendsWhoListened.add(friend.id);
+            entry.friendData.push({
+              id: friend.id,
+              username: friend.username,
+              profilePicture: friend.avatar_url,
+            });
+          }
+        });
+      });
       
       // Convert to FriendPopularAlbum array and filter albums with multiple listeners
       const friendPopularAlbums: FriendPopularAlbum[] = [];
       
       albumPopularity.forEach((entry, _albumId) => {
-        // Only include albums that have been listened to by 1+ friends (lowered from 2+ for demo data)
+        // Only include albums that have been listened to by 1+ friends
         if (entry.friendsWhoListened.size >= 1) {
           friendPopularAlbums.push({
             album: entry.album,
@@ -255,14 +322,18 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error loading popular with friends:', error);
       setPopularWithFriends([]);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
     }
   }, [currentUser]);
 
   const loadDiscoverFriends = useCallback(async () => {
     try {
+      setLoadingStates(prev => ({ ...prev, discoverFriends: true }));
       const currentUserId = currentUser?.id;
       if (!currentUserId) {
         setDiscoverFriends([]);
+        setLoadingStates(prev => ({ ...prev, discoverFriends: false }));
         return;
       }
       
@@ -275,28 +346,29 @@ export default function HomeScreen() {
         
         if (potentialUsers.length === 0) {
           setDiscoverFriends([]);
+          setLoadingStates(prev => ({ ...prev, discoverFriends: false }));
           return;
         }
         
-        // Calculate real mutual followers for each potential friend
-        const potentialFriends: PotentialFriend[] = [];
-        
-        for (const user of potentialUsers) {
+        // Calculate mutual followers for all users in parallel
+        const mutualFollowerPromises = potentialUsers.map(async (user) => {
           try {
             const mutualFollowersCount = await userService.getMutualFollowersCount(currentUserId, user.id);
-            potentialFriends.push({
+            return {
               user,
               mutualFollowers: mutualFollowersCount,
-            });
+            };
           } catch (error) {
             console.error(`Error calculating mutual followers for user ${user.username}:`, error);
             // If calculation fails, still include the user but with 0 mutual followers
-            potentialFriends.push({
+            return {
               user,
               mutualFollowers: 0,
-            });
+            };
           }
-        }
+        });
+        
+        const potentialFriends = await Promise.all(mutualFollowerPromises);
         
         // Sort by mutual followers count (descending) and limit to 20
         potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
@@ -307,19 +379,23 @@ export default function HomeScreen() {
     } catch (error) {
       console.error('Error loading discover friends:', error);
       setDiscoverFriends([]);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, discoverFriends: false }));
     }
   }, [currentUser]);
 
   useEffect(() => {
     dispatch(fetchAlbumsStart());
-    Promise.all([
-      loadPopularThisWeek(),
-      loadNewFromFriends(),
-      loadPopularWithFriends(),
-      loadDiscoverFriends(),
-    ]).finally(() => {
+    // Load sections independently - don't wait for all to complete
+    loadPopularThisWeek();
+    loadNewFromFriends();
+    loadPopularWithFriends();
+    loadDiscoverFriends();
+    
+    // Mark albums as loaded after a short delay (sections load independently)
+    setTimeout(() => {
       dispatch(fetchAlbumsSuccess([]));
-    });
+    }, 100);
   }, [dispatch, loadPopularThisWeek, loadNewFromFriends, loadPopularWithFriends, loadDiscoverFriends]);
 
   const onRefresh = useCallback(async () => {
@@ -464,41 +540,69 @@ export default function HomeScreen() {
       {/* Popular This Week */}
       <View style={styles.section}>
         {renderSectionHeader('Popular This Week', () => navigation.navigate('PopularThisWeek'))}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.horizontalList}>
-            {popularThisWeek.map(renderAlbumCard)}
+        {loadingStates.popularThisWeek && popularThisWeek.length === 0 ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" />
+            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
           </View>
-        </ScrollView>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.horizontalList}>
+              {popularThisWeek.map(renderAlbumCard)}
+            </View>
+          </ScrollView>
+        )}
       </View>
 
       {/* New From Friends */}
       <View style={styles.section}>
         {renderSectionHeader('New From Friends', () => navigation.navigate('NewFromFriends'))}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.horizontalList}>
-            {newFromFriends.map(renderFriendActivityCard)}
+        {loadingStates.newFromFriends && newFromFriends.length === 0 ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" />
+            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
           </View>
-        </ScrollView>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.horizontalList}>
+              {newFromFriends.map(renderFriendActivityCard)}
+            </View>
+          </ScrollView>
+        )}
       </View>
 
       {/* Popular With Friends */}
       <View style={styles.section}>
         {renderSectionHeader('Popular With Friends', () => navigation.navigate('PopularWithFriends'))}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.horizontalList}>
-            {popularWithFriends.map(renderPopularWithFriendsCard)}
+        {loadingStates.popularWithFriends && popularWithFriends.length === 0 ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" />
+            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
           </View>
-        </ScrollView>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.horizontalList}>
+              {popularWithFriends.map(renderPopularWithFriendsCard)}
+            </View>
+          </ScrollView>
+        )}
       </View>
 
       {/* Discover Friends */}
       <View style={styles.section}>
         {renderSectionHeader('Discover Friends')}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.horizontalList}>
-            {discoverFriends.map(renderPotentialFriendCard)}
+        {loadingStates.discoverFriends && discoverFriends.length === 0 ? (
+          <View style={styles.loadingSection}>
+            <ActivityIndicator size="small" />
+            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
           </View>
-        </ScrollView>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.horizontalList}>
+              {discoverFriends.map(renderPotentialFriendCard)}
+            </View>
+          </ScrollView>
+        )}
       </View>
 
       {/* Banner Ad */}
@@ -523,6 +627,12 @@ const createStyles = (theme: any) => StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     color: theme.colors.onSurfaceVariant,
+  },
+  loadingSection: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   section: {
     marginBottom: spacing.xl,

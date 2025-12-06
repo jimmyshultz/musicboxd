@@ -112,6 +112,8 @@ export default function AlbumDetailsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [userDiaryEntries, setUserDiaryEntries] = useState<DiaryEntry[]>([]);
   const [friendsDiaryEntries, setFriendsDiaryEntries] = useState<DiaryEntryWithUserProfile[]>([]);
+  const [loadingInteractions, setLoadingInteractions] = useState(false);
+  const [loadingDiaryEntries, setLoadingDiaryEntries] = useState(false);
 
   const openDiaryModal = () => {
     setAddToDiary(true);
@@ -219,15 +221,25 @@ export default function AlbumDetailsScreen() {
       if (response.success && response.data) {
         dispatch(setCurrentAlbum(response.data));
         
+        // Show album immediately, then load interactions in parallel
+        setLoading(false);
+        
         // Load user's interactions if user is logged in
         if (user) {
+          setLoadingInteractions(true);
+          
           try {
-            // Check if user has listened to this album
-            const hasListened = await albumListensService.hasUserListenedToAlbum(user.id, albumId);
+            // Load all user interactions in parallel for faster loading
+            const [hasListened, userRating, userEntries] = await Promise.all([
+              albumListensService.hasUserListenedToAlbum(user.id, albumId),
+              albumRatingsService.getUserAlbumRating(user.id, albumId),
+              diaryEntriesService.getUserDiaryEntriesForAlbum(user.id, albumId),
+            ]);
+            
+            // Update listened status
             dispatch(setCurrentAlbumIsListened(hasListened));
             
-            // Get user's rating for this album
-            const userRating = await albumRatingsService.getUserAlbumRating(user.id, albumId);
+            // Update user rating
             if (userRating) {
               const reviewData = {
                 id: `review_${albumId}_${user.id}`,
@@ -241,22 +253,33 @@ export default function AlbumDetailsScreen() {
               };
               dispatch(setCurrentAlbumUserReview(reviewData));
             }
-
-            // Load user's diary entries for this album
-            const userEntries = await diaryEntriesService.getUserDiaryEntriesForAlbum(user.id, albumId);
+            
+            // Update user's diary entries
             setUserDiaryEntries(userEntries);
-
-            // Load friends' diary entries for this album
-            const friendsEntries = await diaryEntriesService.getFriendsDiaryEntriesForAlbum(user.id, albumId, 10);
-            setFriendsDiaryEntries(friendsEntries);
+            
+            setLoadingInteractions(false);
+            
+            // Load friends' diary entries in background (non-blocking)
+            setLoadingDiaryEntries(true);
+            diaryEntriesService.getFriendsDiaryEntriesForAlbum(user.id, albumId, 10)
+              .then(friendsEntries => {
+                setFriendsDiaryEntries(friendsEntries);
+                setLoadingDiaryEntries(false);
+              })
+              .catch(error => {
+                console.error('Error loading friends diary entries:', error);
+                setLoadingDiaryEntries(false);
+              });
+              
           } catch (error) {
             console.error('Error loading user album interactions:', error);
+            setLoadingInteractions(false);
+            setLoadingDiaryEntries(false);
           }
         }
       }
     } catch (error) {
       console.error('Error loading album details:', error);
-    } finally {
       setLoading(false);
     }
   }, [albumId, dispatch, user]);
@@ -481,97 +504,113 @@ export default function AlbumDetailsScreen() {
       </Card>
 
       {/* Your Diary Entries */}
-      {user && userDiaryEntries.length > 0 && (
+      {user && (loadingInteractions || userDiaryEntries.length > 0) && (
         <Card style={styles.diaryEntriesCard} elevation={1}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle}>
               Your Diary Entries
             </Text>
-            {userDiaryEntries.slice(0, 1).map((entry) => (
-              <TouchableOpacity
-                key={entry.id}
-                onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: user.id })}
-                style={styles.diaryEntryItem}
-              >
-                <View style={styles.diaryEntryContent}>
-                  <View style={styles.diaryEntryHeader}>
-                    <Text variant="bodyMedium" style={styles.diaryEntryDate}>
-                      {new Date(entry.diary_date).toLocaleDateString()}
-                    </Text>
-                    {entry.rating && (
-                      <View style={styles.diaryEntryRating}>
-                        <Icon name="star" size={14} color={theme.colors.primary} />
-                        <Text variant="bodyMedium" style={styles.ratingValue}>
-                          {entry.rating.toFixed(1)}
+            {loadingInteractions ? (
+              <View style={styles.loadingSection}>
+                <ActivityIndicator size="small" />
+              </View>
+            ) : (
+              <>
+                {userDiaryEntries.slice(0, 1).map((entry) => (
+                  <TouchableOpacity
+                    key={entry.id}
+                    onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: user.id })}
+                    style={styles.diaryEntryItem}
+                  >
+                    <View style={styles.diaryEntryContent}>
+                      <View style={styles.diaryEntryHeader}>
+                        <Text variant="bodyMedium" style={styles.diaryEntryDate}>
+                          {new Date(entry.diary_date).toLocaleDateString()}
                         </Text>
+                        {entry.rating && (
+                          <View style={styles.diaryEntryRating}>
+                            <Icon name="star" size={14} color={theme.colors.primary} />
+                            <Text variant="bodyMedium" style={styles.ratingValue}>
+                              {entry.rating.toFixed(1)}
+                            </Text>
+                          </View>
+                        )}
                       </View>
-                    )}
-                  </View>
-                  {entry.notes && (
-                    <Text variant="bodySmall" numberOfLines={2} style={styles.diaryEntryNotes}>
-                      {entry.notes}
-                    </Text>
-                  )}
-                </View>
-                <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
-              </TouchableOpacity>
-            ))}
-            {userDiaryEntries.length > 1 && (
-              <Text variant="bodySmall" style={styles.moreEntriesText}>
-                You have {userDiaryEntries.length} {userDiaryEntries.length === 1 ? 'entry' : 'entries'} for this album
-              </Text>
+                      {entry.notes && (
+                        <Text variant="bodySmall" numberOfLines={2} style={styles.diaryEntryNotes}>
+                          {entry.notes}
+                        </Text>
+                      )}
+                    </View>
+                    <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+                  </TouchableOpacity>
+                ))}
+                {userDiaryEntries.length > 1 && (
+                  <Text variant="bodySmall" style={styles.moreEntriesText}>
+                    You have {userDiaryEntries.length} {userDiaryEntries.length === 1 ? 'entry' : 'entries'} for this album
+                  </Text>
+                )}
+              </>
             )}
           </Card.Content>
         </Card>
       )}
 
       {/* Friends' Diary Entries */}
-      {user && friendsDiaryEntries.length > 0 && (
+      {user && (loadingDiaryEntries || friendsDiaryEntries.length > 0) && (
         <Card style={styles.diaryEntriesCard} elevation={1}>
           <Card.Content>
             <Text variant="titleMedium" style={styles.sectionTitle}>
               Friends' Entries
             </Text>
-            {friendsDiaryEntries.map((entry) => (
-              <TouchableOpacity
-                key={entry.id}
-                onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: entry.user_id })}
-                style={styles.friendDiaryEntryItem}
-              >
-                <View style={styles.friendDiaryEntryContent}>
-                  {entry.user_profiles?.avatar_url ? (
-                    <Avatar.Image 
-                      size={32} 
-                      source={{ uri: entry.user_profiles.avatar_url }} 
-                    />
-                  ) : (
-                    <Avatar.Icon 
-                      size={32} 
-                      icon="account" 
-                    />
-                  )}
-                  <View style={styles.friendDiaryInfo}>
-                    <Text variant="bodyMedium" style={styles.friendUsername}>
-                      {entry.user_profiles?.username || 'Unknown'}
-                    </Text>
-                    <View style={styles.friendDiaryDateRatingRow}>
-                      <Text variant="bodySmall" style={styles.friendDiaryDate}>
-                        {new Date(entry.diary_date).toLocaleDateString()}
-                      </Text>
-                      {entry.rating && (
-                        <View style={styles.friendDiaryRating}>
-                          <Icon name="star" size={14} color={theme.colors.primary} />
-                          <Text variant="bodyMedium" style={styles.ratingValue}>
-                            {entry.rating.toFixed(1)}
-                          </Text>
-                        </View>
+            {loadingDiaryEntries && friendsDiaryEntries.length === 0 ? (
+              <View style={styles.loadingSection}>
+                <ActivityIndicator size="small" />
+              </View>
+            ) : (
+              <>
+                {friendsDiaryEntries.map((entry) => (
+                  <TouchableOpacity
+                    key={entry.id}
+                    onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: entry.user_id })}
+                    style={styles.friendDiaryEntryItem}
+                  >
+                    <View style={styles.friendDiaryEntryContent}>
+                      {entry.user_profiles?.avatar_url ? (
+                        <Avatar.Image 
+                          size={32} 
+                          source={{ uri: entry.user_profiles.avatar_url }} 
+                        />
+                      ) : (
+                        <Avatar.Icon 
+                          size={32} 
+                          icon="account" 
+                        />
                       )}
+                      <View style={styles.friendDiaryInfo}>
+                        <Text variant="bodyMedium" style={styles.friendUsername}>
+                          {entry.user_profiles?.username || 'Unknown'}
+                        </Text>
+                        <View style={styles.friendDiaryDateRatingRow}>
+                          <Text variant="bodySmall" style={styles.friendDiaryDate}>
+                            {new Date(entry.diary_date).toLocaleDateString()}
+                          </Text>
+                          {entry.rating && (
+                            <View style={styles.friendDiaryRating}>
+                              <Icon name="star" size={14} color={theme.colors.primary} />
+                              <Text variant="bodyMedium" style={styles.ratingValue}>
+                                {entry.rating.toFixed(1)}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
                     </View>
-                  </View>
-                </View>
-                <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
-              </TouchableOpacity>
-            ))}
+                    <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
           </Card.Content>
         </Card>
       )}
@@ -933,6 +972,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginBottom: spacing.lg,
     backgroundColor: theme.colors.surface,
+  },
+  loadingSection: {
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   diaryEntryItem: {
     flexDirection: 'row',
