@@ -31,7 +31,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
 
   const iconSize = getIconSize();
 
-  const handleStarPress = (starNumber: number, event: any) => {
+  const handleStarPress = (starNumber: number) => {
     if (disabled) return;
 
     // Letterboxd-style behavior:
@@ -83,7 +83,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
       {[1, 2, 3, 4, 5].map((starNumber) => (
         <TouchableOpacity
           key={starNumber}
-          onPress={(event) => handleStarPress(starNumber, event)}
+          onPress={() => handleStarPress(starNumber)}
           disabled={disabled}
           activeOpacity={0.7}
           style={[styles.starTouchable, disabled && styles.starDisabled]}
