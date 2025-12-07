@@ -25,6 +25,15 @@ export interface DiaryEntryWithAlbum extends DiaryEntry {
   };
 }
 
+export interface DiaryEntryWithUserProfile extends DiaryEntry {
+  user_profiles?: {
+    id: string;
+    username: string;
+    avatar_url?: string;
+    display_name?: string;
+  };
+}
+
 // Utility helpers
 function getMonthKey(dateStr: string): string {
   // dateStr is YYYY-MM-DD
@@ -360,6 +369,84 @@ class DiaryEntriesService {
     } catch (error) {
       console.error('Error checking diary entry:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get user's diary entries for a specific album
+   */
+  async getUserDiaryEntriesForAlbum(userId: string, albumId: string): Promise<DiaryEntry[]> {
+    try {
+      const { data, error } = await supabase
+        .from('diary_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('album_id', albumId)
+        .order('diary_date', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting user diary entries for album:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get friends' diary entries for a specific album
+   */
+  async getFriendsDiaryEntriesForAlbum(userId: string, albumId: string, limit: number = 10): Promise<DiaryEntryWithUserProfile[]> {
+    try {
+      // First, get the user's following list (friends)
+      const { userService } = await import('./userService');
+      const friends = await userService.getUserFollowing(userId);
+      
+      if (friends.length === 0) {
+        return [];
+      }
+
+      const friendIds = friends.map(friend => friend.id);
+
+      // Query diary entries for these friends and this album
+      const { data: entries, error } = await supabase
+        .from('diary_entries')
+        .select('*')
+        .eq('album_id', albumId)
+        .in('user_id', friendIds)
+        .order('diary_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        throw error;
+      }
+
+      if (!entries || entries.length === 0) {
+        return [];
+      }
+
+      // Create a map of friend profiles for quick lookup
+      const friendsMap = new Map(friends.map(f => [f.id, f]));
+
+      // Combine diary entries with user profile data
+      const entriesWithProfiles: DiaryEntryWithUserProfile[] = entries.map(entry => ({
+        ...entry,
+        user_profiles: friendsMap.get(entry.user_id) ? {
+          id: friendsMap.get(entry.user_id)!.id,
+          username: friendsMap.get(entry.user_id)!.username,
+          avatar_url: friendsMap.get(entry.user_id)!.avatar_url,
+          display_name: friendsMap.get(entry.user_id)!.display_name,
+        } : undefined
+      }));
+
+      return entriesWithProfiles;
+    } catch (error) {
+      console.error('Error getting friends diary entries for album:', error);
+      return [];
     }
   }
 }

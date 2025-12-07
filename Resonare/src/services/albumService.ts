@@ -306,21 +306,9 @@ export class AlbumService {
           if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
             const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
             
-            // Save artist to database if we have artist data
-            if (spotifyAlbum.artists && spotifyAlbum.artists[0]) {
-              try {
-                const primaryArtist = spotifyAlbum.artists[0];
-                // Fetch full artist data to get images, genres, etc.
-                const fullArtistData = await SpotifyService.getArtist(primaryArtist.id);
-                const artistDbFormat = SpotifyMapper.mapArtistToDatabase(fullArtistData);
-                
-                const { supabase } = await import('./supabase');
-                await supabase.from('artists').upsert(artistDbFormat);
-              } catch (artistError) {
-                // Don't fail album fetch if artist save fails
-                console.warn('Could not save artist data:', artistError);
-              }
-            }
+            // NOTE: Artist data fetching is deferred for performance
+            // It will be fetched when user navigates to artist details page
+            // This significantly speeds up album loading on home page
             
             return {
               data: album,
