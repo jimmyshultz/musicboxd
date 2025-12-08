@@ -20,9 +20,9 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { ProfileStackParamList } from '../../types';
-import { RootState } from '../../store';
+import { RootState, AppDispatch } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { logout } from '../../store/slices/authSlice';
+import { logout, deleteAccount } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
 import { spacing } from '../../utils/theme';
 
@@ -37,7 +37,7 @@ interface UserSettings {
 
 export default function SettingsScreen() {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -51,6 +51,7 @@ export default function SettingsScreen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadSettings = useCallback(async () => {
     if (!user) return;
@@ -121,6 +122,53 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: () => {
             dispatch(logout());
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data including:\n\n' +
+      '- Your profile\n' +
+      '- All ratings and reviews\n' +
+      '- Diary entries\n' +
+      '- Followers and following\n\n' +
+      'This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: confirmDeleteAccount,
+        },
+      ]
+    );
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      'Are you absolutely sure?',
+      'Press DELETE FOREVER to confirm account deletion.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Forever',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await dispatch(deleteAccount()).unwrap();
+              // The auth state change will automatically navigate to auth screen
+            } catch (error: any) {
+              Alert.alert(
+                'Error',
+                error || 'Failed to delete account. Please try again.'
+              );
+              setDeleting(false);
+            }
           },
         },
       ]
@@ -250,6 +298,21 @@ export default function SettingsScreen() {
             <Icon name="chevron-right" size={16} color="#666" />
           </TouchableOpacity>
           
+          <TouchableOpacity 
+            style={styles.accountItem} 
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+          >
+            <Text variant="titleMedium" style={styles.deleteAccountText}>
+              Delete Account
+            </Text>
+            {deleting ? (
+              <ActivityIndicator size="small" color={theme.colors.error} />
+            ) : (
+              <Icon name="chevron-right" size={16} color={theme.colors.error} />
+            )}
+          </TouchableOpacity>
+          
           <Divider style={styles.divider} />
         </>
       )}
@@ -333,6 +396,10 @@ const createStyles = (theme: any) => StyleSheet.create({
   accountItemText: {
     fontWeight: '500',
     color: theme.colors.onSurface,
+  },
+  deleteAccountText: {
+    fontWeight: '500',
+    color: theme.colors.error,
   },
   chevron: {
     fontSize: 20,

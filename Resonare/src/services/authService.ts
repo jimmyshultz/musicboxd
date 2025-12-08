@@ -501,4 +501,44 @@ export class AuthService {
       return false;
     }
   }
+
+  /**
+   * Delete user account and all associated data
+   * This permanently removes the user's profile, ratings, diary entries, follows, etc.
+   */
+  static async deleteAccount() {
+    try {
+      console.log('Starting account deletion...');
+      
+      // Get current user
+      const user = await this.getCurrentUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Sign out from Google first (doesn't require Supabase auth)
+      // This must happen before database deletion since the user will be deleted
+      try {
+        await GoogleSignin.signOut();
+        console.log('Signed out from Google');
+      } catch (googleError) {
+        // Google sign out failure is not critical
+        console.log('Google sign out skipped or failed:', googleError);
+      }
+
+      // Delete all user data from the database
+      // This triggers a cascade that also deletes from auth.users via trigger
+      await userService.deleteUserData(user.id);
+
+      // Note: We don't call supabase.auth.signOut() here because the trigger
+      // on user_profiles deletion already deleted the auth.users record.
+      // Attempting to sign out would fail since the user no longer exists.
+      // The local session will be cleared automatically when the auth state changes.
+
+      console.log('Account deletion completed successfully');
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      throw error;
+    }
+  }
 }
