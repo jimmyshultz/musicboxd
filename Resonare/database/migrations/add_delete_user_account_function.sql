@@ -11,7 +11,9 @@ SET search_path = public
 AS $$
 BEGIN
   -- Verify the user is deleting their own account
-  IF auth.uid() != target_user_id THEN
+  -- Must explicitly check for NULL since NULL != value returns NULL (not TRUE)
+  -- and IF NULL THEN does not execute, which would bypass the security check
+  IF auth.uid() IS NULL OR auth.uid() != target_user_id THEN
     RAISE EXCEPTION 'You can only delete your own account';
   END IF;
 
