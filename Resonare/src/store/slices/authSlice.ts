@@ -134,6 +134,17 @@ export const signOutUser = createAsyncThunk(
   }
 );
 
+export const deleteAccount = createAsyncThunk(
+  'auth/deleteAccount',
+  async (_, { rejectWithValue }) => {
+    try {
+      await AuthService.deleteAccount();
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Account deletion failed');
+    }
+  }
+);
+
 export const initializeAuth = createAsyncThunk(
   'auth/initialize',
   async (_, { rejectWithValue }) => {
@@ -299,6 +310,21 @@ const authSlice = createSlice({
         state.error = null;
       })
       .addCase(signOutUser.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+      // Delete Account
+      .addCase(deleteAccount.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAccount.fulfilled, (state) => {
+        state.user = null;
+        state.isAuthenticated = false;
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(deleteAccount.rejected, (state, action) => {
+        state.loading = false;
         state.error = action.payload as string;
       })
       // Initialize Auth

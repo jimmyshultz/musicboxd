@@ -710,6 +710,35 @@ export class UserService {
       return 0;
     }
   }
+
+  // ============================================================================
+  // ACCOUNT DELETION
+  // ============================================================================
+
+  /**
+   * Delete all user data from the database using a server-side function
+   * This permanently removes all user-related data including profile, ratings, diary entries, etc.
+   * Uses a SECURITY DEFINER function to bypass RLS policies
+   */
+  async deleteUserData(userId: string): Promise<void> {
+    console.log('Starting account deletion for user:', userId);
+
+    // Call the server-side function that handles all deletions with proper permissions
+    const { data, error } = await this.client.rpc('delete_user_account', {
+      target_user_id: userId,
+    });
+
+    if (error) {
+      console.error('Error deleting user account:', error);
+      throw new Error(error.message || 'Failed to delete account');
+    }
+
+    if (!data) {
+      throw new Error('Account deletion failed - no confirmation received');
+    }
+
+    console.log('Account deletion completed successfully for user:', userId);
+  }
 }
 
 // Export singleton instance

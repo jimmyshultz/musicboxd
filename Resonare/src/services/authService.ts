@@ -501,4 +501,31 @@ export class AuthService {
       return false;
     }
   }
+
+  /**
+   * Delete user account and all associated data
+   * This permanently removes the user's profile, ratings, diary entries, follows, etc.
+   */
+  static async deleteAccount() {
+    try {
+      console.log('Starting account deletion...');
+      
+      // Get current user
+      const user = await this.getCurrentUser();
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
+      // Delete all user data from the database
+      await userService.deleteUserData(user.id);
+
+      // Sign out from all services
+      await this.signOut();
+
+      console.log('Account deletion completed successfully');
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      throw error;
+    }
+  }
 }
