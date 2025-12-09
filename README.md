@@ -12,6 +12,12 @@ A React Native app for discovering, tracking, and sharing music experiences, ins
 - **Instagram Privacy Model** (Private profiles with follow requests)
 - **Home Page Discovery** (Popular This Week, New From Friends, Popular With Friends)
 - **Staging Environment** (Separate testing environment)
+- **User-Generated Content Safety** (App Store compliant)
+  - Terms of Service & Community Guidelines acceptance
+  - Content moderation and profanity filtering
+  - User reporting system
+  - User blocking functionality
+  - 24-hour moderation response commitment
 
 ### **🏗️ Tech Stack:**
 - **Frontend**: React Native, TypeScript, Redux Toolkit
@@ -60,12 +66,20 @@ Resonare/
 │   ├── utils/               # Utility functions
 │   └── config/              # Environment and app configuration
 ├── database/
+│   ├── migrations/          # Database migration scripts
+│   │   └── add_ugc_safety_tables.sql  # UGC safety compliance tables
 │   └── schema_v2.sql        # Complete database schema
-└── docs/                    # Documentation
-    ├── weekly-summaries/    # Development progress summaries
-    ├── features/            # Feature implementation guides
-    ├── decisions/           # Important technical decisions
-    └── archive/             # Historical documentation
+├── docs/                    # Documentation
+│   ├── weekly-summaries/    # Development progress summaries
+│   ├── features/            # Feature implementation guides
+│   ├── decisions/           # Important technical decisions
+│   ├── archive/             # Historical documentation
+│   ├── index.html           # Privacy Policy (GitHub Pages)
+│   ├── terms.html           # Terms of Service (GitHub Pages)
+│   └── guidelines.html     # Community Guidelines (GitHub Pages)
+└── supabase/
+    └── functions/           # Supabase Edge Functions
+        └── notify-report/   # Email notification for content reports
 ```
 
 ## 📋 Documentation
@@ -78,6 +92,7 @@ Resonare/
 - [`docs/features/INSTAGRAM_PRIVACY_MODEL.md`](docs/features/INSTAGRAM_PRIVACY_MODEL.md)
 - [`docs/features/HOME_PAGE_SOCIAL_FEATURES.md`](docs/features/HOME_PAGE_SOCIAL_FEATURES.md)
 - [`docs/features/STAGING_ENVIRONMENT_SETUP.md`](docs/features/STAGING_ENVIRONMENT_SETUP.md)
+- [`docs/MODERATION_SETUP.md`](docs/MODERATION_SETUP.md) - Content moderation setup guide
 
 ### **📋 Important Decisions:**
 - [`docs/decisions/DATABASE_SCHEMA_V2_MIGRATION.md`](docs/decisions/DATABASE_SCHEMA_V2_MIGRATION.md)
@@ -110,6 +125,21 @@ Refer to `PRODUCTION_ROADMAP.md` for upcoming features:
 - Public profiles: Fully visible content
 - Private profiles: Discoverable but content protected until following
 - Follow requests: Complete workflow for private profile access
+
+### **User-Generated Content Safety (App Store Compliance):**
+- **Terms of Service & Community Guidelines**: Users must accept before using the app
+  - Terms: https://jimmyshultz.github.io/musicboxd/terms.html
+  - Guidelines: https://jimmyshultz.github.io/musicboxd/guidelines.html
+- **Content Moderation**: Client-side profanity filtering using `bad-words` library
+- **Reporting System**: Users can report profiles, ratings, and diary entries
+- **User Blocking**: Users can block abusive users (mutual blocking prevents interaction)
+- **Moderation Workflow**: Admin receives email notifications for reports within 24 hours
+- **Database Tables**: `content_reports`, `blocked_users`, `user_profiles.terms_accepted_at`
+
+### **Legal Documents:**
+- Privacy Policy: https://jimmyshultz.github.io/musicboxd/
+- Terms of Service: https://jimmyshultz.github.io/musicboxd/terms.html
+- Community Guidelines: https://jimmyshultz.github.io/musicboxd/guidelines.html
 
 ---
 

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { BlockedUser, UserProfile } from '../types/database';
+import { UserProfile } from '../types/database';
 
 /**
  * Service for managing user blocks

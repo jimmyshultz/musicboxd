@@ -89,15 +89,8 @@ class ContentModerationService {
   filterProfanity(text: string): string {
     if (!text) return text;
 
-    // If using bad-words library, uncomment this:
-     return filter.clean(text);
-
-    let filtered = text;
-    for (const word of BLOCKED_WORDS) {
-      const regex = new RegExp(word, 'gi');
-      filtered = filtered.replace(regex, '*'.repeat(word.length));
-    }
-    return filtered;
+    // Using bad-words library for profanity filtering
+    return filter.clean(text);
   }
 
   /**

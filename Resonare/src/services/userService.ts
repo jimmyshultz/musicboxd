@@ -413,7 +413,7 @@ export class UserService {
       }
 
       // Filter out blocked users client-side
-      const filteredData = (data || []).filter(user => !blockedIds.includes(user.id));
+      const filteredData = (data || []).filter(profile => !blockedIds.includes(profile.id));
 
       return filteredData.slice(0, limit);
     } catch (error) {

@@ -3,7 +3,6 @@ import {
   View,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
   RefreshControl,
   Alert,
 } from 'react-native';
@@ -21,6 +20,9 @@ import { RootState } from '../../store';
 import { UserProfile } from '../../types/database';
 import { blockService } from '../../services/blockService';
 import { spacing, shadows } from '../../utils/theme';
+
+// Extracted separator component to avoid re-creation during render
+const ItemSeparator = () => <View style={{ height: spacing.sm }} />;
 
 export default function BlockedUsersScreen() {
   const theme = useTheme();
@@ -150,7 +152,7 @@ export default function BlockedUsersScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
-          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          ItemSeparatorComponent={ItemSeparator}
         />
       )}
     </View>
