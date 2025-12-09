@@ -7,6 +7,7 @@ export interface User {
   bio?: string;
   joinedDate: Date;
   lastActiveDate: Date;
+  termsAcceptedAt?: Date; // Timestamp when user accepted Terms of Service
   preferences: UserPreferences;
 }
 
@@ -19,6 +20,7 @@ export interface SerializedUser {
   bio?: string;
   joinedDate: string;
   lastActiveDate: string;
+  termsAcceptedAt?: string; // ISO string timestamp when user accepted Terms of Service
   preferences: UserPreferences;
 }
 
@@ -147,6 +149,7 @@ export interface DiaryEntry {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  TermsAcceptance: undefined;
 };
 
 export type MainTabParamList = {

@@ -9,38 +9,27 @@ import {
 } from 'react-native';
 import {
   Text,
-  TextInput,
   Button,
-  Avatar,
   Card,
-  Switch,
   Checkbox,
   useTheme,
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
-import { updateProfile } from '../../store/slices/authSlice';
+import { updateProfile, signOutUser } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
-import { contentModerationService } from '../../services/contentModerationService';
 import { spacing } from '../../utils/theme';
 
 // Terms of Service and Community Guidelines URLs
 const TERMS_OF_SERVICE_URL = 'https://jimmyshultz.github.io/musicboxd/terms.html';
 const COMMUNITY_GUIDELINES_URL = 'https://jimmyshultz.github.io/musicboxd/guidelines.html';
 
-interface ProfileSetupScreenProps {
-  navigation: any;
-}
-
-export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenProps) {
+export default function TermsAcceptanceScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const styles = createStyles(theme);
   
-  const [username, setUsername] = useState(user?.username || '');
-  const [bio, setBio] = useState(user?.bio || '');
-  const [isPrivate, setIsPrivate] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -56,28 +45,14 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
     });
   };
 
-  const handleSaveProfile = async () => {
-    if (!user || !username.trim()) {
-      Alert.alert('Error', 'Username is required');
+  const handleAcceptTerms = async () => {
+    if (!user) {
+      Alert.alert('Error', 'User not found');
       return;
     }
 
     if (!termsAccepted) {
       Alert.alert('Error', 'You must accept the Terms of Service and Community Guidelines to continue');
-      return;
-    }
-
-    // Validate username for inappropriate content
-    const usernameValidation = contentModerationService.validateUsername(username.trim());
-    if (!usernameValidation.isValid) {
-      Alert.alert('Invalid Username', usernameValidation.error || 'Please choose a different username');
-      return;
-    }
-
-    // Validate bio for inappropriate content
-    const bioValidation = contentModerationService.validateBio(bio.trim());
-    if (!bioValidation.isValid) {
-      Alert.alert('Invalid Bio', bioValidation.error || 'Please revise your bio');
       return;
     }
 
@@ -87,110 +62,71 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
       
       // Update profile in database with terms acceptance timestamp
       await userService.updateUserProfile(user.id, {
-        username: username.trim(),
-        bio: bio.trim(),
-        is_private: isPrivate,
         terms_accepted_at: termsAcceptedAt,
       });
 
-      // Update Redux state (including termsAcceptedAt so navigation works)
-      // Pass termsAcceptedAt as string to avoid Redux serialization issues
+      // Update Redux state with the new termsAcceptedAt
+      // Pass as string to avoid Redux serialization issues
       dispatch(updateProfile({
-        username: username.trim(),
-        bio: bio.trim(),
         termsAcceptedAt: termsAcceptedAt,
-        preferences: {
-          ...user.preferences,
-          privacy: {
-            profileVisibility: isPrivate ? 'private' : 'public',
-            activityVisibility: isPrivate ? 'private' : 'public',
-          },
-        },
-      }));
+      } as any));
 
-      Alert.alert(
-        'Profile Updated',
-        'Your profile has been saved successfully!',
-        [
-          {
-            text: 'Continue',
-            onPress: () => navigation.replace('MainTabs'),
-          },
-        ]
-      );
     } catch (error: any) {
-      console.error('Error saving profile:', error);
+      console.error('Error accepting terms:', error);
       Alert.alert(
         'Error',
-        error.message || 'Failed to save profile. Please try again.'
+        error.message || 'Failed to save. Please try again.'
       );
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleDecline = () => {
+    Alert.alert(
+      'Decline Terms',
+      'You cannot use Resonare without accepting the Terms of Service and Community Guidelines. Would you like to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Sign Out', 
+          style: 'destructive',
+          onPress: () => dispatch(signOutUser()),
+        },
+      ]
+    );
+  };
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
         <Text variant="headlineMedium" style={styles.title}>
-          Set Up Your Profile
+          Updated Terms of Service
         </Text>
         <Text variant="bodyMedium" style={styles.subtitle}>
-          Let others discover your music taste
+          We've updated our Terms of Service and Community Guidelines. Please review and accept to continue using Resonare.
         </Text>
 
-        <Card style={styles.profileCard} elevation={2}>
+        <Card style={styles.infoCard} elevation={2}>
           <Card.Content>
-            <View style={styles.avatarContainer}>
-              <Avatar.Image
-                size={80}
-                source={{ 
-                  uri: user?.profilePicture || 'https://via.placeholder.com/80' 
-                }}
-              />
-            </View>
-
-            <TextInput
-              label="Username *"
-              value={username}
-              onChangeText={setUsername}
-              mode="outlined"
-              style={styles.input}
-              placeholder="Choose a unique username"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-
-            <TextInput
-              label="Bio (Optional)"
-              value={bio}
-              onChangeText={setBio}
-              mode="outlined"
-              multiline
-              numberOfLines={3}
-              style={styles.input}
-              placeholder="Tell us about your music taste..."
-            />
-
-            <View style={styles.privacyContainer}>
-              <View style={styles.privacyTextContainer}>
-                <Text variant="bodyMedium" style={styles.privacyTitle}>
-                  Private Profile
-                </Text>
-                <Text variant="bodySmall" style={styles.privacyDescription}>
-                  Only approved followers can see your activity
-                </Text>
-              </View>
-              <Switch
-                value={isPrivate}
-                onValueChange={setIsPrivate}
-              />
-            </View>
+            <Text variant="titleMedium" style={styles.infoTitle}>
+              What's New
+            </Text>
+            <Text variant="bodyMedium" style={styles.infoText}>
+              • Clear community guidelines for respectful interactions
+            </Text>
+            <Text variant="bodyMedium" style={styles.infoText}>
+              • Content moderation to keep our community safe
+            </Text>
+            <Text variant="bodyMedium" style={styles.infoText}>
+              • Tools to report and block users if needed
+            </Text>
+            <Text variant="bodyMedium" style={styles.infoText}>
+              • Zero tolerance for objectionable content
+            </Text>
           </Card.Content>
         </Card>
 
-        {/* Terms of Service and Community Guidelines */}
         <Card style={styles.termsCard} elevation={2}>
           <Card.Content>
             <TouchableOpacity 
@@ -226,12 +162,21 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
-            onPress={handleSaveProfile}
+            onPress={handleAcceptTerms}
             loading={isLoading}
-            disabled={isLoading || !username.trim() || !termsAccepted}
-            style={styles.saveButton}
+            disabled={isLoading || !termsAccepted}
+            style={styles.acceptButton}
           >
-            Complete Setup
+            Accept and Continue
+          </Button>
+          <Button
+            mode="text"
+            onPress={handleDecline}
+            disabled={isLoading}
+            style={styles.declineButton}
+            textColor={theme.colors.error}
+          >
+            Decline and Sign Out
           </Button>
         </View>
       </View>
@@ -246,6 +191,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   content: {
     padding: spacing.lg,
+    paddingTop: spacing.xl * 2,
   },
   title: {
     fontWeight: 'bold',
@@ -257,42 +203,20 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: spacing.xl,
+    lineHeight: 22,
   },
-  profileCard: {
-    marginBottom: spacing.xl,
+  infoCard: {
+    marginBottom: spacing.lg,
     backgroundColor: theme.colors.surface,
   },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  input: {
+  infoTitle: {
+    fontWeight: '600',
     marginBottom: spacing.md,
   },
-  privacyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  privacyTextContainer: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  privacyTitle: {
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  privacyDescription: {
+  infoText: {
     color: theme.colors.onSurfaceVariant,
-    lineHeight: 16,
-  },
-  buttonContainer: {
-    gap: spacing.md,
-  },
-  saveButton: {
-    paddingVertical: spacing.xs,
+    marginBottom: spacing.xs,
+    lineHeight: 22,
   },
   termsCard: {
     marginBottom: spacing.xl,
@@ -323,5 +247,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.onSurfaceVariant,
     marginTop: spacing.xs,
     lineHeight: 16,
+  },
+  buttonContainer: {
+    gap: spacing.sm,
+  },
+  acceptButton: {
+    paddingVertical: spacing.xs,
+  },
+  declineButton: {
+    paddingVertical: spacing.xs,
   },
 });

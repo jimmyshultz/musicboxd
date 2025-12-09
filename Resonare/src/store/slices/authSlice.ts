@@ -39,6 +39,7 @@ export const signInWithGoogle = createAsyncThunk(
             profilePicture: profile.avatar_url || '',
             joinedDate: profile.created_at, // Already a string from database
             lastActiveDate: new Date().toISOString(),
+            termsAcceptedAt: profile.terms_accepted_at || undefined, // Track terms acceptance
             preferences: {
               favoriteGenres: [],
               favoriteAlbumIds: [],
@@ -96,6 +97,7 @@ export const signInWithApple = createAsyncThunk(
             profilePicture: profile.avatar_url || '',
             joinedDate: profile.created_at, // Already a string from database
             lastActiveDate: new Date().toISOString(),
+            termsAcceptedAt: profile.terms_accepted_at || undefined, // Track terms acceptance
             preferences: {
               favoriteGenres: [],
               favoriteAlbumIds: [],
@@ -163,6 +165,7 @@ export const initializeAuth = createAsyncThunk(
             profilePicture: profile.avatar_url || '',
             joinedDate: profile.created_at, // Already a string from database
             lastActiveDate: new Date().toISOString(), // Convert to string for Redux
+            termsAcceptedAt: profile.terms_accepted_at || undefined, // Track terms acceptance
             preferences: {
               favoriteGenres: [],
               favoriteAlbumIds: [],
@@ -227,19 +230,17 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    updateProfile: (state, action: PayloadAction<Partial<User>>) => {
+    updateProfile: (state, action: PayloadAction<Partial<User | SerializedUser>>) => {
       if (state.user) {
         // Convert any Date objects to strings to avoid Redux serialization issues
         const updates: Partial<SerializedUser> = {};
         
-        // Copy all non-Date properties
+        // Copy all properties, converting Dates to strings
         Object.keys(action.payload).forEach(key => {
-          const value = action.payload[key as keyof User];
-          if (key === 'joinedDate' && value instanceof Date) {
-            updates.joinedDate = value.toISOString();
-          } else if (key === 'lastActiveDate' && value instanceof Date) {
-            updates.lastActiveDate = value.toISOString();
-          } else if (key !== 'joinedDate' && key !== 'lastActiveDate') {
+          const value = (action.payload as any)[key];
+          if (value instanceof Date) {
+            (updates as any)[key] = value.toISOString();
+          } else {
             (updates as any)[key] = value;
           }
         });
