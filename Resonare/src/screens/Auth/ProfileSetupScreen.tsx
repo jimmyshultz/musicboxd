@@ -4,6 +4,8 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Linking,
+  TouchableOpacity,
 } from 'react-native';
 import {
   Text,
@@ -12,13 +14,19 @@ import {
   Avatar,
   Card,
   Switch,
+  Checkbox,
   useTheme,
 } from 'react-native-paper';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../store';
 import { updateProfile } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
+import { contentModerationService } from '../../services/contentModerationService';
 import { spacing } from '../../utils/theme';
+
+// Terms of Service and Community Guidelines URLs
+const TERMS_OF_SERVICE_URL = 'https://jimmyshultz.github.io/musicboxd/terms.html';
+const COMMUNITY_GUIDELINES_URL = 'https://jimmyshultz.github.io/musicboxd/guidelines.html';
 
 interface ProfileSetupScreenProps {
   navigation: any;
@@ -33,7 +41,20 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
   const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [isPrivate, setIsPrivate] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleOpenTerms = () => {
+    Linking.openURL(TERMS_OF_SERVICE_URL).catch(() => {
+      Alert.alert('Error', 'Could not open Terms of Service');
+    });
+  };
+
+  const handleOpenGuidelines = () => {
+    Linking.openURL(COMMUNITY_GUIDELINES_URL).catch(() => {
+      Alert.alert('Error', 'Could not open Community Guidelines');
+    });
+  };
 
   const handleSaveProfile = async () => {
     if (!user || !username.trim()) {
@@ -41,13 +62,33 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
       return;
     }
 
+    if (!termsAccepted) {
+      Alert.alert('Error', 'You must accept the Terms of Service and Community Guidelines to continue');
+      return;
+    }
+
+    // Validate username for inappropriate content
+    const usernameValidation = contentModerationService.validateUsername(username.trim());
+    if (!usernameValidation.isValid) {
+      Alert.alert('Invalid Username', usernameValidation.error || 'Please choose a different username');
+      return;
+    }
+
+    // Validate bio for inappropriate content
+    const bioValidation = contentModerationService.validateBio(bio.trim());
+    if (!bioValidation.isValid) {
+      Alert.alert('Invalid Bio', bioValidation.error || 'Please revise your bio');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Update profile in database
+      // Update profile in database with terms acceptance timestamp
       await userService.updateUserProfile(user.id, {
         username: username.trim(),
         bio: bio.trim(),
         is_private: isPrivate,
+        terms_accepted_at: new Date().toISOString(),
       });
 
       // Update Redux state
@@ -84,19 +125,6 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
     }
   };
 
-  const handleSkip = () => {
-    Alert.alert(
-      'Skip Profile Setup?',
-      'You can always update your profile later in settings.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Skip',
-          onPress: () => navigation.replace('MainTabs'),
-        },
-      ]
-    );
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -158,24 +186,42 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
           </Card.Content>
         </Card>
 
+        {/* Terms of Service and Community Guidelines */}
+        <Card style={styles.termsCard} elevation={2}>
+          <Card.Content>
+            <View style={styles.termsContainer}>
+              <Checkbox
+                status={termsAccepted ? 'checked' : 'unchecked'}
+                onPress={() => setTermsAccepted(!termsAccepted)}
+              />
+              <View style={styles.termsTextContainer}>
+                <Text variant="bodyMedium" style={styles.termsText}>
+                  I agree to the{' '}
+                  <Text style={styles.termsLink} onPress={handleOpenTerms}>
+                    Terms of Service
+                  </Text>
+                  {' '}and{' '}
+                  <Text style={styles.termsLink} onPress={handleOpenGuidelines}>
+                    Community Guidelines
+                  </Text>
+                </Text>
+                <Text variant="bodySmall" style={styles.termsDescription}>
+                  Our community guidelines prohibit objectionable content and abusive behavior. Violations may result in account termination.
+                </Text>
+              </View>
+            </View>
+          </Card.Content>
+        </Card>
+
         <View style={styles.buttonContainer}>
           <Button
             mode="contained"
             onPress={handleSaveProfile}
             loading={isLoading}
-            disabled={isLoading || !username.trim()}
+            disabled={isLoading || !username.trim() || !termsAccepted}
             style={styles.saveButton}
           >
             Complete Setup
-          </Button>
-
-          <Button
-            mode="outlined"
-            onPress={handleSkip}
-            disabled={isLoading}
-            style={styles.skipButton}
-          >
-            Skip for Now
           </Button>
         </View>
       </View>
@@ -238,7 +284,28 @@ const createStyles = (theme: any) => StyleSheet.create({
   saveButton: {
     paddingVertical: spacing.xs,
   },
-  skipButton: {
-    paddingVertical: spacing.xs,
+  termsCard: {
+    marginBottom: spacing.xl,
+    backgroundColor: theme.colors.surface,
+  },
+  termsContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  termsTextContainer: {
+    flex: 1,
+    marginLeft: spacing.xs,
+  },
+  termsText: {
+    lineHeight: 22,
+  },
+  termsLink: {
+    color: theme.colors.primary,
+    textDecorationLine: 'underline',
+  },
+  termsDescription: {
+    color: theme.colors.onSurfaceVariant,
+    marginTop: spacing.xs,
+    lineHeight: 16,
   },
 });

@@ -1,12 +1,20 @@
-# Resonare Privacy Policy - GitHub Pages
+# Resonare Legal Documents - GitHub Pages
 
-This directory contains the privacy policy webpage for Resonare, hosted on GitHub Pages.
+This directory contains the legal documents for Resonare, hosted on GitHub Pages.
 
 ## 📄 Files
 
-- `index.html` - The main privacy policy page with all content
+- `index.html` - Privacy Policy page
+- `terms.html` - Terms of Service page
+- `guidelines.html` - Community Guidelines page
 - `styles.css` - Responsive, modern CSS styling
 - `README.md` - This file
+
+## 🔗 Live URLs
+
+- **Privacy Policy:** https://jimmyshultz.github.io/musicboxd/
+- **Terms of Service:** https://jimmyshultz.github.io/musicboxd/terms.html
+- **Community Guidelines:** https://jimmyshultz.github.io/musicboxd/guidelines.html
 
 ## 🚀 GitHub Pages Setup
 

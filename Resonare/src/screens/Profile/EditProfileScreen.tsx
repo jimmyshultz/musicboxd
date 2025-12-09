@@ -24,17 +24,11 @@ import { ProfileStackParamList } from '../../types';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { storageService } from '../../services/storageService';
+import { contentModerationService } from '../../services/contentModerationService';
 import { updateProfile } from '../../store/slices/authSlice';
 import { spacing } from '../../utils/theme';
 
 type EditProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
-
-// Simple profanity filter word list
-const PROFANITY_WORDS = [
-  'fuck', 'shit', 'damn', 'bitch', 'ass', 'hell', 'crap', 'piss',
-  'bastard', 'slut', 'whore', 'fag', 'nigger', 'retard', 'gay',
-  // Add more as needed
-];
 
 export default function EditProfileScreen() {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
@@ -107,12 +101,10 @@ export default function EditProfileScreen() {
       return 'Username can only contain letters, numbers, periods, dashes, and underscores';
     }
 
-    // Profanity filter
-    const lowerUsername = usernameToValidate.toLowerCase();
-    for (const word of PROFANITY_WORDS) {
-      if (lowerUsername.includes(word)) {
-        return 'Username contains inappropriate language';
-      }
+    // Content moderation check
+    const moderationResult = contentModerationService.validateUsername(usernameToValidate);
+    if (!moderationResult.isValid) {
+      return moderationResult.error || 'Username contains inappropriate content';
     }
 
     return null;

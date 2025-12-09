@@ -32,6 +32,7 @@ import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen'
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
+import BlockedUsersScreen from '../screens/Profile/BlockedUsersScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -602,6 +603,18 @@ function ProfileStackNavigator() {
           title: 'Edit Profile',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} />,
+        })}
+      />
+      <ProfileStack.Screen
+        name="BlockedUsers"
+        component={BlockedUsersScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Blocked Users',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
         })}
       />
     </ProfileStack.Navigator>

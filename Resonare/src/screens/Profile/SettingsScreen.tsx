@@ -271,6 +271,17 @@ export default function SettingsScreen() {
             () => updateSetting('allowFollowers', !settings.allowFollowers),
             settings.isPrivate // Could be extended for more granular control
           )}
+          
+          <TouchableOpacity 
+            style={styles.accountItem} 
+            onPress={() => navigation.navigate('BlockedUsers')}
+          >
+            <Text variant="titleMedium" style={styles.accountItemText}>
+              Blocked Users
+            </Text>
+            <Icon name="chevron-right" size={16} color="#666" />
+          </TouchableOpacity>
+          
           <Divider style={styles.divider} />
         </>
       )}
