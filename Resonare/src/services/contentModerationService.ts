@@ -10,9 +10,9 @@
  * Then uncomment the bad-words import and modify the filterProfanity method.
  */
 
-// Uncomment to use bad-words library:
-// import Filter from 'bad-words';
-// const filter = new Filter();
+
+import { Filter } from 'bad-words';
+const filter = new Filter();
 
 /**
  * Basic list of words to filter (minimal list for demonstration)
@@ -66,14 +66,14 @@ class ContentModerationService {
     }
 
     // If using bad-words library, uncomment this:
-    // if (filter.isProfane(text)) {
-    //   return {
-    //     isClean: false,
-    //     filteredText: filter.clean(text),
-    //     flaggedWords: ['[filtered]'],
-    //     reason: 'Contains profanity or objectionable content',
-    //   };
-    // }
+     if (filter.isProfane(text)) {
+       return {
+         isClean: false,
+         filteredText: filter.clean(text),
+         flaggedWords: ['[filtered]'],
+         reason: 'Contains profanity or objectionable content',
+       };
+     }
 
     return {
       isClean: flaggedWords.length === 0,
@@ -90,7 +90,7 @@ class ContentModerationService {
     if (!text) return text;
 
     // If using bad-words library, uncomment this:
-    // return filter.clean(text);
+     return filter.clean(text);
 
     let filtered = text;
     for (const word of BLOCKED_WORDS) {
