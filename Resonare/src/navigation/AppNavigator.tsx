@@ -27,11 +27,13 @@ import AlbumDetailsScreen from '../screens/Album/AlbumDetailsScreen';
 import ArtistDetailsScreen from '../screens/Artist/ArtistDetailsScreen';
 import AuthScreen from '../screens/Auth/AuthScreen';
 import ProfileSetupScreen from '../screens/Auth/ProfileSetupScreen';
+import TermsAcceptanceScreen from '../screens/Auth/TermsAcceptanceScreen';
 import DiaryScreen from '../screens/Profile/DiaryScreen';
 import DiaryEntryDetailsScreen from '../screens/Profile/DiaryEntryDetailsScreen';
 import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
+import BlockedUsersScreen from '../screens/Profile/BlockedUsersScreen';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -604,6 +606,18 @@ function ProfileStackNavigator() {
           headerLeft: () => <BackButton navigation={navigation} />,
         })}
       />
+      <ProfileStack.Screen
+        name="BlockedUsers"
+        component={BlockedUsersScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Blocked Users',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
+      />
     </ProfileStack.Navigator>
   );
 }
@@ -643,6 +657,9 @@ export default function AppNavigator() {
   const theme = useTheme();
   const { user } = useSelector((state: RootState) => state.auth);
 
+  // Check if user needs to accept terms
+  const needsTermsAcceptance = user && !user.termsAcceptedAt;
+
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -654,11 +671,25 @@ export default function AppNavigator() {
         }}
       >
         {user ? (
-          <Stack.Screen
-            name="Main"
-            component={MainTabNavigator}
-            options={{ headerShown: false }}
-          />
+          needsTermsAcceptance ? (
+            // User is logged in but hasn't accepted terms yet
+            <Stack.Screen
+              name="TermsAcceptance"
+              component={TermsAcceptanceScreen}
+              options={{
+                title: 'Terms of Service',
+                headerBackVisible: false,
+                headerLeft: () => null,
+              }}
+            />
+          ) : (
+            // User is logged in and has accepted terms
+            <Stack.Screen
+              name="Main"
+              component={MainTabNavigator}
+              options={{ headerShown: false }}
+            />
+          )
         ) : (
           <>
             <Stack.Screen

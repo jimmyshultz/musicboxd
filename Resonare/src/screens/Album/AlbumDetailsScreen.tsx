@@ -10,6 +10,7 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import {
   Text,
@@ -41,7 +42,9 @@ import { albumRatingsService } from '../../services/albumRatingsService';
 import { diaryEntriesService, DiaryEntry, DiaryEntryWithUserProfile } from '../../services/diaryEntriesService';
 import { spacing, shadows } from '../../utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Switch } from 'react-native-paper';
+import { Switch, IconButton } from 'react-native-paper';
+import ReportModal from '../../components/ReportModal';
+import { contentModerationService } from '../../services/contentModerationService';
 
 type AlbumDetailsRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
@@ -114,6 +117,8 @@ export default function AlbumDetailsScreen() {
   const [friendsDiaryEntries, setFriendsDiaryEntries] = useState<DiaryEntryWithUserProfile[]>([]);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
   const [loadingDiaryEntries, setLoadingDiaryEntries] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportingEntry, setReportingEntry] = useState<DiaryEntryWithUserProfile | null>(null);
 
   const openDiaryModal = () => {
     setAddToDiary(true);
@@ -127,6 +132,16 @@ export default function AlbumDetailsScreen() {
 
   const handleConfirmDiaryModal = async () => {
     if (!user || !currentAlbum) return;
+    
+    // Validate review content before submitting
+    if (diaryReview.trim()) {
+      const reviewValidation = contentModerationService.validateDiaryNotes(diaryReview.trim());
+      if (!reviewValidation.isValid) {
+        Alert.alert('Content Issue', reviewValidation.error || 'Your review contains inappropriate content. Please revise it.');
+        return;
+      }
+    }
+    
     setSubmitting(true);
     try {
       if (addToDiary) {
@@ -604,7 +619,19 @@ export default function AlbumDetailsScreen() {
                         </View>
                       </View>
                     </View>
-                    <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+                    <View style={styles.friendEntryActions}>
+                      <IconButton
+                        icon="flag-outline"
+                        size={16}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          setReportingEntry(entry);
+                          setShowReportModal(true);
+                        }}
+                        style={styles.reportIconButton}
+                      />
+                      <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+                    </View>
                   </TouchableOpacity>
                 ))}
               </>
@@ -731,6 +758,26 @@ export default function AlbumDetailsScreen() {
             if (selected) {
               setDiaryDate(selected);
             }
+          }}
+        />
+      )}
+
+      {/* Report Modal for friend diary entries */}
+      {user && reportingEntry && (
+        <ReportModal
+          visible={showReportModal}
+          onDismiss={() => {
+            setShowReportModal(false);
+            setReportingEntry(null);
+          }}
+          reporterId={user.id}
+          reportedUserId={reportingEntry.user_id}
+          reportedUsername={reportingEntry.user_profiles?.username || 'Unknown'}
+          contentType="diary_entry"
+          contentId={reportingEntry.id}
+          onReportSubmitted={() => {
+            setShowReportModal(false);
+            setReportingEntry(null);
           }}
         />
       )}
@@ -1048,5 +1095,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  friendEntryActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reportIconButton: {
+    margin: 0,
+    marginRight: spacing.xs,
   },
 });

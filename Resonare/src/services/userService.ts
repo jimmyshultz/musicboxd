@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { UserProfile, FollowRequest } from '../types/database';
 import { User } from '@supabase/supabase-js';
+import { blockService } from './blockService';
 
 // Type-safe Supabase client
 type SupabaseClient = typeof supabase;
@@ -112,7 +113,7 @@ export class UserService {
   }
 
   /**
-   * Search users by username or display name (respects privacy + existing relationships)
+   * Search users by username or display name (respects privacy + existing relationships + blocks)
    */
   async searchUsers(query: string, limit: number = 10): Promise<UserProfile[]> {
     const currentUser = await this.getCurrentUser();
@@ -124,22 +125,33 @@ export class UserService {
         .select('*')
         .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
         .eq('is_private', false)
+        .eq('is_banned', false)
         .limit(limit);
 
       if (error) throw error;
       return data || [];
     }
 
+    // Get blocked user IDs to filter them out
+    const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
+
     // With RLS policy updated, we can search directly without manual filtering
     // The database policy will handle privacy automatically
-    const { data, error } = await this.client
+    let query_builder = this.client
       .from('user_profiles')
       .select('*')
       .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
-      .limit(limit);
+      .eq('is_banned', false)
+      .limit(limit + blockedIds.length); // Fetch extra to account for filtering
+
+    const { data, error } = await query_builder;
 
     if (error) throw error;
-    return data || [];
+    
+    // Filter out blocked users client-side
+    const filteredData = (data || []).filter(user => !blockedIds.includes(user.id));
+    
+    return filteredData.slice(0, limit);
   }
 
   /**
@@ -247,7 +259,7 @@ export class UserService {
   }
 
   /**
-   * Get users that follow the specified user
+   * Get users that follow the specified user (filters out blocked users for current viewer)
    */
   async getFollowers(userId: string): Promise<UserProfile[]> {
     // Get follower IDs first
@@ -259,19 +271,28 @@ export class UserService {
     if (followError) throw followError;
     if (!followData || followData.length === 0) return [];
 
-    // Get user profiles for follower IDs
+    // Get user profiles for follower IDs (excluding banned users)
     const followerIds = followData.map(row => row.follower_id);
     const { data: profileData, error: profileError } = await this.client
       .from('user_profiles')
       .select('*')
-      .in('id', followerIds);
+      .in('id', followerIds)
+      .eq('is_banned', false);
 
     if (profileError) throw profileError;
+    
+    // Filter out blocked users for the current viewer
+    const currentUser = await this.getCurrentUser();
+    if (currentUser) {
+      const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
+      return (profileData || []).filter(user => !blockedIds.includes(user.id));
+    }
+    
     return profileData || [];
   }
 
   /**
-   * Get users that the specified user is following
+   * Get users that the specified user is following (filters out blocked users for current viewer)
    */
   async getFollowing(userId: string): Promise<UserProfile[]> {
     // Get following IDs first
@@ -283,14 +304,23 @@ export class UserService {
     if (followError) throw followError;
     if (!followData || followData.length === 0) return [];
 
-    // Get user profiles for following IDs
+    // Get user profiles for following IDs (excluding banned users)
     const followingIds = followData.map(row => row.following_id);
     const { data: profileData, error: profileError } = await this.client
       .from('user_profiles')
       .select('*')
-      .in('id', followingIds);
+      .in('id', followingIds)
+      .eq('is_banned', false);
 
     if (profileError) throw profileError;
+    
+    // Filter out blocked users for the current viewer
+    const currentUser = await this.getCurrentUser();
+    if (currentUser) {
+      const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
+      return (profileData || []).filter(user => !blockedIds.includes(user.id));
+    }
+    
     return profileData || [];
   }
 
@@ -358,13 +388,17 @@ export class UserService {
 
       const followingIds = followingData?.map(f => f.following_id) || [];
       
-      // Build query to get public profiles, excluding current user
+      // Get blocked user IDs to filter them out
+      const blockedIds = await blockService.getAllBlockedUserIds(authenticatedUserId);
+      
+      // Build query to get public profiles, excluding current user and banned users
       let query = this.client
         .from('user_profiles')
         .select('*')
         .eq('is_private', false)
+        .eq('is_banned', false)
         .not('id', 'eq', authenticatedUserId)
-        .limit(limit);
+        .limit(limit + blockedIds.length + followingIds.length); // Fetch extra to account for filtering
 
       // Only add the NOT IN clause if there are following IDs
       if (followingIds.length > 0) {
@@ -378,7 +412,10 @@ export class UserService {
         return [];
       }
 
-      return data || [];
+      // Filter out blocked users client-side
+      const filteredData = (data || []).filter(profile => !blockedIds.includes(profile.id));
+
+      return filteredData.slice(0, limit);
     } catch (error) {
       console.error('Error in getSuggestedUsers:', error);
       return [];

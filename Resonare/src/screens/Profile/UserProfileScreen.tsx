@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   RefreshControl,
+  Alert,
 } from 'react-native';
 
-import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme } from 'react-native-paper';
+import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -23,8 +24,10 @@ import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { favoriteAlbumsService } from '../../services/favoriteAlbumsService';
+import { blockService } from '../../services/blockService';
 import { spacing, shadows } from '../../utils/theme';
 import BannerAdComponent from '../../components/BannerAd';
+import ReportModal from '../../components/ReportModal';
 
 type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
@@ -81,6 +84,10 @@ export default function UserProfileScreen() {
   const [followActionType, setFollowActionType] = useState<'follow' | 'request' | 'requested' | 'following'>('follow');
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [_blockLoading, setBlockLoading] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   
 
   const isOwnProfile = useMemo(() => 
@@ -175,6 +182,17 @@ export default function UserProfileScreen() {
     }
   }, [currentUser, userId, isOwnProfile]);
 
+  const loadBlockStatus = useCallback(async () => {
+    if (!currentUser || isOwnProfile) return;
+    
+    try {
+      const blocked = await blockService.isBlocked(currentUser.id, userId);
+      setIsBlocked(blocked);
+    } catch (error) {
+      console.error('Error loading block status:', error);
+    }
+  }, [currentUser, userId, isOwnProfile]);
+
   // Main load function that loads all data in sequence
   const loadAllData = useCallback(async () => {
     if (initialLoadDone) return;
@@ -188,13 +206,14 @@ export default function UserProfileScreen() {
           loadRecentActivity(userData),
           loadUserStats(userData),
           loadFollowActionType(),
+          loadBlockStatus(),
         ]);
       }
     } finally {
       setLoading(false);
       setInitialLoadDone(true);
     }
-  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats, loadFollowActionType]);
+  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats, loadFollowActionType, loadBlockStatus]);
 
   // Use focus effect to load data only when screen comes into focus
   useFocusEffect(
@@ -300,6 +319,60 @@ export default function UserProfileScreen() {
     } finally {
       setFollowLoading(false);
     }
+  };
+
+  const handleBlockUser = () => {
+    if (!user || !currentUser) return;
+    
+    Alert.alert(
+      isBlocked ? 'Unblock User' : 'Block User',
+      isBlocked 
+        ? `Are you sure you want to unblock @${user.username}?`
+        : `Are you sure you want to block @${user.username}? They won't be able to see your profile or interact with you.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: isBlocked ? 'Unblock' : 'Block',
+          style: isBlocked ? 'default' : 'destructive',
+          onPress: async () => {
+            setBlockLoading(true);
+            setMenuVisible(false);
+            try {
+              if (isBlocked) {
+                const result = await blockService.unblockUser(currentUser.id, userId);
+                if (result.success) {
+                  setIsBlocked(false);
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to unblock user');
+                }
+              } else {
+                const result = await blockService.blockUser(currentUser.id, userId);
+                if (result.success) {
+                  setIsBlocked(true);
+                  // If we were following them, update the UI
+                  if (followActionType === 'following') {
+                    dispatch(removeFollowing(userId));
+                    setFollowActionType(user.is_private ? 'request' : 'follow');
+                  }
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to block user');
+                }
+              }
+            } catch (error) {
+              console.error('Error toggling block:', error);
+              Alert.alert('Error', 'Failed to update block status');
+            } finally {
+              setBlockLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReportUser = () => {
+    setMenuVisible(false);
+    setShowReportModal(true);
   };
 
   const navigateToAlbum = (albumId: string) => {
@@ -463,7 +536,7 @@ export default function UserProfileScreen() {
             @{user.username}
           </Text>
           
-          {/* Follow Button */}
+          {/* Follow Button and More Menu */}
           {!isOwnProfile && (
             <View style={styles.followContainer}>
               <Button
@@ -471,14 +544,45 @@ export default function UserProfileScreen() {
                 onPress={handleFollowToggle}
                 style={styles.followButton}
                 loading={followLoading}
-                disabled={followLoading}
+                disabled={followLoading || isBlocked}
               >
                 {followActionType === 'following' && "Following"}
                 {followActionType === 'follow' && "Follow"}
                 {followActionType === 'request' && "Request"}
                 {followActionType === 'requested' && "Requested"}
               </Button>
+              
+              <Menu
+                visible={menuVisible}
+                onDismiss={() => setMenuVisible(false)}
+                anchor={
+                  <IconButton
+                    icon="dots-vertical"
+                    size={24}
+                    onPress={() => setMenuVisible(true)}
+                    style={styles.moreButton}
+                  />
+                }
+              >
+                <Menu.Item
+                  onPress={handleBlockUser}
+                  title={isBlocked ? "Unblock User" : "Block User"}
+                  leadingIcon={isBlocked ? "account-check" : "account-cancel"}
+                />
+                <Menu.Item
+                  onPress={handleReportUser}
+                  title="Report User"
+                  leadingIcon="flag"
+                />
+              </Menu>
             </View>
+          )}
+          
+          {/* Show blocked status */}
+          {isBlocked && (
+            <Text variant="bodySmall" style={styles.blockedText}>
+              You have blocked this user
+            </Text>
           )}
         </View>
 
@@ -553,6 +657,19 @@ export default function UserProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Report Modal */}
+      {currentUser && user && (
+        <ReportModal
+          visible={showReportModal}
+          onDismiss={() => setShowReportModal(false)}
+          reporterId={currentUser.id}
+          reportedUserId={user.id}
+          reportedUsername={user.username}
+          contentType="profile"
+          onReportSubmitted={() => setShowReportModal(false)}
+        />
+      )}
     </View>
   );
 }
@@ -605,10 +722,19 @@ const createStyles = (theme: any, statCardWidth: number, statsHorizontalSpacing:
     marginBottom: spacing.md,
   },
   followContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: spacing.md,
   },
   followButton: {
     minWidth: 120,
+  },
+  moreButton: {
+    marginLeft: spacing.xs,
+  },
+  blockedText: {
+    color: theme.colors.error,
+    marginTop: spacing.sm,
   },
   section: {
     marginBottom: spacing.xl,

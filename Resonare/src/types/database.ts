@@ -8,6 +8,10 @@ export interface UserProfile {
   bio?: string;
   avatar_url?: string;
   is_private: boolean;
+  terms_accepted_at?: string; // Timestamp when user accepted EULA
+  is_banned?: boolean; // Whether user is banned
+  banned_at?: string; // Timestamp when user was banned
+  ban_reason?: string; // Reason for ban
   created_at: string;
   updated_at: string;
 }
@@ -117,6 +121,40 @@ export interface UserActivity {
   album?: Album;
 }
 
+// UGC Safety Types
+
+export interface BlockedUser {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  created_at: string;
+  // Relations (populated when joining)
+  blocker?: UserProfile;
+  blocked?: UserProfile;
+}
+
+export type ContentReportType = 'profile' | 'rating' | 'diary_entry';
+export type ContentReportReason = 'spam' | 'harassment' | 'hate_speech' | 'inappropriate' | 'other';
+export type ContentReportStatus = 'pending' | 'reviewed' | 'actioned' | 'dismissed';
+
+export interface ContentReport {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string;
+  content_type: ContentReportType;
+  content_id?: string; // ID of the specific content (nullable for profile reports)
+  reason: ContentReportReason;
+  description?: string; // Optional additional details from reporter
+  status: ContentReportStatus;
+  created_at: string;
+  reviewed_at?: string;
+  reviewed_by?: string; // Admin identifier who reviewed the report
+  action_taken?: string; // Description of action taken (if any)
+  // Relations (populated when joining)
+  reporter?: UserProfile;
+  reported_user?: UserProfile;
+}
+
 // Database table names for type safety (Schema V2)
 export const TableNames = {
   USER_PROFILES: 'user_profiles',
@@ -127,6 +165,8 @@ export const TableNames = {
   DIARY_ENTRIES: 'diary_entries',
   USER_FOLLOWS: 'user_follows',
   USER_ACTIVITIES: 'user_activities',
+  BLOCKED_USERS: 'blocked_users',
+  CONTENT_REPORTS: 'content_reports',
 } as const;
 
 // Supabase database type definition (Schema V2)
@@ -179,6 +219,16 @@ export interface Database {
         Row: UserActivity;
         Insert: Omit<UserActivity, 'id' | 'created_at'>;
         Update: never; // Activities are immutable once created
+      };
+      blocked_users: {
+        Row: BlockedUser;
+        Insert: Omit<BlockedUser, 'id' | 'created_at'>;
+        Update: never; // Blocks are only created or deleted, not updated
+      };
+      content_reports: {
+        Row: ContentReport;
+        Insert: Omit<ContentReport, 'id' | 'created_at' | 'reviewed_at' | 'reviewed_by' | 'action_taken'>;
+        Update: Partial<Pick<ContentReport, 'status' | 'reviewed_at' | 'reviewed_by' | 'action_taken'>>;
       };
     };
   };
