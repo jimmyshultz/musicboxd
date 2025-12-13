@@ -2,6 +2,8 @@
 
 This guide will help you set up Spotify Web API integration for the Resonare app.
 
+**Status**: ✅ **Production Ready** - Spotify API is integrated and active in production.
+
 ## Prerequisites
 
 - A Spotify account (free or premium)
