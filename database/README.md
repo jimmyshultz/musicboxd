@@ -24,6 +24,8 @@ The `migrations/` folder is for future database changes. When you need to modify
 3. Test on dev before applying to production
 4. Update the main schema file after successful migration
 
+**Note**: For detailed migration instructions, see [`Resonare/database/migrations/README.md`](../Resonare/database/migrations/README.md)
+
 ## Database Structure
 
 The current schema includes these main tables:

@@ -2,6 +2,8 @@
 
 This directory contains SQL migration scripts for the Resonare database.
 
+**Related Documentation**: For the complete database schema and overview, see [`../../database/README.md`](../../database/README.md)
+
 ## Migration Order
 
 Migrations should be run in the following order:

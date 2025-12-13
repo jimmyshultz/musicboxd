@@ -4,6 +4,8 @@
 
 Resonare is a mobile application inspired by Letterboxd, designed for music enthusiasts to track, rate, and discover albums while connecting with friends. Built with React Native and TypeScript.
 
+**Status**: ✅ **In Production** - Available on Apple App Store
+
 ## 🎵 Features
 
 ### Core Features (Implemented)
@@ -11,21 +13,29 @@ Resonare is a mobile application inspired by Letterboxd, designed for music enth
 - ✅ **Artist Details**: Dedicated artist pages with full discographies and album grids
 - ✅ **Real-time Search**: Search albums, artists, and users with instant results
 - ✅ **Album Details**: Comprehensive album view with track listings, metadata, and clickable artist names
-- ✅ **Interactive Rating System**: 5-star rating system for albums
+- ✅ **Interactive Rating System**: 5-star rating system for albums with written reviews
 - ✅ **Professional UI**: Material Design 3 with consistent theming and navigation
 - ✅ **Dark/Light Mode**: Automatic theme switching based on system preferences
 - ✅ **TypeScript Integration**: Full type safety throughout the application
 - ✅ **Redux State Management**: Centralized state management with Redux Toolkit
 - ✅ **Spotify Integration**: Real music data from Spotify Web API with fallback to mock data
+- ✅ **User Authentication**: Google Sign-In and Apple Sign-In via Supabase
+- ✅ **Social Features**: Follow system, user discovery, followers/following lists
+- ✅ **Privacy Model**: Instagram-style private profiles with follow requests
+- ✅ **User Profiles**: Complete profiles with stats, reviews, and listening history
+- ✅ **Diary System**: Chronological listening history with notes
+- ✅ **Favorite Albums**: Top 5 favorite albums management
+- ✅ **Content Moderation**: Profanity filtering, user reporting, and blocking
+- ✅ **Monetization**: Google AdMob integration (Banner, Interstitial, Rewarded ads)
+- ✅ **Crash Analytics**: Firebase Crashlytics for production monitoring
 
-### Upcoming Features
-- 📋 User Authentication (Supabase)
-- 👥 Social Features (Follow users, activity feeds)
-- 📊 Listening Statistics and Insights
+### Future Enhancements
+- 📊 Advanced Listening Statistics and Insights
 - 📋 Custom Lists and Collections
 - 🔍 Advanced Search Filters
 - 🎧 Enhanced Streaming Integration
 - 📱 Push Notifications
+- 🤖 Personalized Recommendations
 
 ## 🛠 Tech Stack
 
@@ -37,16 +47,21 @@ Resonare is a mobile application inspired by Letterboxd, designed for music enth
 - **Redux Toolkit** - State management
 - **React Redux** - React bindings for Redux
 
-### Dependencies
+### Key Dependencies
 - `@react-navigation/native` - Navigation core
 - `@react-navigation/stack` - Stack navigation
 - `@react-navigation/bottom-tabs` - Bottom tab navigation
-- `react-native-screens` - Native screen components
-- `react-native-safe-area-context` - Safe area handling
 - `react-native-paper` - Material Design 3 UI components
 - `@reduxjs/toolkit` - Redux state management
 - `react-redux` - React Redux bindings
-- `lodash` - Utility functions (debounce for search)
+- `@supabase/supabase-js` - Backend and authentication
+- `@react-native-google-signin/google-signin` - Google Sign-In
+- `@invertase/react-native-apple-authentication` - Apple Sign-In
+- `react-native-google-mobile-ads` - AdMob monetization
+- `@react-native-firebase/app` - Firebase services
+- `@react-native-firebase/crashlytics` - Crash analytics
+- `bad-words` - Content moderation
+- `lodash` - Utility functions
 
 ## 📱 Current App Flow
 
@@ -117,7 +132,7 @@ By default, the app works with sample album data. To enable real Spotify data:
 
 3. **Restart the development server** to load the new environment variables
 
-📖 **For detailed setup instructions, see [SPOTIFY_SETUP.md](SPOTIFY_SETUP.md)**
+📖 **For detailed setup instructions, see [docs/setup/SPOTIFY_SETUP.md](docs/setup/SPOTIFY_SETUP.md)**
 
 > **Note**: Without Spotify credentials, the app automatically falls back to sample data and works perfectly for development and testing.
 
@@ -174,13 +189,27 @@ src/
 - Responsive margins and padding
 - Professional card layouts
 
-## 📊 Mock Data
+## 🗄️ Database (Supabase)
 
-The app includes comprehensive mock data featuring:
-- **Albums**: OK Computer, In Rainbows, To Pimp a Butterfly, Blonde, Good Kid M.A.A.D City
-- **Track Listings**: Complete track data with durations and featured artists
-- **Metadata**: Release dates, genres, descriptions, and external IDs
-- **User Data**: Mock user profiles and statistics
+The app uses Supabase for backend services:
+- **PostgreSQL Database**: Full relational database with Row Level Security (RLS)
+- **Authentication**: Supabase Auth with Google and Apple OAuth
+- **Storage**: Supabase Storage for profile pictures
+- **Real-time**: Supabase real-time subscriptions for live updates
+
+### Key Database Tables
+- `user_profiles` - User accounts and social data
+- `albums` - Album metadata with `artist_id` foreign key
+- `artists` - Artist profiles, genres, and follower counts
+- `album_listens` - User listening history
+- `album_ratings` - User ratings and reviews
+- `diary_entries` - User diary entries for albums
+- `user_follows` - Following relationships
+- `follow_requests` - Private profile follow requests
+- `content_reports` - User-generated content reports
+- `blocked_users` - User blocking relationships
+
+See [`database/README.md`](../database/README.md) for complete database documentation.
 
 ## 🔧 Development
 
@@ -193,9 +222,18 @@ The app uses Redux Toolkit with the following slices:
 - `userSlice`: Social features and activity feeds
 
 ### Services
-- `AlbumService`: Handles album data fetching and caching
-- `ArtistService`: Manages artist data, discographies, and Spotify integration
-- `SpotifyService`: Direct Spotify Web API integration
+- `albumService`: Handles album data fetching and caching
+- `artistService`: Manages artist data, discographies, and Spotify integration
+- `spotifyService`: Direct Spotify Web API integration
+- `authService`: Authentication with Google and Apple Sign-In
+- `userService`: User profiles and social features
+- `diaryService`: Diary entries and listening history
+- `albumRatingsService`: Ratings and reviews
+- `contentModerationService`: Profanity filtering and content validation
+- `reportService`: User reporting system
+- `blockService`: User blocking functionality
+- `adMobService`: AdMob monetization
+- `crashAnalytics`: Firebase Crashlytics integration
 - Supabase integration for data persistence and caching
 
 ### Type Safety
@@ -205,34 +243,33 @@ Full TypeScript integration with:
 - Component prop interfaces
 - API response types
 
-### Database Schema (Supabase)
-Key tables for data persistence:
-- **`albums`**: Album metadata with `artist_id` foreign key
-- **`artists`**: Artist profiles, genres, and follower counts (indexed by Spotify ID)
-- **`album_listens`**: User listening history
-- **`album_ratings`**: User ratings and reviews
-- **`diary_entries`**: User diary entries for albums
-- **`user_profiles`**: User accounts and social data
+### Environment Configuration
 
-Artist data is automatically cached from Spotify when viewed, with albums linked to artists for fast navigation.
+The app supports three environments:
+- **Development**: Local development with full logging
+- **Staging**: Pre-production testing environment
+- **Production**: Live App Store version
 
-## 🚧 Future Development
+Environment configuration is managed via `react-native-config`:
+- `.env.development.example` - Development environment template
+- `.env.staging.example` - Staging environment template
+- `.env.production.example` - Production environment template
 
-### Phase 1: Backend Integration
-- Replace mock data with real API
-- Implement user authentication
-- Set up database for user data
+See [`src/config/environment.ts`](src/config/environment.ts) for environment management.
 
-### Phase 2: Social Features
-- User following system
-- Activity feeds
-- Review comments and likes
+## 📚 Documentation
 
-### Phase 3: Advanced Features
-- Custom lists and collections
-- Advanced search filters
-- Listening statistics
-- Streaming service integration
+For comprehensive documentation, see:
+- [`docs/README.md`](docs/README.md) - Documentation index
+- [`docs/PRODUCTION_FEATURES.md`](docs/PRODUCTION_FEATURES.md) - Complete production features
+- [`docs/DEVELOPER_GUIDE.md`](docs/DEVELOPER_GUIDE.md) - Developer onboarding
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) - Deployment procedures
+
+### Setup Guides
+- [`docs/setup/SPOTIFY_SETUP.md`](docs/setup/SPOTIFY_SETUP.md) - Spotify API integration
+- [`docs/setup/ADMOB_SETUP.md`](docs/setup/ADMOB_SETUP.md) - AdMob monetization
+- [`docs/setup/CRASH_ANALYTICS_SETUP.md`](docs/setup/CRASH_ANALYTICS_SETUP.md) - Firebase Crashlytics
+- [`docs/setup/MODERATION_SETUP.md`](docs/setup/MODERATION_SETUP.md) - Content moderation
 
 ## 📄 License
 
@@ -246,8 +283,7 @@ This project is licensed under the MIT License - see the [LICENSE](../LICENSE) f
 
 ---
 
-**Status**: ✅ Core features implemented and functional
-**Next Steps**: Backend integration and user authentication
+**Status**: ✅ **In Production** - Available on Apple App Store
 
 ## Quick Start
 
