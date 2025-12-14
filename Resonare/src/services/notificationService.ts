@@ -6,11 +6,23 @@ import { RealtimeChannel } from '@supabase/supabase-js';
  * Service for managing user notifications
  * Handles fetching, marking as read, and real-time subscriptions
  */
+interface SubscriptionInfo {
+  channel: RealtimeChannel;
+  callback: (notification: Notification) => void;
+  retryCount: number;
+  retryTimer: NodeJS.Timeout | null;
+  isRetrying: boolean;
+}
+
 class NotificationService {
   private client = supabase;
   private subscriptions: Map<string, RealtimeChannel> = new Map();
+  private subscriptionInfo: Map<string, SubscriptionInfo> = new Map();
   private isReady = false;
   private initializationPromise: Promise<void> | null = null;
+  private readonly MAX_RETRY_ATTEMPTS = 5;
+  private readonly INITIAL_RETRY_DELAY = 1000; // 1 second
+  private readonly MAX_RETRY_DELAY = 30000; // 30 seconds
 
   /**
    * Initialize the notification service
@@ -62,7 +74,7 @@ class NotificationService {
       const testChannel = this.client.channel(testChannelName);
       
       // Try to subscribe briefly to test the connection with a shorter timeout
-      const testPromise = new Promise<void>((resolve, reject) => {
+      const testPromise = new Promise<void>((resolve, _reject) => {
         const timeout = setTimeout(() => {
           testChannel.unsubscribe();
           this.client.removeChannel(testChannel);
@@ -254,35 +266,117 @@ class NotificationService {
   }
 
   /**
-   * Subscribe to real-time notifications for a user
-   * @param userId - The user ID to subscribe for
-   * @param callback - Callback function called when a new notification is created
-   * @returns Unsubscribe function
+   * Calculate exponential backoff delay
+   * @param retryCount - Current retry attempt number (0-indexed)
+   * @returns Delay in milliseconds
    */
-  subscribeToNotifications(
+  private calculateBackoffDelay(retryCount: number): number {
+    const delay = Math.min(
+      this.INITIAL_RETRY_DELAY * Math.pow(2, retryCount),
+      this.MAX_RETRY_DELAY
+    );
+    // Add jitter to prevent thundering herd
+    const jitter = Math.random() * 0.3 * delay; // Up to 30% jitter
+    return Math.floor(delay + jitter);
+  }
+
+  /**
+   * Retry subscription with exponential backoff
+   * @param userId - The user ID to resubscribe for
+   * @param callback - Callback function
+   * @param retryCount - Current retry attempt
+   */
+  private retrySubscription(
     userId: string,
-    callback: (notification: Notification) => void
-  ): () => void {
-    // Check if subscription already exists for this user
-    const existingChannel = this.subscriptions.get(userId);
-    if (existingChannel) {
-      // Verify the channel is still active
-      const channelState = existingChannel.state as string;
-      console.log('📡 Existing subscription found for user:', userId, 'State:', channelState);
-      // Check if channel is in a subscribed/active state
-      if (channelState === 'joined' || String(channelState).includes('SUBSCRIBED') || String(channelState).includes('joined')) {
-        console.log('📡 Using existing active subscription');
-        // Return unsubscribe function for existing subscription
-        return () => this.unsubscribeFromNotifications(userId);
-      } else {
-        console.log('📡 Existing subscription is not active (state:', channelState, '), removing and creating new one');
-        this.unsubscribeFromNotifications(userId);
+    callback: (notification: Notification) => void,
+    retryCount: number
+  ): void {
+    const subscriptionInfo = this.subscriptionInfo.get(userId);
+    if (!subscriptionInfo) {
+      console.log('📡 No subscription info found for retry, creating new subscription');
+      this._createSubscription(userId, callback, 0);
+      return;
+    }
+
+    // Check if channel is already successfully subscribed before retrying
+    const channel = this.subscriptions.get(userId);
+    if (channel) {
+      const channelState = channel.state as string;
+      if (channelState === 'joined' || String(channelState).includes('SUBSCRIBED')) {
+        console.log('✅ Channel is already successfully subscribed, cancelling retry for user:', userId);
+        // Clear any pending retry timers
+        if (subscriptionInfo.retryTimer) {
+          clearTimeout(subscriptionInfo.retryTimer);
+          subscriptionInfo.retryTimer = null;
+        }
+        subscriptionInfo.isRetrying = false;
+        subscriptionInfo.retryCount = 0;
+        return;
       }
     }
 
+    if (subscriptionInfo.isRetrying) {
+      console.log('📡 Retry already in progress for user:', userId);
+      return;
+    }
+
+    if (retryCount >= this.MAX_RETRY_ATTEMPTS) {
+      console.warn('⚠️ Max retry attempts reached for user:', userId, '- giving up');
+      subscriptionInfo.isRetrying = false;
+      return;
+    }
+
+    subscriptionInfo.isRetrying = true;
+    subscriptionInfo.retryCount = retryCount;
+
+    const delay = this.calculateBackoffDelay(retryCount);
+    console.log(`🔄 Scheduling retry ${retryCount + 1}/${this.MAX_RETRY_ATTEMPTS} for user ${userId} in ${delay}ms`);
+
+    subscriptionInfo.retryTimer = setTimeout(() => {
+      // Double-check channel is still not healthy before retrying
+      const currentChannel = this.subscriptions.get(userId);
+      const currentInfo = this.subscriptionInfo.get(userId);
+      
+      if (currentChannel && currentInfo) {
+        const currentState = currentChannel.state as string;
+        if (currentState === 'joined' || String(currentState).includes('SUBSCRIBED')) {
+          console.log('✅ Channel became healthy before retry timer fired, cancelling retry for user:', userId);
+          currentInfo.isRetrying = false;
+          currentInfo.retryCount = 0;
+          currentInfo.retryTimer = null;
+          return;
+        }
+      }
+      
+      console.log(`🔄 Retrying subscription for user: ${userId} (attempt ${retryCount + 1})`);
+      // Clean up old channel but preserve subscription info
+      this.cleanupChannel(userId);
+      // Create new subscription (subscriptionInfo is preserved, will be updated by _createSubscription)
+      this._createSubscription(userId, callback, retryCount + 1);
+    }, delay);
+  }
+
+  /**
+   * Internal method to create a subscription
+   * @param userId - The user ID to subscribe for
+   * @param callback - Callback function
+   * @param retryCount - Current retry attempt (0 for initial, >0 for retries)
+   */
+  private _createSubscription(
+    userId: string,
+    callback: (notification: Notification) => void,
+    retryCount: number = 0
+  ): void {
+    // Clean up any existing channel first (shouldn't exist, but be safe)
+    this.cleanupChannel(userId);
+
     // Create a unique channel name for this user
     const channelName = `notifications:${userId}`;
-    console.log('📡 Creating real-time channel:', channelName);
+    if (retryCount > 0) {
+      console.log(`📡 Creating real-time channel (retry ${retryCount}):`, channelName);
+    } else {
+      console.log('📡 Creating real-time channel:', channelName);
+    }
     console.log('📡 User ID for filter:', userId);
     console.log('📡 Filter string:', `user_id=eq.${userId}`);
     
@@ -356,7 +450,7 @@ class NotificationService {
                 const notification: Notification = {
                   id: payload.new.id as string,
                   user_id: payload.new.user_id as string,
-                  type: payload.new.type as 'follow' | 'follow_request',
+                  type: payload.new.type as 'follow' | 'follow_request' | 'follow_request_accepted',
                   actor_id: payload.new.actor_id as string,
                   reference_id: payload.new.reference_id as string | undefined,
                   read: payload.new.read as boolean,
@@ -380,7 +474,7 @@ class NotificationService {
                 const notification: Notification = {
                   id: payload.new.id as string,
                   user_id: payload.new.user_id as string,
-                  type: payload.new.type as 'follow' | 'follow_request',
+                  type: payload.new.type as 'follow' | 'follow_request' | 'follow_request_accepted',
                   actor_id: payload.new.actor_id as string,
                   reference_id: payload.new.reference_id as string | undefined,
                   read: payload.new.read as boolean,
@@ -431,8 +525,19 @@ class NotificationService {
         if (status === 'SUBSCRIBED') {
           console.log('✅ Successfully subscribed to notifications for user:', userId);
           console.log('✅ Channel is active and listening for INSERT events on notifications table');
-          console.log('✅ Channel state:', channel.state);
-          console.log('✅ Channel bindings:', channel.bindings);
+          
+          // Reset retry state on successful subscription - clear ALL retry timers
+          const subscriptionInfo = this.subscriptionInfo.get(userId);
+          if (subscriptionInfo) {
+            subscriptionInfo.isRetrying = false;
+            subscriptionInfo.retryCount = 0;
+            // Clear any pending retry timer
+            if (subscriptionInfo.retryTimer) {
+              clearTimeout(subscriptionInfo.retryTimer);
+              subscriptionInfo.retryTimer = null;
+            }
+          }
+          
           // Ensure channel is in map (it should already be there, but double-check)
           if (!this.subscriptions.has(userId)) {
             this.subscriptions.set(userId, channel);
@@ -444,42 +549,88 @@ class NotificationService {
           // Log channel details for debugging
           console.log('✅ Active subscriptions count:', this.subscriptions.size);
           console.log('✅ Channel topic:', channel.topic);
-          
-          // Verify the channel is actually listening
-          try {
-            const bindings = (channel as any).bindings || [];
-            console.log('✅ Channel has', bindings.length, 'bindings');
-            if (Array.isArray(bindings)) {
-              bindings.forEach((binding: any, index: number) => {
-                console.log(`✅ Binding ${index}:`, {
-                  event: binding.event,
-                  schema: binding.schema,
-                  table: binding.table,
-                  filter: binding.filter,
-                });
-              });
-            }
-          } catch (e) {
-            console.log('⚠️ Could not access channel bindings:', e);
-          }
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.error('❌ Error subscribing to notifications channel:', status, err);
-          console.error('❌ This means real-time notifications will NOT work');
-          // Remove from map if subscription failed
-          this.subscriptions.delete(userId);
+          console.log('⚠️ Channel error or timeout - will attempt automatic reconnection');
+          // Only trigger retry if not already retrying
+          const subscriptionInfo = this.subscriptionInfo.get(userId);
+          if (!subscriptionInfo?.isRetrying) {
+            this.retrySubscription(userId, callback, retryCount);
+          } else {
+            console.log('📡 Retry already in progress, ignoring error status');
+          }
         } else if (status === 'CLOSED') {
-          console.warn('⚠️ Subscription closed - real-time notifications stopped');
-          // Remove from map when closed
-          this.subscriptions.delete(userId);
+          // Only trigger retry if not already retrying and channel is actually closed (not just transitioning)
+          const subscriptionInfo = this.subscriptionInfo.get(userId);
+          if (!subscriptionInfo?.isRetrying) {
+            // Check if channel is actually closed or if it's just a transition state
+            const currentChannel = this.subscriptions.get(userId);
+            if (currentChannel) {
+              const currentState = currentChannel.state as string;
+              // If channel is already healthy, don't retry
+              if (currentState === 'joined' || String(currentState).includes('SUBSCRIBED')) {
+                console.log('✅ Channel is healthy despite CLOSED status, not retrying');
+                return;
+              }
+            }
+            console.log('⚠️ Subscription closed - will attempt automatic reconnection');
+            this.retrySubscription(userId, callback, retryCount);
+          } else {
+            console.log('📡 Retry already in progress, ignoring CLOSED status');
+          }
         } else {
           console.log('⏳ Subscription status:', status, 'Channel state:', channel.state);
         }
       });
 
-    // Store channel immediately (before subscription completes) so we can track it
-    // This ensures we can clean it up even if subscription fails
+    // Store channel and subscription info immediately (before subscription completes)
     this.subscriptions.set(userId, channel);
+    
+    // Store subscription info for retry logic
+    const subscriptionInfo: SubscriptionInfo = {
+      channel,
+      callback,
+      retryCount,
+      retryTimer: null,
+      isRetrying: false,
+    };
+    this.subscriptionInfo.set(userId, subscriptionInfo);
+    
     console.log('📡 Channel stored in subscriptions map (pre-subscribe)');
+  }
+
+  /**
+   * Subscribe to real-time notifications for a user
+   * @param userId - The user ID to subscribe for
+   * @param callback - Callback function called when a new notification is created
+   * @returns Unsubscribe function
+   */
+  subscribeToNotifications(
+    userId: string,
+    callback: (notification: Notification) => void
+  ): () => void {
+    // Check if subscription already exists for this user
+    const existingChannel = this.subscriptions.get(userId);
+    const existingInfo = this.subscriptionInfo.get(userId);
+    
+    if (existingChannel && existingInfo) {
+      // Verify the channel is still active
+      const channelState = existingChannel.state as string;
+      console.log('📡 Existing subscription found for user:', userId, 'State:', channelState);
+      // Check if channel is in a subscribed/active state
+      if (channelState === 'joined' || String(channelState).includes('SUBSCRIBED') || String(channelState).includes('joined')) {
+        console.log('📡 Using existing active subscription');
+        // Update callback in case it changed
+        existingInfo.callback = callback;
+        // Return unsubscribe function for existing subscription
+        return () => this.unsubscribeFromNotifications(userId);
+      } else {
+        console.log('📡 Existing subscription is not active (state:', channelState, '), removing and creating new one');
+        this.unsubscribeFromNotifications(userId);
+      }
+    }
+
+    // Create new subscription
+    this._createSubscription(userId, callback, 0);
 
     // Return unsubscribe function
     return () => {
@@ -489,11 +640,32 @@ class NotificationService {
   }
 
   /**
+   * Clean up channel without removing subscription info (for retries)
+   * @param userId - The user ID
+   */
+  private cleanupChannel(userId: string): void {
+    const channel = this.subscriptions.get(userId);
+    if (channel) {
+      console.log('📡 Cleaning up channel for user:', userId, 'Channel state:', channel.state);
+      this.client.removeChannel(channel);
+      this.subscriptions.delete(userId);
+    }
+  }
+
+  /**
    * Unsubscribe from notifications for a user
    * @param userId - The user ID to unsubscribe for
    */
   unsubscribeFromNotifications(userId: string): void {
     const channel = this.subscriptions.get(userId);
+    const subscriptionInfo = this.subscriptionInfo.get(userId);
+    
+    // Clear any pending retry timers
+    if (subscriptionInfo?.retryTimer) {
+      clearTimeout(subscriptionInfo.retryTimer);
+      subscriptionInfo.retryTimer = null;
+    }
+    
     if (channel) {
       console.log('📡 Removing channel for user:', userId, 'Channel state:', channel.state);
       this.client.removeChannel(channel);
@@ -502,16 +674,80 @@ class NotificationService {
     } else {
       console.log('📡 No channel found to unsubscribe for user:', userId);
     }
+    
+    // Remove subscription info
+    if (subscriptionInfo) {
+      this.subscriptionInfo.delete(userId);
+    }
+  }
+
+  /**
+   * Refresh subscription for a user (useful for app state changes)
+   * @param userId - The user ID to refresh subscription for
+   */
+  refreshSubscription(userId: string): void {
+    const subscriptionInfo = this.subscriptionInfo.get(userId);
+    if (!subscriptionInfo) {
+      console.log('📡 No subscription found to refresh for user:', userId);
+      return;
+    }
+
+    console.log('🔄 Refreshing subscription for user:', userId);
+    // Clear any pending retry timers
+    if (subscriptionInfo.retryTimer) {
+      clearTimeout(subscriptionInfo.retryTimer);
+      subscriptionInfo.retryTimer = null;
+    }
+    subscriptionInfo.isRetrying = false;
+    subscriptionInfo.retryCount = 0;
+    
+    // Clean up existing subscription
+    this.unsubscribeFromNotifications(userId);
+    // Create new subscription with existing callback (reset retry count)
+    this._createSubscription(userId, subscriptionInfo.callback, 0);
+  }
+
+  /**
+   * Check connection health and re-subscribe if needed
+   * @param userId - The user ID to check
+   */
+  checkConnectionHealth(userId: string): void {
+    const channel = this.subscriptions.get(userId);
+    const subscriptionInfo = this.subscriptionInfo.get(userId);
+    
+    if (!channel || !subscriptionInfo) {
+      return;
+    }
+
+    const channelState = channel.state as string;
+    const isHealthy = channelState === 'joined' || String(channelState).includes('SUBSCRIBED');
+    
+    if (!isHealthy && !subscriptionInfo.isRetrying) {
+      console.log('🔍 Connection health check failed for user:', userId, 'State:', channelState);
+      console.log('🔄 Triggering reconnection...');
+      this.retrySubscription(userId, subscriptionInfo.callback, 0);
+    }
   }
 
   /**
    * Unsubscribe from all notifications
    */
   unsubscribeAll(): void {
+    // Clear all retry timers
+    this.subscriptionInfo.forEach((info) => {
+      if (info.retryTimer) {
+        clearTimeout(info.retryTimer);
+      }
+    });
+    
+    // Remove all channels
     this.subscriptions.forEach((channel) => {
       this.client.removeChannel(channel);
     });
+    
+    // Clear all maps
     this.subscriptions.clear();
+    this.subscriptionInfo.clear();
   }
 }
 

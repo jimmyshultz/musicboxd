@@ -3,7 +3,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -103,7 +103,7 @@ const NotificationBellIcon = ({ navigation }: { navigation: any }) => {
   return (
     <TouchableOpacity
       onPress={() => navigation.navigate('Notifications')}
-      style={{ marginRight: 16, position: 'relative' }}
+      style={notificationBellStyles.container}
     >
       <Icon name="bell" size={24} color={theme.colors.onSurface} />
       <NotificationBadge count={unreadCount} />
@@ -783,5 +783,13 @@ const backButtonStyles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
+  },
+});
+
+// Styles for NotificationBellIcon component
+const notificationBellStyles = StyleSheet.create({
+  container: {
+    marginRight: 16,
+    position: 'relative',
   },
 });

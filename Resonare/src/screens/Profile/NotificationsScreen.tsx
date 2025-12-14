@@ -48,7 +48,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   onDelete,
   formatTimeAgo,
   getNotificationMessage,
-  theme,
+  theme: _theme,
   styles,
 }) => {
   const swipeableRef = useRef<Swipeable>(null);

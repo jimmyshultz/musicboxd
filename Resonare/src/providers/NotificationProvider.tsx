@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../store';
 import { notificationService } from '../services/notificationService';
@@ -13,6 +14,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const unsubscribeRef = useRef<(() => void) | null>(null);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const healthCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stabilize the notification handler callback with useCallback
   const handleNotification = useCallback((notification: any) => {
@@ -105,6 +108,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
     setupSubscription();
 
+    // Set up connection health monitoring (check every 30 seconds)
+    healthCheckIntervalRef.current = setInterval(() => {
+      if (user?.id) {
+        notificationService.checkConnectionHealth(user.id);
+      }
+    }, 30000); // Check every 30 seconds
+
     // Cleanup subscription on unmount or user change
     return () => {
       console.log('🔔 Cleaning up notification subscription for user:', user.id);
@@ -112,9 +122,40 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         unsubscribeRef.current();
         unsubscribeRef.current = null;
       }
+      if (healthCheckIntervalRef.current) {
+        clearInterval(healthCheckIntervalRef.current);
+        healthCheckIntervalRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]); // Removed dispatch - it's stable from Redux Toolkit
+
+  // Handle app state changes (background/foreground)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      const previousAppState = appStateRef.current;
+      appStateRef.current = nextAppState;
+
+      // When app comes to foreground, refresh subscription
+      if (previousAppState.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('📱 App came to foreground - refreshing notification subscription');
+        if (user?.id) {
+          // Small delay to ensure network is ready
+          setTimeout(() => {
+            notificationService.refreshSubscription(user.id);
+            // Also refresh unread count
+            notificationService.getUnreadCount(user.id)
+              .then(count => dispatch(setUnreadCount(count)))
+              .catch(error => console.error('Error refreshing unread count:', error));
+          }, 500);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [user?.id, dispatch]);
 
   return <>{children}</>;
 };
