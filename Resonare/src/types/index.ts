@@ -133,6 +133,18 @@ export interface Activity {
   timestamp: Date;
 }
 
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: 'follow' | 'follow_request' | 'follow_request_accepted';
+  actorId: string;
+  actorUsername?: string;
+  actorAvatar?: string;
+  referenceId?: string;
+  read: boolean;
+  createdAt: string;
+}
+
 // Diary types
 export interface DiaryEntry {
   id: string;
@@ -174,6 +186,7 @@ export type HomeStackParamList = {
   Diary: { userId: string; username: string };
   DiaryEntryDetails: { entryId: string; userId: string };
   EditProfile: undefined;
+  Notifications: undefined;
 };
 
 export type SearchStackParamList = {
@@ -209,6 +222,7 @@ export type ProfileStackParamList = {
   DiaryEntryDetails: { entryId: string; userId: string };
   Settings: undefined;
   FollowRequests: undefined;
+  Notifications: undefined;
   EditProfile: undefined;
 };
 

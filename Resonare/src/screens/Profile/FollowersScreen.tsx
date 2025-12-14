@@ -29,17 +29,22 @@ import { userService } from '../../services/userService';
 type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
 type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
-
-const EmptyState = ({ activeTab, username }: { activeTab: string; username: string }) => (
-  <View style={styles.emptyContainer}>
-    <Text variant="bodyLarge" style={styles.emptyText}>
-      {activeTab === 'followers' 
-        ? `${username} has no followers yet`
-        : `${username} isn't following anyone yet`
-      }
-    </Text>
-  </View>
-);
+// EmptyState component moved outside to avoid redefinition on every render
+const EmptyState = ({ activeTab: tab, username: name }: { activeTab: string; username: string }) => {
+  const theme = useTheme();
+  const styles = createStyles(theme);
+  
+  return (
+    <View style={styles.emptyContainer}>
+      <Text variant="bodyLarge" style={styles.emptyText}>
+        {tab === 'followers' 
+          ? `${name} has no followers yet`
+          : `${name} isn't following anyone yet`
+        }
+      </Text>
+    </View>
+  );
+};
 
 export default function FollowersScreen() {
   const route = useRoute<FollowersScreenRouteProp>();

@@ -121,6 +121,18 @@ export interface UserActivity {
   album?: Album;
 }
 
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: 'follow' | 'follow_request' | 'follow_request_accepted';
+  actor_id: string;
+  reference_id?: string;
+  read: boolean;
+  created_at: string;
+  // Relations (populated when joining)
+  actor?: UserProfile;
+}
+
 // UGC Safety Types
 
 export interface BlockedUser {
@@ -167,6 +179,7 @@ export const TableNames = {
   USER_ACTIVITIES: 'user_activities',
   BLOCKED_USERS: 'blocked_users',
   CONTENT_REPORTS: 'content_reports',
+  NOTIFICATIONS: 'notifications',
 } as const;
 
 // Supabase database type definition (Schema V2)
@@ -229,6 +242,11 @@ export interface Database {
         Row: ContentReport;
         Insert: Omit<ContentReport, 'id' | 'created_at' | 'reviewed_at' | 'reviewed_by' | 'action_taken'>;
         Update: Partial<Pick<ContentReport, 'status' | 'reviewed_at' | 'reviewed_by' | 'action_taken'>>;
+      };
+      notifications: {
+        Row: Notification;
+        Insert: Omit<Notification, 'id' | 'created_at'>;
+        Update: Partial<Pick<Notification, 'read'>> & Record<string, any>;
       };
     };
   };

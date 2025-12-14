@@ -14,12 +14,14 @@ import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { lightTheme, darkTheme } from './src/utils/theme';
 import { AuthProvider } from './src/providers/AuthProvider';
+import { NotificationProvider } from './src/providers/NotificationProvider';
 import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
 import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
 import { initializeCrashAnalytics } from './src/services/crashAnalytics';
 import { initializeAdMob } from './src/services/adMobService';
+import { initializeNotificationService } from './src/services/notificationService';
 
 // Suppress console output for beta users immediately
 suppressConsoleForBetaUsers();
@@ -34,6 +36,9 @@ function AppContent() {
       try {
         // Initialize crash analytics (handles Firebase internally)
         await initializeCrashAnalytics();
+        
+        // Initialize notification service (must be before AdMob to ensure early loading)
+        await initializeNotificationService();
         
         // Initialize AdMob
         await initializeAdMob();
@@ -66,7 +71,9 @@ function AppContent() {
           backgroundColor={currentTheme.colors.surface}
         />
         <AuthProvider>
-          <AppNavigator />
+          <NotificationProvider>
+            <AppNavigator />
+          </NotificationProvider>
         </AuthProvider>
       </PaperProvider>
     </SafeAreaProvider>

@@ -6,6 +6,7 @@ import userSlice from './slices/userSlice';
 import searchSlice from './slices/searchSlice';
 import diarySlice from './slices/diarySlice';
 import userAlbumsSlice from './slices/userAlbumsSlice';
+import notificationSlice from './slices/notificationSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     search: searchSlice,
     diary: diarySlice,
     userAlbums: userAlbumsSlice,
+    notifications: notificationSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

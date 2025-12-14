@@ -34,6 +34,8 @@ import EditProfileScreen from '../screens/Profile/EditProfileScreen';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 import BlockedUsersScreen from '../screens/Profile/BlockedUsersScreen';
+import NotificationsScreen from '../screens/Profile/NotificationsScreen';
+import { NotificationBadge } from '../components/NotificationBadge';
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -62,7 +64,7 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
 
 
 
-// Tab icon component to avoid creating it during render
+// Tab icon component for non-Profile tabs
 const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
   let iconName: string;
 
@@ -83,10 +85,39 @@ const TabIcon = ({ routeName, color, size }: { routeName: string; color: string;
   return <Icon name={iconName} size={size} color={color} />;
 };
 
+// Profile tab icon component (no badge needed)
+const ProfileTabIcon = ({ color, size }: { color: string; size: number }) => {
+  return <Icon name="user" size={size} color={color} />;
+};
+
+// Notification bell icon component for Home header (needs hooks)
+const NotificationBellIcon = ({ navigation }: { navigation: any }) => {
+  const theme = useTheme();
+  const unreadCount = useSelector((state: RootState) => state.notifications.unreadCount);
+  
+  // Log when unreadCount changes to verify re-renders
+  React.useEffect(() => {
+    console.log('🔔 NotificationBellIcon unreadCount changed to:', unreadCount);
+  }, [unreadCount]);
+  
+  return (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Notifications')}
+      style={notificationBellStyles.container}
+    >
+      <Icon name="bell" size={24} color={theme.colors.onSurface} />
+      <NotificationBadge count={unreadCount} />
+    </TouchableOpacity>
+  );
+};
+
 // Create tab bar icon function outside component
-const createTabBarIcon = (routeName: string) => ({ color, size }: { color: string; size: number }) => (
-  <TabIcon routeName={routeName} color={color} size={size} />
-);
+const createTabBarIcon = (routeName: string) => ({ color, size }: { color: string; size: number }) => {
+  if (routeName === 'Profile') {
+    return <ProfileTabIcon color={color} size={size} />;
+  }
+  return <TabIcon routeName={routeName} color={color} size={size} />;
+};
 
 // Create stack navigators for each tab to handle nested navigation
 const HomeStack = createStackNavigator();
@@ -108,7 +139,24 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="HomeMain"
         component={HomeScreen}
-        options={{ title: 'Resonare', headerBackVisible: false, headerLeft: () => null }}
+        options={({ navigation }) => ({
+          title: 'Resonare',
+          headerBackVisible: false,
+          headerLeft: () => null,
+          headerRight: () => <NotificationBellIcon navigation={navigation} />,
+        })}
+      />
+      <HomeStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Notifications',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
       />
 
       <HomeStack.Screen
@@ -598,6 +646,18 @@ function ProfileStackNavigator() {
         })}
       />
       <ProfileStack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Notifications',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
+      />
+      <ProfileStack.Screen
         name="EditProfile"
         component={EditProfileScreen}
         options={({ navigation }) => ({
@@ -723,5 +783,13 @@ const backButtonStyles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
+  },
+});
+
+// Styles for NotificationBellIcon component
+const notificationBellStyles = StyleSheet.create({
+  container: {
+    marginRight: 16,
+    position: 'relative',
   },
 });
