@@ -254,6 +254,8 @@ export default function NotificationsScreen() {
       return `${username} started following you`;
     } else if (notification.type === 'follow_request') {
       return `${username} requested to follow you`;
+    } else if (notification.type === 'follow_request_accepted') {
+      return `${username} accepted your follow request`;
     }
     return '';
   };
@@ -323,9 +325,6 @@ export default function NotificationsScreen() {
           <View style={styles.emptyContainer}>
             <Text variant="headlineSmall" style={styles.emptyTitle}>
               No Notifications
-            </Text>
-            <Text variant="bodyLarge" style={styles.emptyMessage}>
-              When someone follows you or sends a follow request, you'll see it here.
             </Text>
           </View>
         }

@@ -136,7 +136,7 @@ export interface Activity {
 export interface AppNotification {
   id: string;
   userId: string;
-  type: 'follow' | 'follow_request';
+  type: 'follow' | 'follow_request' | 'follow_request_accepted';
   actorId: string;
   actorUsername?: string;
   actorAvatar?: string;

@@ -124,7 +124,7 @@ export interface UserActivity {
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'follow' | 'follow_request';
+  type: 'follow' | 'follow_request' | 'follow_request_accepted';
   actor_id: string;
   reference_id?: string;
   read: boolean;
