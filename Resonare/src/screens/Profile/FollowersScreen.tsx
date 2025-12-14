@@ -168,9 +168,11 @@ export default function FollowersScreen() {
             <Text variant="bodyLarge" style={styles.username}>
               @{user.username}
             </Text>
-            <Text variant="bodyMedium" style={styles.bio} numberOfLines={2}>
-              {user.bio || 'Music enthusiast'}
-            </Text>
+            {user.bio && (
+              <Text variant="bodyMedium" style={styles.bio} numberOfLines={2}>
+                {user.bio}
+              </Text>
+            )}
           </View>
         </View>
         
