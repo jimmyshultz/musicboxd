@@ -829,7 +829,8 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   rowDirection: { flexDirection: 'row' },
   reviewSection: {
     marginTop: spacing.md,
-    paddingTop: spacing.md,
+    paddingTop: 0,
+    paddingBottom: spacing.md,
   },
   reviewTitle: {
     fontWeight: '600',
@@ -872,13 +873,21 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     flex: 1,
   },
   socialSection: {
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
   },
   likeSection: {
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing.md,
   },
   commentsDivider: {
-    marginVertical: spacing.md,
+    marginVertical: 0,
+    backgroundColor: theme.colors.outline,
+    height: 1,
+  },
+  commentsSection: {
+    marginTop: 0,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
   },
   likeButton: {
     flexDirection: 'row',
@@ -894,9 +903,6 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   likedText: {
     color: theme.colors.error,
     fontWeight: '600',
-  },
-  commentsSection: {
-    marginTop: spacing.md,
   },
   commentsTitle: {
     fontWeight: '600',
