@@ -25,6 +25,7 @@ import {
 } from '../../store/slices/diarySocialSlice';
 import { RootState, AppDispatch } from '../../store';
 import { spacing } from '../../utils/theme';
+import { contentModerationService } from '../../services/contentModerationService';
 
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
  type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
@@ -88,11 +89,13 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           commentsCount: e.comments_count,
         }));
         
-        // Load social info (including hasLiked) - this won't disable the button
-        dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser?.id }));
-        
-        // Load comments
-        dispatch(loadDiaryEntryComments({ entryId, reset: true }));
+        // Only load social info and comments if there's a review
+        if (e.notes) {
+          // Load social info (including hasLiked) - this won't disable the button
+          dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser?.id }));
+          // Load comments
+          dispatch(loadDiaryEntryComments({ entryId, reset: true }));
+        }
         
         // Get album details
         const res = await AlbumService.getAlbumById(e.album_id);
@@ -371,6 +374,14 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     if (!commentText.trim()) {
       return;
     }
+
+    // Validate comment content before submitting
+    const commentValidation = contentModerationService.validateComment(commentText.trim());
+    if (!commentValidation.isValid) {
+      Alert.alert('Content Issue', commentValidation.error || 'Your comment contains inappropriate content. Please revise it.');
+      return;
+    }
+
     try {
       await dispatch(createDiaryEntryComment({ entryId, userId: currentUser.id, body: commentText.trim() })).unwrap();
       setCommentText('');
@@ -490,14 +501,16 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      <ScrollView 
-        style={styles.container} 
-        contentContainerStyle={[
-          styles.scrollContent, 
-          editingReview && styles.scrollContentWithKeyboard
-        ]}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={styles.contentContainer}>
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={[
+            styles.scrollContent, 
+            editingReview && styles.scrollContentWithKeyboard,
+            currentUser && styles.scrollContentWithFixedInput // Add bottom padding when input is fixed
+          ]}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* Shareable view for Instagram - only rendered when needed */}
         {showShareView && (
         <View ref={shareViewRef} style={styles.shareView}>
@@ -608,9 +621,9 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
         </View>
       )}
 
-      {/* Social Interactions Section */}
-      <Divider style={styles.divider} />
-      <View style={styles.socialSection}>
+      {/* Social Interactions Section - Only show if there's a review */}
+      {entry.review && (
+        <View style={styles.socialSection}>
         {/* Like Button */}
         <View style={styles.likeSection}>
           <TouchableOpacity
@@ -632,6 +645,9 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           </TouchableOpacity>
         </View>
 
+        {/* Divider between likes and comments */}
+        <Divider style={styles.commentsDivider} />
+
         {/* Comments Section */}
         <View style={styles.commentsSection}>
           <Text variant="titleMedium" style={styles.commentsTitle}>
@@ -650,61 +666,60 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
               ItemSeparatorComponent={CommentSeparator}
+              contentContainerStyle={styles.commentsListContent}
             />
-          ) : (
-            <Text variant="bodyMedium" style={styles.noCommentsText}>
-              No comments yet. Be the first to comment!
-            </Text>
-          )}
-
-          {/* Comment Input */}
-          {currentUser && (
-            <View style={styles.commentInputContainer}>
-              <TextInput
-                mode="outlined"
-                placeholder="Add a comment..."
-                value={commentText}
-                onChangeText={(text) => {
-                  if (text.length <= 2000) {
-                    setCommentText(text);
-                  }
-                }}
-                multiline
-                maxLength={2000}
-                style={styles.commentInput}
-                right={
-                  <TextInput.Icon
-                    icon="send"
-                    onPress={handlePostComment}
-                    disabled={!commentText.trim()}
-                  />
-                }
-              />
-            </View>
-          )}
+          ) : null}
         </View>
       </View>
-
-      {showPicker && (
-        <View style={styles.datePickerContainer}>
-          <DateTimePicker
-            value={pendingDate || d}
-            mode="date"
-            display="spinner"
-            maximumDate={new Date()}
-            onChange={onChangeDate}
-          />
-          <View style={styles.datePickerButtons}>
-            <Button mode="outlined" onPress={handleCancelDate} disabled={saving}>
-              Cancel
-            </Button>
-            <Button mode="contained" onPress={handleSaveDate} disabled={saving || !pendingDate}>
-              Save
-            </Button>
-          </View>
-        </View>
       )}
-      </ScrollView>
+
+        {showPicker && (
+          <View style={styles.datePickerContainer}>
+            <DateTimePicker
+              value={pendingDate || d}
+              mode="date"
+              display="spinner"
+              maximumDate={new Date()}
+              onChange={onChangeDate}
+            />
+            <View style={styles.datePickerButtons}>
+              <Button mode="outlined" onPress={handleCancelDate} disabled={saving}>
+                Cancel
+              </Button>
+              <Button mode="contained" onPress={handleSaveDate} disabled={saving || !pendingDate}>
+                Save
+              </Button>
+            </View>
+          </View>
+        )}
+        </ScrollView>
+
+        {/* Fixed Comment Input at Bottom of Viewport - Only show if there's a review */}
+        {currentUser && entry.review && (
+          <View style={styles.fixedCommentInputContainer}>
+            <TextInput
+              mode="outlined"
+              placeholder="Add a comment..."
+              value={commentText}
+              onChangeText={(text) => {
+                if (text.length <= 2000) {
+                  setCommentText(text);
+                }
+              }}
+              multiline
+              maxLength={280}
+              style={styles.commentInput}
+              right={
+                <TextInput.Icon
+                  icon="send"
+                  onPress={handlePostComment}
+                  disabled={!commentText.trim()}
+                />
+              }
+            />
+          </View>
+        )}
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -717,6 +732,9 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   },
   scrollContentWithKeyboard: {
     paddingBottom: 300, // Extra padding when keyboard is visible to allow scrolling past keyboard
+  },
+  scrollContentWithFixedInput: {
+    paddingBottom: 100, // Extra padding at bottom when comment input is fixed (to prevent content from being hidden)
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', marginBottom: spacing.lg },
@@ -846,14 +864,21 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   keyboardAvoidingView: {
     flex: 1,
   },
-  divider: {
-    marginVertical: spacing.lg,
+  contentContainer: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  scrollView: {
+    flex: 1,
   },
   socialSection: {
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
   likeSection: {
-    marginBottom: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  commentsDivider: {
+    marginVertical: spacing.md,
   },
   likeButton: {
     flexDirection: 'row',
@@ -922,6 +947,28 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   },
   commentInputContainer: {
     marginTop: spacing.md,
+  },
+  commentsListContent: {
+    paddingBottom: spacing.xl, // Add padding so comments aren't hidden behind fixed input
+  },
+  fixedCommentInputContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.outlineVariant,
+    paddingBottom: Platform.OS === 'ios' ? spacing.lg : spacing.md, // Extra padding for iOS safe area
+    // Add elevation/shadow for better visibility
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   commentInput: {
     backgroundColor: theme.colors.surface,
