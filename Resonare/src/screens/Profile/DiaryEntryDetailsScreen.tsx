@@ -1,20 +1,29 @@
-import React, { useCallback, useEffect, useState, useLayoutEffect } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useCallback, useEffect, useState, useLayoutEffect, useMemo } from 'react';
+import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Avatar, Divider } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share from 'react-native-share';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
+import { DiaryEntryComment } from '../../types/database';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { HalfStarRating, HalfStarDisplay } from '../../components/HalfStarRating';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
-import { RootState } from '../../store';
+import {
+  loadDiaryEntrySocialInfo,
+  toggleDiaryEntryLike,
+  loadDiaryEntryComments,
+  createDiaryEntryComment,
+  deleteDiaryEntryComment,
+  updateSocialInfoFromEntry,
+} from '../../store/slices/diarySocialSlice';
+import { RootState, AppDispatch } from '../../store';
 import { spacing } from '../../utils/theme';
 
  type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
@@ -29,7 +38,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   const route = useRoute<DetailsRoute>();
   const navigation = useNavigation<DetailsNav>();
   const theme = useTheme();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { entryId, userId } = route.params;
   const { user: currentUser } = useSelector((s: RootState) => s.auth);
 
@@ -44,12 +53,17 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   const [menuVisible, setMenuVisible] = useState(false);
   const [editingReview, setEditingReview] = useState(false);
   const [pendingReview, setPendingReview] = useState<string>('');
+  const [commentText, setCommentText] = useState<string>('');
   const shareViewRef = React.useRef<View>(null);
+
+  // Get social state from Redux
+  const likeState = useSelector((s: RootState) => s.diarySocial.likesByEntryId[entryId]);
+  const commentsState = useSelector((s: RootState) => s.diarySocial.commentsByEntryId[entryId]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const e = await diaryEntriesService.getDiaryEntryById(entryId);
+      const e = await diaryEntriesService.getDiaryEntryById(entryId, currentUser?.id);
       if (e) {
         // Convert from new service format to old DiaryEntry format for compatibility
         const convertedEntry: DiaryEntry = {
@@ -61,9 +75,24 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           review: e.notes || undefined,
           createdAt: e.created_at,
           updatedAt: e.updated_at,
+          likesCount: e.likes_count,
+          commentsCount: e.comments_count,
         };
         
         setEntry(convertedEntry);
+        
+        // Update social info in Redux
+        dispatch(updateSocialInfoFromEntry({
+          entryId,
+          likesCount: e.likes_count,
+          commentsCount: e.comments_count,
+        }));
+        
+        // Load social info (including hasLiked) - this won't disable the button
+        dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser?.id }));
+        
+        // Load comments
+        dispatch(loadDiaryEntryComments({ entryId, reset: true }));
         
         // Get album details
         const res = await AlbumService.getAlbumById(e.album_id);
@@ -75,7 +104,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
       console.error('Error loading diary entry:', error);
     }
     setLoading(false);
-  }, [entryId]);
+  }, [entryId, currentUser?.id, dispatch]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -291,6 +320,8 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           review: res.entry.notes || undefined,
           createdAt: res.entry.created_at,
           updatedAt: res.entry.updated_at,
+          likesCount: res.entry.likes_count,
+          commentsCount: res.entry.comments_count,
         };
         setEntry(convertedEntry);
         dispatch(upsertDiaryEntry(convertedEntry));
@@ -303,8 +334,140 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     setPendingReview('');
   }, [entry, dispatch, pendingReview]);
 
+  const handleToggleLike = useCallback(async () => {
+    if (!currentUser) {
+      Alert.alert('Sign In Required', 'Please sign in to like diary entries');
+      return;
+    }
+    if (likeState?.loading) {
+      console.log('Like action already in progress, ignoring click');
+      return;
+    }
+    try {
+      // Get current like state before toggling
+      const currentHasLiked = likeState?.hasLiked || false;
+      const currentLikesCount = likeState?.likesCount ?? entry?.likesCount ?? 0;
+      console.log('Toggling like for entry:', entryId, 'user:', currentUser.id, 'currentlyLiked:', currentHasLiked, 'currentCount:', currentLikesCount, 'likeState:', likeState);
+      const result = await dispatch(toggleDiaryEntryLike({ 
+        entryId, 
+        userId: currentUser.id,
+        currentHasLiked 
+      })).unwrap();
+      console.log('Like toggle result:', result);
+      // Don't reload immediately - the optimistic update is correct and the database trigger
+      // will update the count. The count will be accurate on next page load or when
+      // the entry is refreshed naturally.
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to like diary entry');
+    }
+  }, [currentUser, entryId, dispatch, likeState, entry?.likesCount]);
+
+  const handlePostComment = useCallback(async () => {
+    if (!currentUser) {
+      Alert.alert('Sign In Required', 'Please sign in to comment on diary entries');
+      return;
+    }
+    if (!commentText.trim()) {
+      return;
+    }
+    try {
+      await dispatch(createDiaryEntryComment({ entryId, userId: currentUser.id, body: commentText.trim() })).unwrap();
+      setCommentText('');
+      // Reload social info to update comments count
+      dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser.id }));
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to post comment');
+    }
+  }, [currentUser, entryId, commentText, dispatch]);
+
+  const handleDeleteComment = useCallback(async (commentId: string) => {
+    if (!currentUser) return;
+    Alert.alert(
+      'Delete Comment',
+      'Are you sure you want to delete this comment?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await dispatch(deleteDiaryEntryComment({ commentId, entryId, userId: currentUser.id })).unwrap();
+              // Reload social info to update comments count
+              dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser.id }));
+            } catch (error) {
+              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to delete comment');
+            }
+          },
+        },
+      ]
+    );
+  }, [currentUser, entryId, dispatch]);
+
+  const formatTimeAgo = useCallback((dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  }, []);
+
+  // Create styles early so they're available in callbacks
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const renderComment = useCallback(({ item }: { item: DiaryEntryComment }) => {
+    // Convert database comment format to app format
+    const commentUserId = 'user_id' in item ? item.user_id : item.userId;
+    const commentId = item.id;
+    const commentBody = 'body' in item ? item.body : item.body;
+    const commentCreatedAt = 'created_at' in item ? item.created_at : item.createdAt;
+    const commentUser = 'user_profile' in item && item.user_profile ? {
+      id: item.user_profile.id,
+      username: item.user_profile.username,
+      avatarUrl: item.user_profile.avatar_url,
+    } : ('user' in item ? item.user : undefined);
+
+    const canDelete = currentUser && (currentUser.id === commentUserId || currentUser.id === userId);
+    return (
+      <View style={styles.commentItem}>
+        <Avatar.Image
+          size={32}
+          source={{ uri: commentUser?.avatarUrl || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
+        />
+        <View style={styles.commentContent}>
+          <View style={styles.commentHeader}>
+            <Text variant="bodyMedium" style={styles.commentUsername}>
+              {commentUser?.username || 'Unknown'}
+            </Text>
+            <Text variant="bodySmall" style={styles.commentTime}>
+              {formatTimeAgo(commentCreatedAt)}
+            </Text>
+          </View>
+          <Text variant="bodyMedium" style={styles.commentBody}>
+            {commentBody}
+          </Text>
+        </View>
+        {canDelete && (
+          <IconButton
+            icon="delete-outline"
+            size={18}
+            onPress={() => handleDeleteComment(commentId)}
+            style={styles.commentDeleteButton}
+          />
+        )}
+      </View>
+    );
+  }, [currentUser, userId, formatTimeAgo, handleDeleteComment, styles, theme]);
+
   if (loading || !entry) {
-    const styles = createStyles(theme);
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator />
@@ -315,7 +478,6 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
 
   const d = new Date(entry.diaryDate + 'T00:00:00');
   const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
-  const styles = createStyles(theme);
 
   return (
     <KeyboardAvoidingView 
@@ -440,6 +602,83 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           )}
         </View>
       )}
+
+      {/* Social Interactions Section */}
+      <Divider style={styles.divider} />
+      <View style={styles.socialSection}>
+        {/* Like Button */}
+        <View style={styles.likeSection}>
+          <TouchableOpacity
+            onPress={handleToggleLike}
+            disabled={!currentUser || (likeState?.loading === true)}
+            style={[styles.likeButton, (!currentUser || likeState?.loading === true) && styles.likeButtonDisabled]}
+          >
+            <Icon
+              name={likeState?.hasLiked ? 'heart' : 'heart-o'}
+              size={24}
+              color={likeState?.hasLiked ? theme.colors.error : theme.colors.onSurfaceVariant}
+            />
+            <Text variant="bodyMedium" style={[
+              styles.likeCount,
+              likeState?.hasLiked && styles.likedText
+            ]}>
+              {likeState?.likesCount ?? entry?.likesCount ?? 0}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Comments Section */}
+        <View style={styles.commentsSection}>
+          <Text variant="titleMedium" style={styles.commentsTitle}>
+            Comments ({commentsState?.comments.length ?? entry?.commentsCount ?? 0})
+          </Text>
+
+          {/* Comments List */}
+          {commentsState?.loading && commentsState.comments.length === 0 ? (
+            <View style={styles.loadingComments}>
+              <ActivityIndicator size="small" />
+            </View>
+          ) : commentsState?.comments && commentsState.comments.length > 0 ? (
+            <FlatList
+              data={commentsState.comments}
+              renderItem={renderComment}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={styles.commentSeparator} />}
+            />
+          ) : (
+            <Text variant="bodyMedium" style={styles.noCommentsText}>
+              No comments yet. Be the first to comment!
+            </Text>
+          )}
+
+          {/* Comment Input */}
+          {currentUser && (
+            <View style={styles.commentInputContainer}>
+              <TextInput
+                mode="outlined"
+                placeholder="Add a comment..."
+                value={commentText}
+                onChangeText={(text) => {
+                  if (text.length <= 2000) {
+                    setCommentText(text);
+                  }
+                }}
+                multiline
+                maxLength={2000}
+                style={styles.commentInput}
+                right={
+                  <TextInput.Icon
+                    icon="send"
+                    onPress={handlePostComment}
+                    disabled={!commentText.trim()}
+                  />
+                }
+              />
+            </View>
+          )}
+        </View>
+      </View>
 
       {showPicker && (
         <View style={styles.datePickerContainer}>
@@ -601,5 +840,85 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   },
   keyboardAvoidingView: {
     flex: 1,
+  },
+  divider: {
+    marginVertical: spacing.lg,
+  },
+  socialSection: {
+    marginTop: spacing.md,
+  },
+  likeSection: {
+    marginBottom: spacing.lg,
+  },
+  likeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  likeButtonDisabled: {
+    opacity: 0.5,
+  },
+  likeCount: {
+    color: theme.colors.onSurfaceVariant,
+  },
+  likedText: {
+    color: theme.colors.error,
+    fontWeight: '600',
+  },
+  commentsSection: {
+    marginTop: spacing.md,
+  },
+  commentsTitle: {
+    fontWeight: '600',
+    marginBottom: spacing.md,
+  },
+  loadingComments: {
+    padding: spacing.md,
+    alignItems: 'center',
+  },
+  noCommentsText: {
+    color: theme.colors.onSurfaceVariant,
+    fontStyle: 'italic',
+    paddingVertical: spacing.md,
+  },
+  commentItem: {
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  commentContent: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  commentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+    gap: spacing.sm,
+  },
+  commentUsername: {
+    fontWeight: '600',
+    color: theme.colors.onSurface,
+  },
+  commentTime: {
+    color: theme.colors.onSurfaceVariant,
+  },
+  commentBody: {
+    color: theme.colors.onSurface,
+    lineHeight: 20,
+  },
+  commentDeleteButton: {
+    margin: 0,
+  },
+  commentSeparator: {
+    height: 1,
+    backgroundColor: theme.colors.outlineVariant,
+    marginVertical: spacing.sm,
+  },
+  commentInputContainer: {
+    marginTop: spacing.md,
+  },
+  commentInput: {
+    backgroundColor: theme.colors.surface,
   },
 });

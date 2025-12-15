@@ -6,6 +6,7 @@ import {
   RefreshControl,
   TouchableOpacity,
   Animated,
+  Alert,
 } from 'react-native';
 import { Text, ActivityIndicator, Avatar, Card, useTheme, Button } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -180,6 +181,30 @@ export default function NotificationsScreen() {
       }
     }
 
+    // Handle diary entry notifications
+    if (notification.type === 'diary_like' || notification.type === 'diary_comment') {
+      if (notification.referenceId) {
+        // Navigate to the diary entry details
+        // We need to get the userId from the diary entry
+        try {
+          const { diaryEntriesService } = await import('../../services/diaryEntriesService');
+          const entry = await diaryEntriesService.getDiaryEntryById(notification.referenceId);
+          if (entry) {
+            navigation.navigate('DiaryEntryDetails', {
+              entryId: notification.referenceId,
+              userId: entry.user_id,
+            });
+          } else {
+            Alert.alert('Not Found', 'This diary entry no longer exists.');
+          }
+        } catch (error) {
+          console.error('Error loading diary entry for notification:', error);
+          Alert.alert('Error', 'Unable to open diary entry.');
+        }
+      }
+      return;
+    }
+
     // If it's a follow request and the current user is private, navigate to Follow Requests
     if (notification.type === 'follow_request' && currentUser?.preferences?.privacy?.profileVisibility === 'private') {
       // Navigate to Profile tab, then to FollowRequests screen
@@ -256,6 +281,10 @@ export default function NotificationsScreen() {
       return `${username} requested to follow you`;
     } else if (notification.type === 'follow_request_accepted') {
       return `${username} accepted your follow request`;
+    } else if (notification.type === 'diary_like') {
+      return `${username} liked your diary entry`;
+    } else if (notification.type === 'diary_comment') {
+      return `${username} commented on your diary entry`;
     }
     return '';
   };

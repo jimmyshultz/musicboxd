@@ -474,7 +474,7 @@ class NotificationService {
                 const notification: Notification = {
                   id: payload.new.id as string,
                   user_id: payload.new.user_id as string,
-                  type: payload.new.type as 'follow' | 'follow_request' | 'follow_request_accepted',
+                  type: payload.new.type as 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment',
                   actor_id: payload.new.actor_id as string,
                   reference_id: payload.new.reference_id as string | undefined,
                   read: payload.new.read as boolean,
@@ -491,7 +491,7 @@ class NotificationService {
               const notification: Notification = {
                 id: notificationData.id,
                 user_id: notificationData.user_id,
-                type: notificationData.type,
+                type: notificationData.type as 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment',
                 actor_id: notificationData.actor_id,
                 reference_id: notificationData.reference_id,
                 read: notificationData.read,

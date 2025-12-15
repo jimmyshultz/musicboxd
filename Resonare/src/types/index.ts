@@ -136,7 +136,7 @@ export interface Activity {
 export interface AppNotification {
   id: string;
   userId: string;
-  type: 'follow' | 'follow_request' | 'follow_request_accepted';
+  type: 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment';
   actorId: string;
   actorUsername?: string;
   actorAvatar?: string;
@@ -155,6 +155,35 @@ export interface DiaryEntry {
   review?: string; // Optional review/notes about the album
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
+  likesCount?: number; // Count of likes
+  commentsCount?: number; // Count of comments
+}
+
+export interface DiaryEntryLike {
+  id: string;
+  entryId: string;
+  userId: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    username: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface DiaryEntryComment {
+  id: string;
+  entryId: string;
+  userId: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  isDeleted: boolean;
+  user?: {
+    id: string;
+    username: string;
+    avatarUrl?: string;
+  };
 }
 
 // Navigation types

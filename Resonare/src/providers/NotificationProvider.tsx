@@ -22,10 +22,22 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     try {
       console.log('🔔 Processing real-time notification callback:', notification);
       // Transform database notification to AppNotification
+      // Ensure type is one of the valid notification types
+      const validTypes: AppNotification['type'][] = [
+        'follow',
+        'follow_request',
+        'follow_request_accepted',
+        'diary_like',
+        'diary_comment',
+      ];
+      const notificationType = validTypes.includes(notification.type) 
+        ? notification.type 
+        : 'follow'; // Fallback to follow if unknown type
+
       const appNotification: AppNotification = {
         id: notification.id,
         userId: notification.user_id,
-        type: notification.type,
+        type: notificationType,
         actorId: notification.actor_id,
         actorUsername: notification.actor?.username,
         actorAvatar: notification.actor?.avatar_url,
