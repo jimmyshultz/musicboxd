@@ -182,15 +182,31 @@ SET search_path = public
 AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
+        -- New comment added
         UPDATE public.diary_entries 
         SET comments_count = comments_count + 1 
         WHERE id = NEW.entry_id;
         RETURN NEW;
     ELSIF TG_OP = 'DELETE' THEN
+        -- Comment hard deleted
         UPDATE public.diary_entries 
         SET comments_count = GREATEST(comments_count - 1, 0) 
         WHERE id = OLD.entry_id;
         RETURN OLD;
+    ELSIF TG_OP = 'UPDATE' THEN
+        -- Handle soft delete/restore: check if is_deleted changed
+        IF (OLD.is_deleted = false AND NEW.is_deleted = true) THEN
+            -- Comment was soft deleted
+            UPDATE public.diary_entries 
+            SET comments_count = GREATEST(comments_count - 1, 0) 
+            WHERE id = NEW.entry_id;
+        ELSIF (OLD.is_deleted = true AND NEW.is_deleted = false) THEN
+            -- Comment was restored
+            UPDATE public.diary_entries 
+            SET comments_count = comments_count + 1 
+            WHERE id = NEW.entry_id;
+        END IF;
+        RETURN NEW;
     END IF;
     RETURN NULL;
 END;
@@ -215,7 +231,7 @@ CREATE TRIGGER update_diary_entry_likes_count_trigger
     EXECUTE FUNCTION public.update_diary_entry_likes_count();
 
 CREATE TRIGGER update_diary_entry_comments_count_trigger
-    AFTER INSERT OR DELETE ON public.diary_entry_comments
+    AFTER INSERT OR UPDATE OR DELETE ON public.diary_entry_comments
     FOR EACH ROW
     EXECUTE FUNCTION public.update_diary_entry_comments_count();
 

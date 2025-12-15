@@ -81,8 +81,9 @@ export const toggleDiaryEntryLike = createAsyncThunk(
  */
 export const loadDiaryEntryComments = createAsyncThunk(
   'diarySocial/loadComments',
-  async ({ entryId, reset = false }: { entryId: string; reset?: boolean }) => {
-    const currentState = initialState.commentsByEntryId[entryId];
+  async ({ entryId, reset = false }: { entryId: string; reset?: boolean }, { getState }) => {
+    const state = getState() as RootState;
+    const currentState = state.diarySocial.commentsByEntryId[entryId];
     const offset = reset ? 0 : (currentState?.comments.length || 0);
     
     const comments = await diaryEntriesService.getDiaryEntryComments(entryId, {
