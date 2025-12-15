@@ -139,7 +139,7 @@ const diarySocialSlice = createSlice({
       state,
       action: PayloadAction<{ entryId: string; likesCount?: number; commentsCount?: number; hasLiked?: boolean }>
     ) => {
-      const { entryId, likesCount, commentsCount, hasLiked } = action.payload;
+      const { entryId, likesCount, hasLiked } = action.payload;
       
       if (likesCount !== undefined || hasLiked !== undefined) {
         const currentLikeState = state.likesByEntryId[entryId] || { hasLiked: false, likesCount: 0, loading: false };
@@ -168,7 +168,7 @@ const diarySocialSlice = createSlice({
         }
       })
       .addCase(loadDiaryEntrySocialInfo.fulfilled, (state, action) => {
-        const { entryId, likesCount, commentsCount, hasLiked } = action.payload;
+        const { entryId, likesCount, hasLiked } = action.payload;
         const currentLikeState = state.likesByEntryId[entryId];
         // Always update with fresh data from server, but preserve loading state if a like action is in progress
         // (loading: true means a like/unlike action is happening, not that we're fetching social info)

@@ -423,6 +423,11 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   // Create styles early so they're available in callbacks
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  // Comment separator component - defined outside render to avoid recreation
+  const CommentSeparator = useMemo(() => {
+    return () => <View style={styles.commentSeparator} />;
+  }, [styles.commentSeparator]);
+
   const renderComment = useCallback(({ item }: { item: DiaryEntryComment }) => {
     // Convert database comment format to app format
     const commentUserId = 'user_id' in item ? item.user_id : item.userId;
@@ -465,7 +470,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
         )}
       </View>
     );
-  }, [currentUser, userId, formatTimeAgo, handleDeleteComment, styles, theme]);
+  }, [currentUser, userId, formatTimeAgo, handleDeleteComment, styles]);
 
   if (loading || !entry) {
     return (
@@ -644,7 +649,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
               renderItem={renderComment}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
-              ItemSeparatorComponent={() => <View style={styles.commentSeparator} />}
+              ItemSeparatorComponent={CommentSeparator}
             />
           ) : (
             <Text variant="bodyMedium" style={styles.noCommentsText}>

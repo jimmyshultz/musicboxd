@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { DiaryEntryLike, DiaryEntryComment } from '../types/database';
+import { DiaryEntryComment } from '../types/database';
 
 export interface DiaryEntry {
   id: string;
@@ -224,7 +224,7 @@ class DiaryEntriesService {
   /**
    * Get diary entry by ID
    */
-  async getDiaryEntryById(entryId: string, currentUserId?: string): Promise<DiaryEntry | null> {
+  async getDiaryEntryById(entryId: string, _currentUserId?: string): Promise<DiaryEntry | null> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
