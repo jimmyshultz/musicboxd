@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { DiaryEntryComment } from '../types/database';
 
 export interface DiaryEntry {
   id: string;
@@ -9,6 +10,14 @@ export interface DiaryEntry {
   notes?: string;
   created_at: string;
   updated_at: string;
+  likes_count?: number;
+  comments_count?: number;
+}
+
+export interface DiaryEntrySocialInfo {
+  likesCount: number;
+  commentsCount: number;
+  hasLiked: boolean;
 }
 
 export interface DiaryEntryWithAlbum extends DiaryEntry {
@@ -215,7 +224,7 @@ class DiaryEntriesService {
   /**
    * Get diary entry by ID
    */
-  async getDiaryEntryById(entryId: string): Promise<DiaryEntry | null> {
+  async getDiaryEntryById(entryId: string, _currentUserId?: string): Promise<DiaryEntry | null> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
@@ -227,7 +236,13 @@ class DiaryEntriesService {
         throw error;
       }
 
-      return data || null;
+      if (!data) {
+        return null;
+      }
+
+      // If currentUserId is provided, also check if user has liked
+      // (counts are already denormalized in the entry)
+      return data;
     } catch (error) {
       console.error('Error getting diary entry:', error);
       return null;
@@ -447,6 +462,288 @@ class DiaryEntriesService {
     } catch (error) {
       console.error('Error getting friends diary entries for album:', error);
       return [];
+    }
+  }
+
+  /**
+   * Get social info (likes count, comments count, has liked) for a diary entry
+   */
+  async getDiaryEntrySocialInfo(entryId: string, currentUserId?: string): Promise<DiaryEntrySocialInfo> {
+    try {
+      // Get the entry with counts
+      const { data: entry, error: entryError } = await supabase
+        .from('diary_entries')
+        .select('likes_count, comments_count')
+        .eq('id', entryId)
+        .single();
+
+      if (entryError) {
+        throw entryError;
+      }
+
+      const likesCount = entry?.likes_count || 0;
+      const commentsCount = entry?.comments_count || 0;
+
+      // Check if current user has liked
+      let hasLiked = false;
+      if (currentUserId) {
+        const { data: like, error: likeError } = await supabase
+          .from('diary_entry_likes')
+          .select('id')
+          .eq('entry_id', entryId)
+          .eq('user_id', currentUserId)
+          .single();
+
+        if (!likeError && like) {
+          hasLiked = true;
+        }
+      }
+
+      return {
+        likesCount,
+        commentsCount,
+        hasLiked,
+      };
+    } catch (error) {
+      console.error('Error getting diary entry social info:', error);
+      return {
+        likesCount: 0,
+        commentsCount: 0,
+        hasLiked: false,
+      };
+    }
+  }
+
+  /**
+   * Like a diary entry
+   */
+  async likeDiaryEntry(entryId: string, userId: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log('Attempting to like diary entry:', { entryId, userId });
+      const { data, error } = await supabase
+        .from('diary_entry_likes')
+        .insert({
+          entry_id: entryId,
+          user_id: userId,
+        })
+        .select();
+
+      if (error) {
+        console.error('Error inserting like:', error);
+        if (error.code === '23505') { // Unique constraint violation
+          return { success: false, message: 'You have already liked this entry' };
+        }
+        if (error.code === '42501') { // Insufficient privilege
+          return { success: false, message: 'Permission denied. Please check your account permissions.' };
+        }
+        throw error;
+      }
+
+      console.log('Successfully liked diary entry:', data);
+      return { success: true };
+    } catch (error) {
+      console.error('Error liking diary entry:', error);
+      return { success: false, message: error instanceof Error ? error.message : 'Failed to like diary entry' };
+    }
+  }
+
+  /**
+   * Unlike a diary entry
+   */
+  async unlikeDiaryEntry(entryId: string, userId: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      console.log('Attempting to unlike diary entry:', { entryId, userId });
+      const { error, data } = await supabase
+        .from('diary_entry_likes')
+        .delete()
+        .eq('entry_id', entryId)
+        .eq('user_id', userId)
+        .select();
+
+      if (error) {
+        console.error('Error deleting like:', error);
+        if (error.code === '42501') { // Insufficient privilege
+          return { success: false, message: 'Permission denied. Please check your account permissions.' };
+        }
+        throw error;
+      }
+
+      console.log('Successfully unliked diary entry:', data);
+      return { success: true };
+    } catch (error) {
+      console.error('Error unliking diary entry:', error);
+      return { success: false, message: error instanceof Error ? error.message : 'Failed to unlike diary entry' };
+    }
+  }
+
+  /**
+   * Get comments for a diary entry
+   */
+  async getDiaryEntryComments(
+    entryId: string,
+    options: { limit?: number; offset?: number } = {}
+  ): Promise<DiaryEntryComment[]> {
+    try {
+      const limit = options.limit || 50;
+      const offset = options.offset || 0;
+
+      const { data, error } = await supabase
+        .from('diary_entry_comments')
+        .select(`
+          *,
+          user_profiles (
+            id,
+            username,
+            avatar_url,
+            display_name
+          )
+        `)
+        .eq('entry_id', entryId)
+        .eq('is_deleted', false)
+        .order('created_at', { ascending: true })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform the data to match DiaryEntryComment interface
+      return (data || []).map((comment: any) => ({
+        id: comment.id,
+        entry_id: comment.entry_id,
+        user_id: comment.user_id,
+        body: comment.body,
+        created_at: comment.created_at,
+        updated_at: comment.updated_at,
+        is_deleted: comment.is_deleted,
+        user_profile: comment.user_profiles ? {
+          id: comment.user_profiles.id,
+          username: comment.user_profiles.username,
+          avatar_url: comment.user_profiles.avatar_url,
+          display_name: comment.user_profiles.display_name,
+          is_private: false,
+          created_at: '',
+          updated_at: '',
+        } : undefined,
+      }));
+    } catch (error) {
+      console.error('Error getting diary entry comments:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Create a comment on a diary entry
+   */
+  async createDiaryEntryComment(
+    entryId: string,
+    userId: string,
+    body: string
+  ): Promise<{ success: boolean; comment?: DiaryEntryComment; message?: string }> {
+    try {
+      // Validate body
+      const trimmedBody = body.trim();
+      if (trimmedBody.length === 0) {
+        return { success: false, message: 'Comment cannot be empty' };
+      }
+      if (trimmedBody.length > 2000) {
+        return { success: false, message: 'Comment cannot exceed 2000 characters' };
+      }
+
+      const { data, error } = await supabase
+        .from('diary_entry_comments')
+        .insert({
+          entry_id: entryId,
+          user_id: userId,
+          body: trimmedBody,
+        })
+        .select(`
+          *,
+          user_profiles (
+            id,
+            username,
+            avatar_url,
+            display_name
+          )
+        `)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      const comment: DiaryEntryComment = {
+        id: data.id,
+        entry_id: data.entry_id,
+        user_id: data.user_id,
+        body: data.body,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        is_deleted: data.is_deleted,
+        user_profile: data.user_profiles ? {
+          id: data.user_profiles.id,
+          username: data.user_profiles.username,
+          avatar_url: data.user_profiles.avatar_url,
+          display_name: data.user_profiles.display_name,
+          is_private: false,
+          created_at: '',
+          updated_at: '',
+        } : undefined,
+      };
+
+      return { success: true, comment };
+    } catch (error) {
+      console.error('Error creating diary entry comment:', error);
+      return { success: false, message: 'Failed to create comment' };
+    }
+  }
+
+  /**
+   * Delete a comment (soft delete via is_deleted flag)
+   */
+  async deleteDiaryEntryComment(commentId: string, userId: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      // First check if user owns the comment or the diary entry
+      const { data: comment, error: commentError } = await supabase
+        .from('diary_entry_comments')
+        .select('id, user_id, entry_id')
+        .eq('id', commentId)
+        .single();
+
+      if (commentError || !comment) {
+        return { success: false, message: 'Comment not found' };
+      }
+
+      // Check if user is comment author
+      const isCommentAuthor = comment.user_id === userId;
+
+      // Check if user is diary entry owner
+      const { data: entry, error: entryError } = await supabase
+        .from('diary_entries')
+        .select('user_id')
+        .eq('id', comment.entry_id)
+        .single();
+
+      const isEntryOwner = !entryError && entry && entry.user_id === userId;
+
+      if (!isCommentAuthor && !isEntryOwner) {
+        return { success: false, message: 'You do not have permission to delete this comment' };
+      }
+
+      // Soft delete by setting is_deleted flag
+      const { error: deleteError } = await supabase
+        .from('diary_entry_comments')
+        .update({ is_deleted: true, updated_at: new Date().toISOString() })
+        .eq('id', commentId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting diary entry comment:', error);
+      return { success: false, message: 'Failed to delete comment' };
     }
   }
 }

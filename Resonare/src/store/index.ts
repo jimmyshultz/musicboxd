@@ -5,6 +5,7 @@ import artistSlice from './slices/artistSlice';
 import userSlice from './slices/userSlice';
 import searchSlice from './slices/searchSlice';
 import diarySlice from './slices/diarySlice';
+import diarySocialSlice from './slices/diarySocialSlice';
 import userAlbumsSlice from './slices/userAlbumsSlice';
 import notificationSlice from './slices/notificationSlice';
 
@@ -16,6 +17,7 @@ export const store = configureStore({
     user: userSlice,
     search: searchSlice,
     diary: diarySlice,
+    diarySocial: diarySocialSlice,
     userAlbums: userAlbumsSlice,
     notifications: notificationSlice,
   },

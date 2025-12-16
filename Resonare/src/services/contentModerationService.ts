@@ -227,6 +227,30 @@ class ContentModerationService {
 
     return { isValid: true };
   }
+
+  /**
+   * Validate comment text (length and content check)
+   */
+  validateComment(comment: string): { isValid: boolean; error?: string; filteredComment?: string } {
+    if (!comment || comment.trim().length === 0) {
+      return { isValid: false, error: 'Comment cannot be empty' };
+    }
+
+    if (comment.length > 280) {
+      return { isValid: false, error: 'Comment must be less than 280 characters' };
+    }
+
+    const contentCheck = this.checkContent(comment);
+    if (!contentCheck.isClean) {
+      return { 
+        isValid: false, 
+        error: 'Comment contains inappropriate content',
+        filteredComment: contentCheck.filteredText,
+      };
+    }
+
+    return { isValid: true };
+  }
 }
 
 // Export singleton instance

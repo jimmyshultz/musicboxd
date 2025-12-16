@@ -82,8 +82,31 @@ export interface DiaryEntry {
   notes?: string;
   created_at: string;
   updated_at: string;
+  likes_count?: number; // Denormalized count of likes
+  comments_count?: number; // Denormalized count of comments
   // Relations (populated when joining)
   album?: Album;
+  user_profile?: UserProfile;
+}
+
+export interface DiaryEntryLike {
+  id: string;
+  entry_id: string;
+  user_id: string;
+  created_at: string;
+  // Relations (populated when joining)
+  user_profile?: UserProfile;
+}
+
+export interface DiaryEntryComment {
+  id: string;
+  entry_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+  // Relations (populated when joining)
   user_profile?: UserProfile;
 }
 
@@ -124,7 +147,7 @@ export interface UserActivity {
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'follow' | 'follow_request' | 'follow_request_accepted';
+  type: 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment';
   actor_id: string;
   reference_id?: string;
   read: boolean;
@@ -175,6 +198,8 @@ export const TableNames = {
   ALBUM_LISTENS: 'album_listens',
   ALBUM_RATINGS: 'album_ratings',
   DIARY_ENTRIES: 'diary_entries',
+  DIARY_ENTRY_LIKES: 'diary_entry_likes',
+  DIARY_ENTRY_COMMENTS: 'diary_entry_comments',
   USER_FOLLOWS: 'user_follows',
   USER_ACTIVITIES: 'user_activities',
   BLOCKED_USERS: 'blocked_users',
@@ -217,6 +242,16 @@ export interface Database {
         Row: DiaryEntry;
         Insert: Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Omit<DiaryEntry, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+      };
+      diary_entry_likes: {
+        Row: DiaryEntryLike;
+        Insert: Omit<DiaryEntryLike, 'id' | 'created_at'>;
+        Update: never; // Likes are only created or deleted, not updated
+      };
+      diary_entry_comments: {
+        Row: DiaryEntryComment;
+        Insert: Omit<DiaryEntryComment, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Pick<DiaryEntryComment, 'body' | 'is_deleted' | 'updated_at'>>;
       };
       user_follows: {
         Row: UserFollow;
