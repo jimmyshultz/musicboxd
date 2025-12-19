@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Avatar, Divider } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
-import Share from 'react-native-share';
+import Share, { Social } from 'react-native-share';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
@@ -27,15 +27,15 @@ import { RootState, AppDispatch } from '../../store';
 import { spacing } from '../../utils/theme';
 import { contentModerationService } from '../../services/contentModerationService';
 
- type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
- type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
+type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
+type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
 
 // Menu icon component to avoid creating during render
 const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
 
 
 
- export default function DiaryEntryDetailsScreen() {
+export default function DiaryEntryDetailsScreen() {
   const route = useRoute<DetailsRoute>();
   const navigation = useNavigation<DetailsNav>();
   const theme = useTheme();
@@ -79,16 +79,16 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           likesCount: e.likes_count,
           commentsCount: e.comments_count,
         };
-        
+
         setEntry(convertedEntry);
-        
+
         // Update social info in Redux
         dispatch(updateSocialInfoFromEntry({
           entryId,
           likesCount: e.likes_count,
           commentsCount: e.comments_count,
         }));
-        
+
         // Only load social info and comments if there's a review
         if (e.notes) {
           // Load social info (including hasLiked) - this won't disable the button
@@ -96,7 +96,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
           // Load comments
           dispatch(loadDiaryEntryComments({ entryId, reset: true }));
         }
-        
+
         // Get album details
         const res = await AlbumService.getAlbumById(e.album_id);
         if (res.success && res.data) {
@@ -115,26 +115,26 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
 
   const handleShareDiaryEntry = useCallback(async () => {
     if (!album || !entry) return;
-    
+
     setSharing(true);
     setShowShareView(true);
-    
+
     try {
       // Wait for the view to render
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       const shareView = shareViewRef.current;
       if (!shareView) {
         throw new Error('Share view not found');
       }
-      
+
       console.log('Capturing view...');
       // Capture the view
       const uri = await captureRef(shareView, {
         format: 'png',
         quality: 1.0,
       });
-      
+
       console.log('View captured, URI:', uri);
 
       // Try general sharing first (more reliable than Instagram-specific)
@@ -148,16 +148,71 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
       console.log('Opening share dialog...');
       const result = await Share.open(shareOptions);
       console.log('Share dialog result:', result);
-      
-    } catch (error) {
+
+    } catch (error: any) {
       console.log('Share cancelled or failed:', error);
-      
+
       // Only show error alert for actual errors, not user cancellation
       if (error.message !== 'User did not share') {
         Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
       }
     }
-    
+
+    setShowShareView(false);
+    setSharing(false);
+  }, [album, entry]);
+
+  const handleShareToInstagram = useCallback(async () => {
+    if (!album || !entry) return;
+
+    setSharing(true);
+    setShowShareView(true);
+
+    try {
+      // Wait for the view to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const shareView = shareViewRef.current;
+      if (!shareView) {
+        throw new Error('Share view not found');
+      }
+
+      console.log('Capturing view for Instagram...');
+      // Capture the view as base64 for Instagram Stories
+      const base64Image = await captureRef(shareView, {
+        format: 'png',
+        quality: 1.0,
+        result: 'base64',
+      });
+
+      console.log('View captured as base64, sharing to Instagram Stories...');
+
+      // Share directly to Instagram Stories
+      await Share.shareSingle({
+        social: Social.InstagramStories,
+        backgroundImage: `data:image/png;base64,${base64Image}`,
+        appId: '839603392211413', // Facebook App ID for Instagram Stories sharing
+      });
+
+      console.log('Instagram Stories share completed');
+
+    } catch (error: any) {
+      console.log('Instagram share cancelled or failed:', error);
+
+      // Handle specific error cases
+      if (error.message?.includes('not installed') || error.message?.includes('No Activity')) {
+        Alert.alert(
+          'Instagram Not Found',
+          'Please install Instagram to share directly to Stories. You can use "Share..." to save the image instead.'
+        );
+      } else if (error.message !== 'User did not share') {
+        Alert.alert(
+          'Share Error',
+          'Unable to share to Instagram Stories. Try using "Share..." to save the image and share manually.'
+        );
+      }
+    }
+
     setShowShareView(false);
     setSharing(false);
   }, [album, entry]);
@@ -191,42 +246,50 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
             />
           }
         >
-          <Menu.Item 
+          <Menu.Item
+            onPress={() => {
+              setMenuVisible(false);
+              handleShareToInstagram();
+            }}
+            title="Share to Instagram"
+            leadingIcon="camera"
+          />
+          <Menu.Item
             onPress={() => {
               setMenuVisible(false);
               handleShareDiaryEntry();
-            }} 
-            title="Share" 
-            leadingIcon="share" 
+            }}
+            title="Share..."
+            leadingIcon="share-variant"
           />
-          <Menu.Item 
+          <Menu.Item
             onPress={() => {
               setMenuVisible(false);
               setShowPicker(true);
-            }} 
-            title="Edit Date" 
-            leadingIcon="calendar" 
+            }}
+            title="Edit Date"
+            leadingIcon="calendar"
           />
-          <Menu.Item 
+          <Menu.Item
             onPress={() => {
               setMenuVisible(false);
               handleEditReview();
-            }} 
-            title="Edit Review" 
-            leadingIcon="pencil" 
+            }}
+            title="Edit Review"
+            leadingIcon="pencil"
           />
-          <Menu.Item 
+          <Menu.Item
             onPress={() => {
               setMenuVisible(false);
               onDelete();
-            }} 
-            title="Delete" 
-            leadingIcon="delete" 
+            }}
+            title="Delete"
+            leadingIcon="delete"
           />
         </Menu>
       ) : undefined,
     });
-  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry, onDelete, handleEditReview]);
+  }, [navigation, menuVisible, canEdit, handleShareToInstagram, handleShareDiaryEntry, onDelete, handleEditReview]);
 
   const onChangeDate = (_: any, selected?: Date) => {
     if (selected) {
@@ -238,7 +301,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     if (!entry || !pendingDate) return;
     setSaving(true);
     try {
-      const iso = `${pendingDate.getFullYear()}-${String(pendingDate.getMonth()+1).padStart(2,'0')}-${String(pendingDate.getDate()).padStart(2,'0')}`;
+      const iso = `${pendingDate.getFullYear()}-${String(pendingDate.getMonth() + 1).padStart(2, '0')}-${String(pendingDate.getDate()).padStart(2, '0')}`;
       const res = await diaryEntriesService.updateDiaryEntry(entry.id, { diaryDate: iso });
       if (res.success && res.entry) {
         // Convert from new service format to old DiaryEntry format
@@ -309,7 +372,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     try {
       // Allow empty reviews - trim and explicitly set to null if empty to clear the database field
       const reviewText = pendingReview.trim();
-      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { 
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, {
         notes: reviewText.length > 0 ? reviewText : null as any
       });
       if (res.success && res.entry) {
@@ -351,10 +414,10 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
       const currentHasLiked = likeState?.hasLiked || false;
       const currentLikesCount = likeState?.likesCount ?? entry?.likesCount ?? 0;
       console.log('Toggling like for entry:', entryId, 'user:', currentUser.id, 'currentlyLiked:', currentHasLiked, 'currentCount:', currentLikesCount, 'likeState:', likeState);
-      const result = await dispatch(toggleDiaryEntryLike({ 
-        entryId, 
+      const result = await dispatch(toggleDiaryEntryLike({
+        entryId,
         userId: currentUser.id,
-        currentHasLiked 
+        currentHasLiked
       })).unwrap();
       console.log('Like toggle result:', result);
       // Don't reload immediately - the optimistic update is correct and the database trigger
@@ -423,7 +486,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMinutes < 1) return 'Just now';
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
@@ -496,202 +559,207 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.keyboardAvoidingView} 
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingView}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.contentContainer}>
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={[
-            styles.scrollContent, 
+            styles.scrollContent,
             editingReview && styles.scrollContentWithKeyboard,
             currentUser && styles.scrollContentWithFixedInput // Add bottom padding when input is fixed
           ]}
           keyboardShouldPersistTaps="handled"
         >
-        {/* Shareable view for Instagram - only rendered when needed */}
-        {showShareView && (
-        <View ref={shareViewRef} style={styles.shareView}>
-          {album && (
-            <View style={styles.shareContent}>
-              <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
-              <View style={styles.shareTextOverlay}>
-                <Text style={styles.shareAlbumTitle}>{album.title}</Text>
-                <Text style={styles.shareArtistName}>{album.artist}</Text>
-                <Text style={styles.shareDate}>{d.toLocaleDateString()}</Text>
-                {entry.ratingAtTime && (
-                  <View style={styles.shareRatingContainer}>
-                    <HalfStarDisplay rating={entry.ratingAtTime} size="large" />
-                    <Text style={styles.shareRatingText}>{entry.ratingAtTime.toFixed(1)} stars</Text>
+          {/* Shareable view for Instagram - only rendered when needed */}
+          {showShareView && (
+            <View ref={shareViewRef} style={styles.shareView}>
+              {album && (
+                <View style={styles.shareContent}>
+                  {/* Large album cover with shadow */}
+                  <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
+
+                  {/* Content below cover - no overlay background */}
+                  <View style={styles.shareTextOverlay}>
+                    <Text style={styles.shareAlbumTitle} numberOfLines={2}>{album.title}</Text>
+                    <Text style={styles.shareArtistName} numberOfLines={1}>{album.artist}</Text>
+
+                    {/* Star rating - prominent display */}
+                    {entry.ratingAtTime && (
+                      <View style={styles.shareRatingContainer}>
+                        <HalfStarDisplay rating={entry.ratingAtTime} size="large" />
+                      </View>
+                    )}
+
+                    {/* App branding */}
+                    <View style={styles.shareBrandingContainer}>
+                      <Text style={styles.shareBrandingPrefix}>on</Text>
+                      <Text style={styles.shareAppName}>Resonare</Text>
+                    </View>
                   </View>
-                )}
-                {entry.review && (
-                  <Text style={styles.shareNotes}>"{entry.review}"</Text>
-                )}
-                <Text style={styles.shareAppName}>Resonare</Text>
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Regular diary entry view */}
+          {album && (
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => navigation.navigate('AlbumDetails', { albumId: album.id })}>
+                <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
+              </TouchableOpacity>
+              <View style={styles.headerTextContainer}>
+                <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
+                <Text variant="bodyMedium" style={styles.subduedText}>{album.artist}</Text>
               </View>
             </View>
           )}
-        </View>
-      )}
 
-      {/* Regular diary entry view */}
-      {album && (
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.navigate('AlbumDetails', { albumId: album.id })}>
-            <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
-          </TouchableOpacity>
-          <View style={styles.headerTextContainer}>
-            <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
-            <Text variant="bodyMedium" style={styles.subduedText}>{album.artist}</Text>
+          <View style={styles.row}>
+            <Text variant="bodyLarge">Diary date</Text>
+            <Text variant="bodyLarge">{d.toLocaleDateString()}</Text>
           </View>
-        </View>
-      )}
 
-      <View style={styles.row}>
-        <Text variant="bodyLarge">Diary date</Text>
-        <Text variant="bodyLarge">{d.toLocaleDateString()}</Text>
-      </View>
+          <View style={[styles.row, styles.rowAlignCenter]}>
+            <Text variant="bodyLarge">Rating</Text>
+            <View style={styles.rowDirection}>
+              {canEdit ? (
+                <HalfStarRating
+                  rating={entry.ratingAtTime || 0}
+                  onRatingChange={onChangeRating}
+                  size="medium"
+                />
+              ) : (
+                <HalfStarDisplay
+                  rating={entry.ratingAtTime || 0}
+                  size="medium"
+                />
+              )}
+            </View>
+          </View>
 
-      <View style={[styles.row, styles.rowAlignCenter] }>
-        <Text variant="bodyLarge">Rating</Text>
-        <View style={styles.rowDirection}>
-          {canEdit ? (
-            <HalfStarRating
-              rating={entry.ratingAtTime || 0}
-              onRatingChange={onChangeRating}
-              size="medium"
-            />
-          ) : (
-            <HalfStarDisplay
-              rating={entry.ratingAtTime || 0}
-              size="medium"
-            />
+          {/* Review Section - Only show if there's a review or user can edit */}
+          {(entry.review || canEdit) && (
+            <View style={styles.reviewSection}>
+              <Text variant="titleMedium" style={styles.reviewTitle}>Review</Text>
+              {editingReview && canEdit ? (
+                <View style={styles.reviewEditContainer}>
+                  <TextInput
+                    mode="outlined"
+                    placeholder="Share your thoughts about this album..."
+                    value={pendingReview}
+                    onChangeText={(text) => {
+                      if (text.length <= 280) {
+                        setPendingReview(text);
+                      }
+                    }}
+                    multiline
+                    numberOfLines={4}
+                    maxLength={280}
+                    style={styles.reviewInput}
+                  />
+                  <Text variant="bodySmall" style={styles.characterCount}>
+                    {pendingReview.length}/280
+                  </Text>
+                  <View style={styles.reviewButtons}>
+                    <Button mode="outlined" onPress={handleCancelReview} disabled={saving}>
+                      Cancel
+                    </Button>
+                    <Button mode="contained" onPress={handleSaveReview} disabled={saving}>
+                      Save
+                    </Button>
+                  </View>
+                </View>
+              ) : (
+                <View>
+                  {entry.review ? (
+                    <Text variant="bodyMedium" style={styles.reviewText}>
+                      {entry.review}
+                    </Text>
+                  ) : (
+                    <Text variant="bodyMedium" style={styles.noReviewText}>
+                      Tap "Edit Review" to add your thoughts
+                    </Text>
+                  )}
+                </View>
+              )}
+            </View>
           )}
-        </View>
-      </View>
 
-      {/* Review Section - Only show if there's a review or user can edit */}
-      {(entry.review || canEdit) && (
-        <View style={styles.reviewSection}>
-          <Text variant="titleMedium" style={styles.reviewTitle}>Review</Text>
-          {editingReview && canEdit ? (
-            <View style={styles.reviewEditContainer}>
-              <TextInput
-                mode="outlined"
-                placeholder="Share your thoughts about this album..."
-                value={pendingReview}
-                onChangeText={(text) => {
-                  if (text.length <= 280) {
-                    setPendingReview(text);
-                  }
-                }}
-                multiline
-                numberOfLines={4}
-                maxLength={280}
-                style={styles.reviewInput}
+          {/* Social Interactions Section - Only show if there's a review */}
+          {entry.review && (
+            <View style={styles.socialSection}>
+              {/* Like Button */}
+              <View style={styles.likeSection}>
+                <TouchableOpacity
+                  onPress={handleToggleLike}
+                  disabled={!currentUser || (likeState?.loading === true)}
+                  style={[styles.likeButton, (!currentUser || likeState?.loading === true) && styles.likeButtonDisabled]}
+                >
+                  <Icon
+                    name={likeState?.hasLiked ? 'heart' : 'heart-o'}
+                    size={24}
+                    color={likeState?.hasLiked ? theme.colors.error : theme.colors.onSurfaceVariant}
+                  />
+                  <Text variant="bodyMedium" style={[
+                    styles.likeCount,
+                    likeState?.hasLiked && styles.likedText
+                  ]}>
+                    {likeState?.likesCount ?? entry?.likesCount ?? 0}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Divider between likes and comments */}
+              <Divider style={styles.commentsDivider} />
+
+              {/* Comments Section */}
+              <View style={styles.commentsSection}>
+                <Text variant="titleMedium" style={styles.commentsTitle}>
+                  Comments ({commentsState?.comments.length ?? entry?.commentsCount ?? 0})
+                </Text>
+
+                {/* Comments List */}
+                {commentsState?.loading && commentsState.comments.length === 0 ? (
+                  <View style={styles.loadingComments}>
+                    <ActivityIndicator size="small" />
+                  </View>
+                ) : commentsState?.comments && commentsState.comments.length > 0 ? (
+                  <FlatList
+                    data={commentsState.comments}
+                    renderItem={renderComment}
+                    keyExtractor={(item) => item.id}
+                    scrollEnabled={false}
+                    ItemSeparatorComponent={CommentSeparator}
+                    contentContainerStyle={styles.commentsListContent}
+                  />
+                ) : null}
+              </View>
+            </View>
+          )}
+
+          {showPicker && (
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                value={pendingDate || d}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()}
+                onChange={onChangeDate}
               />
-              <Text variant="bodySmall" style={styles.characterCount}>
-                {pendingReview.length}/280
-              </Text>
-              <View style={styles.reviewButtons}>
-                <Button mode="outlined" onPress={handleCancelReview} disabled={saving}>
+              <View style={styles.datePickerButtons}>
+                <Button mode="outlined" onPress={handleCancelDate} disabled={saving}>
                   Cancel
                 </Button>
-                <Button mode="contained" onPress={handleSaveReview} disabled={saving}>
+                <Button mode="contained" onPress={handleSaveDate} disabled={saving || !pendingDate}>
                   Save
                 </Button>
               </View>
             </View>
-          ) : (
-            <View>
-              {entry.review ? (
-                <Text variant="bodyMedium" style={styles.reviewText}>
-                  {entry.review}
-                </Text>
-              ) : (
-                <Text variant="bodyMedium" style={styles.noReviewText}>
-                  Tap "Edit Review" to add your thoughts
-                </Text>
-              )}
-            </View>
           )}
-        </View>
-      )}
-
-      {/* Social Interactions Section - Only show if there's a review */}
-      {entry.review && (
-        <View style={styles.socialSection}>
-        {/* Like Button */}
-        <View style={styles.likeSection}>
-          <TouchableOpacity
-            onPress={handleToggleLike}
-            disabled={!currentUser || (likeState?.loading === true)}
-            style={[styles.likeButton, (!currentUser || likeState?.loading === true) && styles.likeButtonDisabled]}
-          >
-            <Icon
-              name={likeState?.hasLiked ? 'heart' : 'heart-o'}
-              size={24}
-              color={likeState?.hasLiked ? theme.colors.error : theme.colors.onSurfaceVariant}
-            />
-            <Text variant="bodyMedium" style={[
-              styles.likeCount,
-              likeState?.hasLiked && styles.likedText
-            ]}>
-              {likeState?.likesCount ?? entry?.likesCount ?? 0}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Divider between likes and comments */}
-        <Divider style={styles.commentsDivider} />
-
-        {/* Comments Section */}
-        <View style={styles.commentsSection}>
-          <Text variant="titleMedium" style={styles.commentsTitle}>
-            Comments ({commentsState?.comments.length ?? entry?.commentsCount ?? 0})
-          </Text>
-
-          {/* Comments List */}
-          {commentsState?.loading && commentsState.comments.length === 0 ? (
-            <View style={styles.loadingComments}>
-              <ActivityIndicator size="small" />
-            </View>
-          ) : commentsState?.comments && commentsState.comments.length > 0 ? (
-            <FlatList
-              data={commentsState.comments}
-              renderItem={renderComment}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              ItemSeparatorComponent={CommentSeparator}
-              contentContainerStyle={styles.commentsListContent}
-            />
-          ) : null}
-        </View>
-      </View>
-      )}
-
-        {showPicker && (
-          <View style={styles.datePickerContainer}>
-            <DateTimePicker
-              value={pendingDate || d}
-              mode="date"
-              display="spinner"
-              maximumDate={new Date()}
-              onChange={onChangeDate}
-            />
-            <View style={styles.datePickerButtons}>
-              <Button mode="outlined" onPress={handleCancelDate} disabled={saving}>
-                Cancel
-              </Button>
-              <Button mode="contained" onPress={handleSaveDate} disabled={saving || !pendingDate}>
-                Save
-              </Button>
-            </View>
-          </View>
-        )}
         </ScrollView>
 
         {/* Fixed Comment Input at Bottom of Viewport - Only show if there's a review */}
@@ -724,9 +792,9 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   );
 }
 
- const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  scrollContent: { 
+  scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xl, // Extra padding at bottom for date picker
   },
@@ -738,7 +806,7 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', marginBottom: spacing.lg },
-  datePickerContainer: { 
+  datePickerContainer: {
     marginTop: spacing.md,
     padding: spacing.md,
     backgroundColor: theme.colors.surface,
@@ -761,66 +829,83 @@ const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
   },
   shareContent: {
     flex: 1,
-    backgroundColor: '#1a1a1a', // Dark background for Instagram story
+    backgroundColor: '#14181c', // Letterboxd-inspired dark blue-grey
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 60,
+    justifyContent: 'flex-start',
+    paddingTop: 280, // Increased padding to optically center album cover with content below
+    paddingHorizontal: 60,
   },
   shareAlbumCover: {
-    width: 300,
-    height: 300,
-    borderRadius: 16,
-    marginBottom: 40,
+    width: 700,
+    height: 700,
+    borderRadius: 20,
+    marginBottom: 50,
+    // Shadow for depth
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
   },
   shareTextOverlay: {
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 30,
-    borderRadius: 20,
-    maxWidth: 400,
+    paddingHorizontal: 40,
+    maxWidth: 900,
   },
   shareAlbumTitle: {
-    fontSize: 28,
+    fontSize: 48,
     fontWeight: 'bold',
     color: '#fff',
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   shareArtistName: {
-    fontSize: 22,
-    color: '#ccc',
+    fontSize: 36,
+    color: '#9ab',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 30,
   },
   shareDate: {
-    fontSize: 18,
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  shareRatingContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  shareRatingText: {
-    fontSize: 16,
-    color: '#fff',
-    marginTop: 8,
-  },
-  shareNotes: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 20,
-    lineHeight: 24,
-  },
-  shareAppName: {
-    fontSize: 14,
-    color: '#888',
+    fontSize: 28,
+    color: '#678',
     textAlign: 'center',
     marginTop: 20,
   },
+  shareRatingContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  shareRatingText: {
+    // Hidden - stars are sufficient
+    fontSize: 0,
+    height: 0,
+  },
+  shareNotes: {
+    fontSize: 28,
+    color: '#fff',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 24,
+    lineHeight: 40,
+    maxWidth: 800,
+  },
+  shareBrandingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 50,
+    gap: 12,
+  },
+  shareBrandingPrefix: {
+    fontSize: 28,
+    color: '#678',
+    textAlign: 'center',
+  },
+  shareAppName: {
+    fontSize: 32,
+    color: '#BB86FC', // App's purple accent color
+    textAlign: 'center',
+    fontWeight: '700',
+  },
+
   cover: { width: 96, height: 96, borderRadius: 8 },
   headerTextContainer: { flex: 1, marginLeft: spacing.md },
   subduedText: { color: theme.colors.onSurfaceVariant },
