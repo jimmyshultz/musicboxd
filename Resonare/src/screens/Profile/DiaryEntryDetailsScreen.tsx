@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Avatar, Divider } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
-import Share from 'react-native-share';
+import Share, { Social } from 'react-native-share';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
@@ -149,12 +149,67 @@ export default function DiaryEntryDetailsScreen() {
       const result = await Share.open(shareOptions);
       console.log('Share dialog result:', result);
 
-    } catch (error) {
+    } catch (error: any) {
       console.log('Share cancelled or failed:', error);
 
       // Only show error alert for actual errors, not user cancellation
       if (error.message !== 'User did not share') {
         Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
+      }
+    }
+
+    setShowShareView(false);
+    setSharing(false);
+  }, [album, entry]);
+
+  const handleShareToInstagram = useCallback(async () => {
+    if (!album || !entry) return;
+
+    setSharing(true);
+    setShowShareView(true);
+
+    try {
+      // Wait for the view to render
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      const shareView = shareViewRef.current;
+      if (!shareView) {
+        throw new Error('Share view not found');
+      }
+
+      console.log('Capturing view for Instagram...');
+      // Capture the view as base64 for Instagram Stories
+      const base64Image = await captureRef(shareView, {
+        format: 'png',
+        quality: 1.0,
+        result: 'base64',
+      });
+
+      console.log('View captured as base64, sharing to Instagram Stories...');
+
+      // Share directly to Instagram Stories
+      await Share.shareSingle({
+        social: Social.InstagramStories,
+        backgroundImage: `data:image/png;base64,${base64Image}`,
+        appId: '839603392211413', // Facebook App ID for Instagram Stories sharing
+      });
+
+      console.log('Instagram Stories share completed');
+
+    } catch (error: any) {
+      console.log('Instagram share cancelled or failed:', error);
+
+      // Handle specific error cases
+      if (error.message?.includes('not installed') || error.message?.includes('No Activity')) {
+        Alert.alert(
+          'Instagram Not Found',
+          'Please install Instagram to share directly to Stories. You can use "Share..." to save the image instead.'
+        );
+      } else if (error.message !== 'User did not share') {
+        Alert.alert(
+          'Share Error',
+          'Unable to share to Instagram Stories. Try using "Share..." to save the image and share manually.'
+        );
       }
     }
 
@@ -194,10 +249,18 @@ export default function DiaryEntryDetailsScreen() {
           <Menu.Item
             onPress={() => {
               setMenuVisible(false);
+              handleShareToInstagram();
+            }}
+            title="Share to Instagram"
+            leadingIcon="camera"
+          />
+          <Menu.Item
+            onPress={() => {
+              setMenuVisible(false);
               handleShareDiaryEntry();
             }}
-            title="Share"
-            leadingIcon="share"
+            title="Share..."
+            leadingIcon="share-variant"
           />
           <Menu.Item
             onPress={() => {
@@ -226,7 +289,7 @@ export default function DiaryEntryDetailsScreen() {
         </Menu>
       ) : undefined,
     });
-  }, [navigation, menuVisible, canEdit, handleShareDiaryEntry, onDelete, handleEditReview]);
+  }, [navigation, menuVisible, canEdit, handleShareToInstagram, handleShareDiaryEntry, onDelete, handleEditReview]);
 
   const onChangeDate = (_: any, selected?: Date) => {
     if (selected) {
