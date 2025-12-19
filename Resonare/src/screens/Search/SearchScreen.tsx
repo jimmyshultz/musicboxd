@@ -3,12 +3,12 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   FlatList,
   TextInput,
   RefreshControl,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 import {
   Text,
   Chip,
@@ -39,11 +39,11 @@ import BannerAdComponent from '../../components/BannerAd';
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
 
 // Custom search input component to replace react-native-paper Searchbar
-const CustomSearchbar = ({ 
-  placeholder, 
-  onChangeText, 
-  onSubmitEditing, 
-  value, 
+const CustomSearchbar = ({
+  placeholder,
+  onChangeText,
+  onSubmitEditing,
+  value,
   style,
   theme
 }: {
@@ -55,7 +55,7 @@ const CustomSearchbar = ({
   theme: any;
 }) => {
   const styles = createSearchInputStyles(theme);
-  
+
   return (
     <View style={[styles.searchInputContainer, style]}>
       <Icon name="search" size={18} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
@@ -81,7 +81,7 @@ export default function SearchScreen() {
   const navigation = useNavigation<SearchScreenNavigationProp>();
   const dispatch = useDispatch();
   const theme = useTheme();
-  
+
   const {
     searchQuery,
     searchResults,
@@ -190,7 +190,11 @@ export default function SearchScreen() {
       style={styles.searchResultItem}
       onPress={() => navigateToAlbum(item.id)}
     >
-      <Image source={{ uri: item.coverImageUrl }} style={styles.albumCoverSmall} />
+      <FastImage
+        source={{ uri: item.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCoverSmall}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <View style={styles.albumDetailsContainer}>
         <Text variant="titleMedium" numberOfLines={2} style={styles.albumTitle}>
           {item.title}
@@ -210,9 +214,10 @@ export default function SearchScreen() {
       style={styles.artistResultItem}
       onPress={() => navigateToArtist(item.id, item.name)}
     >
-      <Image 
-        source={{ uri: item.imageUrl || 'https://via.placeholder.com/60' }} 
-        style={styles.artistImage} 
+      <FastImage
+        source={{ uri: item.imageUrl || 'https://via.placeholder.com/60', priority: FastImage.priority.normal }}
+        style={styles.artistImage}
+        resizeMode={FastImage.resizeMode.cover}
       />
       <View style={styles.artistDetailsContainer}>
         <Text variant="titleMedium" numberOfLines={1} style={styles.artistName}>
@@ -225,11 +230,11 @@ export default function SearchScreen() {
         )}
         {item.followerCount !== undefined && (
           <Text variant="bodySmall" style={styles.artistFollowers}>
-            {item.followerCount >= 1000000 
-              ? `${(item.followerCount / 1000000).toFixed(1)}M` 
-              : item.followerCount >= 1000 
-              ? `${(item.followerCount / 1000).toFixed(1)}K` 
-              : item.followerCount} followers
+            {item.followerCount >= 1000000
+              ? `${(item.followerCount / 1000000).toFixed(1)}M`
+              : item.followerCount >= 1000
+                ? `${(item.followerCount / 1000).toFixed(1)}K`
+                : item.followerCount} followers
           </Text>
         )}
       </View>
@@ -241,9 +246,10 @@ export default function SearchScreen() {
       style={styles.userResultItem}
       onPress={() => navigateToUserProfile(item.id)}
     >
-      <Image 
-        source={{ uri: item.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.username)}&background=random` }} 
-        style={styles.userAvatar} 
+      <FastImage
+        source={{ uri: item.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.username)}&background=random`, priority: FastImage.priority.normal }}
+        style={styles.userAvatar}
+        resizeMode={FastImage.resizeMode.cover}
       />
       <View style={styles.userDetailsContainer}>
         <Text variant="titleMedium" numberOfLines={1} style={styles.userDisplayName}>
@@ -264,10 +270,10 @@ export default function SearchScreen() {
   const showAlbumResults = searchMode === 'albums' && searchQuery.trim() && searchResults;
   const showArtistResults = searchMode === 'artists' && searchQuery.trim() && artistSearchResults.length > 0;
   const showUserResults = searchMode === 'users' && searchQuery.trim() && userSearchResults.length > 0;
-  const showEmptyState = searchQuery.trim() && 
+  const showEmptyState = searchQuery.trim() &&
     ((searchMode === 'albums' && searchResults && searchResults.albums.length === 0) ||
-     (searchMode === 'artists' && artistSearchResults.length === 0) ||
-     (searchMode === 'users' && userSearchResults.length === 0));
+      (searchMode === 'artists' && artistSearchResults.length === 0) ||
+      (searchMode === 'users' && userSearchResults.length === 0));
 
   const styles = createStyles(theme);
 
@@ -276,18 +282,18 @@ export default function SearchScreen() {
       <View style={styles.searchContainer}>
         <CustomSearchbar
           placeholder={
-            searchMode === 'albums' 
-              ? "Search albums..." 
+            searchMode === 'albums'
+              ? "Search albums..."
               : searchMode === 'artists'
-              ? "Search artists..."
-              : "Search users..."
+                ? "Search artists..."
+                : "Search users..."
           }
           onChangeText={handleSearchChange}
           onSubmitEditing={handleSearchSubmit}
           value={searchQuery}
           theme={theme}
         />
-        
+
         {/* Search Mode Toggle */}
         <View style={styles.modeToggleContainer}>
           <TouchableOpacity
@@ -380,27 +386,27 @@ export default function SearchScreen() {
       {showEmptyState && !loading && !artistSearchLoading && !userSearchLoading && (
         <View style={styles.emptyStateContainer}>
           <Text variant="bodyLarge" style={styles.emptyStateText}>
-            {searchMode === 'albums' 
+            {searchMode === 'albums'
               ? `No albums found for "${searchQuery}"`
               : searchMode === 'artists'
-              ? `No artists found for "${searchQuery}"`
-              : `No users found for "${searchQuery}"`
+                ? `No artists found for "${searchQuery}"`
+                : `No users found for "${searchQuery}"`
             }
           </Text>
           <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
             {searchMode === 'albums'
               ? "Try searching for a different album name"
               : searchMode === 'artists'
-              ? "Try searching for a different artist name"
-              : "Try searching for a different username or display name"
+                ? "Try searching for a different artist name"
+                : "Try searching for a different username or display name"
             }
           </Text>
         </View>
       )}
 
       {!searchQuery.trim() && (
-        <ScrollView 
-          style={styles.discoveryContainer} 
+        <ScrollView
+          style={styles.discoveryContainer}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -425,7 +431,7 @@ export default function SearchScreen() {
               </View>
             </View>
           )}
-          
+
           {/* Banner Ad */}
           <View style={styles.adContainer}>
             <BannerAdComponent />

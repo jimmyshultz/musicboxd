@@ -3,11 +3,11 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
   RefreshControl,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -43,11 +43,11 @@ export default function NewFromFriendsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  
+
   // Responsive spacing calculation: use percentage-based approach for consistent layout
   const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-  
+
   const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
   const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
   const [activities, setActivities] = useState<FriendActivity[]>([]);
@@ -63,27 +63,27 @@ export default function NewFromFriendsScreen() {
         setLoading(false);
         return;
       }
-      
+
       // Get users that current user is actually following
       const users = await userService.getUserFollowing(currentUserId);
-      
+
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
       const friendsOnly = users.filter(user => user.username !== currentUsername);
-      
+
       // Early return if no friends available
       if (friendsOnly.length === 0) {
         setActivities([]);
         return;
       }
-      
+
       const friendActivities: FriendActivity[] = [];
-      
+
       // Get real diary entries for each friend
       for (const friend of friendsOnly) {
         try {
           const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
-          
+
           // Get all diary entries for this friend and create activities
           for (const entry of userDiaryEntries) {
             if (entry.albums) {
@@ -118,7 +118,7 @@ export default function NewFromFriendsScreen() {
           console.error(`Error loading diary entries for friend ${friend.username}:`, error);
         }
       }
-      
+
       // Sort by most recent first and limit to 60 items for performance
       friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
       setActivities(friendActivities.slice(0, 60));
@@ -158,7 +158,7 @@ export default function NewFromFriendsScreen() {
     const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffHours < 1) return 'Just now';
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
@@ -167,36 +167,40 @@ export default function NewFromFriendsScreen() {
 
   const renderActivityCard = (activity: FriendActivity, index: number) => {
     const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
-    
+
     return (
       <View key={`${activity.album.id}_${index}`} style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}>
-      <TouchableOpacity onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}>
-        <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
-        <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
-          {activity.album.title}
-        </Text>
-        <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-          {activity.album.artist}
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.friendInfo}
-        onPress={() => navigateToUserProfile(activity.friend.id)}
-      >
-        <Avatar.Image 
-          size={20} 
-          source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/40x40/cccccc/999999?text=U' }}
-        />
-        <View style={styles.friendDetails}>
-          <Text variant="bodySmall" numberOfLines={1} style={styles.friendName}>
-            @{activity.friend.username}
+        <TouchableOpacity onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}>
+          <FastImage
+            source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+            style={styles.albumCover}
+            resizeMode={FastImage.resizeMode.cover}
+          />
+          <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+            {activity.album.title}
           </Text>
-          <Text variant="bodySmall" style={styles.timeAgo}>
-            {formatTimeAgo(activity.diaryDate)}
+          <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+            {activity.album.artist}
           </Text>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.friendInfo}
+          onPress={() => navigateToUserProfile(activity.friend.id)}
+        >
+          <Avatar.Image
+            size={20}
+            source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/40x40/cccccc/999999?text=U' }}
+          />
+          <View style={styles.friendDetails}>
+            <Text variant="bodySmall" numberOfLines={1} style={styles.friendName}>
+              @{activity.friend.username}
+            </Text>
+            <Text variant="bodySmall" style={styles.timeAgo}>
+              {formatTimeAgo(activity.diaryDate)}
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -215,8 +219,8 @@ export default function NewFromFriendsScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView 
-          style={styles.scrollContainer} 
+        <ScrollView
+          style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

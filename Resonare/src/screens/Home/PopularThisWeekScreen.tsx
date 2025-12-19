@@ -3,11 +3,11 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
   RefreshControl,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
@@ -26,11 +26,11 @@ export default function PopularThisWeekScreen() {
   const navigation = useNavigation<PopularThisWeekNavigationProp>();
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  
+
   // Responsive spacing calculation: use percentage-based approach for consistent layout
   const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-  
+
   const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
   const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -71,14 +71,18 @@ export default function PopularThisWeekScreen() {
 
   const renderAlbumCard = (album: Album, index: number) => {
     const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
-    
+
     return (
       <TouchableOpacity
         key={album.id}
         style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
         onPress={() => navigateToAlbum(album.id)}
       >
-        <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+        <FastImage
+          source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+          style={styles.albumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
           {album.title}
         </Text>
@@ -112,8 +116,8 @@ export default function PopularThisWeekScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView 
-          style={styles.scrollContainer} 
+        <ScrollView
+          style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

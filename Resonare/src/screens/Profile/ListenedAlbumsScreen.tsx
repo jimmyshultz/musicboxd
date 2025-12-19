@@ -4,10 +4,10 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
   useWindowDimensions,
   RefreshControl,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
 import {
   Text,
@@ -43,11 +43,11 @@ export default function ListenedAlbumsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  
+
   // Responsive spacing calculation: use percentage-based approach for consistent layout
   const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const CARD_MARGIN = Math.max(spacing.xs, width * 0.02); // 2% of screen width, minimum 4
-  
+
   const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
   const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
 
@@ -60,7 +60,7 @@ export default function ListenedAlbumsScreen() {
     try {
       // Use the new service to get listening history for any user
       const listeningHistory = await userStatsServiceV2.getUserListeningHistory(userId, 50, 0);
-      
+
       // Convert to the format expected by this screen
       const listenedAlbumsData: ListenedAlbumData[] = listeningHistory.map(item => ({
         album: {
@@ -82,7 +82,7 @@ export default function ListenedAlbumsScreen() {
           dateListened: new Date(item.interaction?.listened_at || Date.now()),
         }
       }));
-      
+
       setListenedAlbums(listenedAlbumsData);
     } catch (error) {
       console.error('Error loading listened albums:', error);
@@ -112,7 +112,7 @@ export default function ListenedAlbumsScreen() {
     const listenDate = new Date(date);
     const now = new Date();
     const diffInDays = Math.floor((now.getTime() - listenDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -127,14 +127,18 @@ export default function ListenedAlbumsScreen() {
 
   const renderAlbumCard = (data: ListenedAlbumData, index: number) => {
     const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
-    
+
     return (
       <TouchableOpacity
         key={`${data.album.id}-${index}`}
         style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
         onPress={() => navigateToAlbum(data.album.id)}
       >
-        <Image source={{ uri: data.album.coverImageUrl || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image' }} style={styles.albumCover} />
+        <FastImage
+          source={{ uri: data.album.coverImageUrl || 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image', priority: FastImage.priority.normal }}
+          style={styles.albumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <View style={styles.albumInfo}>
           <Text variant="bodyMedium" numberOfLines={2} style={styles.albumTitle}>
             {data.album.title}
@@ -189,8 +193,8 @@ export default function ListenedAlbumsScreen() {
             </Text>
           </View>
         ) : (
-          <ScrollView 
-            style={styles.scrollView} 
+          <ScrollView
+            style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

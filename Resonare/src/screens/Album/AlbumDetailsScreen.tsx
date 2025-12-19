@@ -3,7 +3,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   Dimensions,
   Platform,
   Modal,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 import {
   Text,
   Card,
@@ -31,9 +31,9 @@ import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Track 
 import { RootState } from '../../store';
 import { HalfStarRating } from '../../components/HalfStarRating';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { 
-  setCurrentAlbum, 
-  setCurrentAlbumUserReview, 
+import {
+  setCurrentAlbum,
+  setCurrentAlbumUserReview,
   setCurrentAlbumIsListened
 } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
@@ -97,11 +97,11 @@ export default function AlbumDetailsScreen() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const { albumId } = route.params;
-  
+
   const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } = useSelector((state: RootState) => state.albums);
   const { user } = useSelector((state: RootState) => state.auth);
   const { interactions, loading: userAlbumsLoading } = useSelector((state: RootState) => state.userAlbums);
-  
+
   // Get current album interaction from the new database-backed state
   const currentAlbumInteraction = interactions[albumId];
   const [loading, setLoading] = useState(true);
@@ -132,7 +132,7 @@ export default function AlbumDetailsScreen() {
 
   const handleConfirmDiaryModal = async () => {
     if (!user || !currentAlbum) return;
-    
+
     // Validate review content before submitting
     if (diaryReview.trim()) {
       const reviewValidation = contentModerationService.validateDiaryNotes(diaryReview.trim());
@@ -141,11 +141,11 @@ export default function AlbumDetailsScreen() {
         return;
       }
     }
-    
+
     setSubmitting(true);
     try {
       if (addToDiary) {
-        const iso = `${diaryDate.getFullYear()}-${String(diaryDate.getMonth()+1).padStart(2,'0')}-${String(diaryDate.getDate()).padStart(2,'0')}`;
+        const iso = `${diaryDate.getFullYear()}-${String(diaryDate.getMonth() + 1).padStart(2, '0')}-${String(diaryDate.getDate()).padStart(2, '0')}`;
         const reviewText = diaryReview.trim() || undefined;
         const res = await diaryEntriesService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating, reviewText);
         if (!res.success) {
@@ -192,7 +192,7 @@ export default function AlbumDetailsScreen() {
     setSubmitting(true);
     try {
       const isCurrentlyListened = currentAlbumIsListened;
-      
+
       if (isCurrentlyListened) {
         // Remove listen using new service
         await albumListensService.unmarkAsListened(user.id, currentAlbum.id);
@@ -235,11 +235,11 @@ export default function AlbumDetailsScreen() {
       const response = await AlbumService.getAlbumById(albumId);
       if (response.success && response.data) {
         dispatch(setCurrentAlbum(response.data));
-        
+
         // Load user's interactions if user is logged in
         if (user) {
           setLoadingInteractions(true);
-          
+
           try {
             // Load all user interactions in parallel for faster loading
             const [hasListened, userRating, userEntries] = await Promise.all([
@@ -247,10 +247,10 @@ export default function AlbumDetailsScreen() {
               albumRatingsService.getUserAlbumRating(user.id, albumId),
               diaryEntriesService.getUserDiaryEntriesForAlbum(user.id, albumId),
             ]);
-            
+
             // Update listened status
             dispatch(setCurrentAlbumIsListened(hasListened));
-            
+
             // Update user rating
             if (userRating) {
               const reviewData = {
@@ -265,12 +265,12 @@ export default function AlbumDetailsScreen() {
               };
               dispatch(setCurrentAlbumUserReview(reviewData));
             }
-            
+
             // Update user's diary entries
             setUserDiaryEntries(userEntries);
-            
+
             setLoadingInteractions(false);
-            
+
             // Load friends' diary entries in background (non-blocking)
             setLoadingDiaryEntries(true);
             diaryEntriesService.getFriendsDiaryEntriesForAlbum(user.id, albumId, 10)
@@ -282,7 +282,7 @@ export default function AlbumDetailsScreen() {
                 console.error('Error loading friends diary entries:', error);
                 setLoadingDiaryEntries(false);
               });
-              
+
           } catch (error) {
             console.error('Error loading user album interactions:', error);
             setLoadingInteractions(false);
@@ -316,7 +316,7 @@ export default function AlbumDetailsScreen() {
 
   const handleRating = async (rating: number) => {
     if (!user || !currentAlbum || submitting) return;
-    
+
     setSubmitting(true);
     try {
       if (rating === 0) {
@@ -326,7 +326,7 @@ export default function AlbumDetailsScreen() {
       } else {
         // Add or update rating using new service
         await albumRatingsService.rateAlbum(user.id, currentAlbum.id, rating);
-        
+
         // Update local review state for immediate UI feedback
         const newReview = {
           id: `review_${currentAlbum.id}_${user.id}`,
@@ -366,8 +366,8 @@ export default function AlbumDetailsScreen() {
   const styles = createStyles(theme);
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -375,7 +375,11 @@ export default function AlbumDetailsScreen() {
     >
       {/* Album Header */}
       <View style={styles.header}>
-        <Image source={{ uri: currentAlbum.coverImageUrl }} style={styles.albumCover} />
+        <FastImage
+          source={{ uri: currentAlbum.coverImageUrl, priority: FastImage.priority.high }}
+          style={styles.albumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <View style={styles.albumInfoContainer}>
           <Text variant="headlineMedium" style={styles.albumTitle}>
             {currentAlbum.title}
@@ -398,7 +402,7 @@ export default function AlbumDetailsScreen() {
           <Text variant="bodyMedium" style={styles.albumMeta}>
             {albumYear} • {currentAlbum.trackList.length} tracks • {AlbumService.formatDuration(totalDuration)}
           </Text>
-          
+
           {/* Genres */}
           <View style={styles.genresContainer}>
             {currentAlbum.genre.map((genre, index) => (
@@ -441,9 +445,9 @@ export default function AlbumDetailsScreen() {
             Rate this Album
           </Text>
           <View style={styles.starContainer}>
-            <HalfStarRating 
-              rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0} 
-              onRatingChange={handleRating} 
+            <HalfStarRating
+              rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0}
+              onRatingChange={handleRating}
               disabled={submitting || !user || userAlbumsLoading.rating}
               size="large"
             />
@@ -590,14 +594,14 @@ export default function AlbumDetailsScreen() {
                   >
                     <View style={styles.friendDiaryEntryContent}>
                       {entry.user_profiles?.avatar_url ? (
-                        <Avatar.Image 
-                          size={32} 
-                          source={{ uri: entry.user_profiles.avatar_url }} 
+                        <Avatar.Image
+                          size={32}
+                          source={{ uri: entry.user_profiles.avatar_url }}
                         />
                       ) : (
-                        <Avatar.Icon 
-                          size={32} 
-                          icon="account" 
+                        <Avatar.Icon
+                          size={32}
+                          icon="account"
                         />
                       )}
                       <View style={styles.friendDiaryInfo}>
@@ -662,8 +666,8 @@ export default function AlbumDetailsScreen() {
               </TouchableOpacity>
               <Text variant="titleLarge" style={styles.diaryModalTitle}>Add to Diary</Text>
               <TouchableOpacity onPress={handleConfirmDiaryModal} disabled={submitting}>
-                <Text 
-                  variant="bodyLarge" 
+                <Text
+                  variant="bodyLarge"
                   style={submitting ? styles.saveButtonDisabled : styles.saveButton}
                 >
                   Save
@@ -672,7 +676,7 @@ export default function AlbumDetailsScreen() {
             </View>
 
             {/* Scrollable Content */}
-            <ScrollView 
+            <ScrollView
               style={styles.diaryModalScroll}
               contentContainerStyle={styles.diaryModalContent}
               keyboardShouldPersistTaps="handled"

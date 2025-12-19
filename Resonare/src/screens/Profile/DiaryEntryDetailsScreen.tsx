@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState, useLayoutEffect, useMemo } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Avatar, Divider } from 'react-native-paper';
@@ -580,7 +581,7 @@ export default function DiaryEntryDetailsScreen() {
               {album && (
                 <View style={styles.shareContent}>
                   {/* Large album cover with shadow */}
-                  <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
+                  <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.shareAlbumCover} resizeMode={FastImage.resizeMode.cover} />
 
                   {/* Content below cover - no overlay background */}
                   <View style={styles.shareTextOverlay}>
@@ -609,7 +610,7 @@ export default function DiaryEntryDetailsScreen() {
           {album && (
             <View style={styles.header}>
               <TouchableOpacity onPress={() => navigation.navigate('AlbumDetails', { albumId: album.id })}>
-                <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
+                <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.cover} resizeMode={FastImage.resizeMode.cover} />
               </TouchableOpacity>
               <View style={styles.headerTextContainer}>
                 <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
