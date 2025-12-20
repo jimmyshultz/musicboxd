@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
@@ -18,7 +18,7 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { spacing, shadows } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 import ProfileAvatar from '../../components/ProfileAvatar';
 
 type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;

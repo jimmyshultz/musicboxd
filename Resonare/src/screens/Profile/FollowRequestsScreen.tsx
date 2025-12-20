@@ -5,7 +5,7 @@ import {
   StyleSheet,
   RefreshControl,
 } from 'react-native';
-import { Text, ActivityIndicator, Button, Avatar, Card, useTheme } from 'react-native-paper';
+import { Text, ActivityIndicator, Button, Card, useTheme } from 'react-native-paper';
 
 import { useSelector } from 'react-redux';
 

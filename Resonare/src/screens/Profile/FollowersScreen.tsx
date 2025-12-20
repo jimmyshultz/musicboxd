@@ -9,7 +9,6 @@ import {
 // SafeAreaView import removed - using regular View since header handles safe area
 import {
   Text,
-  Avatar,
   Button,
   ActivityIndicator,
   SegmentedButtons,

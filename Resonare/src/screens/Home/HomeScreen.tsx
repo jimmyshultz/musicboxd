@@ -7,7 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
-import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,7 +15,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { HomeStackParamList, Album } from '../../types';
 import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
-import { spacing, shadows } from '../../utils/theme';
+import { spacing } from '../../utils/theme';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';

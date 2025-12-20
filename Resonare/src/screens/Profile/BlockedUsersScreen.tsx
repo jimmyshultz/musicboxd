@@ -8,7 +8,6 @@ import {
 } from 'react-native';
 import {
   Text,
-  Avatar,
   ActivityIndicator,
   Button,
   useTheme,

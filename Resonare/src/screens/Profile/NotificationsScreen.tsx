@@ -8,7 +8,7 @@ import {
   Animated,
   Alert,
 } from 'react-native';
-import { Text, ActivityIndicator, Avatar, Card, useTheme, Button } from 'react-native-paper';
+import { Text, ActivityIndicator, Card, useTheme, Button } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';

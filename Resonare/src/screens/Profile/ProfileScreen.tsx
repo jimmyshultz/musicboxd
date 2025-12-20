@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
-import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';

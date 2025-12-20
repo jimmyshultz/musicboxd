@@ -21,7 +21,6 @@ import {
   Divider,
   useTheme,
   TextInput,
-  Avatar,
 } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -29,7 +28,6 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
-import { useTheme as useNavigationTheme } from '@react-navigation/native';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import { HalfStarRating } from '../../components/HalfStarRating';
 import Icon from 'react-native-vector-icons/FontAwesome';

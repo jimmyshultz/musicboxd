@@ -3,7 +3,7 @@ import FastImage from '@d11/react-native-fast-image';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Avatar, Divider } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Divider } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share, { Social } from 'react-native-share';

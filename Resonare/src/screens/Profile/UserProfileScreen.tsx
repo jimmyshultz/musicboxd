@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 
-import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
+import { Text, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
