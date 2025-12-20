@@ -3,11 +3,11 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
+import FastImage from '@d11/react-native-fast-image';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,12 +15,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { HomeStackParamList, Album } from '../../types';
 import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
+import { spacing } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { spacing } from '../../utils/theme';
 import BannerAdComponent from '../../components/BannerAd';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
@@ -61,10 +62,10 @@ export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const dispatch = useDispatch();
   const theme = useTheme();
-  
+
   const { loading } = useSelector((state: RootState) => state.albums);
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  
+
   const [popularThisWeek, setPopularThisWeek] = useState<Album[]>([]);
   const [newFromFriends, setNewFromFriends] = useState<FriendActivity[]>([]);
   const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
@@ -76,7 +77,7 @@ export default function HomeScreen() {
     popularWithFriends: true,
     discoverFriends: true,
   });
-  
+
   const styles = createStyles(theme);
 
   const loadPopularThisWeek = useCallback(async () => {
@@ -105,34 +106,34 @@ export default function HomeScreen() {
         setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
         return;
       }
-      
+
       // Get users that current user is actually following
       const users = await userService.getUserFollowing(currentUserId);
-      
+
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
       const friendsOnly = users.filter(user => user.username !== currentUsername);
-      
+
       // Early return if no friends available
       if (friendsOnly.length === 0) {
         setNewFromFriends([]);
         setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
         return;
       }
-      
+
       const friendActivities: FriendActivity[] = [];
-      
+
       // Get real diary entries for each friend - Process in parallel
       const diaryPromises = friendsOnly.map(async (friend) => {
         try {
           const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
-          
+
           if (userDiaryEntries.length > 0) {
             // Get the 3 most recent diary entries for this friend
             const recentEntries = userDiaryEntries
               .sort((a, b) => new Date(b.diary_date).getTime() - new Date(a.diary_date).getTime())
               .slice(0, 3);
-            
+
             // Create activities for each recent diary entry
             return recentEntries.map(entry => {
               if (entry.albums) {
@@ -148,7 +149,7 @@ export default function HomeScreen() {
                   albumType: entry.albums.album_type || 'album',
                   trackList: [], // Empty for now
                 };
-                
+
                 return {
                   album: {
                     ...album,
@@ -179,7 +180,7 @@ export default function HomeScreen() {
 
       const results = await Promise.all(diaryPromises);
       results.forEach(activities => friendActivities.push(...activities));
-      
+
       // Sort by most recent first and limit to 10 total activities for home page preview
       friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
       setNewFromFriends(friendActivities.slice(0, 10));
@@ -200,61 +201,61 @@ export default function HomeScreen() {
         setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
         return;
       }
-      
+
       // Get users that current user is actually following
       const users = await userService.getUserFollowing(currentUserId);
-      
+
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
       const friendsOnly = users.filter(user => user.username !== currentUsername);
-      
+
       // Early return if no friends available
       if (friendsOnly.length === 0) {
         setPopularWithFriends([]);
         setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
         return;
       }
-      
+
       // Track album popularity: albumId -> { album, friendsWhoListened: Set<friendId> }
       const albumPopularity = new Map<string, {
         album: Album;
         friendsWhoListened: Set<string>;
         friendData: { id: string; username: string; profilePicture?: string; }[];
       }>();
-      
+
       // Fetch all friends' listens in parallel
-      const friendListensPromises = friendsOnly.map(friend => 
+      const friendListensPromises = friendsOnly.map(friend =>
         AlbumService.getUserListens(friend.id).catch(error => {
           console.error(`Error loading listens for friend ${friend.username}:`, error);
           return [];
         })
       );
-      
+
       const allFriendsListens = await Promise.all(friendListensPromises);
-      
+
       // Collect all unique album IDs
       const allAlbumIds = new Set<string>();
       allFriendsListens.forEach(listens => {
         listens.forEach(listen => allAlbumIds.add(listen.albumId));
       });
-      
+
       if (allAlbumIds.size === 0) {
         setPopularWithFriends([]);
         setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
         return;
       }
-      
+
       // Batch query albums from database
       const { supabase } = await import('../../services/supabase');
       const { data: dbAlbums, error: dbError } = await supabase
         .from('albums')
         .select('*')
         .in('id', Array.from(allAlbumIds));
-      
+
       if (dbError) {
         console.error('Error fetching albums from database:', dbError);
       }
-      
+
       // Create a map of albums from database
       const albumsMap = new Map<string, Album>();
       dbAlbums?.forEach(dbAlbum => {
@@ -271,15 +272,15 @@ export default function HomeScreen() {
           trackList: [],
         });
       });
-      
+
       // Process each friend's listens
       allFriendsListens.forEach((listens, index) => {
         const friend = friendsOnly[index];
-        
+
         listens.forEach(listen => {
           const album = albumsMap.get(listen.albumId);
           if (!album) return; // Skip if album not in database
-          
+
           // Get or create album entry
           if (!albumPopularity.has(listen.albumId)) {
             albumPopularity.set(listen.albumId, {
@@ -288,7 +289,7 @@ export default function HomeScreen() {
               friendData: [],
             });
           }
-          
+
           const entry = albumPopularity.get(listen.albumId)!;
           // Add friend to this album's listeners
           if (!entry.friendsWhoListened.has(friend.id)) {
@@ -301,10 +302,10 @@ export default function HomeScreen() {
           }
         });
       });
-      
+
       // Convert to FriendPopularAlbum array and filter albums with multiple listeners
       const friendPopularAlbums: FriendPopularAlbum[] = [];
-      
+
       albumPopularity.forEach((entry, _albumId) => {
         // Only include albums that have been listened to by 1+ friends
         if (entry.friendsWhoListened.size >= 1) {
@@ -315,7 +316,7 @@ export default function HomeScreen() {
           });
         }
       });
-      
+
       // Sort by number of friends who listened (descending) and limit to 20
       friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
       setPopularWithFriends(friendPopularAlbums.slice(0, 20));
@@ -336,20 +337,20 @@ export default function HomeScreen() {
         setLoadingStates(prev => ({ ...prev, discoverFriends: false }));
         return;
       }
-      
+
       const users = await userService.getSuggestedUsers(currentUserId, 20);
-      
+
       if (users.length > 0) {
         // Filter out current user from potential friends
         const currentUsername = currentUser?.username || 'musiclover2024';
         const potentialUsers = users.filter(user => user.username !== currentUsername);
-        
+
         if (potentialUsers.length === 0) {
           setDiscoverFriends([]);
           setLoadingStates(prev => ({ ...prev, discoverFriends: false }));
           return;
         }
-        
+
         // Calculate mutual followers for all users in parallel
         const mutualFollowerPromises = potentialUsers.map(async (user) => {
           try {
@@ -367,9 +368,9 @@ export default function HomeScreen() {
             };
           }
         });
-        
+
         const potentialFriends = await Promise.all(mutualFollowerPromises);
-        
+
         // Sort by mutual followers count (descending) and limit to 20
         potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
         setDiscoverFriends(potentialFriends.slice(0, 20));
@@ -391,7 +392,7 @@ export default function HomeScreen() {
     loadNewFromFriends();
     loadPopularWithFriends();
     loadDiscoverFriends();
-    
+
     // Mark albums as loaded after a short delay (sections load independently)
     setTimeout(() => {
       dispatch(fetchAlbumsSuccess([]));
@@ -443,7 +444,11 @@ export default function HomeScreen() {
       style={styles.albumCard}
       onPress={() => navigateToAlbum(album.id)}
     >
-      <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {album.title}
       </Text>
@@ -459,7 +464,11 @@ export default function HomeScreen() {
       style={styles.albumCard}
       onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
     >
-      <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {activity.album.title}
       </Text>
@@ -467,9 +476,9 @@ export default function HomeScreen() {
         {activity.album.artist}
       </Text>
       <View style={styles.friendBadge}>
-        <Avatar.Image 
-          size={16} 
-          source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
+        <ProfileAvatar
+          uri={activity.friend.profilePicture}
+          size={16}
         />
         <Text variant="bodySmall" style={styles.friendBadgeText}>
           @{activity.friend.username}
@@ -484,7 +493,11 @@ export default function HomeScreen() {
       style={styles.albumCard}
       onPress={() => navigateToAlbum(popularAlbum.album.id)}
     >
-      <Image source={{ uri: popularAlbum.album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: popularAlbum.album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {popularAlbum.album.title}
       </Text>
@@ -505,9 +518,9 @@ export default function HomeScreen() {
       style={styles.userCard}
       onPress={() => navigateToUserProfile(potentialFriend.user.id)}
     >
-      <Avatar.Image 
-        size={60} 
-        source={{ uri: potentialFriend.user.avatar_url || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
+      <ProfileAvatar
+        uri={potentialFriend.user.avatar_url}
+        size={60}
       />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{potentialFriend.user.username}
@@ -530,8 +543,8 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

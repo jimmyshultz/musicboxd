@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState, useLayoutEffect, useMemo } from 'react';
-import { View, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Avatar, Divider } from 'react-native-paper';
+import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Divider } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share, { Social } from 'react-native-share';
@@ -12,6 +13,7 @@ import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParam
 import { DiaryEntryComment } from '../../types/database';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { HalfStarRating, HalfStarDisplay } from '../../components/HalfStarRating';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
@@ -517,9 +519,9 @@ export default function DiaryEntryDetailsScreen() {
     const canDelete = currentUser && (currentUser.id === commentUserId || currentUser.id === userId);
     return (
       <View style={styles.commentItem}>
-        <Avatar.Image
+        <ProfileAvatar
+          uri={commentUser?.avatarUrl}
           size={32}
-          source={{ uri: commentUser?.avatarUrl || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
         />
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>
@@ -580,7 +582,7 @@ export default function DiaryEntryDetailsScreen() {
               {album && (
                 <View style={styles.shareContent}>
                   {/* Large album cover with shadow */}
-                  <Image source={{ uri: album.coverImageUrl }} style={styles.shareAlbumCover} />
+                  <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.shareAlbumCover} resizeMode={FastImage.resizeMode.cover} />
 
                   {/* Content below cover - no overlay background */}
                   <View style={styles.shareTextOverlay}>
@@ -609,7 +611,7 @@ export default function DiaryEntryDetailsScreen() {
           {album && (
             <View style={styles.header}>
               <TouchableOpacity onPress={() => navigation.navigate('AlbumDetails', { albumId: album.id })}>
-                <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />
+                <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.cover} resizeMode={FastImage.resizeMode.cover} />
               </TouchableOpacity>
               <View style={styles.headerTextContainer}>
                 <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>

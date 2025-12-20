@@ -3,10 +3,10 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
 import { Text, ActivityIndicator, Searchbar, useTheme } from 'react-native-paper';
 import { useSelector } from 'react-redux';
@@ -24,14 +24,14 @@ export default function FavoriteAlbumsManagementScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  
+
   // Responsive spacing calculation: use percentage-based approach for consistent layout
   const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-  
+
   const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
   const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Album[]>([]);
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
@@ -47,7 +47,7 @@ export default function FavoriteAlbumsManagementScreen() {
     try {
       // Get favorite albums from database
       const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(currentUser.id, 100);
-      
+
       // Convert to the Album format expected by the UI
       const albums = favoriteAlbumsData.map(favorite => ({
         id: favorite.albums.id,
@@ -61,7 +61,7 @@ export default function FavoriteAlbumsManagementScreen() {
         albumType: favorite.albums.album_type || 'album',
         trackList: [], // Empty for now
       }));
-      
+
       setFavoriteAlbums(albums);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
@@ -99,21 +99,21 @@ export default function FavoriteAlbumsManagementScreen() {
 
   const addToFavorites = async (album: Album) => {
     if (!currentUser?.id) return;
-    
+
     if (favoriteAlbums.length >= 5) {
       // Could show a toast/alert here
       return;
     }
-    
+
     if (!favoriteAlbums.find(fav => fav.id === album.id)) {
       try {
         // Find the next available ranking (1-5)
         const nextRanking = favoriteAlbums.length + 1;
         await favoriteAlbumsService.addToFavorites(currentUser.id, album.id, nextRanking);
-        
+
         // Reload favorites to get the updated rankings
         await loadFavoriteAlbums();
-        
+
         console.log('Added to favorites:', album.title, 'at ranking', nextRanking);
       } catch (error) {
         console.error('Error adding to favorites:', error);
@@ -123,13 +123,13 @@ export default function FavoriteAlbumsManagementScreen() {
 
   const removeFromFavorites = async (albumId: string) => {
     if (!currentUser?.id) return;
-    
+
     try {
       await favoriteAlbumsService.removeFromFavorites(currentUser.id, albumId);
-      
+
       // Reload favorites to get the updated rankings (others may shift up)
       await loadFavoriteAlbums();
-      
+
       console.log('Removed from favorites:', albumId);
     } catch (error) {
       console.error('Error removing from favorites:', error);
@@ -139,7 +139,11 @@ export default function FavoriteAlbumsManagementScreen() {
   const renderFavoriteAlbum = (album: Album, index: number) => (
     <View key={album.id} style={styles.favoriteAlbumCard}>
       <TouchableOpacity onPress={() => removeFromFavorites(album.id)}>
-        <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+        <FastImage
+          source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+          style={styles.albumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <View style={styles.removeButton}>
           <Icon name="times" size={16} color="#fff" />
         </View>
@@ -160,19 +164,23 @@ export default function FavoriteAlbumsManagementScreen() {
     const isAlreadyFavorite = favoriteAlbums.find(fav => fav.id === album.id);
     const canAddMore = favoriteAlbums.length < 5;
     const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
-    
+
     return (
       <TouchableOpacity
         key={album.id}
         style={[
-          styles.searchResultCard, 
+          styles.searchResultCard,
           isAlreadyFavorite && styles.searchResultCardSelected,
           isLastInRow && styles.searchResultCardLastInRow
         ]}
         onPress={() => canAddMore && !isAlreadyFavorite ? addToFavorites(album) : null}
         disabled={!!isAlreadyFavorite || !canAddMore}
       >
-        <Image source={{ uri: album.coverImageUrl }} style={styles.searchAlbumCover} />
+        <FastImage
+          source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+          style={styles.searchAlbumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
           {album.title}
         </Text>
@@ -226,7 +234,7 @@ export default function FavoriteAlbumsManagementScreen() {
             value={searchQuery}
             style={styles.searchbar}
           />
-          
+
           {favoriteAlbums.length >= 5 && (
             <Text variant="bodySmall" style={styles.limitWarning}>
               You can only have 5 favorite albums. Remove some to add new ones.

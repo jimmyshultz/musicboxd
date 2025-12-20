@@ -3,12 +3,13 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
   RefreshControl,
 } from 'react-native';
-import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
+import FastImage from '@d11/react-native-fast-image';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -57,11 +58,11 @@ export default function ProfileScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  
+
   // Responsive spacing calculation for stats grid
   const STATS_HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const STATS_CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-  
+
   const statCardWidth = (width - (STATS_HORIZONTAL_SPACING * 2) - (STATS_CARD_MARGIN * (STATS_CARDS_PER_ROW - 1))) / STATS_CARDS_PER_ROW;
   const styles = createStyles(theme, statCardWidth, STATS_HORIZONTAL_SPACING, STATS_CARD_MARGIN);
 
@@ -88,7 +89,7 @@ export default function ProfileScreen() {
     try {
       // Get favorite albums from database (limited to 5 ranked favorites)
       const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
-      
+
       // Convert to the Album format expected by the UI
       const albums = favoriteAlbumsData.map(favorite => ({
         id: favorite.albums.id,
@@ -102,7 +103,7 @@ export default function ProfileScreen() {
         albumType: favorite.albums.album_type || 'album',
         trackList: [], // Empty for now
       }));
-      
+
       setFavoriteAlbums(albums);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
@@ -130,13 +131,13 @@ export default function ProfileScreen() {
     try {
       // Get comprehensive stats using the new service
       const stats = await userStatsServiceV2.getUserStats(user.id);
-      
+
       // Get social data for Redux store
       const [followersData, followingData] = await Promise.all([
         userService.getUserFollowers(user.id),
         userService.getUserFollowing(user.id),
       ]);
-      
+
       // Update Redux store with social data - convert UserProfile to SerializedUser
       dispatch(setFollowers(followersData.map(follower => ({
         id: follower.id,
@@ -182,7 +183,7 @@ export default function ProfileScreen() {
           }
         }
       }))));
-      
+
       console.log('User stats from new service:', stats); // Debug log
       setUserStats({
         albumsThisYear: stats.albumsThisYear,
@@ -273,8 +274,8 @@ export default function ProfileScreen() {
 
   const navigateToFollowers = () => {
     if (user) {
-      navigation.navigate('Followers', { 
-        userId: user.id, 
+      navigation.navigate('Followers', {
+        userId: user.id,
         username: user.username,
         initialTab: 'followers'
       });
@@ -283,8 +284,8 @@ export default function ProfileScreen() {
 
   const navigateToFollowing = () => {
     if (user) {
-      navigation.navigate('Followers', { 
-        userId: user.id, 
+      navigation.navigate('Followers', {
+        userId: user.id,
         username: user.username,
         initialTab: 'following'
       });
@@ -293,8 +294,8 @@ export default function ProfileScreen() {
 
   const navigateToListenedAlbums = (_timeframe: 'year' | 'alltime') => {
     if (user) {
-      navigation.navigate('ListenedAlbums', { 
-        userId: user.id, 
+      navigation.navigate('ListenedAlbums', {
+        userId: user.id,
         username: user.username,
       });
     }
@@ -302,8 +303,8 @@ export default function ProfileScreen() {
 
   const navigateToUserReviews = (_timeframe: 'year' | 'alltime') => {
     if (user) {
-      navigation.navigate('UserReviews', { 
-        userId: user.id, 
+      navigation.navigate('UserReviews', {
+        userId: user.id,
         username: user.username,
       });
     }
@@ -317,7 +318,11 @@ export default function ProfileScreen() {
       style={styles.albumCard}
       onPress={() => navigateToAlbum(album.id)}
     >
-      <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {album.title}
       </Text>
@@ -333,7 +338,11 @@ export default function ProfileScreen() {
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
-      <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {activity.album.title}
       </Text>
@@ -353,20 +362,20 @@ export default function ProfileScreen() {
     return (
       <TouchableOpacity
         style={[
-          styles.statCard, 
+          styles.statCard,
           { backgroundColor: theme.colors.surface },
           isLastInRow && styles.statCardLastInRow
         ]}
         onPress={onPress}
         disabled={!onPress}
       >
-      <Text variant="headlineMedium" style={styles.statValue}>
-        {value.toLocaleString()}
-      </Text>
-      <Text variant="bodyMedium" style={styles.statLabel}>
-        {title}
-      </Text>
-    </TouchableOpacity>
+        <Text variant="headlineMedium" style={styles.statValue}>
+          {value.toLocaleString()}
+        </Text>
+        <Text variant="bodyMedium" style={styles.statLabel}>
+          {title}
+        </Text>
+      </TouchableOpacity>
     );
   };
 
@@ -395,7 +404,7 @@ export default function ProfileScreen() {
   return (
     <View style={styles.safeArea}>
       {/* Segmented Control */}
-      <View style={styles.segmentHeader}> 
+      <View style={styles.segmentHeader}>
         <SegmentedButtons
           value={'profile'}
           onValueChange={(v: any) => {
@@ -410,9 +419,9 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <ScrollView 
-        style={styles.container} 
-        showsVerticalScrollIndicator={false} 
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
         contentInsetAdjustmentBehavior="never"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -420,9 +429,9 @@ export default function ProfileScreen() {
       >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <Avatar.Image 
-            size={80} 
-            source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
+          <ProfileAvatar
+            uri={user.profilePicture}
+            size={80}
             style={styles.profilePicture}
           />
           <Text variant="headlineMedium" style={styles.username}>

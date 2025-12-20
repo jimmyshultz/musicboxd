@@ -3,14 +3,15 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
   RefreshControl,
   Alert,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 
-import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
+import { Text, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -57,17 +58,17 @@ export default function UserProfileScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  
+
   const { userId } = route.params;
-  
+
   // Responsive spacing calculation for stats grid
   const STATS_HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const STATS_CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-  
+
   const statCardWidth = (width - (STATS_HORIZONTAL_SPACING * 2) - (STATS_CARD_MARGIN * (STATS_CARDS_PER_ROW - 1))) / STATS_CARDS_PER_ROW;
   const styles = createStyles(theme, statCardWidth, STATS_HORIZONTAL_SPACING, STATS_CARD_MARGIN);
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  
+
   const [user, setUser] = useState<UserProfile | null>(null);
   const [favoriteAlbums, setFavoriteAlbums] = useState<Album[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
@@ -88,16 +89,16 @@ export default function UserProfileScreen() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [_blockLoading, setBlockLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  
 
-  const isOwnProfile = useMemo(() => 
-    currentUser?.id === userId, 
+
+  const isOwnProfile = useMemo(() =>
+    currentUser?.id === userId,
     [currentUser?.id, userId]
   );
 
   const loadUserProfile = useCallback(async () => {
     if (!userId) return;
-    
+
     try {
       const userData = await userService.getUserById(userId);
       setUser(userData);
@@ -117,7 +118,7 @@ export default function UserProfileScreen() {
     try {
       // Get favorite albums from database (limited to 5 ranked favorites)
       const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(userData.id, 5);
-      
+
       // Convert to the Album format expected by the UI
       const albums = favoriteAlbumsData.map(favorite => ({
         id: favorite.albums.id,
@@ -131,7 +132,7 @@ export default function UserProfileScreen() {
         albumType: favorite.albums.album_type || 'album',
         trackList: [], // Empty for now
       }));
-      
+
       setFavoriteAlbums(albums);
     } catch (error) {
       console.error('Error loading favorite albums:', error);
@@ -157,7 +158,7 @@ export default function UserProfileScreen() {
       console.log('UserProfile - Loading stats for user:', userData.id); // Debug log
       const stats = await userStatsServiceV2.getUserStats(userData.id);
       console.log('UserProfile - Stats loaded:', stats); // Debug log
-      
+
       setUserStats({
         albumsThisYear: stats.albumsThisYear,
         albumsAllTime: stats.albumsAllTime,
@@ -173,7 +174,7 @@ export default function UserProfileScreen() {
 
   const loadFollowActionType = useCallback(async () => {
     if (!currentUser || isOwnProfile) return;
-    
+
     try {
       const actionType = await userService.getFollowActionType(currentUser.id, userId);
       setFollowActionType(actionType);
@@ -184,7 +185,7 @@ export default function UserProfileScreen() {
 
   const loadBlockStatus = useCallback(async () => {
     if (!currentUser || isOwnProfile) return;
-    
+
     try {
       const blocked = await blockService.isBlocked(currentUser.id, userId);
       setIsBlocked(blocked);
@@ -196,7 +197,7 @@ export default function UserProfileScreen() {
   // Main load function that loads all data in sequence
   const loadAllData = useCallback(async () => {
     if (initialLoadDone) return;
-    
+
     setLoading(true);
     try {
       const userData = await loadUserProfile();
@@ -265,7 +266,7 @@ export default function UserProfileScreen() {
 
   const handleFollowToggle = async () => {
     if (!user || !currentUser || followLoading) return;
-    
+
     setFollowLoading(true);
     try {
       if (followActionType === 'following') {
@@ -280,7 +281,7 @@ export default function UserProfileScreen() {
       } else {
         // Follow or send request
         const result = await userService.followUser(userId);
-        
+
         if (result.type === 'followed') {
           // Direct follow - add to Redux store
           const serializedUser: SerializedUser = {
@@ -323,10 +324,10 @@ export default function UserProfileScreen() {
 
   const handleBlockUser = () => {
     if (!user || !currentUser) return;
-    
+
     Alert.alert(
       isBlocked ? 'Unblock User' : 'Block User',
-      isBlocked 
+      isBlocked
         ? `Are you sure you want to unblock @${user.username}?`
         : `Are you sure you want to block @${user.username}? They won't be able to see your profile or interact with you.`,
       [
@@ -381,8 +382,8 @@ export default function UserProfileScreen() {
 
   const navigateToFollowers = () => {
     if (user) {
-      navigation.navigate('Followers', { 
-        userId: user.id, 
+      navigation.navigate('Followers', {
+        userId: user.id,
         username: user.username,
         initialTab: 'followers'
       });
@@ -391,8 +392,8 @@ export default function UserProfileScreen() {
 
   const navigateToFollowing = () => {
     if (user) {
-      navigation.navigate('Followers', { 
-        userId: user.id, 
+      navigation.navigate('Followers', {
+        userId: user.id,
         username: user.username,
         initialTab: 'following'
       });
@@ -401,8 +402,8 @@ export default function UserProfileScreen() {
 
   const navigateToListenedAlbums = (_timeframe: 'year' | 'alltime') => {
     if (user) {
-      navigation.navigate('ListenedAlbums', { 
-        userId: user.id, 
+      navigation.navigate('ListenedAlbums', {
+        userId: user.id,
         username: user.username,
       });
     }
@@ -410,8 +411,8 @@ export default function UserProfileScreen() {
 
   const navigateToUserReviews = (_timeframe: 'year' | 'alltime') => {
     if (user) {
-      navigation.navigate('UserReviews', { 
-        userId: user.id, 
+      navigation.navigate('UserReviews', {
+        userId: user.id,
         username: user.username,
       });
     }
@@ -425,7 +426,11 @@ export default function UserProfileScreen() {
       style={styles.albumCard}
       onPress={() => navigateToAlbum(album.id)}
     >
-      <Image source={{ uri: album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {album.title}
       </Text>
@@ -441,7 +446,11 @@ export default function UserProfileScreen() {
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
-      <Image source={{ uri: activity.album.coverImageUrl }} style={styles.albumCover} />
+      <FastImage
+        source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+        style={styles.albumCover}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
         {activity.album.title}
       </Text>
@@ -461,20 +470,20 @@ export default function UserProfileScreen() {
     return (
       <TouchableOpacity
         style={[
-          styles.statCard, 
+          styles.statCard,
           { backgroundColor: theme.colors.surface },
           isLastInRow && styles.statCardLastInRow
         ]}
         onPress={onPress}
         disabled={!onPress}
       >
-      <Text variant="headlineMedium" style={styles.statValue}>
-        {value.toLocaleString()}
-      </Text>
-      <Text variant="bodyMedium" style={styles.statLabel}>
-        {title}
-      </Text>
-    </TouchableOpacity>
+        <Text variant="headlineMedium" style={styles.statValue}>
+          {value.toLocaleString()}
+        </Text>
+        <Text variant="bodyMedium" style={styles.statLabel}>
+          {title}
+        </Text>
+      </TouchableOpacity>
     );
   };
 
@@ -518,8 +527,8 @@ export default function UserProfileScreen() {
         />
       </View>
 
-      <ScrollView 
-        style={styles.scrollContainer} 
+      <ScrollView
+        style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -527,15 +536,15 @@ export default function UserProfileScreen() {
       >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <Avatar.Image 
-            size={80} 
-            source={{ uri: user.avatar_url || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
+          <ProfileAvatar
+            uri={user.avatar_url}
+            size={80}
             style={styles.profilePicture}
           />
           <Text variant="headlineMedium" style={styles.username}>
             @{user.username}
           </Text>
-          
+
           {/* Follow Button and More Menu */}
           {!isOwnProfile && (
             <View style={styles.followContainer}>
@@ -551,7 +560,7 @@ export default function UserProfileScreen() {
                 {followActionType === 'request' && "Request"}
                 {followActionType === 'requested' && "Requested"}
               </Button>
-              
+
               <Menu
                 visible={menuVisible}
                 onDismiss={() => setMenuVisible(false)}
@@ -577,7 +586,7 @@ export default function UserProfileScreen() {
               </Menu>
             </View>
           )}
-          
+
           {/* Show blocked status */}
           {isBlocked && (
             <Text variant="bodySmall" style={styles.blockedText}>

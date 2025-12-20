@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, SectionList, StyleSheet, TouchableOpacity, Image, RefreshControl } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
+import { View, SectionList, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,10 +14,10 @@ import { fetchDiaryStart, fetchDiarySuccess, fetchDiaryFailure } from '../../sto
 import { spacing } from '../../utils/theme';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 
- type DiaryScreenRouteProp = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'Diary'>;
- type DiaryScreenNavProp = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
+type DiaryScreenRouteProp = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'Diary'>;
+type DiaryScreenNavProp = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
 
- export default function DiaryScreen() {
+export default function DiaryScreen() {
   const route = useRoute<DiaryScreenRouteProp>();
   const navigation = useNavigation<DiaryScreenNavProp>();
   const dispatch = useDispatch();
@@ -57,7 +58,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
     dispatch(fetchDiaryStart());
     try {
       const { entries, lastMonth, hasMore } = await diaryEntriesService.getDiaryEntriesByUser(userId, { monthWindow: 3 });
-      
+
       // Convert from new service format to old DiaryEntry format
       const convertedEntries: DiaryEntry[] = entries.map(entry => ({
         id: entry.id,
@@ -69,7 +70,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
         createdAt: entry.created_at,
         updatedAt: entry.updated_at,
       }));
-      
+
       // Store album data from the joined results
       const fetched: Record<string, Album> = {};
       entries.forEach(entry => {
@@ -86,7 +87,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
           };
         }
       });
-      
+
       if (Object.keys(fetched).length > 0) {
         setAlbumsById(prev => ({ ...prev, ...fetched }));
       }
@@ -116,7 +117,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
         createdAt: entry.created_at,
         updatedAt: entry.updated_at,
       }));
-      
+
       // Store album data from the joined results for any missing albums
       const fetched: Record<string, Album> = {};
       entries.forEach(entry => {
@@ -133,7 +134,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
           };
         }
       });
-      
+
       if (Object.keys(fetched).length > 0) {
         setAlbumsById(prev => ({ ...prev, ...fetched }));
       }
@@ -170,7 +171,7 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
         onPress={() => navigation.navigate('DiaryEntryDetails' as any, { entryId: item.id, userId })}
       >
         <Text style={styles.dayNumber}>{day}</Text>
-        {album && <Image source={{ uri: album.coverImageUrl }} style={styles.cover} />}
+        {album && <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.cover} resizeMode={FastImage.resizeMode.cover} />}
         <View style={styles.rowTextContainer}>
           <Text variant="bodyMedium" numberOfLines={1} style={styles.title}>
             {album ? `${album.title} (${albumYear})` : ''}
@@ -197,22 +198,22 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.container} edges={['left','right','bottom']}>
+    <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
       <View style={styles.headerToggle}>
-                            <SegmentedButtons
-            value={selectedTab}
-            onValueChange={(v: any) => {
-              if (v === 'profile') {
-                if (currentUser?.id === userId) {
-                  navigation.replace('ProfileMain' as any);
-                } else {
-                  navigation.replace('UserProfile' as any, { userId });
-                }
+        <SegmentedButtons
+          value={selectedTab}
+          onValueChange={(v: any) => {
+            if (v === 'profile') {
+              if (currentUser?.id === userId) {
+                navigation.replace('ProfileMain' as any);
               } else {
-                setSelectedTab('diary');
+                navigation.replace('UserProfile' as any, { userId });
               }
-            }}
-            buttons={[
+            } else {
+              setSelectedTab('diary');
+            }
+          }}
+          buttons={[
             { value: 'profile', label: 'Profile' },
             { value: 'diary', label: 'Diary' },
           ]}
@@ -220,12 +221,12 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
       </View>
 
       {(!initialReady && (loading || entries.length === 0)) ? (
-        <View style={styles.center}> 
+        <View style={styles.center}>
           <ActivityIndicator />
           <Text style={{ marginTop: spacing.sm }}>Loading diary…</Text>
         </View>
       ) : entries.length === 0 ? (
-        <View style={styles.center}> 
+        <View style={styles.center}>
           {currentUser?.id === userId ? (
             <Text style={styles.emptyStateText}>No diary entries yet. Mark albums as listened and add them to your diary.</Text>
           ) : (
@@ -250,9 +251,9 @@ import { HalfStarDisplay } from '../../components/HalfStarRating';
       )}
     </SafeAreaView>
   );
- }
+}
 
- const createStyles = (theme: any) => StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   headerToggle: { padding: spacing.md, backgroundColor: theme.colors.surface, borderBottomWidth: 1, borderBottomColor: theme.colors.outline },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },

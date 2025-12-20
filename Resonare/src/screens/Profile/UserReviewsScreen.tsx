@@ -4,9 +4,9 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  Image,
   RefreshControl,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
 import {
   Text,
@@ -55,7 +55,7 @@ export default function UserReviewsScreen() {
     try {
       // Use the new service to get rated albums
       const ratedAlbums = await userStatsServiceV2.getUserRatedAlbums(userId, 50, 0);
-      
+
       // Convert to the format expected by this screen
       const reviewsData: ReviewData[] = ratedAlbums
         .filter(item => item.interaction?.rating) // Only include items with ratings
@@ -81,7 +81,7 @@ export default function UserReviewsScreen() {
             dateReviewed: new Date(item.interaction!.updated_at),
           }
         }));
-      
+
       setReviews(reviewsData);
     } catch (error) {
       console.error('Error loading user reviews:', error);
@@ -110,7 +110,7 @@ export default function UserReviewsScreen() {
   const formatReviewDate = (date: Date) => {
     const now = new Date();
     const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
     if (diffInDays < 7) return `${diffInDays} days ago`;
@@ -125,7 +125,11 @@ export default function UserReviewsScreen() {
       onPress={() => navigateToAlbum(data.album.id)}
     >
       <View style={styles.reviewHeader}>
-        <Image source={{ uri: data.album.coverImageUrl }} style={styles.albumCover} />
+        <FastImage
+          source={{ uri: data.album.coverImageUrl, priority: FastImage.priority.normal }}
+          style={styles.albumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <View style={styles.albumInfo}>
           <Text variant="titleMedium" numberOfLines={2} style={styles.albumTitle}>
             {data.album.title}
@@ -155,7 +159,7 @@ export default function UserReviewsScreen() {
     );
   }
 
-  const averageRating = reviews.length > 0 
+  const averageRating = reviews.length > 0
     ? reviews.reduce((sum, data) => sum + data.review.rating, 0) / reviews.length
     : 0;
 
@@ -184,8 +188,8 @@ export default function UserReviewsScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

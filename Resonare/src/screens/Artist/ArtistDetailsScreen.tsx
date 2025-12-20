@@ -3,12 +3,12 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   Dimensions,
   TouchableOpacity,
   RefreshControl,
   FlatList,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 import {
   Text,
   ActivityIndicator,
@@ -141,7 +141,11 @@ export default function ArtistDetailsScreen() {
           onPress={() => handleAlbumPress(item.id)}
           activeOpacity={0.7}
         >
-          <Image source={{ uri: item.coverImageUrl }} style={styles.albumCover} />
+          <FastImage
+            source={{ uri: item.coverImageUrl, priority: FastImage.priority.normal }}
+            style={styles.albumCover}
+            resizeMode={FastImage.resizeMode.cover}
+          />
           <Text variant="bodyMedium" style={styles.albumTitle} numberOfLines={2}>
             {item.title}
           </Text>
@@ -201,9 +205,10 @@ export default function ArtistDetailsScreen() {
     >
       {/* Artist Header */}
       <View style={styles.header}>
-        <Image
-          source={{ uri: currentArtist.imageUrl }}
+        <FastImage
+          source={{ uri: currentArtist.imageUrl, priority: FastImage.priority.high }}
           style={styles.artistImage}
+          resizeMode={FastImage.resizeMode.cover}
         />
         <Text variant="headlineLarge" style={styles.artistName}>
           {currentArtist.name}

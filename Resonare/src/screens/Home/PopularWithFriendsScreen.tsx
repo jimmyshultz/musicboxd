@@ -3,13 +3,13 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Image,
   TouchableOpacity,
   useWindowDimensions,
   RefreshControl,
 } from 'react-native';
+import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
-import { Text, ActivityIndicator, Avatar, useTheme } from 'react-native-paper';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
@@ -19,6 +19,7 @@ import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { spacing } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 type PopularWithFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -41,11 +42,11 @@ export default function PopularWithFriendsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  
+
   // Responsive spacing calculation: use percentage-based approach for consistent layout
   const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-  
+
   const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
   const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
   const [albums, setAlbums] = useState<FriendPopularAlbum[]>([]);
@@ -61,32 +62,32 @@ export default function PopularWithFriendsScreen() {
         setLoading(false);
         return;
       }
-      
+
       // Get users that current user is actually following
       const users = await userService.getUserFollowing(currentUserId);
-      
+
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
       const friendsOnly = users.filter(user => user.username !== currentUsername);
-      
+
       // Early return if no friends available
       if (friendsOnly.length === 0) {
         setAlbums([]);
         return;
       }
-      
+
       // Track album popularity: albumId -> { album, friendsWhoListened: Set<friendId> }
       const albumPopularity = new Map<string, {
         album: Album;
         friendsWhoListened: Set<string>;
         friendData: { id: string; username: string; profilePicture?: string; }[];
       }>();
-      
+
       // Collect listen data from all friends
       for (const friend of friendsOnly) {
         try {
           const userListens = await AlbumService.getUserListens(friend.id);
-          
+
           for (const listen of userListens) {
             // Get or create album entry
             if (!albumPopularity.has(listen.albumId)) {
@@ -101,7 +102,7 @@ export default function PopularWithFriendsScreen() {
                 continue; // Skip if album not found
               }
             }
-            
+
             const entry = albumPopularity.get(listen.albumId)!;
             // Add friend to this album's listeners
             if (!entry.friendsWhoListened.has(friend.id)) {
@@ -117,10 +118,10 @@ export default function PopularWithFriendsScreen() {
           console.error(`Error loading listens for friend ${friend.username}:`, error);
         }
       }
-      
+
       // Convert to FriendPopularAlbum array and filter albums with multiple listeners
       const popularWithFriends: FriendPopularAlbum[] = [];
-      
+
       albumPopularity.forEach((entry, _albumId) => {
         // Only include albums that have been listened to by 1+ friends (lowered from 2+ for demo data)
         if (entry.friendsWhoListened.size >= 1) {
@@ -131,7 +132,7 @@ export default function PopularWithFriendsScreen() {
           });
         }
       });
-      
+
       // Sort by number of friends who listened (descending) and limit to 60
       popularWithFriends.sort((a, b) => b.totalFriends - a.totalFriends);
       setAlbums(popularWithFriends.slice(0, 60));
@@ -163,21 +164,21 @@ export default function PopularWithFriendsScreen() {
   const renderFriendAvatars = (friends: FriendPopularAlbum['friendsWhoListened'], totalFriends: number) => {
     const displayedFriends = friends.slice(0, 3);
     const remainingCount = totalFriends - displayedFriends.length;
-    
+
     return (
       <View style={styles.friendAvatars}>
         {displayedFriends.map((friend, index) => (
-          <Avatar.Image 
-            key={friend.id}
-            size={24} 
-            source={{ uri: friend.profilePicture || 'https://via.placeholder.com/48x48/cccccc/999999?text=U' }}
-            style={[styles.friendAvatar, index > 0 && styles.overlappingAvatar]}
-          />
+          <View key={friend.id} style={[styles.friendAvatar, index > 0 && styles.overlappingAvatar]}>
+            <ProfileAvatar
+              uri={friend.profilePicture}
+              size={24}
+            />
+          </View>
         ))}
         {remainingCount > 0 && (
           <View style={[
-            styles.friendAvatar, 
-            styles.remainingCount, 
+            styles.friendAvatar,
+            styles.remainingCount,
             displayedFriends.length > 0 && styles.overlappingAvatar
           ]}>
             <Text style={styles.remainingText}>+{remainingCount}</Text>
@@ -189,33 +190,37 @@ export default function PopularWithFriendsScreen() {
 
   const renderAlbumCard = (popularAlbum: FriendPopularAlbum, index: number) => {
     const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
-    
+
     return (
       <TouchableOpacity
         key={popularAlbum.album.id}
         style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
         onPress={() => navigateToAlbum(popularAlbum.album.id)}
       >
-      <Image source={{ uri: popularAlbum.album.coverImageUrl }} style={styles.albumCover} />
-      <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
-        {popularAlbum.album.title}
-      </Text>
-      <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
-        {popularAlbum.album.artist}
-      </Text>
-      
-      <View style={styles.friendsInfo}>
-        {renderFriendAvatars(popularAlbum.friendsWhoListened, popularAlbum.totalFriends)}
-        <Text variant="bodySmall" style={styles.friendsCount}>
-          {popularAlbum.totalFriends} friend{popularAlbum.totalFriends !== 1 ? 's' : ''}
+        <FastImage
+          source={{ uri: popularAlbum.album.coverImageUrl, priority: FastImage.priority.normal }}
+          style={styles.albumCover}
+          resizeMode={FastImage.resizeMode.cover}
+        />
+        <Text variant="bodySmall" numberOfLines={2} style={styles.albumTitle}>
+          {popularAlbum.album.title}
         </Text>
-      </View>
-      
-      <View style={styles.rankBadge}>
-        <Text variant="bodySmall" style={styles.rankText}>
-          #{index + 1}
+        <Text variant="bodySmall" numberOfLines={1} style={styles.artistName}>
+          {popularAlbum.album.artist}
         </Text>
-      </View>
+
+        <View style={styles.friendsInfo}>
+          {renderFriendAvatars(popularAlbum.friendsWhoListened, popularAlbum.totalFriends)}
+          <Text variant="bodySmall" style={styles.friendsCount}>
+            {popularAlbum.totalFriends} friend{popularAlbum.totalFriends !== 1 ? 's' : ''}
+          </Text>
+        </View>
+
+        <View style={styles.rankBadge}>
+          <Text variant="bodySmall" style={styles.rankText}>
+            #{index + 1}
+          </Text>
+        </View>
       </TouchableOpacity>
     );
   };
@@ -234,8 +239,8 @@ export default function PopularWithFriendsScreen() {
   return (
     <View style={styles.safeArea}>
       <View style={styles.container}>
-        <ScrollView 
-          style={styles.scrollContainer} 
+        <ScrollView
+          style={styles.scrollContainer}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
