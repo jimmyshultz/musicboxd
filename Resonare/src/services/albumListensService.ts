@@ -83,13 +83,13 @@ class AlbumListensService {
       // Album doesn't exist, we need to fetch it and insert it
       const { AlbumService } = await import('./albumService');
       const albumResponse = await AlbumService.getAlbumById(albumId);
-      
+
       if (!albumResponse.success || !albumResponse.data) {
         throw new Error(`Could not fetch album data for ID: ${albumId}`);
       }
 
       const album = albumResponse.data;
-      
+
       // Insert the album into the database
       const { error: insertError } = await supabase
         .from('albums')
@@ -212,7 +212,7 @@ class AlbumListensService {
   async getUserListenCountThisYear(userId: string): Promise<number> {
     try {
       const currentYear = new Date().getFullYear();
-      
+
       const { count, error } = await supabase
         .from('album_listens')
         .select('*', { count: 'exact', head: true })
@@ -295,6 +295,47 @@ class AlbumListensService {
       return data || [];
     } catch (error) {
       console.error('Error getting user listens with albums:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get listens for multiple users with album details (batch query)
+   * Used for PopularWithFriends to avoid N+1 queries
+   */
+  async getListensForUsers(userIds: string[]): Promise<AlbumListenWithAlbum[]> {
+    try {
+      if (userIds.length === 0) {
+        return [];
+      }
+
+      const { data, error } = await supabase
+        .from('album_listens')
+        .select(`
+          *,
+          albums (
+            id,
+            name,
+            artist_name,
+            release_date,
+            image_url,
+            spotify_url,
+            total_tracks,
+            album_type,
+            genres
+          )
+        `)
+        .in('user_id', userIds)
+        .eq('is_listened', true)
+        .order('first_listened_at', { ascending: false });
+
+      if (error) {
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting listens for users:', error);
       return [];
     }
   }

@@ -22,6 +22,7 @@ import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSl
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
+import { albumListensService } from '../../services/albumListensService';
 import BannerAdComponent from '../../components/BannerAd';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
@@ -121,65 +122,49 @@ export default function HomeScreen() {
         return;
       }
 
-      const friendActivities: FriendActivity[] = [];
+      // Create a map for quick friend lookup
+      const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
+      const friendIds = friendsOnly.map(f => f.id);
 
-      // Get real diary entries for each friend - Process in parallel
-      const diaryPromises = friendsOnly.map(async (friend) => {
-        try {
-          const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
+      // BATCH QUERY: Get all diary entries for all friends in ONE query
+      const allDiaryEntries = await diaryService.getRecentDiaryEntriesForUsers(friendIds, 30);
 
-          if (userDiaryEntries.length > 0) {
-            // Get the 3 most recent diary entries for this friend
-            const recentEntries = userDiaryEntries
-              .sort((a, b) => new Date(b.diary_date).getTime() - new Date(a.diary_date).getTime())
-              .slice(0, 3);
+      // Transform diary entries to FriendActivity[]
+      const friendActivities: FriendActivity[] = allDiaryEntries
+        .filter(entry => entry.albums)
+        .map(entry => {
+          const friend = friendsMap.get(entry.user_id);
+          const album: Album = {
+            id: entry.albums.id,
+            title: entry.albums.name,
+            artist: entry.albums.artist_name,
+            releaseDate: entry.albums.release_date || '',
+            genre: entry.albums.genres || [],
+            coverImageUrl: entry.albums.image_url || '',
+            spotifyUrl: entry.albums.spotify_url || '',
+            totalTracks: entry.albums.total_tracks || 0,
+            albumType: entry.albums.album_type || 'album',
+            trackList: [],
+          };
 
-            // Create activities for each recent diary entry
-            return recentEntries.map(entry => {
-              if (entry.albums) {
-                const album: Album = {
-                  id: entry.albums.id,
-                  title: entry.albums.name,
-                  artist: entry.albums.artist_name,
-                  releaseDate: entry.albums.release_date || '',
-                  genre: entry.albums.genres || [],
-                  coverImageUrl: entry.albums.image_url || '',
-                  spotifyUrl: entry.albums.spotify_url || '',
-                  totalTracks: entry.albums.total_tracks || 0,
-                  albumType: entry.albums.album_type || 'album',
-                  trackList: [], // Empty for now
-                };
-
-                return {
-                  album: {
-                    ...album,
-                    // Use unique ID for each activity instance to allow duplicates
-                    id: album.id + '_friend_activity_' + friend.id + '_' + entry.id,
-                  },
-                  originalAlbumId: album.id, // Store original album ID for navigation
-                  diaryEntryId: entry.id, // Store diary entry ID for diary navigation
-                  friend: {
-                    id: friend.id,
-                    username: friend.username,
-                    profilePicture: friend.avatar_url,
-                  },
-                  diaryDate: new Date(entry.diary_date),
-                  rating: entry.rating,
-                  notes: entry.notes,
-                };
-              }
-              return null;
-            }).filter(Boolean) as FriendActivity[];
-          }
-          return [];
-        } catch (error) {
-          console.error(`Error loading diary entries for friend ${friend.username}:`, error);
-          return [];
-        }
-      });
-
-      const results = await Promise.all(diaryPromises);
-      results.forEach(activities => friendActivities.push(...activities));
+          return {
+            album: {
+              ...album,
+              // Use unique ID for each activity instance to allow duplicates
+              id: album.id + '_friend_activity_' + entry.user_id + '_' + entry.id,
+            },
+            originalAlbumId: album.id,
+            diaryEntryId: entry.id,
+            friend: {
+              id: entry.user_id,
+              username: friend?.username || 'unknown',
+              profilePicture: friend?.avatar_url,
+            },
+            diaryDate: new Date(entry.diary_date),
+            rating: entry.rating,
+            notes: entry.notes,
+          };
+        });
 
       // Sort by most recent first and limit to 10 total activities for home page preview
       friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
@@ -216,92 +201,66 @@ export default function HomeScreen() {
         return;
       }
 
-      // Track album popularity: albumId -> { album, friendsWhoListened: Set<friendId> }
+      // Create a map for quick friend lookup
+      const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
+      const friendIds = friendsOnly.map(f => f.id);
+
+      // BATCH QUERY: Get all listens for all friends in ONE query (album data already joined)
+      const allListens = await albumListensService.getListensForUsers(friendIds);
+
+      if (allListens.length === 0) {
+        setPopularWithFriends([]);
+        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
+        return;
+      }
+
+      // Track album popularity: albumId -> { album, friendsWhoListened }
       const albumPopularity = new Map<string, {
         album: Album;
         friendsWhoListened: Set<string>;
         friendData: { id: string; username: string; profilePicture?: string; }[];
       }>();
 
-      // Fetch all friends' listens in parallel
-      const friendListensPromises = friendsOnly.map(friend =>
-        AlbumService.getUserListens(friend.id).catch(error => {
-          console.error(`Error loading listens for friend ${friend.username}:`, error);
-          return [];
-        })
-      );
+      // Process all listens (no additional queries needed - album data already included)
+      for (const listen of allListens) {
+        if (!listen.albums) continue;
 
-      const allFriendsListens = await Promise.all(friendListensPromises);
+        const albumId = listen.album_id;
+        const friend = friendsMap.get(listen.user_id);
+        if (!friend) continue;
 
-      // Collect all unique album IDs
-      const allAlbumIds = new Set<string>();
-      allFriendsListens.forEach(listens => {
-        listens.forEach(listen => allAlbumIds.add(listen.albumId));
-      });
+        // Get or create album entry
+        if (!albumPopularity.has(albumId)) {
+          const album: Album = {
+            id: listen.albums.id,
+            title: listen.albums.name,
+            artist: listen.albums.artist_name,
+            releaseDate: listen.albums.release_date || '',
+            genre: listen.albums.genres || [],
+            coverImageUrl: listen.albums.image_url || '',
+            spotifyUrl: listen.albums.spotify_url || '',
+            totalTracks: listen.albums.total_tracks || 0,
+            albumType: listen.albums.album_type || 'album',
+            trackList: [],
+          };
+          albumPopularity.set(albumId, {
+            album,
+            friendsWhoListened: new Set(),
+            friendData: [],
+          });
+        }
 
-      if (allAlbumIds.size === 0) {
-        setPopularWithFriends([]);
-        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
-        return;
+        const entry = albumPopularity.get(albumId)!;
+        // Add friend to this album's listeners
+        if (!entry.friendsWhoListened.has(friend.id)) {
+          entry.friendsWhoListened.add(friend.id);
+          entry.friendData.push({
+            id: friend.id,
+            username: friend.username,
+            profilePicture: friend.avatar_url,
+          });
+        }
       }
-
-      // Batch query albums from database
-      const { supabase } = await import('../../services/supabase');
-      const { data: dbAlbums, error: dbError } = await supabase
-        .from('albums')
-        .select('*')
-        .in('id', Array.from(allAlbumIds));
-
-      if (dbError) {
-        console.error('Error fetching albums from database:', dbError);
-      }
-
-      // Create a map of albums from database
-      const albumsMap = new Map<string, Album>();
-      dbAlbums?.forEach(dbAlbum => {
-        albumsMap.set(dbAlbum.id, {
-          id: dbAlbum.id,
-          title: dbAlbum.name,
-          artist: dbAlbum.artist_name,
-          releaseDate: dbAlbum.release_date || '',
-          genre: dbAlbum.genres || [],
-          coverImageUrl: dbAlbum.image_url || '',
-          spotifyUrl: dbAlbum.spotify_url || '',
-          totalTracks: dbAlbum.total_tracks || 0,
-          albumType: dbAlbum.album_type || 'album',
-          trackList: [],
-        });
-      });
-
-      // Process each friend's listens
-      allFriendsListens.forEach((listens, index) => {
-        const friend = friendsOnly[index];
-
-        listens.forEach(listen => {
-          const album = albumsMap.get(listen.albumId);
-          if (!album) return; // Skip if album not in database
-
-          // Get or create album entry
-          if (!albumPopularity.has(listen.albumId)) {
-            albumPopularity.set(listen.albumId, {
-              album,
-              friendsWhoListened: new Set(),
-              friendData: [],
-            });
-          }
-
-          const entry = albumPopularity.get(listen.albumId)!;
-          // Add friend to this album's listeners
-          if (!entry.friendsWhoListened.has(friend.id)) {
-            entry.friendsWhoListened.add(friend.id);
-            entry.friendData.push({
-              id: friend.id,
-              username: friend.username,
-              profilePicture: friend.avatar_url,
-            });
-          }
-        });
-      });
 
       // Convert to FriendPopularAlbum array and filter albums with multiple listeners
       const friendPopularAlbums: FriendPopularAlbum[] = [];

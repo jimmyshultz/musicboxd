@@ -16,8 +16,8 @@ import { useSelector } from 'react-redux';
 
 import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
-import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
+import { albumListensService } from '../../services/albumListensService';
 import { spacing } from '../../utils/theme';
 import ProfileAvatar from '../../components/ProfileAvatar';
 
@@ -76,46 +76,58 @@ export default function PopularWithFriendsScreen() {
         return;
       }
 
-      // Track album popularity: albumId -> { album, friendsWhoListened: Set<friendId> }
+      // Create a map for quick friend lookup
+      const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
+      const friendIds = friendsOnly.map(f => f.id);
+
+      // BATCH QUERY: Get all listens for all friends in ONE query (album data already joined)
+      const allListens = await albumListensService.getListensForUsers(friendIds);
+
+      // Track album popularity: albumId -> { album, friendsWhoListened }
       const albumPopularity = new Map<string, {
         album: Album;
         friendsWhoListened: Set<string>;
         friendData: { id: string; username: string; profilePicture?: string; }[];
       }>();
 
-      // Collect listen data from all friends
-      for (const friend of friendsOnly) {
-        try {
-          const userListens = await AlbumService.getUserListens(friend.id);
+      // Process all listens (no additional queries needed - album data already included)
+      for (const listen of allListens) {
+        if (!listen.albums) continue;
 
-          for (const listen of userListens) {
-            // Get or create album entry
-            if (!albumPopularity.has(listen.albumId)) {
-              const albumResponse = await AlbumService.getAlbumById(listen.albumId);
-              if (albumResponse.success && albumResponse.data) {
-                albumPopularity.set(listen.albumId, {
-                  album: albumResponse.data,
-                  friendsWhoListened: new Set(),
-                  friendData: [],
-                });
-              } else {
-                continue; // Skip if album not found
-              }
-            }
+        const albumId = listen.album_id;
+        const friend = friendsMap.get(listen.user_id);
+        if (!friend) continue;
 
-            const entry = albumPopularity.get(listen.albumId)!;
-            // Add friend to this album's listeners
-            if (!entry.friendsWhoListened.has(friend.id)) {
-              entry.friendsWhoListened.add(friend.id);
-              entry.friendData.push({
-                id: friend.id,
-                username: friend.username,
-                profilePicture: friend.avatar_url,
-              });
-            }
-          }
-        } catch (error) {
-          console.error(`Error loading listens for friend ${friend.username}:`, error);
+        // Get or create album entry
+        if (!albumPopularity.has(albumId)) {
+          const album: Album = {
+            id: listen.albums.id,
+            title: listen.albums.name,
+            artist: listen.albums.artist_name,
+            releaseDate: listen.albums.release_date || '',
+            genre: listen.albums.genres || [],
+            coverImageUrl: listen.albums.image_url || '',
+            spotifyUrl: listen.albums.spotify_url || '',
+            totalTracks: listen.albums.total_tracks || 0,
+            albumType: listen.albums.album_type || 'album',
+            trackList: [],
+          };
+          albumPopularity.set(albumId, {
+            album,
+            friendsWhoListened: new Set(),
+            friendData: [],
+          });
+        }
+
+        const entry = albumPopularity.get(albumId)!;
+        // Add friend to this album's listeners
+        if (!entry.friendsWhoListened.has(friend.id)) {
+          entry.friendsWhoListened.add(friend.id);
+          entry.friendData.push({
+            id: friend.id,
+            username: friend.username,
+            profilePicture: friend.avatar_url,
+          });
         }
       }
 

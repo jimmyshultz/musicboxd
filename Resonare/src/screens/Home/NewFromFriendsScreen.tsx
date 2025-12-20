@@ -78,47 +78,44 @@ export default function NewFromFriendsScreen() {
         return;
       }
 
-      const friendActivities: FriendActivity[] = [];
+      // Create a map for quick friend lookup
+      const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
+      const friendIds = friendsOnly.map(f => f.id);
 
-      // Get real diary entries for each friend
-      for (const friend of friendsOnly) {
-        try {
-          const userDiaryEntries = await diaryService.getUserDiaryEntriesWithAlbums(friend.id);
+      // BATCH QUERY: Get all diary entries for all friends in ONE query
+      const allDiaryEntries = await diaryService.getRecentDiaryEntriesForUsers(friendIds, 100);
 
-          // Get all diary entries for this friend and create activities
-          for (const entry of userDiaryEntries) {
-            if (entry.albums) {
-              const album: Album = {
-                id: entry.albums.id,
-                title: entry.albums.name,
-                artist: entry.albums.artist_name,
-                releaseDate: entry.albums.release_date || '',
-                genre: entry.albums.genres || [],
-                coverImageUrl: entry.albums.image_url || '',
-                spotifyUrl: entry.albums.spotify_url || '',
-                totalTracks: entry.albums.total_tracks || 0,
-                albumType: entry.albums.album_type || 'album',
-                trackList: [], // Empty for now
-              };
+      // Transform diary entries to FriendActivity[]
+      const friendActivities: FriendActivity[] = allDiaryEntries
+        .filter(entry => entry.albums)
+        .map(entry => {
+          const friend = friendsMap.get(entry.user_id);
+          const album: Album = {
+            id: entry.albums.id,
+            title: entry.albums.name,
+            artist: entry.albums.artist_name,
+            releaseDate: entry.albums.release_date || '',
+            genre: entry.albums.genres || [],
+            coverImageUrl: entry.albums.image_url || '',
+            spotifyUrl: entry.albums.spotify_url || '',
+            totalTracks: entry.albums.total_tracks || 0,
+            albumType: entry.albums.album_type || 'album',
+            trackList: [],
+          };
 
-              friendActivities.push({
-                album: album, // Use converted album
-                diaryEntryId: entry.id, // Store diary entry ID for navigation
-                friend: {
-                  id: friend.id,
-                  username: friend.username,
-                  profilePicture: friend.avatar_url,
-                },
-                diaryDate: new Date(entry.diary_date),
-                rating: entry.rating,
-                notes: entry.notes,
-              });
-            }
-          }
-        } catch (error) {
-          console.error(`Error loading diary entries for friend ${friend.username}:`, error);
-        }
-      }
+          return {
+            album,
+            diaryEntryId: entry.id,
+            friend: {
+              id: entry.user_id,
+              username: friend?.username || 'unknown',
+              profilePicture: friend?.avatar_url,
+            },
+            diaryDate: new Date(entry.diary_date),
+            rating: entry.rating,
+            notes: entry.notes,
+          };
+        });
 
       // Sort by most recent first and limit to 60 items for performance
       friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
