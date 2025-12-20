@@ -14,12 +14,13 @@ import { FollowRequest } from '../../types/database';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { spacing } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 export default function FollowRequestsScreen() {
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   const [requests, setRequests] = useState<FollowRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -27,7 +28,7 @@ export default function FollowRequestsScreen() {
 
   const loadFollowRequests = useCallback(async () => {
     if (!currentUser) return;
-    
+
     try {
       const pendingRequests = await userService.getPendingFollowRequests(currentUser.id);
       setRequests(pendingRequests);
@@ -48,19 +49,19 @@ export default function FollowRequestsScreen() {
       await loadFollowRequests();
       setLoading(false);
     };
-    
+
     loadData();
   }, [loadFollowRequests]);
 
   const handleAcceptRequest = async (requestId: string, requesterUsername: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
-    
+
     try {
       await userService.acceptFollowRequest(requestId);
-      
+
       // Remove from requests list
       setRequests(prev => prev.filter(req => req.id !== requestId));
-      
+
       // TODO: Show success message or notification
       console.log(`Accepted follow request from ${requesterUsername}`);
     } catch (error) {
@@ -76,13 +77,13 @@ export default function FollowRequestsScreen() {
 
   const handleRejectRequest = async (requestId: string, requesterUsername: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
-    
+
     try {
       await userService.rejectFollowRequest(requestId);
-      
+
       // Remove from requests list
       setRequests(prev => prev.filter(req => req.id !== requestId));
-      
+
       // TODO: Show success message or notification
       console.log(`Rejected follow request from ${requesterUsername}`);
     } catch (error) {
@@ -101,18 +102,16 @@ export default function FollowRequestsScreen() {
   const renderRequestCard = (request: FollowRequest) => {
     const isProcessing = processingRequests.has(request.id);
     const requester = request.requester;
-    
+
     if (!requester) return null;
 
     return (
       <Card key={request.id} style={styles.requestCard}>
         <Card.Content style={styles.requestContent}>
           <View style={styles.userInfo}>
-            <Avatar.Image
+            <ProfileAvatar
+              uri={requester.avatar_url}
               size={50}
-              source={{ 
-                uri: requester.avatar_url || 'https://via.placeholder.com/50x50/cccccc/999999?text=U' 
-              }}
               style={styles.avatar}
             />
             <View style={styles.userDetails}>
@@ -129,7 +128,7 @@ export default function FollowRequestsScreen() {
               </Text>
             </View>
           </View>
-          
+
           <View style={styles.actionButtons}>
             <Button
               mode="outlined"
@@ -160,7 +159,7 @@ export default function FollowRequestsScreen() {
     const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffHours < 1) return 'Just now';
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;

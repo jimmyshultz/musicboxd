@@ -28,6 +28,7 @@ import {
   clearAllNotifications,
 } from '../../store/slices/notificationSlice';
 import { spacing } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 // NotificationsScreen can be in either HomeStack or ProfileStack
 type NotificationsScreenNavigationProp = StackNavigationProp<HomeStackParamList | ProfileStackParamList, 'Notifications'>;
@@ -96,11 +97,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         >
           <Card.Content style={styles.notificationContent}>
             <View style={styles.userInfo}>
-              <Avatar.Image
+              <ProfileAvatar
+                uri={item.actorAvatar}
                 size={50}
-                source={{ 
-                  uri: item.actorAvatar || 'https://via.placeholder.com/50x50/cccccc/999999?text=U' 
-                }}
                 style={styles.avatar}
               />
               <View style={styles.notificationDetails}>
@@ -118,7 +117,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             </View>
           </Card.Content>
         </Card>
-    </TouchableOpacity>
+      </TouchableOpacity>
     </Swipeable>
   );
 };
@@ -130,16 +129,16 @@ export default function NotificationsScreen() {
   const { notifications, loading } = useSelector((state: RootState) => state.notifications);
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   const [refreshing, setRefreshing] = useState(false);
 
   const loadNotifications = useCallback(async () => {
     if (!currentUser) return;
-    
+
     try {
       dispatch(fetchNotificationsStart());
       const fetchedNotifications = await notificationService.getNotifications(currentUser.id);
-      
+
       // Transform to AppNotification format
       const appNotifications: AppNotification[] = fetchedNotifications.map((n: any) => ({
         id: n.id,
@@ -152,7 +151,7 @@ export default function NotificationsScreen() {
         read: n.read,
         createdAt: n.created_at,
       }));
-      
+
       dispatch(fetchNotificationsSuccess(appNotifications));
     } catch (error) {
       console.error('Error loading notifications:', error);
@@ -229,7 +228,7 @@ export default function NotificationsScreen() {
 
   const handleMarkAllAsRead = async () => {
     if (!currentUser) return;
-    
+
     try {
       await notificationService.markAllAsRead(currentUser.id);
       dispatch(markAllAsRead());
@@ -249,7 +248,7 @@ export default function NotificationsScreen() {
 
   const handleClearAll = async () => {
     if (!currentUser) return;
-    
+
     try {
       await notificationService.deleteAllNotifications(currentUser.id);
       dispatch(clearAllNotifications());
@@ -265,7 +264,7 @@ export default function NotificationsScreen() {
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMinutes < 1) return 'Just now';
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;

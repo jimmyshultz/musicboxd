@@ -11,6 +11,7 @@ import {
 import FastImage from '@d11/react-native-fast-image';
 
 import { Text, Avatar, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -535,9 +536,9 @@ export default function UserProfileScreen() {
       >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <Avatar.Image
+          <ProfileAvatar
+            uri={user.avatar_url}
             size={80}
-            source={{ uri: user.avatar_url || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
             style={styles.profilePicture}
           />
           <Text variant="headlineMedium" style={styles.username}>

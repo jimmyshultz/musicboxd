@@ -20,6 +20,7 @@ import { RootState } from '../../store';
 import { UserProfile } from '../../types/database';
 import { blockService } from '../../services/blockService';
 import { spacing, shadows } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 // Extracted separator component to avoid re-creation during render
 const ItemSeparator = () => <View style={{ height: spacing.sm }} />;
@@ -28,7 +29,7 @@ export default function BlockedUsersScreen() {
   const theme = useTheme();
   const styles = createStyles(theme);
   const { user } = useSelector((state: RootState) => state.auth);
-  
+
   const [blockedUsers, setBlockedUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +37,7 @@ export default function BlockedUsersScreen() {
 
   const loadBlockedUsers = useCallback(async () => {
     if (!user) return;
-    
+
     try {
       const users = await blockService.getBlockedUsers(user.id);
       setBlockedUsers(users);
@@ -69,7 +70,7 @@ export default function BlockedUsersScreen() {
           text: 'Unblock',
           onPress: async () => {
             if (!user) return;
-            
+
             setUnblockingUserId(blockedUser.id);
             try {
               const result = await blockService.unblockUser(user.id, blockedUser.id);
@@ -92,11 +93,9 @@ export default function BlockedUsersScreen() {
 
   const renderBlockedUser = ({ item }: { item: UserProfile }) => (
     <View style={styles.userItem}>
-      <Avatar.Image
+      <ProfileAvatar
+        uri={item.avatar_url}
         size={50}
-        source={{ 
-          uri: item.avatar_url || 'https://via.placeholder.com/100x100/cccccc/999999?text=User' 
-        }}
       />
       <View style={styles.userInfo}>
         <Text variant="titleMedium" style={styles.username}>

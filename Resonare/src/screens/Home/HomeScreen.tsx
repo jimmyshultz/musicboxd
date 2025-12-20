@@ -15,12 +15,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { HomeStackParamList, Album } from '../../types';
 import { UserProfile } from '../../types/database';
 import { RootState } from '../../store';
+import { spacing, shadows } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { spacing } from '../../utils/theme';
 import BannerAdComponent from '../../components/BannerAd';
 
 type HomeScreenNavigationProp = StackNavigationProp<HomeStackParamList>;
@@ -475,9 +476,9 @@ export default function HomeScreen() {
         {activity.album.artist}
       </Text>
       <View style={styles.friendBadge}>
-        <Avatar.Image
+        <ProfileAvatar
+          uri={activity.friend.profilePicture}
           size={16}
-          source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
         />
         <Text variant="bodySmall" style={styles.friendBadgeText}>
           @{activity.friend.username}
@@ -517,9 +518,9 @@ export default function HomeScreen() {
       style={styles.userCard}
       onPress={() => navigateToUserProfile(potentialFriend.user.id)}
     >
-      <Avatar.Image
+      <ProfileAvatar
+        uri={potentialFriend.user.avatar_url}
         size={60}
-        source={{ uri: potentialFriend.user.avatar_url || 'https://via.placeholder.com/120x120/cccccc/999999?text=User' }}
       />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{potentialFriend.user.username}

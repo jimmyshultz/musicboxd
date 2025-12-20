@@ -13,6 +13,7 @@ import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParam
 import { DiaryEntryComment } from '../../types/database';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
 import { HalfStarRating, HalfStarDisplay } from '../../components/HalfStarRating';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
@@ -518,9 +519,9 @@ export default function DiaryEntryDetailsScreen() {
     const canDelete = currentUser && (currentUser.id === commentUserId || currentUser.id === userId);
     return (
       <View style={styles.commentItem}>
-        <Avatar.Image
+        <ProfileAvatar
+          uri={commentUser?.avatarUrl}
           size={32}
-          source={{ uri: commentUser?.avatarUrl || 'https://via.placeholder.com/32x32/cccccc/999999?text=U' }}
         />
         <View style={styles.commentContent}>
           <View style={styles.commentHeader}>

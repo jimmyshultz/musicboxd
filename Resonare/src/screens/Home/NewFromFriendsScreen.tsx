@@ -18,7 +18,8 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
-import { spacing } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -188,9 +189,9 @@ export default function NewFromFriendsScreen() {
           style={styles.friendInfo}
           onPress={() => navigateToUserProfile(activity.friend.id)}
         >
-          <Avatar.Image
+          <ProfileAvatar
+            uri={activity.friend.profilePicture}
             size={20}
-            source={{ uri: activity.friend.profilePicture || 'https://via.placeholder.com/40x40/cccccc/999999?text=U' }}
           />
           <View style={styles.friendDetails}>
             <Text variant="bodySmall" numberOfLines={1} style={styles.friendName}>

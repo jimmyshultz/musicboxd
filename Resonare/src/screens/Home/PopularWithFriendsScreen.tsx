@@ -18,7 +18,8 @@ import { HomeStackParamList, Album } from '../../types';
 import { RootState } from '../../store';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
-import { spacing } from '../../utils/theme';
+import { spacing, shadows } from '../../utils/theme';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 type PopularWithFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
@@ -167,12 +168,12 @@ export default function PopularWithFriendsScreen() {
     return (
       <View style={styles.friendAvatars}>
         {displayedFriends.map((friend, index) => (
-          <Avatar.Image
-            key={friend.id}
-            size={24}
-            source={{ uri: friend.profilePicture || 'https://via.placeholder.com/48x48/cccccc/999999?text=U' }}
-            style={[styles.friendAvatar, index > 0 && styles.overlappingAvatar]}
-          />
+          <View key={friend.id} style={[styles.friendAvatar, index > 0 && styles.overlappingAvatar]}>
+            <ProfileAvatar
+              uri={friend.profilePicture}
+              size={24}
+            />
+          </View>
         ))}
         {remainingCount > 0 && (
           <View style={[

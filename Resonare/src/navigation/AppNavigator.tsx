@@ -10,6 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { RootStackParamList, MainTabParamList } from '../types';
 import { RootState } from '../store';
+import { prefetchProfileImages } from '../services/imagePrefetchService';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -43,7 +44,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 // Back button component
 const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
   const theme = useTheme();
-  
+
   const handlePress = React.useCallback(() => {
     if (customOnPress) {
       customOnPress();
@@ -53,7 +54,7 @@ const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any;
   }, [customOnPress, navigation]);
 
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
       onPress={handlePress}
       style={backButtonStyles.container}
     >
@@ -94,12 +95,12 @@ const ProfileTabIcon = ({ color, size }: { color: string; size: number }) => {
 const NotificationBellIcon = ({ navigation }: { navigation: any }) => {
   const theme = useTheme();
   const unreadCount = useSelector((state: RootState) => state.notifications.unreadCount);
-  
+
   // Log when unreadCount changes to verify re-renders
   React.useEffect(() => {
     console.log('🔔 NotificationBellIcon unreadCount changed to:', unreadCount);
   }, [unreadCount]);
-  
+
   return (
     <TouchableOpacity
       onPress={() => navigation.navigate('Notifications')}
@@ -225,7 +226,7 @@ function HomeStackNavigator() {
             const state = navigation.getState();
             const routes = state.routes;
             const currentRouteIndex = state.index;
-            
+
             // Look backwards in the route history to find the last non-diary, non-userprofile screen
             let foundValidRoute = false;
             for (let i = currentRouteIndex - 1; i >= 0; i--) {
@@ -237,7 +238,7 @@ function HomeStackNavigator() {
                 return;
               }
             }
-            
+
             // If no valid screen found, go to home
             if (!foundValidRoute) {
               navigation.navigate('HomeMain');
@@ -293,9 +294,9 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={({ navigation }) => ({ 
-          title: 'Diary Entry', 
-          headerBackVisible: false, 
+        options={({ navigation }) => ({
+          title: 'Diary Entry',
+          headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} />
         })}
       />
@@ -386,7 +387,7 @@ function SearchStackNavigator() {
             const state = navigation.getState();
             const routes = state.routes;
             const currentRouteIndex = state.index;
-            
+
             // Look backwards in the route history to find the last non-diary, non-userprofile screen
             let foundValidRoute = false;
             for (let i = currentRouteIndex - 1; i >= 0; i--) {
@@ -398,7 +399,7 @@ function SearchStackNavigator() {
                 return;
               }
             }
-            
+
             // If no valid screen found, go to search main
             if (!foundValidRoute) {
               navigation.navigate('SearchMain');
@@ -454,9 +455,9 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={({ navigation }) => ({ 
-          title: 'Diary Entry', 
-          headerBackVisible: false, 
+        options={({ navigation }) => ({
+          title: 'Diary Entry',
+          headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} />
         })}
       />
@@ -547,7 +548,7 @@ function ProfileStackNavigator() {
             const state = navigation.getState();
             const routes = state.routes;
             const currentRouteIndex = state.index;
-            
+
             // Look backwards in the route history to find the last non-diary, non-userprofile screen
             let foundValidRoute = false;
             for (let i = currentRouteIndex - 1; i >= 0; i--) {
@@ -559,7 +560,7 @@ function ProfileStackNavigator() {
                 return;
               }
             }
-            
+
             // If no valid screen found, go to profile main
             if (!foundValidRoute) {
               navigation.navigate('ProfileMain');
@@ -615,9 +616,9 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="DiaryEntryDetails"
         component={DiaryEntryDetailsScreen}
-        options={({ navigation }) => ({ 
-          title: 'Diary Entry', 
-          headerBackVisible: false, 
+        options={({ navigation }) => ({
+          title: 'Diary Entry',
+          headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} />
         })}
       />
@@ -697,16 +698,16 @@ function MainTabNavigator() {
         headerShown: false, // Hide headers since they're handled by stack navigators
       })}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeStackNavigator}
       />
-      <Tab.Screen 
-        name="Search" 
+      <Tab.Screen
+        name="Search"
         component={SearchStackNavigator}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileStackNavigator}
       />
     </Tab.Navigator>
@@ -716,6 +717,13 @@ function MainTabNavigator() {
 export default function AppNavigator() {
   const theme = useTheme();
   const { user } = useSelector((state: RootState) => state.auth);
+
+  // Prefetch profile images when user becomes authenticated
+  React.useEffect(() => {
+    if (user?.id) {
+      prefetchProfileImages(user.id);
+    }
+  }, [user?.id]);
 
   // Check if user needs to accept terms
   const needsTermsAcceptance = user && !user.termsAcceptedAt;

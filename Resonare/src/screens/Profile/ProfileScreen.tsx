@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 import { Text, Avatar, ActivityIndicator, useTheme } from 'react-native-paper';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -428,9 +429,9 @@ export default function ProfileScreen() {
       >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <Avatar.Image
+          <ProfileAvatar
+            uri={user.profilePicture}
             size={80}
-            source={{ uri: user.profilePicture || 'https://via.placeholder.com/160x160/cccccc/999999?text=User' }}
             style={styles.profilePicture}
           />
           <Text variant="headlineMedium" style={styles.username}>

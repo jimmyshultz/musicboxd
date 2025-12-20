@@ -29,6 +29,8 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Track } from '../../types';
 import { RootState } from '../../store';
+import { useTheme as useNavigationTheme } from '@react-navigation/native';
+import ProfileAvatar from '../../components/ProfileAvatar';
 import { HalfStarRating } from '../../components/HalfStarRating';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {
@@ -593,17 +595,10 @@ export default function AlbumDetailsScreen() {
                     style={styles.friendDiaryEntryItem}
                   >
                     <View style={styles.friendDiaryEntryContent}>
-                      {entry.user_profiles?.avatar_url ? (
-                        <Avatar.Image
-                          size={32}
-                          source={{ uri: entry.user_profiles.avatar_url }}
-                        />
-                      ) : (
-                        <Avatar.Icon
-                          size={32}
-                          icon="account"
-                        />
-                      )}
+                      <ProfileAvatar
+                        uri={entry.user_profiles?.avatar_url}
+                        size={32}
+                      />
                       <View style={styles.friendDiaryInfo}>
                         <Text variant="bodyMedium" style={styles.friendUsername}>
                           {entry.user_profiles?.username || 'Unknown'}

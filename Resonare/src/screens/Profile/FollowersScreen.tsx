@@ -25,6 +25,7 @@ import { SerializedUser, HomeStackParamList, SearchStackParamList, ProfileStackP
 import { UserProfile } from '../../types/database';
 import { addFollowing, removeFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
+import ProfileAvatar from '../../components/ProfileAvatar';
 
 type FollowersScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'Followers'>;
 type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
@@ -33,11 +34,11 @@ type FollowersScreenNavigationProp = StackNavigationProp<HomeStackParamList | Se
 const EmptyState = ({ activeTab: tab, username: name }: { activeTab: string; username: string }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   return (
     <View style={styles.emptyContainer}>
       <Text variant="bodyLarge" style={styles.emptyText}>
-        {tab === 'followers' 
+        {tab === 'followers'
           ? `${name} has no followers yet`
           : `${name} isn't following anyone yet`
         }
@@ -52,11 +53,11 @@ export default function FollowersScreen() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   const { userId, username, initialTab = 'followers' } = route.params;
   const { following } = useSelector((state: RootState) => state.user);
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  
+
   const [activeTab, setActiveTab] = useState(initialTab);
   const [followers, setFollowers] = useState<UserProfile[]>([]);
   const [followingUsers, setFollowingUsers] = useState<UserProfile[]>([]);
@@ -72,10 +73,10 @@ export default function FollowersScreen() {
         userService.getUserFollowers(userId),
         userService.getUserFollowing(userId)
       ]);
-      
+
       console.log('Loaded followers:', followersData.length);
       console.log('Loaded following:', followingData.length);
-      
+
       setFollowers(followersData);
       setFollowingUsers(followingData);
     } catch (error) {
@@ -159,9 +160,9 @@ export default function FollowersScreen() {
         onPress={() => navigateToProfile(user.id)}
       >
         <View style={styles.userInfo}>
-          <Avatar.Image
+          <ProfileAvatar
+            uri={user.avatar_url}
             size={50}
-            source={{ uri: user.avatar_url || 'https://via.placeholder.com/50x50/cccccc/999999?text=User' }}
             style={styles.avatar}
           />
           <View style={styles.userDetails}>
@@ -175,7 +176,7 @@ export default function FollowersScreen() {
             )}
           </View>
         </View>
-        
+
         {!isCurrentUser && (
           <Button
             mode={userIsFollowing ? "outlined" : "contained"}
@@ -196,12 +197,12 @@ export default function FollowersScreen() {
 
   return (
     <View style={styles.safeArea}>
-        {/* Header */}
-  <View style={styles.header}>
-    <Text variant="headlineSmall" style={styles.headerTitle}>
-      @{username}
-    </Text>
-  </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text variant="headlineSmall" style={styles.headerTitle}>
+          @{username}
+        </Text>
+      </View>
 
       {/* Tab Selector */}
       <View style={styles.tabContainer}>
