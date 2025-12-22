@@ -156,6 +156,30 @@ export interface Notification {
   actor?: UserProfile;
 }
 
+// Push Notification Types
+
+export interface PushToken {
+  id: string;
+  user_id: string;
+  token: string;
+  platform: 'ios' | 'android';
+  device_id?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PushPreferences {
+  user_id: string;
+  push_enabled: boolean;
+  follows_enabled: boolean;
+  likes_enabled: boolean;
+  comments_enabled: boolean;
+  marketing_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // UGC Safety Types
 
 export interface BlockedUser {
@@ -205,6 +229,8 @@ export const TableNames = {
   BLOCKED_USERS: 'blocked_users',
   CONTENT_REPORTS: 'content_reports',
   NOTIFICATIONS: 'notifications',
+  PUSH_TOKENS: 'push_tokens',
+  PUSH_PREFERENCES: 'push_preferences',
 } as const;
 
 // Supabase database type definition (Schema V2)
@@ -282,6 +308,16 @@ export interface Database {
         Row: Notification;
         Insert: Omit<Notification, 'id' | 'created_at'>;
         Update: Partial<Pick<Notification, 'read'>> & Record<string, any>;
+      };
+      push_tokens: {
+        Row: PushToken;
+        Insert: Omit<PushToken, 'id' | 'created_at' | 'updated_at'>;
+        Update: Partial<Pick<PushToken, 'is_active' | 'updated_at'>>;
+      };
+      push_preferences: {
+        Row: PushPreferences;
+        Insert: Omit<PushPreferences, 'created_at' | 'updated_at'>;
+        Update: Partial<Omit<PushPreferences, 'user_id' | 'created_at' | 'updated_at'>>;
       };
     };
   };
