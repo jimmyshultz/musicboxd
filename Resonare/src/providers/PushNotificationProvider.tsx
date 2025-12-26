@@ -19,6 +19,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
     const { user } = useSelector((state: RootState) => state.auth);
     const tokenRefreshUnsubscribeRef = useRef<(() => void) | null>(null);
     const foregroundUnsubscribeRef = useRef<(() => void) | null>(null);
+    const notificationOpenedUnsubscribeRef = useRef<(() => void) | null>(null);
     const appStateRef = useRef<AppStateStatus>(AppState.currentState);
     const previousUserIdRef = useRef<string | null>(null);
 
@@ -66,7 +67,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
         });
 
         // Handle notification opened app (when app is in background)
-        messaging().onNotificationOpenedApp((remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+        notificationOpenedUnsubscribeRef.current = messaging().onNotificationOpenedApp((remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
             console.log('📱 Push: Notification opened app:', remoteMessage);
             if (remoteMessage.data) {
                 handlePushNotificationNavigation(remoteMessage.data as {
@@ -74,6 +75,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
                     reference_id?: string;
                     notification_id?: string;
                     actor_id?: string;
+                    user_id?: string;
                 });
             }
         });
@@ -92,6 +94,7 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
                                 reference_id?: string;
                                 notification_id?: string;
                                 actor_id?: string;
+                                user_id?: string;
                             });
                         }, 1000);
                     }
@@ -119,6 +122,11 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
             if (foregroundUnsubscribeRef.current) {
                 foregroundUnsubscribeRef.current();
                 foregroundUnsubscribeRef.current = null;
+            }
+
+            if (notificationOpenedUnsubscribeRef.current) {
+                notificationOpenedUnsubscribeRef.current();
+                notificationOpenedUnsubscribeRef.current = null;
             }
 
             appStateSubscription.remove();

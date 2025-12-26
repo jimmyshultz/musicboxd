@@ -297,6 +297,7 @@ serve(async (req: Request) => {
                             notification_type: notificationType,
                             reference_id: notification.reference_id || '',
                             actor_id: notification.actor_id,
+                            user_id: notification.user_id, // Owner of the content (diary entry, etc.)
                         },
                         // iOS specific configuration
                         apns: {

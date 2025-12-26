@@ -44,8 +44,9 @@ export function handlePushNotificationNavigation(data: {
     reference_id?: string;
     notification_id?: string;
     actor_id?: string;
+    user_id?: string;
 }) {
-    const { notification_type, reference_id, actor_id } = data;
+    const { notification_type, reference_id, actor_id, user_id } = data;
 
     console.log('📱 Deep linking for notification type:', notification_type);
 
@@ -70,29 +71,24 @@ export function handlePushNotificationNavigation(data: {
         case 'follow_request':
             // Navigate to follow requests screen (nested in Profile tab)
             console.log('📱 Navigating to follow requests');
-            navigationRef.dispatch(
-                CommonActions.navigate({
-                    name: 'Profile',
-                    params: {
-                        screen: 'FollowRequests',
-                    },
-                })
-            );
+            navigate('Profile', {
+                screen: 'FollowRequests',
+            });
             break;
 
         case 'diary_like':
         case 'diary_comment':
             // Navigate to the diary entry
-            if (reference_id) {
-                console.log('📱 Navigating to diary entry:', reference_id);
+            if (reference_id && user_id) {
+                console.log('📱 Navigating to diary entry:', reference_id, 'userId:', user_id);
                 // reference_id is the diary entry ID
-                // We need the user_id too, but we can get it from the current user
-                // since it's the user's own diary entry that was liked/commented
+                // user_id is the owner of the diary entry (the current user who received the notification)
                 navigate('DiaryEntryDetails', {
                     entryId: reference_id,
-                    // userId will be filled by the screen if not provided
+                    userId: user_id,
                 });
             } else {
+                console.log('📱 Missing reference_id or user_id, navigating to notifications');
                 navigate('Notifications');
             }
             break;

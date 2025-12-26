@@ -141,31 +141,33 @@ class PushTokenService {
     }
 
     /**
-     * Deactivate the current token (call on logout)
-     * @param userId - The user ID to deactivate token for
+     * Deactivate all active tokens for a user (call on logout)
+     * This deactivates all tokens in the database rather than relying on the in-memory currentToken,
+     * ensuring tokens are properly deactivated even if the app was restarted before logout.
+     * @param userId - The user ID to deactivate tokens for
      */
     async deactivateToken(userId: string): Promise<void> {
         try {
-            if (!this.currentToken) {
-                console.log('⚠️ No current token to deactivate');
-                return;
-            }
-
+            // Deactivate ALL active tokens for this user
+            // We don't rely on this.currentToken because:
+            // 1. It's lost when the app restarts
+            // 2. The user might have multiple devices
             const { error } = await (this.client
                 .from('push_tokens') as any)
                 .update({ is_active: false, updated_at: new Date().toISOString() })
                 .eq('user_id', userId)
-                .eq('token', this.currentToken);
+                .eq('is_active', true);
 
             if (error) {
                 throw error;
             }
 
-            console.log('✅ Push token deactivated');
+            console.log('✅ All push tokens deactivated for user');
             this.currentToken = null;
             this.isInitialized = false;
         } catch (error) {
-            console.error('❌ Error deactivating push token:', error);
+            console.error('❌ Error deactivating push tokens:', error);
+            // Don't throw - we want logout to continue even if this fails
         }
     }
 
