@@ -265,6 +265,15 @@ serve(async (req: Request) => {
         // Get OAuth2 access token
         const accessToken = await getAccessToken(serviceAccount);
 
+        // Get unread notification count for badge
+        const { count: unreadCount } = await supabase
+            .from('notifications')
+            .select('*', { count: 'exact', head: true })
+            .eq('user_id', notification.user_id)
+            .eq('read', false);
+
+        const badgeCount = unreadCount ?? 1;
+
         // Build notification message
         const title = messageTemplate.title;
         const body = messageTemplate.bodyTemplate.replace('{username}', actorUsername);
@@ -287,13 +296,14 @@ serve(async (req: Request) => {
                             notification_id: notification.id,
                             notification_type: notificationType,
                             reference_id: notification.reference_id || '',
+                            actor_id: notification.actor_id,
                         },
                         // iOS specific configuration
                         apns: {
                             payload: {
                                 aps: {
                                     sound: 'default',
-                                    badge: 1,
+                                    badge: badgeCount,
                                     'mutable-content': 1,
                                 },
                             },

@@ -6,7 +6,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Text, ActivityIndicator, Button, Card, useTheme } from 'react-native-paper';
-
+import { useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 
 
@@ -43,15 +43,18 @@ export default function FollowRequestsScreen() {
     setRefreshing(false);
   }, [loadFollowRequests]);
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await loadFollowRequests();
-      setLoading(false);
-    };
+  // Reload data whenever screen comes into focus (including from push notification)
+  useFocusEffect(
+    useCallback(() => {
+      const loadData = async () => {
+        setLoading(true);
+        await loadFollowRequests();
+        setLoading(false);
+      };
 
-    loadData();
-  }, [loadFollowRequests]);
+      loadData();
+    }, [loadFollowRequests])
+  );
 
   const handleAcceptRequest = async (requestId: string, requesterUsername: string) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));

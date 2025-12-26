@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import messaging, { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { RootState } from '../store';
 import { pushTokenService } from '../services/pushTokenService';
+import { handlePushNotificationNavigation } from '../services/navigationService';
 
 interface PushNotificationProviderProps {
     children: React.ReactNode;
@@ -67,8 +68,14 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
         // Handle notification opened app (when app is in background)
         messaging().onNotificationOpenedApp((remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
             console.log('📱 Push: Notification opened app:', remoteMessage);
-            // TODO: Handle deep linking based on notification data
-            // For now, the app just opens to the default screen
+            if (remoteMessage.data) {
+                handlePushNotificationNavigation(remoteMessage.data as {
+                    notification_type?: string;
+                    reference_id?: string;
+                    notification_id?: string;
+                    actor_id?: string;
+                });
+            }
         });
 
         // Check if app was opened from a notification (when app was killed)
@@ -77,15 +84,25 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
             .then((remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) => {
                 if (remoteMessage) {
                     console.log('📱 Push: App opened from notification:', remoteMessage);
-                    // TODO: Handle deep linking based on notification data
+                    if (remoteMessage.data) {
+                        // Small delay to ensure navigation is ready
+                        setTimeout(() => {
+                            handlePushNotificationNavigation(remoteMessage.data as {
+                                notification_type?: string;
+                                reference_id?: string;
+                                notification_id?: string;
+                                actor_id?: string;
+                            });
+                        }, 1000);
+                    }
                 }
             });
 
-        // Handle app state changes (re-register token when coming from background)
+        // Note: Badge clearing is handled natively in AppDelegate.swift
+        // Track app state for potential future use
         const appStateSubscription = AppState.addEventListener('change', (nextAppState) => {
             if (appStateRef.current.match(/inactive|background/) && nextAppState === 'active') {
-                console.log('📱 Push: App came to foreground, verifying token');
-                // Token should still be valid, but we could re-verify if needed
+                console.log('📱 Push: App came to foreground');
             }
             appStateRef.current = nextAppState;
         });

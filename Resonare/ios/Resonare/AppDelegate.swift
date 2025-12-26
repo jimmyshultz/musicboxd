@@ -124,6 +124,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
       // It will be available in React Native via messaging().getToken()
     }
   }
+  
+  // MARK: - App Lifecycle
+  
+  // Clear badge when app becomes active
+  func applicationDidBecomeActive(_ application: UIApplication) {
+    // Clear the app badge when user opens the app
+    UIApplication.shared.applicationIconBadgeNumber = 0
+    print("✅ App badge cleared")
+  }
 }
 
 class ReactNativeDelegate: RCTDefaultReactNativeFactoryDelegate {
