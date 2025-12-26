@@ -130,3 +130,63 @@ After completing setup:
 - Push notifications only work on physical devices
 - Check the app has notification permissions granted
 - Verify the device token is stored in `push_tokens` table
+
+## Production Deployment
+
+When you're ready to deploy push notifications to production, follow these steps on your **production Supabase project**:
+
+### 1. Run Database Migration
+
+1. Go to your **production** Supabase Dashboard
+2. Open **SQL Editor** → **New Query**
+3. Copy and paste the contents of `database/migrations/add_push_notification_tables.sql`
+4. Click **Run**
+5. Verify `push_tokens` and `push_preferences` tables exist
+
+### 2. Add Firebase Service Account Secret
+
+1. Go to **Project Settings** → **Edge Functions** → **Secrets**
+2. Add a new secret:
+   - **Name**: `FIREBASE_SERVICE_ACCOUNT`
+   - **Value**: Paste the entire Firebase service account JSON (same file used in dev)
+3. Click **Save**
+
+### 3. Deploy Edge Function
+
+Use the Supabase CLI targeting your production project:
+
+```bash
+supabase login
+supabase link --project-ref YOUR_PRODUCTION_PROJECT_REF
+supabase functions deploy send-push
+```
+
+Or manually via Dashboard if supported.
+
+### 4. Create Database Webhook
+
+1. Go to **Database** → **Webhooks**
+2. Create a new webhook:
+   - **Name**: `send-push-notification`
+   - **Table**: `notifications`
+   - **Events**: `INSERT`
+   - **Type**: `Supabase Edge Functions`
+   - **Edge Function**: `send-push`
+3. Click **Create webhook**
+
+### 5. Verify Production Setup
+
+1. Check Edge Function logs in Dashboard for any errors
+2. Test with a production build on a physical device
+3. Verify tokens are being saved to `push_tokens` table
+4. Trigger a notification and confirm push is received
+
+### Checklist Summary
+
+| Step | Action |
+|------|--------|
+| ☐ | Run database migration on production |
+| ☐ | Add `FIREBASE_SERVICE_ACCOUNT` secret |
+| ☐ | Deploy `send-push` Edge Function |
+| ☐ | Create webhook on `notifications` table |
+| ☐ | Test on physical device with production build |

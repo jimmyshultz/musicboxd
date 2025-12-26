@@ -99,8 +99,8 @@ async function getAccessToken(serviceAccount: ServiceAccountCredentials): Promis
 
     // Encode header and payload
     const encoder = new TextEncoder();
-    const headerB64 = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-    const payloadB64 = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+    const headerB64 = btoa(JSON.stringify(header)).replace(/[=]/g, '').replace(/\+/g, '-').replace(/[/]/g, '_');
+    const payloadB64 = btoa(JSON.stringify(payload)).replace(/[=]/g, '').replace(/\+/g, '-').replace(/[/]/g, '_');
     const unsignedToken = `${headerB64}.${payloadB64}`;
 
     // Sign with private key
@@ -127,9 +127,9 @@ async function getAccessToken(serviceAccount: ServiceAccountCredentials): Promis
     );
 
     const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-        .replace(/=/g, '')
+        .replace(/[=]/g, '')
         .replace(/\+/g, '-')
-        .replace(/\//g, '_');
+        .replace(/[/]/g, '_');
 
     const jwt = `${unsignedToken}.${signatureB64}`;
 
@@ -363,7 +363,7 @@ serve(async (req: Request) => {
         );
     } catch (error) {
         console.error('Error processing push notification:', error);
-        return new Response(JSON.stringify({ error: String(error) }), {
+        return new Response(JSON.stringify({ error: 'Internal server error' }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });
