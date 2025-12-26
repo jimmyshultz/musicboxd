@@ -38,6 +38,9 @@ export function navigate(name: string, params?: Record<string, any>) {
 /**
  * Handle navigation for push notification data
  * Routes to the appropriate screen based on notification type
+ * 
+ * Note: Screens are nested within tab navigators, so we must provide the full path:
+ * Root -> Main (tab navigator) -> Tab (stack navigator) -> Screen
  */
 export function handlePushNotificationNavigation(data: {
     notification_type?: string;
@@ -52,7 +55,13 @@ export function handlePushNotificationNavigation(data: {
 
     if (!notification_type) {
         console.log('📱 No notification type, navigating to notifications screen');
-        navigate('Notifications');
+        // Navigate to Notifications screen within Home tab
+        navigate('Main', {
+            screen: 'Home',
+            params: {
+                screen: 'Notifications',
+            },
+        });
         return;
     }
 
@@ -62,17 +71,33 @@ export function handlePushNotificationNavigation(data: {
             // Navigate to the actor's profile (the new follower or person who accepted)
             if (actor_id) {
                 console.log('📱 Navigating to user profile:', actor_id);
-                navigate('UserProfile', { userId: actor_id });
+                // Navigate to UserProfile within Home tab
+                navigate('Main', {
+                    screen: 'Home',
+                    params: {
+                        screen: 'UserProfile',
+                        params: { userId: actor_id },
+                    },
+                });
             } else {
-                navigate('Notifications');
+                // Fallback to notifications screen
+                navigate('Main', {
+                    screen: 'Home',
+                    params: {
+                        screen: 'Notifications',
+                    },
+                });
             }
             break;
 
         case 'follow_request':
             // Navigate to follow requests screen (nested in Profile tab)
             console.log('📱 Navigating to follow requests');
-            navigate('Profile', {
-                screen: 'FollowRequests',
+            navigate('Main', {
+                screen: 'Profile',
+                params: {
+                    screen: 'FollowRequests',
+                },
             });
             break;
 
@@ -81,21 +106,38 @@ export function handlePushNotificationNavigation(data: {
             // Navigate to the diary entry
             if (reference_id && user_id) {
                 console.log('📱 Navigating to diary entry:', reference_id, 'userId:', user_id);
+                // Navigate to DiaryEntryDetails within Home tab
                 // reference_id is the diary entry ID
                 // user_id is the owner of the diary entry (the current user who received the notification)
-                navigate('DiaryEntryDetails', {
-                    entryId: reference_id,
-                    userId: user_id,
+                navigate('Main', {
+                    screen: 'Home',
+                    params: {
+                        screen: 'DiaryEntryDetails',
+                        params: {
+                            entryId: reference_id,
+                            userId: user_id,
+                        },
+                    },
                 });
             } else {
                 console.log('📱 Missing reference_id or user_id, navigating to notifications');
-                navigate('Notifications');
+                navigate('Main', {
+                    screen: 'Home',
+                    params: {
+                        screen: 'Notifications',
+                    },
+                });
             }
             break;
 
         default:
             console.log('📱 Unknown notification type, navigating to notifications');
-            navigate('Notifications');
+            navigate('Main', {
+                screen: 'Home',
+                params: {
+                    screen: 'Notifications',
+                },
+            });
             break;
     }
 }

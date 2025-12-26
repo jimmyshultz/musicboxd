@@ -141,32 +141,47 @@ class PushTokenService {
     }
 
     /**
-     * Deactivate all active tokens for a user (call on logout)
-     * This deactivates all tokens in the database rather than relying on the in-memory currentToken,
-     * ensuring tokens are properly deactivated even if the app was restarted before logout.
-     * @param userId - The user ID to deactivate tokens for
+     * Deactivate the current device's token (call on logout)
+     * Only deactivates the token for this specific device to support multi-device usage.
+     * If the current token is not available in memory, attempts to fetch it from FCM.
+     * @param userId - The user ID to deactivate token for
      */
     async deactivateToken(userId: string): Promise<void> {
         try {
-            // Deactivate ALL active tokens for this user
-            // We don't rely on this.currentToken because:
-            // 1. It's lost when the app restarts
-            // 2. The user might have multiple devices
+            // Get the current device's token
+            let tokenToDeactivate = this.currentToken;
+            
+            // If we don't have it in memory, try to get it from FCM
+            if (!tokenToDeactivate) {
+                try {
+                    tokenToDeactivate = await messaging().getToken();
+                } catch (error) {
+                    console.warn('⚠️ Could not get FCM token for deactivation:', error);
+                }
+            }
+
+            if (!tokenToDeactivate) {
+                console.warn('⚠️ No token available to deactivate - skipping');
+                return;
+            }
+
+            // Deactivate ONLY this device's token to support multi-device usage
             const { error } = await (this.client
                 .from('push_tokens') as any)
                 .update({ is_active: false, updated_at: new Date().toISOString() })
                 .eq('user_id', userId)
+                .eq('token', tokenToDeactivate)
                 .eq('is_active', true);
 
             if (error) {
                 throw error;
             }
 
-            console.log('✅ All push tokens deactivated for user');
+            console.log('✅ Push token deactivated for current device');
             this.currentToken = null;
             this.isInitialized = false;
         } catch (error) {
-            console.error('❌ Error deactivating push tokens:', error);
+            console.error('❌ Error deactivating push token:', error);
             // Don't throw - we want logout to continue even if this fails
         }
     }

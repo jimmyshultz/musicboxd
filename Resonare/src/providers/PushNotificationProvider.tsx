@@ -27,8 +27,11 @@ export const PushNotificationProvider: React.FC<PushNotificationProviderProps> =
     useEffect(() => {
         // If user was authenticated and is now null, deactivate token
         if (previousUserIdRef.current && !user?.id) {
-            console.log('📱 Push: User logged out, deactivating token');
-            pushTokenService.deactivateToken(previousUserIdRef.current);
+            console.log('📱 Push: User logged out, deactivating token for this device');
+            // Deactivate only this device's token to preserve other devices
+            pushTokenService.deactivateToken(previousUserIdRef.current).catch((error) => {
+                console.error('📱 Push: Error during token deactivation:', error);
+            });
         }
 
         // Update the previous user ID ref
