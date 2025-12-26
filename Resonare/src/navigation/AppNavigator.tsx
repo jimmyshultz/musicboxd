@@ -36,6 +36,7 @@ import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 import BlockedUsersScreen from '../screens/Profile/BlockedUsersScreen';
 import NotificationsScreen from '../screens/Profile/NotificationsScreen';
+import NotificationSettingsScreen from '../screens/Profile/NotificationSettingsScreen';
 import { NotificationBadge } from '../components/NotificationBadge';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -673,6 +674,18 @@ function ProfileStackNavigator() {
         options={({ navigation }) => ({
           headerShown: true,
           title: 'Blocked Users',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
+      />
+      <ProfileStack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Notification Settings',
           headerBackVisible: false,
           headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
             navigation.goBack();
