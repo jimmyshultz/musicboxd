@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { RootStackParamList, MainTabParamList } from '../types';
 import { RootState } from '../store';
 import { prefetchProfileImages } from '../services/imagePrefetchService';
+import { navigationRef } from '../services/navigationService';
 
 // Screens
 import HomeScreen from '../screens/Home/HomeScreen';
@@ -36,6 +37,7 @@ import SettingsScreen from '../screens/Profile/SettingsScreen';
 import FollowRequestsScreen from '../screens/Profile/FollowRequestsScreen';
 import BlockedUsersScreen from '../screens/Profile/BlockedUsersScreen';
 import NotificationsScreen from '../screens/Profile/NotificationsScreen';
+import NotificationSettingsScreen from '../screens/Profile/NotificationSettingsScreen';
 import { NotificationBadge } from '../components/NotificationBadge';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -679,6 +681,18 @@ function ProfileStackNavigator() {
           }} />,
         })}
       />
+      <ProfileStack.Screen
+        name="NotificationSettings"
+        component={NotificationSettingsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Notification Settings',
+          headerBackVisible: false,
+          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
+            navigation.goBack();
+          }} />,
+        })}
+      />
     </ProfileStack.Navigator>
   );
 }
@@ -729,7 +743,7 @@ export default function AppNavigator() {
   const needsTermsAcceptance = user && !user.termsAcceptedAt;
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {

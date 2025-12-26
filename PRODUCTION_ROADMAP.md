@@ -281,10 +281,11 @@ Now that Resonare is live on the Apple App Store, the focus shifts to growth, op
 - ✅ **iOS App Store Launch** - Completed
 - ✅ **AdMob Integration** - Completed
 - ✅ **Crash Analytics** - Completed
+- ✅ **Diary Entry Social Enhancements** - Completed
+- ✅ **In-App Notifications** - Completed
 - 🔄 **User Feedback Collection** - Ongoing
 - 🔄 **Performance Monitoring** - Ongoing
-- 📋 **Diary Entry Social Enhancements** - In planning
-- 📋 **In-App Notifications** - In planning
+- 📋 **Push Notifications** - In planning
 - 📋 **Android Version** - In planning
 - 📋 **Enhanced Discovery Algorithms** - In planning
 - 📋 **Advanced Social Features** - In planning

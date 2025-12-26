@@ -252,6 +252,8 @@ export type ProfileStackParamList = {
   Settings: undefined;
   FollowRequests: undefined;
   Notifications: undefined;
+  NotificationSettings: undefined;
+  BlockedUsers: undefined;
   EditProfile: undefined;
 };
 

@@ -41,7 +41,7 @@ export default function SettingsScreen() {
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   const [settings, setSettings] = useState<UserSettings>({
     isPrivate: false,
     allowFollowers: true,
@@ -92,7 +92,7 @@ export default function SettingsScreen() {
     setSaving(true);
     try {
       const newSettings = { ...settings, [key]: value };
-      
+
       // Handle privacy setting update
       if (key === 'isPrivate') {
         await userService.updateProfile(user.id, { is_private: value });
@@ -101,7 +101,7 @@ export default function SettingsScreen() {
           newSettings.showActivity = false;
         }
       }
-      
+
       setSettings(newSettings);
     } catch (error) {
       console.error('Error updating setting:', error);
@@ -220,8 +220,8 @@ export default function SettingsScreen() {
   }
 
   return (
-    <ScrollView 
-      style={styles.container} 
+    <ScrollView
+      style={styles.container}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -243,11 +243,11 @@ export default function SettingsScreen() {
             () => updateSetting('showActivity', !settings.showActivity),
             settings.isPrivate // Disabled if profile is private
           )}
-          
+
           {/* Follow Requests navigation - only show for private profiles */}
           {settings.isPrivate && (
-            <TouchableOpacity 
-              style={styles.accountItem} 
+            <TouchableOpacity
+              style={styles.accountItem}
               onPress={() => navigation.navigate('FollowRequests')}
             >
               <Text variant="titleMedium" style={styles.accountItemText}>
@@ -256,7 +256,7 @@ export default function SettingsScreen() {
               <Icon name="chevron-right" size={16} color="#666" />
             </TouchableOpacity>
           )}
-          
+
           <Divider style={styles.divider} />
         </>
       )}
@@ -271,9 +271,9 @@ export default function SettingsScreen() {
             () => updateSetting('allowFollowers', !settings.allowFollowers),
             settings.isPrivate // Could be extended for more granular control
           )}
-          
-          <TouchableOpacity 
-            style={styles.accountItem} 
+
+          <TouchableOpacity
+            style={styles.accountItem}
             onPress={() => navigation.navigate('BlockedUsers')}
           >
             <Text variant="titleMedium" style={styles.accountItemText}>
@@ -281,7 +281,7 @@ export default function SettingsScreen() {
             </Text>
             <Icon name="chevron-right" size={16} color="#666" />
           </TouchableOpacity>
-          
+
           <Divider style={styles.divider} />
         </>
       )}
@@ -289,12 +289,15 @@ export default function SettingsScreen() {
       {renderSection(
         'Notifications',
         <>
-          {renderSettingItem(
-            'Email Notifications',
-            'Receive email updates about your account and activity',
-            settings.emailNotifications,
-            () => updateSetting('emailNotifications', !settings.emailNotifications)
-          )}
+          <TouchableOpacity
+            style={styles.accountItem}
+            onPress={() => navigation.navigate('NotificationSettings')}
+          >
+            <Text variant="titleMedium" style={styles.accountItemText}>
+              Push Notification Settings
+            </Text>
+            <Icon name="chevron-right" size={16} color="#666" />
+          </TouchableOpacity>
           <Divider style={styles.divider} />
         </>
       )}
@@ -308,9 +311,9 @@ export default function SettingsScreen() {
             </Text>
             <Icon name="chevron-right" size={16} color="#666" />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.accountItem} 
+
+          <TouchableOpacity
+            style={styles.accountItem}
             onPress={handleDeleteAccount}
             disabled={deleting}
           >
@@ -323,7 +326,7 @@ export default function SettingsScreen() {
               <Icon name="chevron-right" size={16} color={theme.colors.error} />
             )}
           </TouchableOpacity>
-          
+
           <Divider style={styles.divider} />
         </>
       )}

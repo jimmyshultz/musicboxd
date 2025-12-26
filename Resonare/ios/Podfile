@@ -26,11 +26,13 @@ target 'Resonare' do
   # Add this line for Google Sign-In
   pod 'GoogleSignIn'
   
-  # Firebase Crashlytics with specific modular headers for dependencies
+  # Firebase Crashlytics and Messaging with specific modular headers for dependencies
   pod 'Firebase/Crashlytics'
+  pod 'Firebase/Messaging'
   pod 'GoogleUtilities', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseInstallations', :modular_headers => true
+  pod 'FirebaseMessaging', :modular_headers => true
   pod 'GoogleDataTransport', :modular_headers => true
   pod 'nanopb', :modular_headers => true
   pod 'FirebaseCoreExtension', :modular_headers => true
@@ -61,7 +63,7 @@ target 'Resonare' do
 
     # Ensure Firebase Swift modules are properly configured
     installer.pods_project.targets.each do |target|
-      if ['FirebaseCoreInternal', 'FirebaseCrashlytics', 'FirebaseSessions', 'GoogleUtilities', 'FirebaseCore', 'FirebaseInstallations', 'GoogleDataTransport', 'nanopb', 'FirebaseCoreExtension'].include?(target.name)
+      if ['FirebaseCoreInternal', 'FirebaseCrashlytics', 'FirebaseSessions', 'FirebaseMessaging', 'GoogleUtilities', 'FirebaseCore', 'FirebaseInstallations', 'GoogleDataTransport', 'nanopb', 'FirebaseCoreExtension'].include?(target.name)
         target.build_configurations.each do |config|
           config.build_settings['DEFINES_MODULE'] = 'YES'
           config.build_settings['SWIFT_VERSION'] = '5.0'
