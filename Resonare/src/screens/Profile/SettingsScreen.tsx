@@ -22,7 +22,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { ProfileStackParamList } from '../../types';
 import { RootState, AppDispatch } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { logout, deleteAccount } from '../../store/slices/authSlice';
+import { signOutUser, deleteAccount } from '../../store/slices/authSlice';
 import { userService } from '../../services/userService';
 import { spacing } from '../../utils/theme';
 
@@ -121,7 +121,7 @@ export default function SettingsScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
-            dispatch(logout());
+            dispatch(signOutUser());
           },
         },
       ]

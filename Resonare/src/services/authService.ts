@@ -433,13 +433,19 @@ export class AuthService {
    */
   static async signOut() {
     try {
-      // Sign out from Google
-      await GoogleSignin.signOut();
+      // Sign out from Google (wrapped separately to not block Supabase signout)
+      try {
+        await GoogleSignin.signOut();
+      } catch (googleError) {
+        // Google sign out can fail if user signed in with Apple or if SDK state is inconsistent
+        // This is non-critical - the important thing is clearing the Supabase session
+        console.log('Google sign out skipped or failed:', googleError);
+      }
       
       // Note: Apple doesn't require explicit sign-out from their service
       // The user would need to revoke access from their Apple ID settings
       
-      // Sign out from Supabase
+      // Sign out from Supabase - critical for clearing persisted session from AsyncStorage
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;
