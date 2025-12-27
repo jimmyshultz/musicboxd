@@ -155,8 +155,8 @@ class PushTokenService {
             if (!tokenToDeactivate) {
                 try {
                     tokenToDeactivate = await messaging().getToken();
-                } catch (error) {
-                    console.warn('⚠️ Could not get FCM token for deactivation:', error);
+                } catch (fcmError) {
+                    console.warn('⚠️ Could not get FCM token for deactivation:', fcmError);
                 }
             }
 
