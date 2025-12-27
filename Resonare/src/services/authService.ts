@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { userService } from './userService';
+import { pushTokenService } from './pushTokenService';
 
 // Safely import Apple Authentication with fallback
 let appleAuth: any = null;
@@ -433,13 +434,40 @@ export class AuthService {
    */
   static async signOut() {
     try {
-      // Sign out from Google
-      await GoogleSignin.signOut();
+      // Get current user ID before signing out (needed for push token deactivation)
+      // Wrapped in try-catch because this is non-critical - we must always proceed to Supabase signOut
+      let currentUser = null;
+      try {
+        currentUser = await this.getCurrentUser();
+      } catch (userError) {
+        // Non-critical - continue with sign out even if we can't get the user
+        console.log('Could not get current user for push token deactivation:', userError);
+      }
+      
+      // Deactivate push token BEFORE signing out of Supabase
+      // This must happen while the user is still authenticated so RLS policies allow the update
+      if (currentUser?.id) {
+        try {
+          await pushTokenService.deactivateToken(currentUser.id);
+        } catch (pushError) {
+          // Non-critical - continue with sign out even if this fails
+          console.log('Push token deactivation failed:', pushError);
+        }
+      }
+      
+      // Sign out from Google (wrapped separately to not block Supabase signout)
+      try {
+        await GoogleSignin.signOut();
+      } catch (googleError) {
+        // Google sign out can fail if user signed in with Apple or if SDK state is inconsistent
+        // This is non-critical - the important thing is clearing the Supabase session
+        console.log('Google sign out skipped or failed:', googleError);
+      }
       
       // Note: Apple doesn't require explicit sign-out from their service
       // The user would need to revoke access from their Apple ID settings
       
-      // Sign out from Supabase
+      // Sign out from Supabase - critical for clearing persisted session from AsyncStorage
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;

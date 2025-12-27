@@ -18,7 +18,7 @@ import { ProfileStackParamList, Album, Listen, Review } from '../../types';
 import { RootState } from '../../store';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
-import { logout } from '../../store/slices/authSlice';
+import { signOutUser } from '../../store/slices/authSlice';
 import { setFollowers, setFollowing } from '../../store/slices/userSlice';
 import { userService } from '../../services/userService';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
@@ -252,7 +252,7 @@ export default function ProfileScreen() {
   }, [loadRecentActivity, loadUserStats, loadFavoriteAlbums]);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(signOutUser());
   };
 
   const navigateToAlbum = (albumId: string) => {
