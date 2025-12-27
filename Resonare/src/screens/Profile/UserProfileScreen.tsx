@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  useWindowDimensions,
   RefreshControl,
   Alert,
 } from 'react-native';
@@ -34,7 +33,6 @@ type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackPara
 type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
 
 const ALBUM_CARD_WIDTH = 120;
-const STATS_CARDS_PER_ROW = 3;
 
 interface UserStats {
   albumsThisYear: number;
@@ -57,16 +55,9 @@ export default function UserProfileScreen() {
   const dispatch = useDispatch();
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-
   const { userId } = route.params;
 
-  // Responsive spacing calculation for stats grid
-  const STATS_HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
-  const STATS_CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
-
-  const statCardWidth = (width - (STATS_HORIZONTAL_SPACING * 2) - (STATS_CARD_MARGIN * (STATS_CARDS_PER_ROW - 1))) / STATS_CARDS_PER_ROW;
-  const styles = createStyles(theme, statCardWidth, STATS_HORIZONTAL_SPACING, STATS_CARD_MARGIN);
+  const styles = createStyles(theme);
   const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -465,14 +456,12 @@ export default function UserProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderStatCard = (title: string, value: number, onPress?: () => void, index?: number) => {
-    const isLastInRow = index !== undefined && (index + 1) % STATS_CARDS_PER_ROW === 0;
+  const renderStatCard = (title: string, value: number, onPress?: () => void) => {
     return (
       <TouchableOpacity
         style={[
           styles.statCard,
           { backgroundColor: theme.colors.surface },
-          isLastInRow && styles.statCardLastInRow
         ]}
         onPress={onPress}
         disabled={!onPress}
@@ -656,13 +645,17 @@ export default function UserProfileScreen() {
           <Text variant="headlineSmall" style={styles.sectionTitle}>
             Stats & Social
           </Text>
-          <View style={styles.statsGrid}>
-            {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'), 0)}
-            {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'), 1)}
-            {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'), 2)}
-            {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'), 3)}
-            {renderStatCard('Followers', userStats.followers, navigateToFollowers, 4)}
-            {renderStatCard('Following', userStats.following, navigateToFollowing, 5)}
+          <View style={styles.statsContainer}>
+            <View style={styles.statsRow}>
+              {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
+              {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
+              {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
+            </View>
+            <View style={styles.statsRow}>
+              {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
+              {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
+              {renderStatCard('Following', userStats.following, navigateToFollowing)}
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -683,7 +676,7 @@ export default function UserProfileScreen() {
   );
 }
 
-const createStyles = (theme: any, statCardWidth: number, statsHorizontalSpacing: number, statsCardMargin: number) => StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -783,25 +776,22 @@ const createStyles = (theme: any, statCardWidth: number, statsHorizontalSpacing:
     justifyContent: 'flex-start',
   },
 
-  statsGrid: {
+  statsContainer: {
+    paddingHorizontal: spacing.md,
+  },
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: statsHorizontalSpacing,
-    justifyContent: 'flex-start',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
   },
   statCard: {
-    width: statCardWidth,
+    flex: 1,
     aspectRatio: 1.2,
     borderRadius: 12,
     padding: spacing.md,
-    marginBottom: spacing.md,
-    marginRight: statsCardMargin,
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.small,
-  },
-  statCardLastInRow: {
-    marginRight: 0,
   },
   statValue: {
     fontWeight: 'bold',
