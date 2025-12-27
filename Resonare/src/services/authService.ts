@@ -435,7 +435,14 @@ export class AuthService {
   static async signOut() {
     try {
       // Get current user ID before signing out (needed for push token deactivation)
-      const currentUser = await this.getCurrentUser();
+      // Wrapped in try-catch because this is non-critical - we must always proceed to Supabase signOut
+      let currentUser = null;
+      try {
+        currentUser = await this.getCurrentUser();
+      } catch (userError) {
+        // Non-critical - continue with sign out even if we can't get the user
+        console.log('Could not get current user for push token deactivation:', userError);
+      }
       
       // Deactivate push token BEFORE signing out of Supabase
       // This must happen while the user is still authenticated so RLS policies allow the update
