@@ -34,7 +34,7 @@ export default function NotificationSettingsScreen() {
         follows_enabled: true,
         likes_enabled: true,
         comments_enabled: true,
-        marketing_enabled: false,
+        marketing_enabled: true,
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -204,7 +204,7 @@ export default function NotificationSettingsScreen() {
                     {renderSettingItem(
                         'App Updates',
                         'Occasional notifications about new features and improvements',
-                        preferences.marketing_enabled === true,
+                        preferences.marketing_enabled !== false,
                         () => updatePreference('marketing_enabled', !preferences.marketing_enabled),
                         !isPushEnabled
                     )}

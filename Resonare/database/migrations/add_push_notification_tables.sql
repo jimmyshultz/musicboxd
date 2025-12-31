@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS public.push_preferences (
     follows_enabled BOOLEAN DEFAULT true,
     likes_enabled BOOLEAN DEFAULT true,
     comments_enabled BOOLEAN DEFAULT true,
-    marketing_enabled BOOLEAN DEFAULT false, -- For future marketing notifications
+    marketing_enabled BOOLEAN DEFAULT true, -- For app updates notifications (opt-out)
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
