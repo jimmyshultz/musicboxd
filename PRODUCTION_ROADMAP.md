@@ -283,9 +283,9 @@ Now that Resonare is live on the Apple App Store, the focus shifts to growth, op
 - ✅ **Crash Analytics** - Completed
 - ✅ **Diary Entry Social Enhancements** - Completed
 - ✅ **In-App Notifications** - Completed
+- ✅  **Push Notifications** - Completed
 - 🔄 **User Feedback Collection** - Ongoing
 - 🔄 **Performance Monitoring** - Ongoing
-- 📋 **Push Notifications** - In planning
 - 📋 **Android Version** - In planning
 - 📋 **Enhanced Discovery Algorithms** - In planning
 - 📋 **Advanced Social Features** - In planning
