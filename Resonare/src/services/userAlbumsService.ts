@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
-import { SpotifyService } from './spotifyService';
-import { SpotifyMapper } from './spotifyMapper';
+import { albumCacheService } from './albumCacheService';
 
 export interface UserAlbumInteraction {
   id: string;
@@ -37,52 +36,12 @@ export interface AlbumWithInteraction {
 
 class UserAlbumsService {
   /**
-   * Ensure album exists in the albums table
-   */
-  private async ensureAlbumExists(spotifyAlbumId: string): Promise<void> {
-    try {
-      // Check if album already exists
-      const { data: existingAlbum, error: checkError } = await supabase
-        .from('albums')
-        .select('id')
-        .eq('id', spotifyAlbumId)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        // Error other than "not found"
-        throw checkError;
-      }
-
-      if (existingAlbum) {
-        // Album already exists
-        return;
-      }
-
-      // Fetch album data from Spotify
-      const spotifyAlbum = await SpotifyService.getAlbum(spotifyAlbumId);
-      const mappedAlbum = SpotifyMapper.mapAlbumToDatabase(spotifyAlbum);
-
-      // Insert album into database
-      const { error: insertError } = await supabase
-        .from('albums')
-        .insert(mappedAlbum);
-
-      if (insertError) {
-        throw insertError;
-      }
-    } catch (error) {
-      console.error('Error ensuring album exists:', error);
-      throw error;
-    }
-  }
-
-  /**
    * Mark an album as listened for a user
    */
   async markAsListened(userId: string, albumId: string, listenedAt?: Date): Promise<UserAlbumInteraction> {
     try {
       // Ensure album exists in database
-      await this.ensureAlbumExists(albumId);
+      await albumCacheService.ensureAlbumExists(albumId);
 
       const timestamp = listenedAt || new Date();
       
@@ -152,7 +111,7 @@ class UserAlbumsService {
       }
 
       // Ensure album exists in database
-      await this.ensureAlbumExists(albumId);
+      await albumCacheService.ensureAlbumExists(albumId);
 
       const { data, error } = await supabase
         .from('user_albums')

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { albumCacheService } from './albumCacheService';
 
 export interface FavoriteAlbum {
   id: string;
@@ -36,7 +37,7 @@ class FavoriteAlbumsService {
       }
 
       // First, ensure the album exists in the albums table
-      await this.ensureAlbumExists(albumId);
+      await albumCacheService.ensureAlbumExists(albumId);
 
       const { data, error } = await supabase
         .from('favorite_albums')
@@ -112,7 +113,7 @@ class FavoriteAlbumsService {
       }
 
       // Ensure all albums exist
-      await Promise.all(favorites.map(fav => this.ensureAlbumExists(fav.albumId)));
+      await Promise.all(favorites.map(fav => albumCacheService.ensureAlbumExists(fav.albumId)));
 
       // Delete existing favorites
       await supabase
@@ -386,61 +387,6 @@ class FavoriteAlbumsService {
     } catch (error) {
       console.error('Error getting most favorited albums:', error);
       return [];
-    }
-  }
-
-  /**
-   * Ensure an album exists in the albums table
-   */
-  private async ensureAlbumExists(albumId: string): Promise<void> {
-    try {
-      // Check if album already exists
-      const { data: existingAlbum, error: checkError } = await supabase
-        .from('albums')
-        .select('id')
-        .eq('id', albumId)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      if (existingAlbum) {
-        // Album already exists
-        return;
-      }
-
-      // Album doesn't exist, we need to fetch it and insert it
-      const { AlbumService } = await import('./albumService');
-      const albumResponse = await AlbumService.getAlbumById(albumId);
-      
-      if (!albumResponse.success || !albumResponse.data) {
-        throw new Error(`Could not fetch album data for ID: ${albumId}`);
-      }
-
-      const album = albumResponse.data;
-      
-      // Insert the album into the database
-      const { error: insertError } = await supabase
-        .from('albums')
-        .insert({
-          id: album.id,
-          name: album.title,
-          artist_name: album.artist,
-          release_date: album.releaseDate || null,
-          image_url: album.coverImageUrl || null,
-          spotify_url: album.spotifyUrl || null,
-          total_tracks: album.totalTracks || null,
-          album_type: album.albumType || 'album',
-          genres: album.genre || []
-        });
-
-      if (insertError) {
-        throw insertError;
-      }
-    } catch (error) {
-      console.error('Error ensuring album exists:', error);
-      throw error;
     }
   }
 }
