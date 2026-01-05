@@ -310,25 +310,14 @@ export default function HomeScreen() {
           return;
         }
 
-        // Calculate mutual followers for all users in parallel
-        const mutualFollowerPromises = potentialUsers.map(async (user) => {
-          try {
-            const mutualFollowersCount = await userService.getMutualFollowersCount(currentUserId, user.id);
-            return {
-              user,
-              mutualFollowers: mutualFollowersCount,
-            };
-          } catch (error) {
-            console.error(`Error calculating mutual followers for user ${user.username}:`, error);
-            // If calculation fails, still include the user but with 0 mutual followers
-            return {
-              user,
-              mutualFollowers: 0,
-            };
-          }
-        });
+        // Get mutual follower counts for all users in one batch call
+        const targetUserIds = potentialUsers.map(user => user.id);
+        const mutualCounts = await userService.getMutualFollowersCountBatch(currentUserId, targetUserIds);
 
-        const potentialFriends = await Promise.all(mutualFollowerPromises);
+        const potentialFriends = potentialUsers.map(user => ({
+          user,
+          mutualFollowers: mutualCounts[user.id] || 0,
+        }));
 
         // Sort by mutual followers count (descending) and limit to 20
         potentialFriends.sort((a, b) => b.mutualFollowers - a.mutualFollowers);
