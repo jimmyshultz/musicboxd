@@ -96,51 +96,93 @@ export const albumCacheService = new AlbumCacheService();
 
 ---
 
-### 2. HomeScreen Fetches Following List Twice
+### 2. HomeScreen Fetches Following List Twice ✅ IMPLEMENTED
 
-**Location:**
-- `src/screens/Home/HomeScreen.tsx` (lines 112, 191)
+**Status:** Completed on January 4, 2026
+
+**Original Location:**
+- `src/screens/Home/HomeScreen.tsx` (lines 112, 191) - UPDATED
 
 **Problem:**
-Both `loadNewFromFriends` and `loadPopularWithFriends` independently call `userService.getUserFollowing(currentUserId)` when the HomeScreen loads. Since these run in parallel on mount, the same data is fetched twice.
+Both `loadNewFromFriends` and `loadPopularWithFriends` independently called `userService.getUserFollowing(currentUserId)` when the HomeScreen loaded. Since these ran in parallel on mount, the same data was fetched twice on every Home screen load and refresh.
 
-**Current Behavior:**
+**Implementation Details:**
+
+Modified both functions to accept optional `providedUsers` parameter:
+
 ```typescript
-const loadNewFromFriends = useCallback(async () => {
-  const users = await userService.getUserFollowing(currentUserId); // Call 1
-  // ...
+// Modified loadNewFromFriends to accept optional users
+const loadNewFromFriends = useCallback(async (providedUsers?: UserProfile[]) => {
+  // Use provided users or fetch if not provided (backward compatible)
+  const users = providedUsers ?? await userService.getUserFollowing(currentUserId);
+  // ... rest of function unchanged
 }, [currentUser]);
 
-const loadPopularWithFriends = useCallback(async () => {
-  const users = await userService.getUserFollowing(currentUserId); // Call 2
-  // ...
+// Modified loadPopularWithFriends to accept optional users
+const loadPopularWithFriends = useCallback(async (providedUsers?: UserProfile[]) => {
+  // Use provided users or fetch if not provided (backward compatible)
+  const users = providedUsers ?? await userService.getUserFollowing(currentUserId);
+  // ... rest of function unchanged
 }, [currentUser]);
 ```
 
-**Recommendation:**
-Refactor to fetch the following list once and share it:
-
+**Created coordinated load function:**
 ```typescript
-const loadHomeData = useCallback(async () => {
+const loadFriendsData = useCallback(async () => {
   const currentUserId = currentUser?.id;
   if (!currentUserId) return;
 
   // Fetch following list ONCE
   const followingUsers = await userService.getUserFollowing(currentUserId);
-  
-  // Pass to both loaders
+
+  // Pass to both loaders in parallel
   await Promise.all([
     loadNewFromFriends(followingUsers),
     loadPopularWithFriends(followingUsers),
-    loadDiscoverFriends(),
   ]);
-}, [currentUser]);
+}, [currentUser, loadNewFromFriends, loadPopularWithFriends]);
 ```
 
-**Estimated Impact:**
-- **50% reduction** in following list queries on Home screen load
-- Faster initial Home screen render
-- More consistent data (both sections use same snapshot)
+**Updated hooks to use coordinated approach:**
+```typescript
+// useEffect - initial load
+useEffect(() => {
+  dispatch(fetchAlbumsStart());
+  loadPopularThisWeek();
+  loadFriendsData();  // Single call replaces both individual calls
+  loadDiscoverFriends();
+  // ...
+}, [dispatch, loadPopularThisWeek, loadFriendsData, loadDiscoverFriends]);
+
+// onRefresh - pull to refresh
+const onRefresh = useCallback(async () => {
+  setRefreshing(true);
+  try {
+    await Promise.all([
+      loadPopularThisWeek(),
+      loadFriendsData(),  // Single call for both friends sections
+      loadDiscoverFriends(),
+    ]);
+  } finally {
+    setRefreshing(false);
+  }
+}, [loadPopularThisWeek, loadFriendsData, loadDiscoverFriends]);
+```
+
+**Changes Made:**
+- ✅ Added optional `providedUsers?: UserProfile[]` parameter to `loadNewFromFriends`
+- ✅ Added optional `providedUsers?: UserProfile[]` parameter to `loadPopularWithFriends`
+- ✅ Created `loadFriendsData()` function that fetches once and shares data
+- ✅ Updated `useEffect` hook to use `loadFriendsData` instead of separate calls
+- ✅ Updated `onRefresh` callback to use `loadFriendsData` instead of separate calls
+- ✅ Maintained backward compatibility - functions can still be called without parameters
+
+**Actual Impact:**
+- **50% reduction** in `getUserFollowing` queries on Home screen load
+- **50% reduction** in `getUserFollowing` queries on pull-to-refresh
+- More consistent data - both sections use the same following list snapshot
+- Faster initial Home screen render - one less network round trip
+- Cleaner dependency arrays in hooks
 
 ---
 
@@ -754,7 +796,7 @@ REFRESH MATERIALIZED VIEW popular_albums_weekly;
 |---|-------|----------|--------|--------|--------|
 | 3 | N+1 Mutual Followers Query | 🔴 High | Medium | Very High | ✅ COMPLETED |
 | 4 | 8 Queries for User Stats | 🔴 High | Medium | High | ✅ COMPLETED |
-| 2 | Duplicate Following List Fetch | 🔴 High | Low | Medium | Sprint 1 |
+| 2 | Duplicate Following List Fetch | 🔴 High | Low | Medium | ✅ COMPLETED |
 | 1 | Duplicate ensureAlbumExists | 🔴 High | Medium | High | ✅ COMPLETED |
 | 5 | Inefficient Followers Query | 🔴 High | Medium | High | Sprint 2 |
 | 6 | Album Reload on Focus | 🟡 Medium | Low | Medium | Sprint 2 |
@@ -792,7 +834,7 @@ After implementing these improvements, monitor:
 | `src/services/userService.ts` | Add batch mutual followers, optimize getFollowers | ✅ Done (batch) |
 | `src/services/userStatsServiceV2.ts` | Use count methods instead of full fetches | ✅ Done (PostgreSQL fn) |
 | `database/migrations/add_user_stats_function.sql` | **NEW** - PostgreSQL function for user stats | ✅ Done |
-| `src/screens/Home/HomeScreen.tsx` | Share following list, use batch mutual followers | ✅ Done (batch) |
+| `src/screens/Home/HomeScreen.tsx` | Share following list, use batch mutual followers | ✅ Done (both) |
 | `src/screens/Profile/ProfileScreen.tsx` | Add refresh cooldown |
 | `src/screens/Album/AlbumDetailsScreen.tsx` | Conditional reload on focus |
 | `src/services/supabase.ts` | Environment check for debug logs |
