@@ -1,7 +1,7 @@
+import { supabase } from './supabase';
+import { diaryEntriesService } from './diaryEntriesService';
 import { albumListensService } from './albumListensService';
 import { albumRatingsService } from './albumRatingsService';
-import { diaryEntriesService } from './diaryEntriesService';
-import { userService } from './userService';
 
 export interface UserStatsV2 {
   albumsThisYear: number;
@@ -16,39 +16,32 @@ export interface UserStatsV2 {
 
 class UserStatsServiceV2 {
   /**
-   * Get comprehensive user statistics
+   * Get comprehensive user statistics using PostgreSQL function
+   * Single query instead of 8 separate queries for better performance
    */
   async getUserStats(userId: string): Promise<UserStatsV2> {
     try {
-      const [
-        albumsAllTime,
-        albumsThisYear,
-        ratingsAllTime,
-        ratingsThisYear,
-        averageRating,
-        diaryEntries,
-        followersData,
-        followingData
-      ] = await Promise.all([
-        albumListensService.getUserListenCount(userId),
-        albumListensService.getUserListenCountThisYear(userId),
-        albumRatingsService.getUserRatingCount(userId),
-        albumRatingsService.getUserRatingCountThisYear(userId),
-        albumRatingsService.getUserAverageRating(userId),
-        diaryEntriesService.getUserDiaryCount(userId),
-        userService.getUserFollowers(userId),
-        userService.getUserFollowing(userId)
-      ]);
+      const { data, error } = await supabase
+        .rpc('get_user_stats', { target_user_id: userId });
+
+      if (error) throw error;
+
+      // The function returns a single row
+      const stats = data?.[0];
+      
+      if (!stats) {
+        throw new Error('No stats returned from database');
+      }
 
       return {
-        albumsThisYear,
-        albumsAllTime,
-        ratingsThisYear,
-        ratingsAllTime,
-        averageRating,
-        diaryEntries,
-        followers: followersData.length,
-        following: followingData.length
+        albumsAllTime: Number(stats.albums_all_time) || 0,
+        albumsThisYear: Number(stats.albums_this_year) || 0,
+        ratingsAllTime: Number(stats.ratings_all_time) || 0,
+        ratingsThisYear: Number(stats.ratings_this_year) || 0,
+        averageRating: Number(stats.average_rating) || 0,
+        diaryEntries: Number(stats.diary_entries) || 0,
+        followers: Number(stats.followers) || 0,
+        following: Number(stats.following) || 0
       };
     } catch (error) {
       console.error('Error getting user stats:', error);
