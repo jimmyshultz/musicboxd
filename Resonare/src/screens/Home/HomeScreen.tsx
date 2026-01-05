@@ -98,7 +98,7 @@ export default function HomeScreen() {
     }
   }, []);
 
-  const loadNewFromFriends = useCallback(async () => {
+  const loadNewFromFriends = useCallback(async (providedUsers?: UserProfile[]) => {
     try {
       setLoadingStates(prev => ({ ...prev, newFromFriends: true }));
       const currentUserId = currentUser?.id;
@@ -108,8 +108,8 @@ export default function HomeScreen() {
         return;
       }
 
-      // Get users that current user is actually following
-      const users = await userService.getUserFollowing(currentUserId);
+      // Use provided users or fetch if not provided
+      const users = providedUsers ?? await userService.getUserFollowing(currentUserId);
 
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -177,7 +177,7 @@ export default function HomeScreen() {
     }
   }, [currentUser]);
 
-  const loadPopularWithFriends = useCallback(async () => {
+  const loadPopularWithFriends = useCallback(async (providedUsers?: UserProfile[]) => {
     try {
       setLoadingStates(prev => ({ ...prev, popularWithFriends: true }));
       const currentUserId = currentUser?.id;
@@ -187,8 +187,8 @@ export default function HomeScreen() {
         return;
       }
 
-      // Get users that current user is actually following
-      const users = await userService.getUserFollowing(currentUserId);
+      // Use provided users or fetch if not provided
+      const users = providedUsers ?? await userService.getUserFollowing(currentUserId);
 
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
@@ -287,6 +287,20 @@ export default function HomeScreen() {
     }
   }, [currentUser]);
 
+  const loadFriendsData = useCallback(async () => {
+    const currentUserId = currentUser?.id;
+    if (!currentUserId) return;
+
+    // Fetch following list ONCE
+    const followingUsers = await userService.getUserFollowing(currentUserId);
+
+    // Pass to both loaders in parallel
+    await Promise.all([
+      loadNewFromFriends(followingUsers),
+      loadPopularWithFriends(followingUsers),
+    ]);
+  }, [currentUser, loadNewFromFriends, loadPopularWithFriends]);
+
   const loadDiscoverFriends = useCallback(async () => {
     try {
       setLoadingStates(prev => ({ ...prev, discoverFriends: true }));
@@ -335,31 +349,29 @@ export default function HomeScreen() {
 
   useEffect(() => {
     dispatch(fetchAlbumsStart());
-    // Load sections independently - don't wait for all to complete
+    // Load sections independently - friends data shares the following list
     loadPopularThisWeek();
-    loadNewFromFriends();
-    loadPopularWithFriends();
+    loadFriendsData();
     loadDiscoverFriends();
 
     // Mark albums as loaded after a short delay (sections load independently)
     setTimeout(() => {
       dispatch(fetchAlbumsSuccess([]));
     }, 100);
-  }, [dispatch, loadPopularThisWeek, loadNewFromFriends, loadPopularWithFriends, loadDiscoverFriends]);
+  }, [dispatch, loadPopularThisWeek, loadFriendsData, loadDiscoverFriends]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
       await Promise.all([
         loadPopularThisWeek(),
-        loadNewFromFriends(),
-        loadPopularWithFriends(),
+        loadFriendsData(),
         loadDiscoverFriends(),
       ]);
     } finally {
       setRefreshing(false);
     }
-  }, [loadPopularThisWeek, loadNewFromFriends, loadPopularWithFriends, loadDiscoverFriends]);
+  }, [loadPopularThisWeek, loadFriendsData, loadDiscoverFriends]);
 
   const navigateToAlbum = (albumId: string) => {
     navigation.navigate('AlbumDetails', { albumId });
