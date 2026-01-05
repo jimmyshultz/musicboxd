@@ -724,6 +724,19 @@ export class UserService {
   }
 
   /**
+   * Get follower IDs for a user (lightweight - just IDs, no full profiles)
+   */
+  async getFollowerIds(userId: string): Promise<string[]> {
+    const { data, error } = await this.client
+      .from('user_follows')
+      .select('follower_id')
+      .eq('following_id', userId);
+
+    if (error) throw error;
+    return data?.map(row => row.follower_id) || [];
+  }
+
+  /**
    * Calculate mutual followers between current user and target user
    */
   async getMutualFollowersCount(currentUserId: string, targetUserId: string): Promise<number> {
@@ -745,6 +758,61 @@ export class UserService {
     } catch (error) {
       console.error('Error calculating mutual followers:', error);
       return 0;
+    }
+  }
+
+  /**
+   * Calculate mutual followers for multiple users in a single batch operation
+   * This is much more efficient than calling getMutualFollowersCount for each user
+   * @param currentUserId - The current user's ID
+   * @param targetUserIds - Array of target user IDs to calculate mutual followers for
+   * @returns Record mapping user IDs to their mutual follower counts
+   */
+  async getMutualFollowersCountBatch(
+    currentUserId: string,
+    targetUserIds: string[]
+  ): Promise<Record<string, number>> {
+    if (targetUserIds.length === 0) return {};
+
+    try {
+      // 1. Get current user's follower IDs (1 query)
+      const currentUserFollowerIds = new Set(await this.getFollowerIds(currentUserId));
+
+      // 2. Get followers for ALL target users in one query
+      const { data: allFollowsData, error } = await this.client
+        .from('user_follows')
+        .select('following_id, follower_id')
+        .in('following_id', targetUserIds);
+
+      if (error) throw error;
+
+      // 3. Get blocked user IDs (1 query)
+      const blockedIds = new Set(await blockService.getAllBlockedUserIds(currentUserId));
+
+      // 4. Calculate intersections in memory
+      const mutualCounts: Record<string, number> = {};
+      
+      // Initialize all targets to 0
+      targetUserIds.forEach(id => { mutualCounts[id] = 0; });
+
+      // Group followers by target user and count matches
+      allFollowsData?.forEach(row => {
+        const followerId = row.follower_id;
+        const targetId = row.following_id;
+        
+        // Check if this follower is mutual (follows current user) and not blocked
+        if (currentUserFollowerIds.has(followerId) && !blockedIds.has(followerId)) {
+          mutualCounts[targetId]++;
+        }
+      });
+
+      return mutualCounts;
+    } catch (error) {
+      console.error('Error calculating mutual followers in batch:', error);
+      // Return zeros for all users on error
+      const emptyResults: Record<string, number> = {};
+      targetUserIds.forEach(id => { emptyResults[id] = 0; });
+      return emptyResults;
     }
   }
 
