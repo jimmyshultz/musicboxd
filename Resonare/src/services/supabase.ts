@@ -32,13 +32,14 @@ const getSupabaseConfig = () => {
 
 const config = getSupabaseConfig();
 
-// Debug Supabase configuration
-console.log('🔧 [DEBUG] Supabase Configuration:');
-console.log('🔧 [DEBUG] Environment:', ENV_CONFIG.ENVIRONMENT);
-console.log('🔧 [DEBUG] isProduction:', Environment.isProduction);
-console.log('🔧 [DEBUG] isStaging:', Environment.isStaging);
-console.log('🔧 [DEBUG] Supabase URL:', config.url);
-console.log('🔧 [DEBUG] Supabase Anon Key (first 20 chars):', config.anonKey?.substring(0, 20) + '...');
+// Debug Supabase configuration (only in development)
+Logger.debug('Supabase Configuration', {
+  environment: ENV_CONFIG.ENVIRONMENT,
+  isProduction: Environment.isProduction,
+  isStaging: Environment.isStaging,
+  url: config.url,
+  anonKeyPreview: config.anonKey?.substring(0, 20) + '...',
+});
 
 export const supabase = createClient<Database>(config.url, config.anonKey, {
   auth: {
@@ -49,17 +50,18 @@ export const supabase = createClient<Database>(config.url, config.anonKey, {
   },
 });
 
-// Test Supabase connection
+// Test Supabase connection (environment-aware logging)
 setTimeout(() => {
   supabase.auth.getSession().then(({ data, error }) => {
     if (error) {
-      console.log('🔧 [DEBUG] Supabase connection test failed:', error.message);
+      Logger.warn('Supabase connection test failed', error.message);
     } else {
-      console.log('🔧 [DEBUG] Supabase connection test successful');
-      console.log('🔧 [DEBUG] Current session exists:', !!data.session);
+      Logger.debug('Supabase connection test successful', {
+        hasSession: !!data.session,
+      });
     }
   }).catch((err) => {
-    console.log('🔧 [DEBUG] Supabase connection test error:', err);
+    Logger.error('Supabase connection test error', err);
   });
 }, 1000);
 
