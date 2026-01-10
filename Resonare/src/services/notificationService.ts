@@ -58,31 +58,50 @@ class NotificationService {
         throw new Error('Supabase client is not available');
       }
 
-      // Test Supabase connection by getting the current session
+      // Mark as ready immediately - don't block startup
+      this.isReady = true;
+      console.log('✅ Notification service marked as ready');
+
+      // Test connection in background (non-blocking)
+      this.testRealtimeConnection().catch((error) => {
+        console.warn('⚠️ Background real-time connection test failed:', error);
+        // Connection issues will be handled by retry logic in actual subscriptions
+      });
+
+      console.log('✅ Notification service initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize notification service:', error);
+      // Reset promise so we can retry
+      this.initializationPromise = null;
+      throw error;
+    }
+  }
+
+  /**
+   * Test real-time connection in background (non-blocking)
+   * Used to verify connection works, but doesn't block initialization
+   */
+  private async testRealtimeConnection(): Promise<void> {
+    try {
+      // Verify session first
       const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
       if (sessionError) {
-        console.warn('⚠️ Could not verify Supabase session during initialization:', sessionError);
-        // Don't throw - session might not be available yet, but client is ready
+        console.warn('⚠️ Could not verify Supabase session:', sessionError);
       } else {
-        console.log('✅ Supabase client verified, session exists:', !!sessionData.session);
+        console.log('✅ Supabase session verified:', !!sessionData.session);
       }
 
-      // Test real-time connection by creating a test channel
-      // This verifies that real-time is available without creating an actual subscription
-      // Use a shorter timeout to avoid blocking initialization
+      // Test real-time connection by creating a temporary test channel
       const testChannelName = `test:${Date.now()}`;
       const testChannel = this.client.channel(testChannelName);
       
-      // Try to subscribe briefly to test the connection with a shorter timeout
-      const testPromise = new Promise<void>((resolve, _reject) => {
+      return new Promise<void>((resolve, _reject) => {
         const timeout = setTimeout(() => {
           testChannel.unsubscribe();
           this.client.removeChannel(testChannel);
-          // Don't reject - just resolve to continue initialization
-          // Real-time might still work even if test times out
-          console.log('⏳ Real-time connection test timed out, continuing anyway');
-          resolve();
-        }, 2000); // 2 second timeout - faster initialization
+          console.log('⏳ Real-time connection test timed out (non-blocking)');
+          resolve(); // Resolve, not reject - timeout is acceptable
+        }, 2000);
 
         testChannel
           .subscribe((status) => {
@@ -90,35 +109,19 @@ class NotificationService {
               clearTimeout(timeout);
               testChannel.unsubscribe();
               this.client.removeChannel(testChannel);
-              console.log('✅ Real-time connection verified');
+              console.log('✅ Real-time connection test successful');
               resolve();
             } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
               clearTimeout(timeout);
               testChannel.unsubscribe();
               this.client.removeChannel(testChannel);
-              // Don't reject - just log and continue
-              console.warn(`⚠️ Real-time connection test returned ${status}, continuing anyway`);
-              resolve();
+              console.warn(`⚠️ Real-time connection test returned ${status}`);
+              resolve(); // Resolve, not reject - errors are handled by retry logic
             }
-            // For other statuses (JOINING, etc.), wait for SUBSCRIBED or timeout
           });
       });
-
-      // Wait for test with timeout - if it takes too long, continue anyway
-      await Promise.race([
-        testPromise,
-        new Promise<void>((resolve) => setTimeout(() => {
-          console.log('⏳ Real-time test taking too long, marking service as ready anyway');
-          resolve();
-        }, 3000)), // Absolute max 3 seconds total
-      ]);
-
-      this.isReady = true;
-      console.log('✅ Notification service initialized successfully');
     } catch (error) {
-      console.error('❌ Failed to initialize notification service:', error);
-      // Reset promise so we can retry
-      this.initializationPromise = null;
+      console.warn('⚠️ Error during background connection test:', error);
       throw error;
     }
   }
