@@ -70,6 +70,10 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<number>(0);
+
+  // Cooldown period for automatic refresh on focus (30 seconds)
+  const REFRESH_COOLDOWN_MS = 30000;
 
   const loadFavoriteAlbums = useCallback(async () => {
     if (!user?.id) {
@@ -204,6 +208,9 @@ export default function ProfileScreen() {
           loadUserStats(),
           loadFavoriteAlbums(),
         ]);
+        
+        // Mark initial refresh time
+        setLastRefreshTime(Date.now());
       } finally {
         setLoading(false);
         setInitialLoadDone(true);
@@ -213,20 +220,27 @@ export default function ProfileScreen() {
     loadAllData();
   }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums, initialLoadDone, user]);
 
-  // Refresh stats when screen comes into focus (after returning from album rating)
+  // Refresh stats when screen comes into focus (with cooldown)
   useFocusEffect(
     useCallback(() => {
       if (initialLoadDone && user?.id) {
-        // Refresh stats and recent activity to ensure they're up to date
-        loadUserStats();
-        loadRecentActivity();
+        const now = Date.now();
+        const timeSinceLastRefresh = now - lastRefreshTime;
+        
+        // Only refresh if cooldown period has elapsed
+        if (timeSinceLastRefresh > REFRESH_COOLDOWN_MS) {
+          loadUserStats();
+          loadRecentActivity();
+          setLastRefreshTime(now);
+        }
       }
-    }, [loadUserStats, loadRecentActivity, user?.id, initialLoadDone])
+    }, [loadUserStats, loadRecentActivity, user?.id, initialLoadDone, lastRefreshTime])
   );
 
   // Reset when user changes
   useEffect(() => {
     setInitialLoadDone(false);
+    setLastRefreshTime(0); // Reset refresh time
     setRecentActivity([]);
     setUserStats({
       albumsThisYear: 0,
@@ -246,6 +260,9 @@ export default function ProfileScreen() {
         loadUserStats(),
         loadFavoriteAlbums(),
       ]);
+      
+      // Update refresh timestamp after manual refresh
+      setLastRefreshTime(Date.now());
     } finally {
       setRefreshing(false);
     }
