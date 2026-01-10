@@ -400,51 +400,38 @@ return {
 
 ---
 
-### 5. Inefficient Followers/Following Queries
+### 5. Inefficient Followers/Following Queries ✅ IMPLEMENTED
 
-**Location:**
-- `src/services/userService.ts` (lines 264-325)
+**Status:** Completed on January 9, 2026
+
+**Original Location:**
+- `src/services/userService.ts` (lines 264-325) - REPLACED
 
 **Problem:**
-`getFollowers()` and `getFollowing()` each make 3 sequential database queries:
+`getFollowers()` and `getFollowing()` each made 4-5 sequential database queries:
 1. Query `user_follows` table for relationship IDs
 2. Query `user_profiles` table for profile data
-3. Query `blockService.getAllBlockedUserIds()` for blocked users
+3. Query `blocked_users` table for users blocked by viewer (via `blockService.getAllBlockedUserIds()`)
+4. Query `blocked_users` table for users who blocked viewer (via `blockService.getAllBlockedUserIds()`)
+5. Filter results in JavaScript on the client
 
-Then results are filtered in JavaScript.
+This pattern was used across multiple screens: HomeScreen, FollowersScreen, ProfileScreen, NewFromFriendsScreen, and PopularWithFriendsScreen.
 
-**Current Behavior:**
-```typescript
-async getFollowers(userId: string): Promise<UserProfile[]> {
-  // Query 1: Get follower IDs
-  const { data: followData } = await this.client
-    .from('user_follows')
-    .select('follower_id')
-    .eq('following_id', userId);
+**Implementation Details:**
 
-  // Query 2: Get profiles
-  const { data: profileData } = await this.client
-    .from('user_profiles')
-    .select('*')
-    .in('id', followerIds);
+Created `database/migrations/add_followers_following_functions.sql` with two PostgreSQL functions:
 
-  // Query 3: Get blocked users
-  const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
-  
-  // Filter in JavaScript
-  return profileData.filter(user => !blockedIds.includes(user.id));
-}
-```
-
-**Recommendation:**
-Create a PostgreSQL function that handles joins and filtering server-side:
-
+1. **`get_user_followers(target_user_id, current_viewer_id)`**
 ```sql
 CREATE OR REPLACE FUNCTION get_user_followers(
   target_user_id UUID,
   current_viewer_id UUID DEFAULT NULL
 )
-RETURNS SETOF user_profiles AS $$
+RETURNS SETOF user_profiles
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+AS $$
 BEGIN
   RETURN QUERY
   SELECT up.*
@@ -452,19 +439,82 @@ BEGIN
   INNER JOIN user_follows uf ON up.id = uf.follower_id
   WHERE uf.following_id = target_user_id
     AND up.is_banned = false
-    AND (current_viewer_id IS NULL OR up.id NOT IN (
-      SELECT blocked_user_id FROM user_blocks WHERE blocker_user_id = current_viewer_id
-      UNION
-      SELECT blocker_user_id FROM user_blocks WHERE blocked_user_id = current_viewer_id
-    ));
+    AND (
+      current_viewer_id IS NULL 
+      OR up.id NOT IN (
+        SELECT blocked_id FROM blocked_users WHERE blocker_id = current_viewer_id
+        UNION
+        SELECT blocker_id FROM blocked_users WHERE blocked_id = current_viewer_id
+      )
+    );
 END;
-$$ LANGUAGE plpgsql;
+$$;
 ```
 
-**Estimated Impact:**
-- **66% reduction** in queries per followers/following fetch (3 → 1)
-- Faster data retrieval with server-side filtering
-- Less data transferred over network
+2. **`get_user_following(target_user_id, current_viewer_id)`** - Similar structure for following relationships
+
+**Updated `userService.ts` to use RPC calls:**
+
+```typescript
+// Before: 4-5 queries with client-side filtering (~29 lines each)
+async getFollowers(userId: string): Promise<UserProfile[]> {
+  const { data: followData } = await this.client
+    .from('user_follows')
+    .select('follower_id')
+    .eq('following_id', userId);
+  
+  const followerIds = followData.map(row => row.follower_id);
+  const { data: profileData } = await this.client
+    .from('user_profiles')
+    .select('*')
+    .in('id', followerIds)
+    .eq('is_banned', false);
+  
+  const currentUser = await this.getCurrentUser();
+  const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
+  return profileData.filter(user => !blockedIds.includes(user.id));
+}
+
+// After: Single RPC call with server-side filtering (~17 lines each)
+async getFollowers(userId: string): Promise<UserProfile[]> {
+  try {
+    const currentUser = await this.getCurrentUser();
+    const viewerId = currentUser?.id || null;
+
+    const { data, error } = await this.client
+      .rpc('get_user_followers', { 
+        target_user_id: userId,
+        current_viewer_id: viewerId 
+      });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error getting followers:', error);
+    return [];
+  }
+}
+```
+
+**Changes Made:**
+- ✅ Created PostgreSQL functions `get_user_followers()` and `get_user_following()`
+- ✅ Created migration file `add_followers_following_functions.sql`
+- ✅ Updated `getFollowers()` method to use single RPC call
+- ✅ Updated `getFollowing()` method to use single RPC call
+- ✅ Reduced each method from ~29 lines to ~17 lines (42% code reduction)
+- ✅ Server-side joins and filtering (no client-side processing)
+- ✅ Functions use SECURITY DEFINER and STABLE for proper access and optimization
+- ✅ Bidirectional block filtering handled in single query
+
+**Actual Impact:**
+- **80% reduction** in database queries (4-5 → 1 query per call)
+- **80% reduction** in network round trips
+- Server-side joins optimized by PostgreSQL query planner
+- Less data transferred (blocked user IDs no longer sent to client)
+- Atomic operation - consistent snapshot of data
+- Code simplified and more maintainable
+- Deprecated methods `getUserFollowers()` and `getUserFollowing()` automatically benefit
+- **Fully backward compatible** - old app versions continue to work during gradual rollout
 
 ---
 
@@ -798,7 +848,7 @@ REFRESH MATERIALIZED VIEW popular_albums_weekly;
 | 4 | 8 Queries for User Stats | 🔴 High | Medium | High | ✅ COMPLETED |
 | 2 | Duplicate Following List Fetch | 🔴 High | Low | Medium | ✅ COMPLETED |
 | 1 | Duplicate ensureAlbumExists | 🔴 High | Medium | High | ✅ COMPLETED |
-| 5 | Inefficient Followers Query | 🔴 High | Medium | High | Sprint 2 |
+| 5 | Inefficient Followers Query | 🔴 High | Medium | High | ✅ COMPLETED |
 | 6 | Album Reload on Focus | 🟡 Medium | Low | Medium | Sprint 2 |
 | 7 | Profile Refresh on Tab | 🟡 Medium | Low | Medium | Sprint 2 |
 | 8 | Debug Logs in Production | 🟡 Medium | Low | Low | Sprint 3 |
@@ -831,9 +881,10 @@ After implementing these improvements, monitor:
 | `src/services/diaryEntriesService.ts` | Remove `ensureAlbumExists`, use cache service | ✅ Done |
 | `src/services/favoriteAlbumsService.ts` | Remove `ensureAlbumExists`, use cache service | ✅ Done |
 | `src/services/userAlbumsService.ts` | Remove `ensureAlbumExists`, use cache service | ✅ Done |
-| `src/services/userService.ts` | Add batch mutual followers, optimize getFollowers | ✅ Done (batch) |
+| `src/services/userService.ts` | Add batch mutual followers, optimize getFollowers | ✅ Done (all) |
 | `src/services/userStatsServiceV2.ts` | Use count methods instead of full fetches | ✅ Done (PostgreSQL fn) |
 | `database/migrations/add_user_stats_function.sql` | **NEW** - PostgreSQL function for user stats | ✅ Done |
+| `database/migrations/add_followers_following_functions.sql` | **NEW** - PostgreSQL functions for followers/following | ✅ Done |
 | `src/screens/Home/HomeScreen.tsx` | Share following list, use batch mutual followers | ✅ Done (both) |
 | `src/screens/Profile/ProfileScreen.tsx` | Add refresh cooldown |
 | `src/screens/Album/AlbumDetailsScreen.tsx` | Conditional reload on focus |
