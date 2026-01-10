@@ -262,66 +262,44 @@ export class UserService {
    * Get users that follow the specified user (filters out blocked users for current viewer)
    */
   async getFollowers(userId: string): Promise<UserProfile[]> {
-    // Get follower IDs first
-    const { data: followData, error: followError } = await this.client
-      .from('user_follows')
-      .select('follower_id')
-      .eq('following_id', userId);
+    try {
+      const currentUser = await this.getCurrentUser();
+      const viewerId = currentUser?.id || null;
 
-    if (followError) throw followError;
-    if (!followData || followData.length === 0) return [];
+      const { data, error } = await this.client
+        .rpc('get_user_followers', { 
+          target_user_id: userId,
+          current_viewer_id: viewerId 
+        });
 
-    // Get user profiles for follower IDs (excluding banned users)
-    const followerIds = followData.map(row => row.follower_id);
-    const { data: profileData, error: profileError } = await this.client
-      .from('user_profiles')
-      .select('*')
-      .in('id', followerIds)
-      .eq('is_banned', false);
-
-    if (profileError) throw profileError;
-    
-    // Filter out blocked users for the current viewer
-    const currentUser = await this.getCurrentUser();
-    if (currentUser) {
-      const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
-      return (profileData || []).filter(user => !blockedIds.includes(user.id));
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error getting followers:', error);
+      return [];
     }
-    
-    return profileData || [];
   }
 
   /**
    * Get users that the specified user is following (filters out blocked users for current viewer)
    */
   async getFollowing(userId: string): Promise<UserProfile[]> {
-    // Get following IDs first
-    const { data: followData, error: followError } = await this.client
-      .from('user_follows')
-      .select('following_id')
-      .eq('follower_id', userId);
+    try {
+      const currentUser = await this.getCurrentUser();
+      const viewerId = currentUser?.id || null;
 
-    if (followError) throw followError;
-    if (!followData || followData.length === 0) return [];
+      const { data, error } = await this.client
+        .rpc('get_user_following', { 
+          target_user_id: userId,
+          current_viewer_id: viewerId 
+        });
 
-    // Get user profiles for following IDs (excluding banned users)
-    const followingIds = followData.map(row => row.following_id);
-    const { data: profileData, error: profileError } = await this.client
-      .from('user_profiles')
-      .select('*')
-      .in('id', followingIds)
-      .eq('is_banned', false);
-
-    if (profileError) throw profileError;
-    
-    // Filter out blocked users for the current viewer
-    const currentUser = await this.getCurrentUser();
-    if (currentUser) {
-      const blockedIds = await blockService.getAllBlockedUserIds(currentUser.id);
-      return (profileData || []).filter(user => !blockedIds.includes(user.id));
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error getting following:', error);
+      return [];
     }
-    
-    return profileData || [];
   }
 
   /**

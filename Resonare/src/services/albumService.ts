@@ -3,9 +3,6 @@ import { mockAlbums, popularGenres } from './mockData';
 import { SpotifyService } from './spotifyService';
 import { SpotifyMapper } from './spotifyMapper';
 
-// Simulate API delay
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 // Helper to serialize a review
 function serializeReview(review: Review): any {
   return {
@@ -322,7 +319,6 @@ export class AlbumService {
       }
       
       // Check mock data (for backward compatibility and fallback)
-      await delay(300);
       const mockAlbum = mockAlbums.find(a => a.id === id);
       
       if (mockAlbum) {
@@ -401,8 +397,6 @@ export class AlbumService {
 
   // Helper method to search mock data
   private static async searchMockData(query: string): Promise<ApiResponse<SearchResult>> {
-    await delay(400);
-    
     const lowercaseQuery = query.toLowerCase();
     
     // Filter albums by title or artist
@@ -430,8 +424,6 @@ export class AlbumService {
 
   // Get albums by genre
   static async getAlbumsByGenre(genre: string): Promise<ApiResponse<Album[]>> {
-    await delay(400);
-    
     const filteredAlbums = mockAlbums.filter(album =>
       album.genre.some(g => g.toLowerCase() === genre.toLowerCase())
     );
@@ -447,8 +439,7 @@ export class AlbumService {
   // TODO: This should query the database for albums marked as "listened" most frequently in the last 7 days
   // For now, returns mock data until social features and user activity tracking are implemented
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
-    try {
-      // TODO: Implement actual trending logic when social features are ready:
+    // TODO: Implement actual trending logic when social features are ready:
       // 1. Query Supabase for user_listens table
       // 2. Filter by dateListened >= 7 days ago
       // 3. Group by albumId and count occurrences
@@ -491,27 +482,15 @@ export class AlbumService {
       
       */
       
-      await delay(300);
       return {
         data: [], // Empty until we have real user activity data
         success: true,
-        message: 'Trending albums not available yet - requires social features implementation',
-      };
-      
-    } catch (error) {
-      // Return empty array instead of mock data fallback
-      await delay(300);
-      return {
-        data: [],
-        success: true,
-        message: 'Trending albums not available - error occurred',
-      };
-    }
+      message: 'Trending albums not available yet - requires social features implementation',
+    };
   }
 
   // Get new releases (mock implementation)
   static async getNewReleases(): Promise<ApiResponse<Album[]>> {
-    await delay(500);
     // Sort by release date (newest first) and return top 5
     const sorted = [...mockAlbums].sort((a, b) => 
       new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
@@ -525,7 +504,6 @@ export class AlbumService {
 
   // Get popular genres
   static async getPopularGenres(): Promise<ApiResponse<string[]>> {
-    await delay(200);
     return {
       data: popularGenres,
       success: true,
@@ -535,8 +513,6 @@ export class AlbumService {
 
   // Add listen
   static async addListened(userId: string, albumId: string, notes?: string): Promise<ApiResponse<Listen>> {
-    await delay(300);
-    
     // Check if already listened
     const existingListen = this.userListens.find(
       listen => listen.userId === userId && listen.albumId === albumId
@@ -573,8 +549,6 @@ export class AlbumService {
 
   // Remove listen
   static async removeListened(userId: string, albumId: string): Promise<ApiResponse<void>> {
-    await delay(300);
-    
     const index = this.userListens.findIndex(
       listen => listen.userId === userId && listen.albumId === albumId
     );
@@ -610,8 +584,6 @@ export class AlbumService {
     rating: number, 
     reviewText?: string
   ): Promise<ApiResponse<Review>> {
-    await delay(300);
-    
     // Check if review already exists
     const existingReviewIndex = this.userReviews.findIndex(
       review => review.userId === userId && review.albumId === albumId
@@ -658,8 +630,6 @@ export class AlbumService {
 
   // Remove review
   static async removeReview(userId: string, albumId: string): Promise<ApiResponse<void>> {
-    await delay(300);
-    
     const index = this.userReviews.findIndex(
       review => review.userId === userId && review.albumId === albumId
     );
@@ -710,7 +680,6 @@ export class AlbumService {
     } catch (error) {
       console.error('Error getting user listens:', error);
       // Fallback to mock data for the current user only
-      await delay(300);
       return this.userListens
         .filter(listen => listen.userId === userId)
         .map(serializeListen);
@@ -719,7 +688,6 @@ export class AlbumService {
 
   // Get user's reviews
   static async getUserReviews(userId: string): Promise<Review[]> {
-    await delay(300);
     return this.userReviews
       .filter(review => review.userId === userId)
       .map(serializeReview);

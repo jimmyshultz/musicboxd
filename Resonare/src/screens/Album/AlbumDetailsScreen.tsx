@@ -119,6 +119,7 @@ export default function AlbumDetailsScreen() {
   const [loadingDiaryEntries, setLoadingDiaryEntries] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportingEntry, setReportingEntry] = useState<DiaryEntryWithUserProfile | null>(null);
+  const [lastLoadedAlbumId, setLastLoadedAlbumId] = useState<string | null>(null);
 
   const openDiaryModal = () => {
     setAddToDiary(true);
@@ -286,23 +287,29 @@ export default function AlbumDetailsScreen() {
           } catch (error) {
             console.error('Error loading user album interactions:', error);
             setLoadingInteractions(false);
-            setLoadingDiaryEntries(false);
-          }
+          setLoadingDiaryEntries(false);
         }
       }
-    } catch (error) {
-      console.error('Error loading album details:', error);
-    } finally {
-      setLoading(false);
+      
+      // Mark this album as loaded
+      setLastLoadedAlbumId(albumId);
     }
-  }, [albumId, dispatch, user]);
+  } catch (error) {
+    console.error('Error loading album details:', error);
+  } finally {
+    setLoading(false);
+  }
+}, [albumId, dispatch, user]);
 
   // Use useFocusEffect to reload when screen comes into focus
-  // This ensures the correct album is loaded when navigating back
+  // Only reload if album ID changed - prevents unnecessary reloads for same album
   useFocusEffect(
     useCallback(() => {
-      loadAlbumDetails();
-    }, [loadAlbumDetails])
+      // Only reload if we're viewing a different album or this is the first load
+      if (albumId !== lastLoadedAlbumId) {
+        loadAlbumDetails();
+      }
+    }, [albumId, lastLoadedAlbumId, loadAlbumDetails])
   );
 
   const onRefresh = useCallback(async () => {
