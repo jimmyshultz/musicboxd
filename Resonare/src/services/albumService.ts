@@ -439,8 +439,7 @@ export class AlbumService {
   // TODO: This should query the database for albums marked as "listened" most frequently in the last 7 days
   // For now, returns mock data until social features and user activity tracking are implemented
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
-    try {
-      // TODO: Implement actual trending logic when social features are ready:
+    // TODO: Implement actual trending logic when social features are ready:
       // 1. Query Supabase for user_listens table
       // 2. Filter by dateListened >= 7 days ago
       // 3. Group by albumId and count occurrences
@@ -486,17 +485,8 @@ export class AlbumService {
       return {
         data: [], // Empty until we have real user activity data
         success: true,
-        message: 'Trending albums not available yet - requires social features implementation',
-      };
-      
-    } catch (error) {
-      // Return empty array instead of mock data fallback
-      return {
-        data: [],
-        success: true,
-        message: 'Trending albums not available - error occurred',
-      };
-    }
+      message: 'Trending albums not available yet - requires social features implementation',
+    };
   }
 
   // Get new releases (mock implementation)
