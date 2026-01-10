@@ -1,0 +1,109 @@
+# Dependabot configuration for Resonare React Native app
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # NPM dependencies for React Native app
+  - package-ecosystem: "npm"
+    directory: "/Resonare"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+      time: "09:00"
+      timezone: "America/Chicago"
+    # Limit to 10 PRs at a time to avoid PR overload
+    open-pull-requests-limit: 10
+    # Group minor and patch updates together to reduce PR noise
+    groups:
+      # Group all React Native related packages
+      react-native:
+        patterns:
+          - "react-native*"
+          - "@react-native*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group React Navigation packages
+      navigation:
+        patterns:
+          - "@react-navigation/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Firebase packages
+      firebase:
+        patterns:
+          - "@react-native-firebase/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group Babel packages
+      babel:
+        patterns:
+          - "@babel/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group TypeScript and type definitions
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group testing packages
+      testing:
+        patterns:
+          - "jest"
+          - "@types/jest"
+          - "react-test-renderer"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group all other minor/patch updates
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Add labels to PRs for easier filtering
+    labels:
+      - "dependencies"
+      - "npm"
+    # Reviewers for dependency PRs (optional - uncomment and add your GitHub username)
+    # reviewers:
+    #   - "jimmyshultz"
+    # Ignore major versions of packages that need manual migration
+    ignore:
+      # Reanimated 4 requires manual migration
+      - dependency-name: "react-native-reanimated"
+        update-types: ["version-update:semver-major"]
+      # ESLint 9 requires config migration to flat config
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # Jest 30 is a major version change
+      - dependency-name: "jest"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/jest"
+        update-types: ["version-update:semver-major"]
+      # Prettier 3 has formatting changes
+      - dependency-name: "prettier"
+        update-types: ["version-update:semver-major"]
+      # React Native major versions need careful migration
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+
+  # GitHub Actions (if you have any workflows)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "friday"
+    labels:
+      - "dependencies"
+      - "github-actions"
