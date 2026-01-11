@@ -313,7 +313,7 @@ export class AlbumService {
               message: 'Album found on Spotify',
             };
           }
-        } catch (spotifyError) {
+        } catch {
           // Continue to check mock data if Spotify fails
         }
       }
@@ -344,7 +344,7 @@ export class AlbumService {
         success: false,
         message: 'Album not found',
       };
-    } catch (error) {
+    } catch {
       return {
         data: null,
         success: false,
@@ -389,7 +389,7 @@ export class AlbumService {
         success: true,
         message: `Found ${searchResult.totalResults} results from Spotify`,
       };
-    } catch (error) {
+    } catch {
       // Fallback to mock data search on error
       return this.searchMockData(query);
     }

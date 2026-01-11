@@ -73,7 +73,7 @@ export const isAdMobInitialized = async (): Promise<boolean> => {
   try {
     await mobileAds().initialize();
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
