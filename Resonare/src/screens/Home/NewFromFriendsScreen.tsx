@@ -46,10 +46,14 @@ export default function NewFromFriendsScreen() {
   const { width } = useWindowDimensions();
 
   // Responsive spacing calculation: use percentage-based approach for consistent layout
-  const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
-  const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
+  const HORIZONTAL_SPACING = spacing.md; // 16px fixed horizontal padding
+  const CARD_MARGIN = spacing.sm; // 8px fixed margin between cards
 
-  const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
+  // Calculate card width to ensure 3 cards always fit per row
+  const totalHorizontalPadding = HORIZONTAL_SPACING * 2;
+  const totalMarginsBetweenCards = CARD_MARGIN * (CARDS_PER_ROW - 1);
+  const availableWidth = width - totalHorizontalPadding - totalMarginsBetweenCards;
+  const albumCardWidth = Math.floor(availableWidth / CARDS_PER_ROW);
   const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
   const [activities, setActivities] = useState<FriendActivity[]>([]);
   const [loading, setLoading] = useState(true);
