@@ -84,7 +84,7 @@ export const Logger = {
             timestamp: new Date().toISOString(),
           });
         });
-      } catch (importError) {
+      } catch {
         // Fail silently if crash analytics is not available
       }
     }
