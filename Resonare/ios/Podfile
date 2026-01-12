@@ -37,6 +37,8 @@ target 'Resonare' do
   pod 'nanopb', :modular_headers => true
   pod 'FirebaseCoreExtension', :modular_headers => true
   
+  # Note: react-native-worklets is auto-linked by React Native with the New Architecture
+  
   # Note: Apple Sign-In (RNAppleAuthentication) is auto-linked by React Native 0.60+
 
   post_install do |installer|
