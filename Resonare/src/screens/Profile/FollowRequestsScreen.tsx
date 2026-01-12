@@ -1,14 +1,14 @@
 import React, { useState, useCallback } from 'react';
+import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import {
-  View,
-  ScrollView,
-  StyleSheet,
-  RefreshControl,
-} from 'react-native';
-import { Text, ActivityIndicator, Button, Card, useTheme } from 'react-native-paper';
+  Text,
+  ActivityIndicator,
+  Button,
+  Card,
+  useTheme,
+} from 'react-native-paper';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
-
 
 import { FollowRequest } from '../../types/database';
 import { RootState } from '../../store';
@@ -24,13 +24,17 @@ export default function FollowRequestsScreen() {
   const [requests, setRequests] = useState<FollowRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [processingRequests, setProcessingRequests] = useState<Set<string>>(new Set());
+  const [processingRequests, setProcessingRequests] = useState<Set<string>>(
+    new Set(),
+  );
 
   const loadFollowRequests = useCallback(async () => {
     if (!currentUser) return;
 
     try {
-      const pendingRequests = await userService.getPendingFollowRequests(currentUser.id);
+      const pendingRequests = await userService.getPendingFollowRequests(
+        currentUser.id,
+      );
       setRequests(pendingRequests);
     } catch (error) {
       console.error('Error loading follow requests:', error);
@@ -53,10 +57,13 @@ export default function FollowRequestsScreen() {
       };
 
       loadData();
-    }, [loadFollowRequests])
+    }, [loadFollowRequests]),
   );
 
-  const handleAcceptRequest = async (requestId: string, requesterUsername: string) => {
+  const handleAcceptRequest = async (
+    requestId: string,
+    requesterUsername: string,
+  ) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
 
     try {
@@ -78,7 +85,10 @@ export default function FollowRequestsScreen() {
     }
   };
 
-  const handleRejectRequest = async (requestId: string, requesterUsername: string) => {
+  const handleRejectRequest = async (
+    requestId: string,
+    requesterUsername: string,
+  ) => {
     setProcessingRequests(prev => new Set(prev).add(requestId));
 
     try {
@@ -99,8 +109,6 @@ export default function FollowRequestsScreen() {
       });
     }
   };
-
-
 
   const renderRequestCard = (request: FollowRequest) => {
     const isProcessing = processingRequests.has(request.id);
@@ -135,7 +143,9 @@ export default function FollowRequestsScreen() {
           <View style={styles.actionButtons}>
             <Button
               mode="outlined"
-              onPress={() => handleRejectRequest(request.id, requester.username)}
+              onPress={() =>
+                handleRejectRequest(request.id, requester.username)
+              }
               disabled={isProcessing}
               style={[styles.actionButton, styles.rejectButton]}
               labelStyle={styles.rejectButtonText}
@@ -144,7 +154,9 @@ export default function FollowRequestsScreen() {
             </Button>
             <Button
               mode="contained"
-              onPress={() => handleAcceptRequest(request.id, requester.username)}
+              onPress={() =>
+                handleAcceptRequest(request.id, requester.username)
+              }
               disabled={isProcessing}
               loading={isProcessing}
               style={[styles.actionButton, styles.acceptButton]}
@@ -194,7 +206,8 @@ export default function FollowRequestsScreen() {
               No Follow Requests
             </Text>
             <Text variant="bodyLarge" style={styles.emptyMessage}>
-              When someone requests to follow your private profile, they'll appear here.
+              When someone requests to follow your private profile, they'll
+              appear here.
             </Text>
           </View>
         ) : (
@@ -210,94 +223,95 @@ export default function FollowRequestsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  requestsList: {
-    padding: spacing.lg,
-  },
-  sectionTitle: {
-    marginBottom: spacing.lg,
-    color: theme.colors.onBackground,
-    fontWeight: 'bold',
-  },
-  requestCard: {
-    marginBottom: spacing.md,
-    backgroundColor: theme.colors.surface,
-  },
-  requestContent: {
-    padding: spacing.md,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  avatar: {
-    marginRight: spacing.md,
-  },
-  userDetails: {
-    flex: 1,
-  },
-  username: {
-    color: theme.colors.onSurface,
-    fontWeight: '600',
-  },
-  displayName: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-  },
-  requestTime: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-  },
-  actionButton: {
-    minWidth: 80,
-  },
-  rejectButton: {
-    borderColor: theme.colors.outline,
-  },
-  rejectButtonText: {
-    color: theme.colors.onSurfaceVariant,
-  },
-  acceptButton: {
-    backgroundColor: theme.colors.primary,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-    marginTop: spacing.xl * 2,
-  },
-  emptyTitle: {
-    color: theme.colors.onBackground,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  emptyMessage: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    scrollContainer: {
+      flex: 1,
+    },
+    requestsList: {
+      padding: spacing.lg,
+    },
+    sectionTitle: {
+      marginBottom: spacing.lg,
+      color: theme.colors.onBackground,
+      fontWeight: 'bold',
+    },
+    requestCard: {
+      marginBottom: spacing.md,
+      backgroundColor: theme.colors.surface,
+    },
+    requestContent: {
+      padding: spacing.md,
+    },
+    userInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.md,
+    },
+    avatar: {
+      marginRight: spacing.md,
+    },
+    userDetails: {
+      flex: 1,
+    },
+    username: {
+      color: theme.colors.onSurface,
+      fontWeight: '600',
+    },
+    displayName: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+    },
+    requestTime: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+    },
+    actionButton: {
+      minWidth: 80,
+    },
+    rejectButton: {
+      borderColor: theme.colors.outline,
+    },
+    rejectButtonText: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    acceptButton: {
+      backgroundColor: theme.colors.primary,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+      marginTop: spacing.xl * 2,
+    },
+    emptyTitle: {
+      color: theme.colors.onBackground,
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    emptyMessage: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      lineHeight: 24,
+    },
+  });

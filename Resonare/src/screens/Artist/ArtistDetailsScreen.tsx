@@ -9,17 +9,22 @@ import {
   FlatList,
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
+import { Text, ActivityIndicator, Chip, useTheme } from 'react-native-paper';
 import {
-  Text,
-  ActivityIndicator,
-  Chip,
-  useTheme,
-} from 'react-native-paper';
-import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+  RouteProp,
+  useRoute,
+  useNavigation,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album } from '../../types';
+import {
+  HomeStackParamList,
+  SearchStackParamList,
+  ProfileStackParamList,
+  Album,
+} from '../../types';
 import { RootState } from '../../store';
 import {
   setCurrentArtist,
@@ -72,9 +77,8 @@ export default function ArtistDetailsScreen() {
   const theme = useTheme();
   const { artistId } = route.params;
 
-  const { currentArtist, currentArtistAlbums, loading, albumsLoading, error } = useSelector(
-    (state: RootState) => state.artist
-  );
+  const { currentArtist, currentArtistAlbums, loading, albumsLoading, error } =
+    useSelector((state: RootState) => state.artist);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -113,7 +117,7 @@ export default function ArtistDetailsScreen() {
   useFocusEffect(
     useCallback(() => {
       loadArtistData();
-    }, [loadArtistData])
+    }, [loadArtistData]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -129,7 +133,7 @@ export default function ArtistDetailsScreen() {
     (albumId: string) => {
       navigation.push('AlbumDetails', { albumId });
     },
-    [navigation]
+    [navigation],
   );
 
   const renderAlbumItem = useCallback(
@@ -142,11 +146,18 @@ export default function ArtistDetailsScreen() {
           activeOpacity={0.7}
         >
           <FastImage
-            source={{ uri: item.coverImageUrl, priority: FastImage.priority.normal }}
+            source={{
+              uri: item.coverImageUrl,
+              priority: FastImage.priority.normal,
+            }}
             style={styles.albumCover}
             resizeMode={FastImage.resizeMode.cover}
           />
-          <Text variant="bodyMedium" style={styles.albumTitle} numberOfLines={2}>
+          <Text
+            variant="bodyMedium"
+            style={styles.albumTitle}
+            numberOfLines={2}
+          >
             {item.title}
           </Text>
           <Text variant="bodySmall" style={styles.albumYear}>
@@ -155,7 +166,7 @@ export default function ArtistDetailsScreen() {
         </TouchableOpacity>
       );
     },
-    [theme, handleAlbumPress]
+    [theme, handleAlbumPress],
   );
 
   const styles = createStyles(theme);
@@ -183,10 +194,7 @@ export default function ArtistDetailsScreen() {
         <Text variant="bodyLarge" style={styles.errorText}>
           {error}
         </Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={loadArtistData}
-        >
+        <TouchableOpacity style={styles.retryButton} onPress={loadArtistData}>
           <Text variant="bodyLarge" style={styles.retryButtonText}>
             Try Again
           </Text>
@@ -206,7 +214,10 @@ export default function ArtistDetailsScreen() {
       {/* Artist Header */}
       <View style={styles.header}>
         <FastImage
-          source={{ uri: currentArtist.imageUrl, priority: FastImage.priority.high }}
+          source={{
+            uri: currentArtist.imageUrl,
+            priority: FastImage.priority.high,
+          }}
           style={styles.artistImage}
           resizeMode={FastImage.resizeMode.cover}
         />
@@ -267,7 +278,7 @@ export default function ArtistDetailsScreen() {
           <FlatList
             data={currentArtistAlbums}
             renderItem={renderAlbumItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={item => item.id}
             numColumns={2}
             columnWrapperStyle={styles.albumsRow}
             scrollEnabled={false}
@@ -416,4 +427,3 @@ const createStyles = (theme: any) =>
       height: spacing.xl,
     },
   });
-

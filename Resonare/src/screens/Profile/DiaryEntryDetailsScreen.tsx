@@ -1,22 +1,58 @@
-import React, { useCallback, useEffect, useState, useLayoutEffect, useMemo } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  useLayoutEffect,
+  useMemo,
+} from 'react';
 import FastImage from '@d11/react-native-fast-image';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform, FlatList } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  FlatList,
+} from 'react-native';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { Button, Text, ActivityIndicator, Menu, IconButton, useTheme, TextInput, Divider } from 'react-native-paper';
+import {
+  Button,
+  Text,
+  ActivityIndicator,
+  Menu,
+  IconButton,
+  useTheme,
+  TextInput,
+  Divider,
+} from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { captureRef } from 'react-native-view-shot';
 import Share, { Social } from 'react-native-share';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import { DiaryEntry, ProfileStackParamList, HomeStackParamList, SearchStackParamList, Album } from '../../types';
+import {
+  DiaryEntry,
+  ProfileStackParamList,
+  HomeStackParamList,
+  SearchStackParamList,
+  Album,
+} from '../../types';
 import { DiaryEntryComment } from '../../types/database';
 import { diaryEntriesService } from '../../services/diaryEntriesService';
-import { HalfStarRating, HalfStarDisplay } from '../../components/HalfStarRating';
+import {
+  HalfStarRating,
+  HalfStarDisplay,
+} from '../../components/HalfStarRating';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import { AlbumService } from '../../services/albumService';
 import { useDispatch, useSelector } from 'react-redux';
-import { removeDiaryEntry, upsertDiaryEntry } from '../../store/slices/diarySlice';
+import {
+  removeDiaryEntry,
+  upsertDiaryEntry,
+} from '../../store/slices/diarySlice';
 import {
   loadDiaryEntrySocialInfo,
   toggleDiaryEntryLike,
@@ -29,13 +65,16 @@ import { RootState, AppDispatch } from '../../store';
 import { spacing } from '../../utils/theme';
 import { contentModerationService } from '../../services/contentModerationService';
 
-type DetailsRoute = RouteProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList, 'DiaryEntryDetails'>;
-type DetailsNav = StackNavigationProp<ProfileStackParamList | HomeStackParamList | SearchStackParamList>;
+type DetailsRoute = RouteProp<
+  ProfileStackParamList | HomeStackParamList | SearchStackParamList,
+  'DiaryEntryDetails'
+>;
+type DetailsNav = StackNavigationProp<
+  ProfileStackParamList | HomeStackParamList | SearchStackParamList
+>;
 
 // Menu icon component to avoid creating during render
 const MenuIcon = () => <Icon name="ellipsis-v" size={18} color="#666" />;
-
-
 
 export default function DiaryEntryDetailsScreen() {
   const route = useRoute<DetailsRoute>();
@@ -60,13 +99,20 @@ export default function DiaryEntryDetailsScreen() {
   const shareViewRef = React.useRef<View>(null);
 
   // Get social state from Redux
-  const likeState = useSelector((s: RootState) => s.diarySocial.likesByEntryId[entryId]);
-  const commentsState = useSelector((s: RootState) => s.diarySocial.commentsByEntryId[entryId]);
+  const likeState = useSelector(
+    (s: RootState) => s.diarySocial.likesByEntryId[entryId],
+  );
+  const commentsState = useSelector(
+    (s: RootState) => s.diarySocial.commentsByEntryId[entryId],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const e = await diaryEntriesService.getDiaryEntryById(entryId, currentUser?.id);
+      const e = await diaryEntriesService.getDiaryEntryById(
+        entryId,
+        currentUser?.id,
+      );
       if (e) {
         // Convert from new service format to old DiaryEntry format for compatibility
         const convertedEntry: DiaryEntry = {
@@ -85,16 +131,20 @@ export default function DiaryEntryDetailsScreen() {
         setEntry(convertedEntry);
 
         // Update social info in Redux
-        dispatch(updateSocialInfoFromEntry({
-          entryId,
-          likesCount: e.likes_count,
-          commentsCount: e.comments_count,
-        }));
+        dispatch(
+          updateSocialInfoFromEntry({
+            entryId,
+            likesCount: e.likes_count,
+            commentsCount: e.comments_count,
+          }),
+        );
 
         // Only load social info and comments if there's a review
         if (e.notes) {
           // Load social info (including hasLiked) - this won't disable the button
-          dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser?.id }));
+          dispatch(
+            loadDiaryEntrySocialInfo({ entryId, userId: currentUser?.id }),
+          );
           // Load comments
           dispatch(loadDiaryEntryComments({ entryId, reset: true }));
         }
@@ -111,7 +161,9 @@ export default function DiaryEntryDetailsScreen() {
     setLoading(false);
   }, [entryId, currentUser?.id, dispatch]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const canEdit = entry && currentUser?.id === userId;
 
@@ -150,13 +202,15 @@ export default function DiaryEntryDetailsScreen() {
       console.log('Opening share dialog...');
       const result = await Share.open(shareOptions);
       console.log('Share dialog result:', result);
-
     } catch (error: any) {
       console.log('Share cancelled or failed:', error);
 
       // Only show error alert for actual errors, not user cancellation
       if (error.message !== 'User did not share') {
-        Alert.alert('Share Error', 'Unable to share at this time. Please try again later.');
+        Alert.alert(
+          'Share Error',
+          'Unable to share at this time. Please try again later.',
+        );
       }
     }
 
@@ -197,20 +251,22 @@ export default function DiaryEntryDetailsScreen() {
       });
 
       console.log('Instagram Stories share completed');
-
     } catch (error: any) {
       console.log('Instagram share cancelled or failed:', error);
 
       // Handle specific error cases
-      if (error.message?.includes('not installed') || error.message?.includes('No Activity')) {
+      if (
+        error.message?.includes('not installed') ||
+        error.message?.includes('No Activity')
+      ) {
         Alert.alert(
           'Instagram Not Found',
-          'Please install Instagram to share directly to Stories. You can use "Share..." to save the image instead.'
+          'Please install Instagram to share directly to Stories. You can use "Share..." to save the image instead.',
         );
       } else if (error.message !== 'User did not share') {
         Alert.alert(
           'Share Error',
-          'Unable to share to Instagram Stories. Try using "Share..." to save the image and share manually.'
+          'Unable to share to Instagram Stories. Try using "Share..." to save the image and share manually.',
         );
       }
     }
@@ -237,61 +293,71 @@ export default function DiaryEntryDetailsScreen() {
   // Set up header menu - only show if user can edit
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: canEdit ? () => (
-        <Menu
-          visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={
-            <IconButton
-              icon={MenuIcon}
-              onPress={() => setMenuVisible(true)}
-            />
-          }
-        >
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              handleShareToInstagram();
-            }}
-            title="Share to Instagram"
-            leadingIcon="camera"
-          />
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              handleShareDiaryEntry();
-            }}
-            title="Share..."
-            leadingIcon="share-variant"
-          />
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              setShowPicker(true);
-            }}
-            title="Edit Date"
-            leadingIcon="calendar"
-          />
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              handleEditReview();
-            }}
-            title="Edit Review"
-            leadingIcon="pencil"
-          />
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              onDelete();
-            }}
-            title="Delete"
-            leadingIcon="delete"
-          />
-        </Menu>
-      ) : undefined,
+      headerRight: canEdit
+        ? () => (
+            <Menu
+              visible={menuVisible}
+              onDismiss={() => setMenuVisible(false)}
+              anchor={
+                <IconButton
+                  icon={MenuIcon}
+                  onPress={() => setMenuVisible(true)}
+                />
+              }
+            >
+              <Menu.Item
+                onPress={() => {
+                  setMenuVisible(false);
+                  handleShareToInstagram();
+                }}
+                title="Share to Instagram"
+                leadingIcon="camera"
+              />
+              <Menu.Item
+                onPress={() => {
+                  setMenuVisible(false);
+                  handleShareDiaryEntry();
+                }}
+                title="Share..."
+                leadingIcon="share-variant"
+              />
+              <Menu.Item
+                onPress={() => {
+                  setMenuVisible(false);
+                  setShowPicker(true);
+                }}
+                title="Edit Date"
+                leadingIcon="calendar"
+              />
+              <Menu.Item
+                onPress={() => {
+                  setMenuVisible(false);
+                  handleEditReview();
+                }}
+                title="Edit Review"
+                leadingIcon="pencil"
+              />
+              <Menu.Item
+                onPress={() => {
+                  setMenuVisible(false);
+                  onDelete();
+                }}
+                title="Delete"
+                leadingIcon="delete"
+              />
+            </Menu>
+          )
+        : undefined,
     });
-  }, [navigation, menuVisible, canEdit, handleShareToInstagram, handleShareDiaryEntry, onDelete, handleEditReview]);
+  }, [
+    navigation,
+    menuVisible,
+    canEdit,
+    handleShareToInstagram,
+    handleShareDiaryEntry,
+    onDelete,
+    handleEditReview,
+  ]);
 
   const onChangeDate = (_: any, selected?: Date) => {
     if (selected) {
@@ -304,7 +370,9 @@ export default function DiaryEntryDetailsScreen() {
     setSaving(true);
     try {
       const iso = `${pendingDate.getFullYear()}-${String(pendingDate.getMonth() + 1).padStart(2, '0')}-${String(pendingDate.getDate()).padStart(2, '0')}`;
-      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { diaryDate: iso });
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, {
+        diaryDate: iso,
+      });
       if (res.success && res.entry) {
         // Convert from new service format to old DiaryEntry format
         const convertedEntry: DiaryEntry = {
@@ -336,7 +404,9 @@ export default function DiaryEntryDetailsScreen() {
     if (!entry) return;
     setSaving(true);
     try {
-      const res = await diaryEntriesService.updateDiaryEntry(entry.id, { rating: newRating });
+      const res = await diaryEntriesService.updateDiaryEntry(entry.id, {
+        rating: newRating,
+      });
       if (res.success && res.entry) {
         // Convert from new service format to old DiaryEntry format
         const convertedEntry: DiaryEntry = {
@@ -375,7 +445,7 @@ export default function DiaryEntryDetailsScreen() {
       // Allow empty reviews - trim and explicitly set to null if empty to clear the database field
       const reviewText = pendingReview.trim();
       const res = await diaryEntriesService.updateDiaryEntry(entry.id, {
-        notes: reviewText.length > 0 ? reviewText : null as any
+        notes: reviewText.length > 0 ? reviewText : (null as any),
       });
       if (res.success && res.entry) {
         // Convert from new service format to old DiaryEntry format
@@ -415,25 +485,44 @@ export default function DiaryEntryDetailsScreen() {
       // Get current like state before toggling
       const currentHasLiked = likeState?.hasLiked || false;
       const currentLikesCount = likeState?.likesCount ?? entry?.likesCount ?? 0;
-      console.log('Toggling like for entry:', entryId, 'user:', currentUser.id, 'currentlyLiked:', currentHasLiked, 'currentCount:', currentLikesCount, 'likeState:', likeState);
-      const result = await dispatch(toggleDiaryEntryLike({
+      console.log(
+        'Toggling like for entry:',
         entryId,
-        userId: currentUser.id,
-        currentHasLiked
-      })).unwrap();
+        'user:',
+        currentUser.id,
+        'currentlyLiked:',
+        currentHasLiked,
+        'currentCount:',
+        currentLikesCount,
+        'likeState:',
+        likeState,
+      );
+      const result = await dispatch(
+        toggleDiaryEntryLike({
+          entryId,
+          userId: currentUser.id,
+          currentHasLiked,
+        }),
+      ).unwrap();
       console.log('Like toggle result:', result);
       // Don't reload immediately - the optimistic update is correct and the database trigger
       // will update the count. The count will be accurate on next page load or when
       // the entry is refreshed naturally.
     } catch (error) {
       console.error('Error toggling like:', error);
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to like diary entry');
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to like diary entry',
+      );
     }
   }, [currentUser, entryId, dispatch, likeState, entry?.likesCount]);
 
   const handlePostComment = useCallback(async () => {
     if (!currentUser) {
-      Alert.alert('Sign In Required', 'Please sign in to comment on diary entries');
+      Alert.alert(
+        'Sign In Required',
+        'Please sign in to comment on diary entries',
+      );
       return;
     }
     if (!commentText.trim()) {
@@ -441,45 +530,76 @@ export default function DiaryEntryDetailsScreen() {
     }
 
     // Validate comment content before submitting
-    const commentValidation = contentModerationService.validateComment(commentText.trim());
+    const commentValidation = contentModerationService.validateComment(
+      commentText.trim(),
+    );
     if (!commentValidation.isValid) {
-      Alert.alert('Content Issue', commentValidation.error || 'Your comment contains inappropriate content. Please revise it.');
+      Alert.alert(
+        'Content Issue',
+        commentValidation.error ||
+          'Your comment contains inappropriate content. Please revise it.',
+      );
       return;
     }
 
     try {
-      await dispatch(createDiaryEntryComment({ entryId, userId: currentUser.id, body: commentText.trim() })).unwrap();
+      await dispatch(
+        createDiaryEntryComment({
+          entryId,
+          userId: currentUser.id,
+          body: commentText.trim(),
+        }),
+      ).unwrap();
       setCommentText('');
       // Reload social info to update comments count
       dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser.id }));
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to post comment');
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to post comment',
+      );
     }
   }, [currentUser, entryId, commentText, dispatch]);
 
-  const handleDeleteComment = useCallback(async (commentId: string) => {
-    if (!currentUser) return;
-    Alert.alert(
-      'Delete Comment',
-      'Are you sure you want to delete this comment?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await dispatch(deleteDiaryEntryComment({ commentId, entryId, userId: currentUser.id })).unwrap();
-              // Reload social info to update comments count
-              dispatch(loadDiaryEntrySocialInfo({ entryId, userId: currentUser.id }));
-            } catch (error) {
-              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to delete comment');
-            }
+  const handleDeleteComment = useCallback(
+    async (commentId: string) => {
+      if (!currentUser) return;
+      Alert.alert(
+        'Delete Comment',
+        'Are you sure you want to delete this comment?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await dispatch(
+                  deleteDiaryEntryComment({
+                    commentId,
+                    entryId,
+                    userId: currentUser.id,
+                  }),
+                ).unwrap();
+                // Reload social info to update comments count
+                dispatch(
+                  loadDiaryEntrySocialInfo({ entryId, userId: currentUser.id }),
+                );
+              } catch (error) {
+                Alert.alert(
+                  'Error',
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to delete comment',
+                );
+              }
+            },
           },
-        },
-      ]
-    );
-  }, [currentUser, entryId, dispatch]);
+        ],
+      );
+    },
+    [currentUser, entryId, dispatch],
+  );
 
   const formatTimeAgo = useCallback((dateString: string) => {
     const date = new Date(dateString);
@@ -504,49 +624,57 @@ export default function DiaryEntryDetailsScreen() {
     return () => <View style={styles.commentSeparator} />;
   }, [styles.commentSeparator]);
 
-  const renderComment = useCallback(({ item }: { item: DiaryEntryComment }) => {
-    // Convert database comment format to app format
-    const commentUserId = 'user_id' in item ? item.user_id : item.userId;
-    const commentId = item.id;
-    const commentBody = 'body' in item ? item.body : item.body;
-    const commentCreatedAt = 'created_at' in item ? item.created_at : item.createdAt;
-    const commentUser = 'user_profile' in item && item.user_profile ? {
-      id: item.user_profile.id,
-      username: item.user_profile.username,
-      avatarUrl: item.user_profile.avatar_url,
-    } : ('user' in item ? item.user : undefined);
+  const renderComment = useCallback(
+    ({ item }: { item: DiaryEntryComment }) => {
+      // Convert database comment format to app format
+      const commentUserId = 'user_id' in item ? item.user_id : item.userId;
+      const commentId = item.id;
+      const commentBody = 'body' in item ? item.body : item.body;
+      const commentCreatedAt =
+        'created_at' in item ? item.created_at : item.createdAt;
+      const commentUser =
+        'user_profile' in item && item.user_profile
+          ? {
+              id: item.user_profile.id,
+              username: item.user_profile.username,
+              avatarUrl: item.user_profile.avatar_url,
+            }
+          : 'user' in item
+            ? item.user
+            : undefined;
 
-    const canDelete = currentUser && (currentUser.id === commentUserId || currentUser.id === userId);
-    return (
-      <View style={styles.commentItem}>
-        <ProfileAvatar
-          uri={commentUser?.avatarUrl}
-          size={32}
-        />
-        <View style={styles.commentContent}>
-          <View style={styles.commentHeader}>
-            <Text variant="bodyMedium" style={styles.commentUsername}>
-              {commentUser?.username || 'Unknown'}
-            </Text>
-            <Text variant="bodySmall" style={styles.commentTime}>
-              {formatTimeAgo(commentCreatedAt)}
+      const canDelete =
+        currentUser &&
+        (currentUser.id === commentUserId || currentUser.id === userId);
+      return (
+        <View style={styles.commentItem}>
+          <ProfileAvatar uri={commentUser?.avatarUrl} size={32} />
+          <View style={styles.commentContent}>
+            <View style={styles.commentHeader}>
+              <Text variant="bodyMedium" style={styles.commentUsername}>
+                {commentUser?.username || 'Unknown'}
+              </Text>
+              <Text variant="bodySmall" style={styles.commentTime}>
+                {formatTimeAgo(commentCreatedAt)}
+              </Text>
+            </View>
+            <Text variant="bodyMedium" style={styles.commentBody}>
+              {commentBody}
             </Text>
           </View>
-          <Text variant="bodyMedium" style={styles.commentBody}>
-            {commentBody}
-          </Text>
+          {canDelete && (
+            <IconButton
+              icon="delete-outline"
+              size={18}
+              onPress={() => handleDeleteComment(commentId)}
+              style={styles.commentDeleteButton}
+            />
+          )}
         </View>
-        {canDelete && (
-          <IconButton
-            icon="delete-outline"
-            size={18}
-            onPress={() => handleDeleteComment(commentId)}
-            style={styles.commentDeleteButton}
-          />
-        )}
-      </View>
-    );
-  }, [currentUser, userId, formatTimeAgo, handleDeleteComment, styles]);
+      );
+    },
+    [currentUser, userId, formatTimeAgo, handleDeleteComment, styles],
+  );
 
   if (loading || !entry) {
     return (
@@ -558,7 +686,9 @@ export default function DiaryEntryDetailsScreen() {
   }
 
   const d = new Date(entry.diaryDate + 'T00:00:00');
-  const albumYear = album ? new Date(album.releaseDate).getFullYear() : undefined;
+  const albumYear = album
+    ? new Date(album.releaseDate).getFullYear()
+    : undefined;
 
   return (
     <KeyboardAvoidingView
@@ -572,7 +702,7 @@ export default function DiaryEntryDetailsScreen() {
           contentContainerStyle={[
             styles.scrollContent,
             editingReview && styles.scrollContentWithKeyboard,
-            currentUser && styles.scrollContentWithFixedInput // Add bottom padding when input is fixed
+            currentUser && styles.scrollContentWithFixedInput, // Add bottom padding when input is fixed
           ]}
           keyboardShouldPersistTaps="handled"
         >
@@ -582,17 +712,31 @@ export default function DiaryEntryDetailsScreen() {
               {album && (
                 <View style={styles.shareContent}>
                   {/* Large album cover with shadow */}
-                  <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.shareAlbumCover} resizeMode={FastImage.resizeMode.cover} />
+                  <FastImage
+                    source={{
+                      uri: album.coverImageUrl,
+                      priority: FastImage.priority.normal,
+                    }}
+                    style={styles.shareAlbumCover}
+                    resizeMode={FastImage.resizeMode.cover}
+                  />
 
                   {/* Content below cover - no overlay background */}
                   <View style={styles.shareTextOverlay}>
-                    <Text style={styles.shareAlbumTitle} numberOfLines={2}>{album.title}</Text>
-                    <Text style={styles.shareArtistName} numberOfLines={1}>{album.artist}</Text>
+                    <Text style={styles.shareAlbumTitle} numberOfLines={2}>
+                      {album.title}
+                    </Text>
+                    <Text style={styles.shareArtistName} numberOfLines={1}>
+                      {album.artist}
+                    </Text>
 
                     {/* Star rating - prominent display */}
                     {entry.ratingAtTime && (
                       <View style={styles.shareRatingContainer}>
-                        <HalfStarDisplay rating={entry.ratingAtTime} size="large" />
+                        <HalfStarDisplay
+                          rating={entry.ratingAtTime}
+                          size="large"
+                        />
                       </View>
                     )}
 
@@ -610,12 +754,27 @@ export default function DiaryEntryDetailsScreen() {
           {/* Regular diary entry view */}
           {album && (
             <View style={styles.header}>
-              <TouchableOpacity onPress={() => navigation.navigate('AlbumDetails', { albumId: album.id })}>
-                <FastImage source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }} style={styles.cover} resizeMode={FastImage.resizeMode.cover} />
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('AlbumDetails', { albumId: album.id })
+                }
+              >
+                <FastImage
+                  source={{
+                    uri: album.coverImageUrl,
+                    priority: FastImage.priority.normal,
+                  }}
+                  style={styles.cover}
+                  resizeMode={FastImage.resizeMode.cover}
+                />
               </TouchableOpacity>
               <View style={styles.headerTextContainer}>
-                <Text variant="titleLarge">{album.title} {albumYear ? `(${albumYear})` : ''}</Text>
-                <Text variant="bodyMedium" style={styles.subduedText}>{album.artist}</Text>
+                <Text variant="titleLarge">
+                  {album.title} {albumYear ? `(${albumYear})` : ''}
+                </Text>
+                <Text variant="bodyMedium" style={styles.subduedText}>
+                  {album.artist}
+                </Text>
               </View>
             </View>
           )}
@@ -646,14 +805,16 @@ export default function DiaryEntryDetailsScreen() {
           {/* Review Section - Only show if there's a review or user can edit */}
           {(entry.review || canEdit) && (
             <View style={styles.reviewSection}>
-              <Text variant="titleMedium" style={styles.reviewTitle}>Review</Text>
+              <Text variant="titleMedium" style={styles.reviewTitle}>
+                Review
+              </Text>
               {editingReview && canEdit ? (
                 <View style={styles.reviewEditContainer}>
                   <TextInput
                     mode="outlined"
                     placeholder="Share your thoughts about this album..."
                     value={pendingReview}
-                    onChangeText={(text) => {
+                    onChangeText={text => {
                       if (text.length <= 280) {
                         setPendingReview(text);
                       }
@@ -667,10 +828,18 @@ export default function DiaryEntryDetailsScreen() {
                     {pendingReview.length}/280
                   </Text>
                   <View style={styles.reviewButtons}>
-                    <Button mode="outlined" onPress={handleCancelReview} disabled={saving}>
+                    <Button
+                      mode="outlined"
+                      onPress={handleCancelReview}
+                      disabled={saving}
+                    >
                       Cancel
                     </Button>
-                    <Button mode="contained" onPress={handleSaveReview} disabled={saving}>
+                    <Button
+                      mode="contained"
+                      onPress={handleSaveReview}
+                      disabled={saving}
+                    >
                       Save
                     </Button>
                   </View>
@@ -698,18 +867,29 @@ export default function DiaryEntryDetailsScreen() {
               <View style={styles.likeSection}>
                 <TouchableOpacity
                   onPress={handleToggleLike}
-                  disabled={!currentUser || (likeState?.loading === true)}
-                  style={[styles.likeButton, (!currentUser || likeState?.loading === true) && styles.likeButtonDisabled]}
+                  disabled={!currentUser || likeState?.loading === true}
+                  style={[
+                    styles.likeButton,
+                    (!currentUser || likeState?.loading === true) &&
+                      styles.likeButtonDisabled,
+                  ]}
                 >
                   <Icon
                     name={likeState?.hasLiked ? 'heart' : 'heart-o'}
                     size={24}
-                    color={likeState?.hasLiked ? theme.colors.error : theme.colors.onSurfaceVariant}
+                    color={
+                      likeState?.hasLiked
+                        ? theme.colors.error
+                        : theme.colors.onSurfaceVariant
+                    }
                   />
-                  <Text variant="bodyMedium" style={[
-                    styles.likeCount,
-                    likeState?.hasLiked && styles.likedText
-                  ]}>
+                  <Text
+                    variant="bodyMedium"
+                    style={[
+                      styles.likeCount,
+                      likeState?.hasLiked && styles.likedText,
+                    ]}
+                  >
                     {likeState?.likesCount ?? entry?.likesCount ?? 0}
                   </Text>
                 </TouchableOpacity>
@@ -721,19 +901,22 @@ export default function DiaryEntryDetailsScreen() {
               {/* Comments Section */}
               <View style={styles.commentsSection}>
                 <Text variant="titleMedium" style={styles.commentsTitle}>
-                  Comments ({commentsState?.comments.length ?? entry?.commentsCount ?? 0})
+                  Comments (
+                  {commentsState?.comments.length ?? entry?.commentsCount ?? 0})
                 </Text>
 
                 {/* Comments List */}
-                {commentsState?.loading && commentsState.comments.length === 0 ? (
+                {commentsState?.loading &&
+                commentsState.comments.length === 0 ? (
                   <View style={styles.loadingComments}>
                     <ActivityIndicator size="small" />
                   </View>
-                ) : commentsState?.comments && commentsState.comments.length > 0 ? (
+                ) : commentsState?.comments &&
+                  commentsState.comments.length > 0 ? (
                   <FlatList
                     data={commentsState.comments}
                     renderItem={renderComment}
-                    keyExtractor={(item) => item.id}
+                    keyExtractor={item => item.id}
                     scrollEnabled={false}
                     ItemSeparatorComponent={CommentSeparator}
                     contentContainerStyle={styles.commentsListContent}
@@ -753,10 +936,18 @@ export default function DiaryEntryDetailsScreen() {
                 onChange={onChangeDate}
               />
               <View style={styles.datePickerButtons}>
-                <Button mode="outlined" onPress={handleCancelDate} disabled={saving}>
+                <Button
+                  mode="outlined"
+                  onPress={handleCancelDate}
+                  disabled={saving}
+                >
                   Cancel
                 </Button>
-                <Button mode="contained" onPress={handleSaveDate} disabled={saving || !pendingDate}>
+                <Button
+                  mode="contained"
+                  onPress={handleSaveDate}
+                  disabled={saving || !pendingDate}
+                >
                   Save
                 </Button>
               </View>
@@ -771,7 +962,7 @@ export default function DiaryEntryDetailsScreen() {
               mode="outlined"
               placeholder="Add a comment..."
               value={commentText}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 if (text.length <= 2000) {
                   setCommentText(text);
                 }
@@ -794,276 +985,283 @@ export default function DiaryEntryDetailsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xl, // Extra padding at bottom for date picker
-  },
-  scrollContentWithKeyboard: {
-    paddingBottom: 300, // Extra padding when keyboard is visible to allow scrolling past keyboard
-  },
-  scrollContentWithFixedInput: {
-    paddingBottom: 100, // Extra padding at bottom when comment input is fixed (to prevent content from being hidden)
-  },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', marginBottom: spacing.lg },
-  datePickerContainer: {
-    marginTop: spacing.md,
-    padding: spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-  },
-  datePickerButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: spacing.md,
-    gap: spacing.sm,
-  },
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+    scrollContent: {
+      padding: spacing.lg,
+      paddingBottom: spacing.xl, // Extra padding at bottom for date picker
+    },
+    scrollContentWithKeyboard: {
+      paddingBottom: 300, // Extra padding when keyboard is visible to allow scrolling past keyboard
+    },
+    scrollContentWithFixedInput: {
+      paddingBottom: 100, // Extra padding at bottom when comment input is fixed (to prevent content from being hidden)
+    },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+    header: { flexDirection: 'row', marginBottom: spacing.lg },
+    datePickerContainer: {
+      marginTop: spacing.md,
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+    },
+    datePickerButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginTop: spacing.md,
+      gap: spacing.sm,
+    },
 
-  shareView: {
-    position: 'absolute',
-    top: 0,
-    left: -1080, // Position off-screen to the left instead of overlaying
-    width: 1080,
-    height: 1920,
-    zIndex: 1000,
-  },
-  shareContent: {
-    flex: 1,
-    backgroundColor: '#14181c', // Letterboxd-inspired dark blue-grey
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 280, // Increased padding to optically center album cover with content below
-    paddingHorizontal: 60,
-  },
-  shareAlbumCover: {
-    width: 700,
-    height: 700,
-    borderRadius: 20,
-    marginBottom: 50,
-    // Shadow for depth
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.5,
-    shadowRadius: 30,
-  },
-  shareTextOverlay: {
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    maxWidth: 900,
-  },
-  shareAlbumTitle: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  shareArtistName: {
-    fontSize: 36,
-    color: '#9ab',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  shareDate: {
-    fontSize: 28,
-    color: '#678',
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  shareRatingContainer: {
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  shareRatingText: {
-    // Hidden - stars are sufficient
-    fontSize: 0,
-    height: 0,
-  },
-  shareNotes: {
-    fontSize: 28,
-    color: '#fff',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 24,
-    lineHeight: 40,
-    maxWidth: 800,
-  },
-  shareBrandingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 50,
-    gap: 12,
-  },
-  shareBrandingPrefix: {
-    fontSize: 28,
-    color: '#678',
-    textAlign: 'center',
-  },
-  shareAppName: {
-    fontSize: 32,
-    color: '#BB86FC', // App's purple accent color
-    textAlign: 'center',
-    fontWeight: '700',
-  },
+    shareView: {
+      position: 'absolute',
+      top: 0,
+      left: -1080, // Position off-screen to the left instead of overlaying
+      width: 1080,
+      height: 1920,
+      zIndex: 1000,
+    },
+    shareContent: {
+      flex: 1,
+      backgroundColor: '#14181c', // Letterboxd-inspired dark blue-grey
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingTop: 280, // Increased padding to optically center album cover with content below
+      paddingHorizontal: 60,
+    },
+    shareAlbumCover: {
+      width: 700,
+      height: 700,
+      borderRadius: 20,
+      marginBottom: 50,
+      // Shadow for depth
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 20 },
+      shadowOpacity: 0.5,
+      shadowRadius: 30,
+    },
+    shareTextOverlay: {
+      alignItems: 'center',
+      paddingHorizontal: 40,
+      maxWidth: 900,
+    },
+    shareAlbumTitle: {
+      fontSize: 48,
+      fontWeight: 'bold',
+      color: '#fff',
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    shareArtistName: {
+      fontSize: 36,
+      color: '#9ab',
+      textAlign: 'center',
+      marginBottom: 30,
+    },
+    shareDate: {
+      fontSize: 28,
+      color: '#678',
+      textAlign: 'center',
+      marginTop: 20,
+    },
+    shareRatingContainer: {
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    shareRatingText: {
+      // Hidden - stars are sufficient
+      fontSize: 0,
+      height: 0,
+    },
+    shareNotes: {
+      fontSize: 28,
+      color: '#fff',
+      textAlign: 'center',
+      fontStyle: 'italic',
+      marginTop: 24,
+      lineHeight: 40,
+      maxWidth: 800,
+    },
+    shareBrandingContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 50,
+      gap: 12,
+    },
+    shareBrandingPrefix: {
+      fontSize: 28,
+      color: '#678',
+      textAlign: 'center',
+    },
+    shareAppName: {
+      fontSize: 32,
+      color: '#BB86FC', // App's purple accent color
+      textAlign: 'center',
+      fontWeight: '700',
+    },
 
-  cover: { width: 96, height: 96, borderRadius: 8 },
-  headerTextContainer: { flex: 1, marginLeft: spacing.md },
-  subduedText: { color: theme.colors.onSurfaceVariant },
-  row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: theme.colors.outline },
-  rowAlignCenter: { alignItems: 'center' },
-  rowDirection: { flexDirection: 'row' },
-  reviewSection: {
-    marginTop: spacing.md,
-    paddingTop: 0,
-    paddingBottom: spacing.md,
-  },
-  reviewTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  reviewText: {
-    lineHeight: 22,
-    color: theme.colors.onSurface,
-  },
-  noReviewText: {
-    lineHeight: 22,
-    color: theme.colors.onSurfaceVariant,
-    fontStyle: 'italic',
-  },
-  reviewEditContainer: {
-    marginTop: spacing.sm,
-  },
-  reviewInput: {
-    minHeight: 100,
-  },
-  reviewButtons: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-  },
-  characterCount: {
-    textAlign: 'right',
-    marginTop: spacing.xs,
-    color: theme.colors.onSurfaceVariant,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  contentContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  socialSection: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-  },
-  likeSection: {
-    paddingBottom: spacing.md,
-  },
-  commentsDivider: {
-    marginVertical: 0,
-    backgroundColor: theme.colors.outline,
-    height: 1,
-  },
-  commentsSection: {
-    marginTop: 0,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.md,
-  },
-  likeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  likeButtonDisabled: {
-    opacity: 0.5,
-  },
-  likeCount: {
-    color: theme.colors.onSurfaceVariant,
-  },
-  likedText: {
-    color: theme.colors.error,
-    fontWeight: '600',
-  },
-  commentsTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  loadingComments: {
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  noCommentsText: {
-    color: theme.colors.onSurfaceVariant,
-    fontStyle: 'italic',
-    paddingVertical: spacing.md,
-  },
-  commentItem: {
-    flexDirection: 'row',
-    marginBottom: spacing.sm,
-    alignItems: 'flex-start',
-  },
-  commentContent: {
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  commentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-    gap: spacing.sm,
-  },
-  commentUsername: {
-    fontWeight: '600',
-    color: theme.colors.onSurface,
-  },
-  commentTime: {
-    color: theme.colors.onSurfaceVariant,
-  },
-  commentBody: {
-    color: theme.colors.onSurface,
-    lineHeight: 20,
-  },
-  commentDeleteButton: {
-    margin: 0,
-  },
-  commentSeparator: {
-    height: 1,
-    backgroundColor: theme.colors.outlineVariant,
-    marginVertical: spacing.sm,
-  },
-  commentInputContainer: {
-    marginTop: spacing.md,
-  },
-  commentsListContent: {
-    paddingBottom: spacing.xl, // Add padding so comments aren't hidden behind fixed input
-  },
-  fixedCommentInputContainer: {
-    backgroundColor: theme.colors.surface,
-    padding: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outlineVariant,
-    paddingBottom: Platform.OS === 'ios' ? spacing.lg : spacing.md, // Extra padding for iOS safe area
-    // Add elevation/shadow for better visibility
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
-  },
-  commentInput: {
-    backgroundColor: theme.colors.surface,
-  },
-});
+    cover: { width: 96, height: 96, borderRadius: 8 },
+    headerTextContainer: { flex: 1, marginLeft: spacing.md },
+    subduedText: { color: theme.colors.onSurfaceVariant },
+    row: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    rowAlignCenter: { alignItems: 'center' },
+    rowDirection: { flexDirection: 'row' },
+    reviewSection: {
+      marginTop: spacing.md,
+      paddingTop: 0,
+      paddingBottom: spacing.md,
+    },
+    reviewTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.md,
+    },
+    reviewText: {
+      lineHeight: 22,
+      color: theme.colors.onSurface,
+    },
+    noReviewText: {
+      lineHeight: 22,
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
+    },
+    reviewEditContainer: {
+      marginTop: spacing.sm,
+    },
+    reviewInput: {
+      minHeight: 100,
+    },
+    reviewButtons: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+      marginTop: spacing.md,
+    },
+    characterCount: {
+      textAlign: 'right',
+      marginTop: spacing.xs,
+      color: theme.colors.onSurfaceVariant,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    contentContainer: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    socialSection: {
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+    },
+    likeSection: {
+      paddingBottom: spacing.md,
+    },
+    commentsDivider: {
+      marginVertical: 0,
+      backgroundColor: theme.colors.outline,
+      height: 1,
+    },
+    commentsSection: {
+      marginTop: 0,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    likeButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    likeButtonDisabled: {
+      opacity: 0.5,
+    },
+    likeCount: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    likedText: {
+      color: theme.colors.error,
+      fontWeight: '600',
+    },
+    commentsTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.md,
+    },
+    loadingComments: {
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    noCommentsText: {
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
+      paddingVertical: spacing.md,
+    },
+    commentItem: {
+      flexDirection: 'row',
+      marginBottom: spacing.sm,
+      alignItems: 'flex-start',
+    },
+    commentContent: {
+      flex: 1,
+      marginLeft: spacing.sm,
+    },
+    commentHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+      gap: spacing.sm,
+    },
+    commentUsername: {
+      fontWeight: '600',
+      color: theme.colors.onSurface,
+    },
+    commentTime: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    commentBody: {
+      color: theme.colors.onSurface,
+      lineHeight: 20,
+    },
+    commentDeleteButton: {
+      margin: 0,
+    },
+    commentSeparator: {
+      height: 1,
+      backgroundColor: theme.colors.outlineVariant,
+      marginVertical: spacing.sm,
+    },
+    commentInputContainer: {
+      marginTop: spacing.md,
+    },
+    commentsListContent: {
+      paddingBottom: spacing.xl, // Add padding so comments aren't hidden behind fixed input
+    },
+    fixedCommentInputContainer: {
+      backgroundColor: theme.colors.surface,
+      padding: spacing.md,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outlineVariant,
+      paddingBottom: Platform.OS === 'ios' ? spacing.lg : spacing.md, // Extra padding for iOS safe area
+      // Add elevation/shadow for better visibility
+      ...Platform.select({
+        ios: {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        },
+        android: {
+          elevation: 8,
+        },
+      }),
+    },
+    commentInput: {
+      backgroundColor: theme.colors.surface,
+    },
+  });

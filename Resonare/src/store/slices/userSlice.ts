@@ -23,7 +23,7 @@ const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    fetchUserStart: (state) => {
+    fetchUserStart: state => {
       state.loading = true;
       state.error = null;
     },
@@ -44,7 +44,9 @@ const userSlice = createSlice({
       }
     },
     removeFollowing: (state, action: PayloadAction<string>) => {
-      state.following = state.following.filter(user => user.id !== action.payload);
+      state.following = state.following.filter(
+        user => user.id !== action.payload,
+      );
     },
     setFollowers: (state, action: PayloadAction<SerializedUser[]>) => {
       state.followers = action.payload;
@@ -57,7 +59,7 @@ const userSlice = createSlice({
       // Keep only the latest 50 activities
       state.activityFeed = state.activityFeed.slice(0, 50);
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },

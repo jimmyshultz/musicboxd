@@ -8,14 +8,24 @@ import {
   Animated,
   Alert,
 } from 'react-native';
-import { Text, ActivityIndicator, Card, useTheme, Button } from 'react-native-paper';
+import {
+  Text,
+  ActivityIndicator,
+  Card,
+  useTheme,
+  Button,
+} from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
-import { ProfileStackParamList, AppNotification, HomeStackParamList } from '../../types';
+import {
+  ProfileStackParamList,
+  AppNotification,
+  HomeStackParamList,
+} from '../../types';
 import { RootState, AppDispatch } from '../../store';
 import { notificationService } from '../../services/notificationService';
 import {
@@ -31,7 +41,10 @@ import { spacing } from '../../utils/theme';
 import ProfileAvatar from '../../components/ProfileAvatar';
 
 // NotificationsScreen can be in either HomeStack or ProfileStack
-type NotificationsScreenNavigationProp = StackNavigationProp<HomeStackParamList | ProfileStackParamList, 'Notifications'>;
+type NotificationsScreenNavigationProp = StackNavigationProp<
+  HomeStackParamList | ProfileStackParamList,
+  'Notifications'
+>;
 
 // Separate component for notification item to allow hooks
 interface NotificationItemProps {
@@ -58,7 +71,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
   const renderRightActions = (
     progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
+    dragX: Animated.AnimatedInterpolation<number>,
   ) => {
     const scale = dragX.interpolate({
       inputRange: [-100, 0],
@@ -72,7 +85,9 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
         onPress={() => onDelete(item.id)}
         activeOpacity={0.7}
       >
-        <Animated.View style={[styles.deleteActionContent, { transform: [{ scale }] }]}>
+        <Animated.View
+          style={[styles.deleteActionContent, { transform: [{ scale }] }]}
+        >
           <Icon name="trash" size={24} color="#fff" />
         </Animated.View>
       </TouchableOpacity>
@@ -85,16 +100,8 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
       renderRightActions={renderRightActions}
       rightThreshold={40}
     >
-      <TouchableOpacity
-        onPress={() => onPress(item)}
-        activeOpacity={0.7}
-      >
-        <Card
-          style={[
-            styles.notificationCard,
-            isUnread && styles.unreadCard,
-          ]}
-        >
+      <TouchableOpacity onPress={() => onPress(item)} activeOpacity={0.7}>
+        <Card style={[styles.notificationCard, isUnread && styles.unreadCard]}>
           <Card.Content style={styles.notificationContent}>
             <View style={styles.userInfo}>
               <ProfileAvatar
@@ -103,10 +110,13 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
                 style={styles.avatar}
               />
               <View style={styles.notificationDetails}>
-                <Text variant="bodyLarge" style={[
-                  styles.notificationText,
-                  isUnread && styles.unreadText,
-                ]}>
+                <Text
+                  variant="bodyLarge"
+                  style={[
+                    styles.notificationText,
+                    isUnread && styles.unreadText,
+                  ]}
+                >
                   {getNotificationMessage(item)}
                 </Text>
                 <Text variant="bodySmall" style={styles.timeText}>
@@ -126,7 +136,9 @@ export default function NotificationsScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const navigation = useNavigation<NotificationsScreenNavigationProp>();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const { notifications, loading } = useSelector((state: RootState) => state.notifications);
+  const { notifications, loading } = useSelector(
+    (state: RootState) => state.notifications,
+  );
   const theme = useTheme();
   const styles = createStyles(theme);
 
@@ -137,25 +149,35 @@ export default function NotificationsScreen() {
 
     try {
       dispatch(fetchNotificationsStart());
-      const fetchedNotifications = await notificationService.getNotifications(currentUser.id);
+      const fetchedNotifications = await notificationService.getNotifications(
+        currentUser.id,
+      );
 
       // Transform to AppNotification format
-      const appNotifications: AppNotification[] = fetchedNotifications.map((n: any) => ({
-        id: n.id,
-        userId: n.user_id,
-        type: n.type,
-        actorId: n.actor_id,
-        actorUsername: n.actor?.username,
-        actorAvatar: n.actor?.avatar_url,
-        referenceId: n.reference_id,
-        read: n.read,
-        createdAt: n.created_at,
-      }));
+      const appNotifications: AppNotification[] = fetchedNotifications.map(
+        (n: any) => ({
+          id: n.id,
+          userId: n.user_id,
+          type: n.type,
+          actorId: n.actor_id,
+          actorUsername: n.actor?.username,
+          actorAvatar: n.actor?.avatar_url,
+          referenceId: n.reference_id,
+          read: n.read,
+          createdAt: n.created_at,
+        }),
+      );
 
       dispatch(fetchNotificationsSuccess(appNotifications));
     } catch (error) {
       console.error('Error loading notifications:', error);
-      dispatch(fetchNotificationsFailure(error instanceof Error ? error.message : 'Failed to load notifications'));
+      dispatch(
+        fetchNotificationsFailure(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load notifications',
+        ),
+      );
     }
   }, [currentUser, dispatch]);
 
@@ -181,13 +203,19 @@ export default function NotificationsScreen() {
     }
 
     // Handle diary entry notifications
-    if (notification.type === 'diary_like' || notification.type === 'diary_comment') {
+    if (
+      notification.type === 'diary_like' ||
+      notification.type === 'diary_comment'
+    ) {
       if (notification.referenceId) {
         // Navigate to the diary entry details
         // We need to get the userId from the diary entry
         try {
-          const { diaryEntriesService } = await import('../../services/diaryEntriesService');
-          const entry = await diaryEntriesService.getDiaryEntryById(notification.referenceId);
+          const { diaryEntriesService } =
+            await import('../../services/diaryEntriesService');
+          const entry = await diaryEntriesService.getDiaryEntryById(
+            notification.referenceId,
+          );
           if (entry) {
             navigation.navigate('DiaryEntryDetails', {
               entryId: notification.referenceId,
@@ -205,7 +233,10 @@ export default function NotificationsScreen() {
     }
 
     // If it's a follow request and the current user is private, navigate to Follow Requests
-    if (notification.type === 'follow_request' && currentUser?.preferences?.privacy?.profileVisibility === 'private') {
+    if (
+      notification.type === 'follow_request' &&
+      currentUser?.preferences?.privacy?.profileVisibility === 'private'
+    ) {
       // Navigate to Profile tab, then to FollowRequests screen
       // Use getParent() to access the tab navigator (HomeStack -> TabNavigator)
       const parent = navigation.getParent();
@@ -344,7 +375,7 @@ export default function NotificationsScreen() {
       <FlatList
         data={notifications}
         renderItem={renderNotificationItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
@@ -361,105 +392,106 @@ export default function NotificationsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  markAllContainer: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outlineVariant,
-  },
-  actionButtonsRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  actionButton: {
-    marginHorizontal: 0,
-  },
-  deleteAction: {
-    backgroundColor: theme.colors.error,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingRight: spacing.lg,
-    marginBottom: spacing.md,
-    borderRadius: 8,
-  },
-  deleteActionContent: {
-    width: 80,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listContainer: {
-    padding: spacing.lg,
-  },
-  notificationCard: {
-    marginBottom: spacing.md,
-    backgroundColor: theme.colors.surface,
-  },
-  unreadCard: {
-    backgroundColor: theme.colors.surfaceVariant,
-  },
-  notificationContent: {
-    padding: spacing.md,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    marginRight: spacing.md,
-  },
-  notificationDetails: {
-    flex: 1,
-  },
-  notificationText: {
-    color: theme.colors.onSurface,
-    marginBottom: spacing.xs,
-  },
-  unreadText: {
-    fontWeight: '600',
-  },
-  timeText: {
-    color: theme.colors.onSurfaceVariant,
-  },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: theme.colors.primary,
-    marginLeft: spacing.sm,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-    marginTop: spacing.xl * 2,
-  },
-  emptyTitle: {
-    color: theme.colors.onBackground,
-    marginBottom: spacing.md,
-    textAlign: 'center',
-  },
-  emptyMessage: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    markAllContainer: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+    },
+    actionButtonsRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    actionButton: {
+      marginHorizontal: 0,
+    },
+    deleteAction: {
+      backgroundColor: theme.colors.error,
+      justifyContent: 'center',
+      alignItems: 'flex-end',
+      paddingRight: spacing.lg,
+      marginBottom: spacing.md,
+      borderRadius: 8,
+    },
+    deleteActionContent: {
+      width: 80,
+      height: '100%',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    listContainer: {
+      padding: spacing.lg,
+    },
+    notificationCard: {
+      marginBottom: spacing.md,
+      backgroundColor: theme.colors.surface,
+    },
+    unreadCard: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    notificationContent: {
+      padding: spacing.md,
+    },
+    userInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    avatar: {
+      marginRight: spacing.md,
+    },
+    notificationDetails: {
+      flex: 1,
+    },
+    notificationText: {
+      color: theme.colors.onSurface,
+      marginBottom: spacing.xs,
+    },
+    unreadText: {
+      fontWeight: '600',
+    },
+    timeText: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    unreadDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: theme.colors.primary,
+      marginLeft: spacing.sm,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+      marginTop: spacing.xl * 2,
+    },
+    emptyTitle: {
+      color: theme.colors.onBackground,
+      marginBottom: spacing.md,
+      textAlign: 'center',
+    },
+    emptyMessage: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      lineHeight: 24,
+    },
+  });

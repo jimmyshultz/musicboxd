@@ -44,31 +44,45 @@ const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Back button component
-const BackButton = React.memo(({ navigation, customOnPress }: { navigation: any; customOnPress?: () => void }) => {
-  const theme = useTheme();
+const BackButton = React.memo(
+  ({
+    navigation,
+    customOnPress,
+  }: {
+    navigation: any;
+    customOnPress?: () => void;
+  }) => {
+    const theme = useTheme();
 
-  const handlePress = React.useCallback(() => {
-    if (customOnPress) {
-      customOnPress();
-    } else if (navigation.canGoBack()) {
-      navigation.goBack();
-    }
-  }, [customOnPress, navigation]);
+    const handlePress = React.useCallback(() => {
+      if (customOnPress) {
+        customOnPress();
+      } else if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
+    }, [customOnPress, navigation]);
 
-  return (
-    <TouchableOpacity
-      onPress={handlePress}
-      style={backButtonStyles.container}
-    >
-      <Icon name="arrow-left" size={18} color={theme.colors.onSurface} />
-    </TouchableOpacity>
-  );
-});
-
-
+    return (
+      <TouchableOpacity
+        onPress={handlePress}
+        style={backButtonStyles.container}
+      >
+        <Icon name="arrow-left" size={18} color={theme.colors.onSurface} />
+      </TouchableOpacity>
+    );
+  },
+);
 
 // Tab icon component for non-Profile tabs
-const TabIcon = ({ routeName, color, size }: { routeName: string; color: string; size: number }) => {
+const TabIcon = ({
+  routeName,
+  color,
+  size,
+}: {
+  routeName: string;
+  color: string;
+  size: number;
+}) => {
   let iconName: string;
 
   switch (routeName) {
@@ -96,7 +110,9 @@ const ProfileTabIcon = ({ color, size }: { color: string; size: number }) => {
 // Notification bell icon component for Home header (needs hooks)
 const NotificationBellIcon = ({ navigation }: { navigation: any }) => {
   const theme = useTheme();
-  const unreadCount = useSelector((state: RootState) => state.notifications.unreadCount);
+  const unreadCount = useSelector(
+    (state: RootState) => state.notifications.unreadCount,
+  );
 
   // Log when unreadCount changes to verify re-renders
   React.useEffect(() => {
@@ -115,12 +131,14 @@ const NotificationBellIcon = ({ navigation }: { navigation: any }) => {
 };
 
 // Create tab bar icon function outside component
-const createTabBarIcon = (routeName: string) => ({ color, size }: { color: string; size: number }) => {
-  if (routeName === 'Profile') {
-    return <ProfileTabIcon color={color} size={size} />;
-  }
-  return <TabIcon routeName={routeName} color={color} size={size} />;
-};
+const createTabBarIcon =
+  (routeName: string) =>
+  ({ color, size }: { color: string; size: number }) => {
+    if (routeName === 'Profile') {
+      return <ProfileTabIcon color={color} size={size} />;
+    }
+    return <TabIcon routeName={routeName} color={color} size={size} />;
+  };
 
 // Create stack navigators for each tab to handle nested navigation
 const HomeStack = createStackNavigator();
@@ -156,9 +174,14 @@ function HomeStackNavigator() {
           headerShown: true,
           title: 'Notifications',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
 
@@ -169,9 +192,14 @@ function HomeStackNavigator() {
           headerShown: true,
           title: 'Popular This Week',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <HomeStack.Screen
@@ -181,9 +209,14 @@ function HomeStackNavigator() {
           headerShown: true,
           title: 'New From Friends',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <HomeStack.Screen
@@ -193,9 +226,14 @@ function HomeStackNavigator() {
           headerShown: true,
           title: 'Popular With Friends',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <HomeStack.Screen
@@ -223,29 +261,38 @@ function HomeStackNavigator() {
           headerShown: true,
           title: '',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            // Custom logic to skip diary screens
-            const state = navigation.getState();
-            const routes = state.routes;
-            const currentRouteIndex = state.index;
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                // Custom logic to skip diary screens
+                const state = navigation.getState();
+                const routes = state.routes;
+                const currentRouteIndex = state.index;
 
-            // Look backwards in the route history to find the last non-diary, non-userprofile screen
-            let foundValidRoute = false;
-            for (let i = currentRouteIndex - 1; i >= 0; i--) {
-              const route = routes[i];
-              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
-                // Found a valid non-diary, non-userprofile screen, navigate back to it
-                navigation.navigate(route.name, route.params);
-                foundValidRoute = true;
-                return;
-              }
-            }
+                // Look backwards in the route history to find the last non-diary, non-userprofile screen
+                let foundValidRoute = false;
+                for (let i = currentRouteIndex - 1; i >= 0; i--) {
+                  const route = routes[i];
+                  if (
+                    route.name !== 'Diary' &&
+                    route.name !== 'DiaryEntryDetails' &&
+                    route.name !== 'UserProfile'
+                  ) {
+                    // Found a valid non-diary, non-userprofile screen, navigate back to it
+                    navigation.navigate(route.name, route.params);
+                    foundValidRoute = true;
+                    return;
+                  }
+                }
 
-            // If no valid screen found, go to home
-            if (!foundValidRoute) {
-              navigation.navigate('HomeMain');
-            }
-          }} />,
+                // If no valid screen found, go to home
+                if (!foundValidRoute) {
+                  navigation.navigate('HomeMain');
+                }
+              }}
+            />
+          ),
         })}
       />
       <HomeStack.Screen
@@ -291,7 +338,11 @@ function HomeStackNavigator() {
       <HomeStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
+        options={{
+          title: 'Diary',
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
       />
       <HomeStack.Screen
         name="DiaryEntryDetails"
@@ -299,7 +350,7 @@ function HomeStackNavigator() {
         options={({ navigation }) => ({
           title: 'Diary Entry',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} />
+          headerLeft: () => <BackButton navigation={navigation} />,
         })}
       />
     </HomeStack.Navigator>
@@ -321,7 +372,11 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="SearchMain"
         component={SearchScreen}
-        options={{ title: 'Search', headerBackVisible: false, headerLeft: () => null }}
+        options={{
+          title: 'Search',
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
       />
       <SearchStack.Screen
         name="PopularThisWeek"
@@ -330,9 +385,14 @@ function SearchStackNavigator() {
           headerShown: true,
           title: 'Popular This Week',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <SearchStack.Screen
@@ -342,9 +402,14 @@ function SearchStackNavigator() {
           headerShown: true,
           title: 'New From Friends',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <SearchStack.Screen
@@ -354,9 +419,14 @@ function SearchStackNavigator() {
           headerShown: true,
           title: 'Popular With Friends',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <SearchStack.Screen
@@ -384,29 +454,38 @@ function SearchStackNavigator() {
           headerShown: true,
           title: '',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            // Custom logic to skip diary screens
-            const state = navigation.getState();
-            const routes = state.routes;
-            const currentRouteIndex = state.index;
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                // Custom logic to skip diary screens
+                const state = navigation.getState();
+                const routes = state.routes;
+                const currentRouteIndex = state.index;
 
-            // Look backwards in the route history to find the last non-diary, non-userprofile screen
-            let foundValidRoute = false;
-            for (let i = currentRouteIndex - 1; i >= 0; i--) {
-              const route = routes[i];
-              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
-                // Found a valid non-diary, non-userprofile screen, navigate back to it
-                navigation.navigate(route.name, route.params);
-                foundValidRoute = true;
-                return;
-              }
-            }
+                // Look backwards in the route history to find the last non-diary, non-userprofile screen
+                let foundValidRoute = false;
+                for (let i = currentRouteIndex - 1; i >= 0; i--) {
+                  const route = routes[i];
+                  if (
+                    route.name !== 'Diary' &&
+                    route.name !== 'DiaryEntryDetails' &&
+                    route.name !== 'UserProfile'
+                  ) {
+                    // Found a valid non-diary, non-userprofile screen, navigate back to it
+                    navigation.navigate(route.name, route.params);
+                    foundValidRoute = true;
+                    return;
+                  }
+                }
 
-            // If no valid screen found, go to search main
-            if (!foundValidRoute) {
-              navigation.navigate('SearchMain');
-            }
-          }} />,
+                // If no valid screen found, go to search main
+                if (!foundValidRoute) {
+                  navigation.navigate('SearchMain');
+                }
+              }}
+            />
+          ),
         })}
       />
       <SearchStack.Screen
@@ -452,7 +531,11 @@ function SearchStackNavigator() {
       <SearchStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
+        options={{
+          title: 'Diary',
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
       />
       <SearchStack.Screen
         name="DiaryEntryDetails"
@@ -460,7 +543,7 @@ function SearchStackNavigator() {
         options={({ navigation }) => ({
           title: 'Diary Entry',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} />
+          headerLeft: () => <BackButton navigation={navigation} />,
         })}
       />
     </SearchStack.Navigator>
@@ -482,7 +565,11 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="ProfileMain"
         component={ProfileScreen}
-        options={{ title: 'Profile', headerBackVisible: false, headerLeft: () => null }}
+        options={{
+          title: 'Profile',
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
       />
       <ProfileStack.Screen
         name="PopularThisWeek"
@@ -491,9 +578,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Popular This Week',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -503,9 +595,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'New From Friends',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -515,9 +612,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Popular With Friends',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -545,29 +647,38 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: '',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            // Custom logic to skip diary screens
-            const state = navigation.getState();
-            const routes = state.routes;
-            const currentRouteIndex = state.index;
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                // Custom logic to skip diary screens
+                const state = navigation.getState();
+                const routes = state.routes;
+                const currentRouteIndex = state.index;
 
-            // Look backwards in the route history to find the last non-diary, non-userprofile screen
-            let foundValidRoute = false;
-            for (let i = currentRouteIndex - 1; i >= 0; i--) {
-              const route = routes[i];
-              if (route.name !== 'Diary' && route.name !== 'DiaryEntryDetails' && route.name !== 'UserProfile') {
-                // Found a valid non-diary, non-userprofile screen, navigate back to it
-                navigation.navigate(route.name, route.params);
-                foundValidRoute = true;
-                return;
-              }
-            }
+                // Look backwards in the route history to find the last non-diary, non-userprofile screen
+                let foundValidRoute = false;
+                for (let i = currentRouteIndex - 1; i >= 0; i--) {
+                  const route = routes[i];
+                  if (
+                    route.name !== 'Diary' &&
+                    route.name !== 'DiaryEntryDetails' &&
+                    route.name !== 'UserProfile'
+                  ) {
+                    // Found a valid non-diary, non-userprofile screen, navigate back to it
+                    navigation.navigate(route.name, route.params);
+                    foundValidRoute = true;
+                    return;
+                  }
+                }
 
-            // If no valid screen found, go to profile main
-            if (!foundValidRoute) {
-              navigation.navigate('ProfileMain');
-            }
-          }} />,
+                // If no valid screen found, go to profile main
+                if (!foundValidRoute) {
+                  navigation.navigate('ProfileMain');
+                }
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -613,7 +724,11 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen
         name="Diary"
         component={DiaryScreen}
-        options={{ title: 'Diary', headerBackVisible: false, headerLeft: () => null }}
+        options={{
+          title: 'Diary',
+          headerBackVisible: false,
+          headerLeft: () => null,
+        }}
       />
       <ProfileStack.Screen
         name="DiaryEntryDetails"
@@ -621,7 +736,7 @@ function ProfileStackNavigator() {
         options={({ navigation }) => ({
           title: 'Diary Entry',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} />
+          headerLeft: () => <BackButton navigation={navigation} />,
         })}
       />
       <ProfileStack.Screen
@@ -631,9 +746,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Settings',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -643,9 +763,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Follow Requests',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -655,9 +780,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Notifications',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -676,9 +806,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Blocked Users',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
       <ProfileStack.Screen
@@ -688,9 +823,14 @@ function ProfileStackNavigator() {
           headerShown: true,
           title: 'Notification Settings',
           headerBackVisible: false,
-          headerLeft: () => <BackButton navigation={navigation} customOnPress={() => {
-            navigation.goBack();
-          }} />,
+          headerLeft: () => (
+            <BackButton
+              navigation={navigation}
+              customOnPress={() => {
+                navigation.goBack();
+              }}
+            />
+          ),
         })}
       />
     </ProfileStack.Navigator>
@@ -712,18 +852,9 @@ function MainTabNavigator() {
         headerShown: false, // Hide headers since they're handled by stack navigators
       })}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeStackNavigator}
-      />
-      <Tab.Screen
-        name="Search"
-        component={SearchStackNavigator}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileStackNavigator}
-      />
+      <Tab.Screen name="Home" component={HomeStackNavigator} />
+      <Tab.Screen name="Search" component={SearchStackNavigator} />
+      <Tab.Screen name="Profile" component={ProfileStackNavigator} />
     </Tab.Navigator>
   );
 }

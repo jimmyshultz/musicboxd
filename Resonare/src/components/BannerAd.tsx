@@ -1,6 +1,10 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import {
+  BannerAd,
+  BannerAdSize,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { AdUnitIds } from '../services/adMobService';
 
 interface BannerAdComponentProps {
@@ -9,7 +13,7 @@ interface BannerAdComponentProps {
    * Options: BANNER, LARGE_BANNER, MEDIUM_RECTANGLE, FULL_BANNER, LEADERBOARD
    */
   size?: BannerAdSize;
-  
+
   /**
    * Optional: Override the ad unit ID
    */
@@ -18,10 +22,10 @@ interface BannerAdComponentProps {
 
 /**
  * Banner Ad Component
- * 
+ *
  * Displays a banner advertisement using Google AdMob
  * Automatically uses test ads in development and real ads in production
- * 
+ *
  * @example
  * ```tsx
  * <BannerAdComponent />
@@ -48,7 +52,7 @@ const BannerAdComponent: React.FC<BannerAdComponentProps> = ({
             console.log('Banner ad loaded');
           }
         }}
-        onAdFailedToLoad={(error) => {
+        onAdFailedToLoad={error => {
           if (__DEV__) {
             console.warn('Banner ad failed to load:', error);
           }
@@ -67,4 +71,3 @@ const styles = StyleSheet.create({
 });
 
 export default BannerAdComponent;
-

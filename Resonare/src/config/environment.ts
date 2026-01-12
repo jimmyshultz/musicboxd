@@ -52,7 +52,7 @@ export const Environment = {
       enableCrashReporting: this.isProduction,
       showEnvironmentBadge: this.isStaging,
     };
-  }
+  },
 };
 
 // Logger utility for environment-aware logging
@@ -71,7 +71,7 @@ export const Logger = {
 
   error: (message: string, error?: any) => {
     console.error(`[${Environment.getDisplayName()}] ${message}`, error);
-    
+
     // Send to crash reporting service
     if (Environment.isStaging || Environment.isProduction) {
       try {
@@ -92,9 +92,12 @@ export const Logger = {
 
   debug: (message: string, data?: any) => {
     if (Environment.isDevelopment) {
-      console.debug(`[${Environment.getDisplayName()}] DEBUG: ${message}`, data);
+      console.debug(
+        `[${Environment.getDisplayName()}] DEBUG: ${message}`,
+        data,
+      );
     }
-  }
+  },
 };
 
 // Development utilities
@@ -112,7 +115,7 @@ export const DevUtils = {
   // Development menu options
   getDevMenuOptions() {
     if (!Environment.isDevelopment) return [];
-    
+
     return [
       'Clear AsyncStorage',
       'Reset to Onboarding',
@@ -120,5 +123,5 @@ export const DevUtils = {
       'API Test Console',
       'Performance Monitor',
     ];
-  }
+  },
 };

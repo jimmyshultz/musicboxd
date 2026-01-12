@@ -21,7 +21,6 @@ type PopularThisWeekNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const CARDS_PER_ROW = 3;
 
-
 export default function PopularThisWeekScreen() {
   const navigation = useNavigation<PopularThisWeekNavigationProp>();
   const theme = useTheme();
@@ -31,8 +30,15 @@ export default function PopularThisWeekScreen() {
   const HORIZONTAL_SPACING = Math.max(spacing.md, width * 0.04); // 4% of screen width, minimum 16
   const CARD_MARGIN = Math.max(spacing.xs, width * 0.015); // 1.5% of screen width, minimum 4
 
-  const albumCardWidth = (width - (HORIZONTAL_SPACING * 2) - (CARD_MARGIN * (CARDS_PER_ROW - 1))) / CARDS_PER_ROW;
-  const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
+  const albumCardWidth =
+    (width - HORIZONTAL_SPACING * 2 - CARD_MARGIN * (CARDS_PER_ROW - 1)) /
+    CARDS_PER_ROW;
+  const styles = createStyles(
+    theme,
+    albumCardWidth,
+    HORIZONTAL_SPACING,
+    CARD_MARGIN,
+  );
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -79,7 +85,10 @@ export default function PopularThisWeekScreen() {
         onPress={() => navigateToAlbum(album.id)}
       >
         <FastImage
-          source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+          source={{
+            uri: album.coverImageUrl,
+            priority: FastImage.priority.normal,
+          }}
           style={styles.albumCover}
           resizeMode={FastImage.resizeMode.cover}
         />
@@ -132,91 +141,97 @@ export default function PopularThisWeekScreen() {
   );
 }
 
-const createStyles = (theme: any, albumCardWidth: number, horizontalSpacing: number, cardMargin: number) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
+const createStyles = (
+  theme: any,
+  albumCardWidth: number,
+  horizontalSpacing: number,
+  cardMargin: number,
+) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
 
-  headerTitle: {
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  placeholder: {
-    width: 48, // Same width as back button for centering
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: horizontalSpacing,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
-    justifyContent: 'flex-start',
-  },
-  albumCard: {
-    width: albumCardWidth,
-    marginBottom: spacing.lg,
-    marginRight: cardMargin,
-    position: 'relative',
-  },
-  albumCardLastInRow: {
-    marginRight: 0,
-  },
-  albumCover: {
-    width: albumCardWidth,
-    height: albumCardWidth,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-  },
-  rankBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.sm,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  rankText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-});
+    headerTitle: {
+      fontWeight: 'bold',
+      flex: 1,
+      textAlign: 'center',
+    },
+    placeholder: {
+      width: 48, // Same width as back button for centering
+    },
+    scrollContainer: {
+      flex: 1,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: horizontalSpacing,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.lg,
+      justifyContent: 'flex-start',
+    },
+    albumCard: {
+      width: albumCardWidth,
+      marginBottom: spacing.lg,
+      marginRight: cardMargin,
+      position: 'relative',
+    },
+    albumCardLastInRow: {
+      marginRight: 0,
+    },
+    albumCover: {
+      width: albumCardWidth,
+      height: albumCardWidth,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      resizeMode: 'cover',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+      lineHeight: 16,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 14,
+    },
+    rankBadge: {
+      position: 'absolute',
+      top: spacing.sm,
+      left: spacing.sm,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+    },
+    rankText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 12,
+    },
+  });

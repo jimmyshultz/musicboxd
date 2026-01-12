@@ -18,7 +18,10 @@ import { RootState } from '../../store';
 import { spacing } from '../../utils/theme';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { fetchAlbumsStart, fetchAlbumsSuccess } from '../../store/slices/albumSlice';
+import {
+  fetchAlbumsStart,
+  fetchAlbumsSuccess,
+} from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { userService } from '../../services/userService';
 import { diaryService } from '../../services/diaryService';
@@ -69,7 +72,9 @@ export default function HomeScreen() {
 
   const [popularThisWeek, setPopularThisWeek] = useState<Album[]>([]);
   const [newFromFriends, setNewFromFriends] = useState<FriendActivity[]>([]);
-  const [popularWithFriends, setPopularWithFriends] = useState<FriendPopularAlbum[]>([]);
+  const [popularWithFriends, setPopularWithFriends] = useState<
+    FriendPopularAlbum[]
+  >([]);
   const [discoverFriends, setDiscoverFriends] = useState<PotentialFriend[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loadingStates, setLoadingStates] = useState({
@@ -98,194 +103,222 @@ export default function HomeScreen() {
     }
   }, []);
 
-  const loadNewFromFriends = useCallback(async (providedUsers?: UserProfile[]) => {
-    try {
-      setLoadingStates(prev => ({ ...prev, newFromFriends: true }));
-      const currentUserId = currentUser?.id;
-      if (!currentUserId) {
+  const loadNewFromFriends = useCallback(
+    async (providedUsers?: UserProfile[]) => {
+      try {
+        setLoadingStates(prev => ({ ...prev, newFromFriends: true }));
+        const currentUserId = currentUser?.id;
+        if (!currentUserId) {
+          setNewFromFriends([]);
+          setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
+          return;
+        }
+
+        // Use provided users or fetch if not provided
+        const users =
+          providedUsers ?? (await userService.getUserFollowing(currentUserId));
+
+        // Filter out current user from friends list
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const friendsOnly = users.filter(
+          user => user.username !== currentUsername,
+        );
+
+        // Early return if no friends available
+        if (friendsOnly.length === 0) {
+          setNewFromFriends([]);
+          setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
+          return;
+        }
+
+        // Create a map for quick friend lookup
+        const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
+        const friendIds = friendsOnly.map(f => f.id);
+
+        // BATCH QUERY: Get all diary entries for all friends in ONE query
+        const allDiaryEntries =
+          await diaryService.getRecentDiaryEntriesForUsers(friendIds, 30);
+
+        // Transform diary entries to FriendActivity[]
+        const friendActivities: FriendActivity[] = allDiaryEntries
+          .filter(entry => entry.albums)
+          .map(entry => {
+            const friend = friendsMap.get(entry.user_id);
+            const album: Album = {
+              id: entry.albums.id,
+              title: entry.albums.name,
+              artist: entry.albums.artist_name,
+              releaseDate: entry.albums.release_date || '',
+              genre: entry.albums.genres || [],
+              coverImageUrl: entry.albums.image_url || '',
+              spotifyUrl: entry.albums.spotify_url || '',
+              totalTracks: entry.albums.total_tracks || 0,
+              albumType: entry.albums.album_type || 'album',
+              trackList: [],
+            };
+
+            return {
+              album: {
+                ...album,
+                // Use unique ID for each activity instance to allow duplicates
+                id:
+                  album.id +
+                  '_friend_activity_' +
+                  entry.user_id +
+                  '_' +
+                  entry.id,
+              },
+              originalAlbumId: album.id,
+              diaryEntryId: entry.id,
+              friend: {
+                id: entry.user_id,
+                username: friend?.username || 'unknown',
+                profilePicture: friend?.avatar_url,
+              },
+              diaryDate: new Date(entry.diary_date),
+              rating: entry.rating,
+              notes: entry.notes,
+            };
+          });
+
+        // Sort by most recent first and limit to 10 total activities for home page preview
+        friendActivities.sort(
+          (a, b) => b.diaryDate.getTime() - a.diaryDate.getTime(),
+        );
+        setNewFromFriends(friendActivities.slice(0, 10));
+      } catch (error) {
+        console.error('Error loading new from friends:', error);
         setNewFromFriends([]);
+      } finally {
         setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
-        return;
       }
+    },
+    [currentUser],
+  );
 
-      // Use provided users or fetch if not provided
-      const users = providedUsers ?? await userService.getUserFollowing(currentUserId);
+  const loadPopularWithFriends = useCallback(
+    async (providedUsers?: UserProfile[]) => {
+      try {
+        setLoadingStates(prev => ({ ...prev, popularWithFriends: true }));
+        const currentUserId = currentUser?.id;
+        if (!currentUserId) {
+          setPopularWithFriends([]);
+          setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
+          return;
+        }
 
-      // Filter out current user from friends list
-      const currentUsername = currentUser?.username || 'musiclover2024';
-      const friendsOnly = users.filter(user => user.username !== currentUsername);
+        // Use provided users or fetch if not provided
+        const users =
+          providedUsers ?? (await userService.getUserFollowing(currentUserId));
 
-      // Early return if no friends available
-      if (friendsOnly.length === 0) {
-        setNewFromFriends([]);
-        setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
-        return;
-      }
+        // Filter out current user from friends list
+        const currentUsername = currentUser?.username || 'musiclover2024';
+        const friendsOnly = users.filter(
+          user => user.username !== currentUsername,
+        );
 
-      // Create a map for quick friend lookup
-      const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
-      const friendIds = friendsOnly.map(f => f.id);
+        // Early return if no friends available
+        if (friendsOnly.length === 0) {
+          setPopularWithFriends([]);
+          setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
+          return;
+        }
 
-      // BATCH QUERY: Get all diary entries for all friends in ONE query
-      const allDiaryEntries = await diaryService.getRecentDiaryEntriesForUsers(friendIds, 30);
+        // Create a map for quick friend lookup
+        const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
+        const friendIds = friendsOnly.map(f => f.id);
 
-      // Transform diary entries to FriendActivity[]
-      const friendActivities: FriendActivity[] = allDiaryEntries
-        .filter(entry => entry.albums)
-        .map(entry => {
-          const friend = friendsMap.get(entry.user_id);
-          const album: Album = {
-            id: entry.albums.id,
-            title: entry.albums.name,
-            artist: entry.albums.artist_name,
-            releaseDate: entry.albums.release_date || '',
-            genre: entry.albums.genres || [],
-            coverImageUrl: entry.albums.image_url || '',
-            spotifyUrl: entry.albums.spotify_url || '',
-            totalTracks: entry.albums.total_tracks || 0,
-            albumType: entry.albums.album_type || 'album',
-            trackList: [],
-          };
+        // BATCH QUERY: Get all listens for all friends in ONE query (album data already joined)
+        const allListens =
+          await albumListensService.getListensForUsers(friendIds);
 
-          return {
-            album: {
-              ...album,
-              // Use unique ID for each activity instance to allow duplicates
-              id: album.id + '_friend_activity_' + entry.user_id + '_' + entry.id,
-            },
-            originalAlbumId: album.id,
-            diaryEntryId: entry.id,
-            friend: {
-              id: entry.user_id,
-              username: friend?.username || 'unknown',
-              profilePicture: friend?.avatar_url,
-            },
-            diaryDate: new Date(entry.diary_date),
-            rating: entry.rating,
-            notes: entry.notes,
-          };
+        if (allListens.length === 0) {
+          setPopularWithFriends([]);
+          setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
+          return;
+        }
+
+        // Track album popularity: albumId -> { album, friendsWhoListened }
+        const albumPopularity = new Map<
+          string,
+          {
+            album: Album;
+            friendsWhoListened: Set<string>;
+            friendData: {
+              id: string;
+              username: string;
+              profilePicture?: string;
+            }[];
+          }
+        >();
+
+        // Process all listens (no additional queries needed - album data already included)
+        for (const listen of allListens) {
+          if (!listen.albums) continue;
+
+          const albumId = listen.album_id;
+          const friend = friendsMap.get(listen.user_id);
+          if (!friend) continue;
+
+          // Get or create album entry
+          if (!albumPopularity.has(albumId)) {
+            const album: Album = {
+              id: listen.albums.id,
+              title: listen.albums.name,
+              artist: listen.albums.artist_name,
+              releaseDate: listen.albums.release_date || '',
+              genre: listen.albums.genres || [],
+              coverImageUrl: listen.albums.image_url || '',
+              spotifyUrl: listen.albums.spotify_url || '',
+              totalTracks: listen.albums.total_tracks || 0,
+              albumType: listen.albums.album_type || 'album',
+              trackList: [],
+            };
+            albumPopularity.set(albumId, {
+              album,
+              friendsWhoListened: new Set(),
+              friendData: [],
+            });
+          }
+
+          const entry = albumPopularity.get(albumId)!;
+          // Add friend to this album's listeners
+          if (!entry.friendsWhoListened.has(friend.id)) {
+            entry.friendsWhoListened.add(friend.id);
+            entry.friendData.push({
+              id: friend.id,
+              username: friend.username,
+              profilePicture: friend.avatar_url,
+            });
+          }
+        }
+
+        // Convert to FriendPopularAlbum array and filter albums with multiple listeners
+        const friendPopularAlbums: FriendPopularAlbum[] = [];
+
+        albumPopularity.forEach((entry, _albumId) => {
+          // Only include albums that have been listened to by 1+ friends
+          if (entry.friendsWhoListened.size >= 1) {
+            friendPopularAlbums.push({
+              album: entry.album,
+              friendsWhoListened: entry.friendData.slice(0, 3), // Show max 3 for UI
+              totalFriends: entry.friendsWhoListened.size,
+            });
+          }
         });
 
-      // Sort by most recent first and limit to 10 total activities for home page preview
-      friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
-      setNewFromFriends(friendActivities.slice(0, 10));
-    } catch (error) {
-      console.error('Error loading new from friends:', error);
-      setNewFromFriends([]);
-    } finally {
-      setLoadingStates(prev => ({ ...prev, newFromFriends: false }));
-    }
-  }, [currentUser]);
-
-  const loadPopularWithFriends = useCallback(async (providedUsers?: UserProfile[]) => {
-    try {
-      setLoadingStates(prev => ({ ...prev, popularWithFriends: true }));
-      const currentUserId = currentUser?.id;
-      if (!currentUserId) {
+        // Sort by number of friends who listened (descending) and limit to 20
+        friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
+        setPopularWithFriends(friendPopularAlbums.slice(0, 20));
+      } catch (error) {
+        console.error('Error loading popular with friends:', error);
         setPopularWithFriends([]);
+      } finally {
         setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
-        return;
       }
-
-      // Use provided users or fetch if not provided
-      const users = providedUsers ?? await userService.getUserFollowing(currentUserId);
-
-      // Filter out current user from friends list
-      const currentUsername = currentUser?.username || 'musiclover2024';
-      const friendsOnly = users.filter(user => user.username !== currentUsername);
-
-      // Early return if no friends available
-      if (friendsOnly.length === 0) {
-        setPopularWithFriends([]);
-        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
-        return;
-      }
-
-      // Create a map for quick friend lookup
-      const friendsMap = new Map(friendsOnly.map(f => [f.id, f]));
-      const friendIds = friendsOnly.map(f => f.id);
-
-      // BATCH QUERY: Get all listens for all friends in ONE query (album data already joined)
-      const allListens = await albumListensService.getListensForUsers(friendIds);
-
-      if (allListens.length === 0) {
-        setPopularWithFriends([]);
-        setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
-        return;
-      }
-
-      // Track album popularity: albumId -> { album, friendsWhoListened }
-      const albumPopularity = new Map<string, {
-        album: Album;
-        friendsWhoListened: Set<string>;
-        friendData: { id: string; username: string; profilePicture?: string; }[];
-      }>();
-
-      // Process all listens (no additional queries needed - album data already included)
-      for (const listen of allListens) {
-        if (!listen.albums) continue;
-
-        const albumId = listen.album_id;
-        const friend = friendsMap.get(listen.user_id);
-        if (!friend) continue;
-
-        // Get or create album entry
-        if (!albumPopularity.has(albumId)) {
-          const album: Album = {
-            id: listen.albums.id,
-            title: listen.albums.name,
-            artist: listen.albums.artist_name,
-            releaseDate: listen.albums.release_date || '',
-            genre: listen.albums.genres || [],
-            coverImageUrl: listen.albums.image_url || '',
-            spotifyUrl: listen.albums.spotify_url || '',
-            totalTracks: listen.albums.total_tracks || 0,
-            albumType: listen.albums.album_type || 'album',
-            trackList: [],
-          };
-          albumPopularity.set(albumId, {
-            album,
-            friendsWhoListened: new Set(),
-            friendData: [],
-          });
-        }
-
-        const entry = albumPopularity.get(albumId)!;
-        // Add friend to this album's listeners
-        if (!entry.friendsWhoListened.has(friend.id)) {
-          entry.friendsWhoListened.add(friend.id);
-          entry.friendData.push({
-            id: friend.id,
-            username: friend.username,
-            profilePicture: friend.avatar_url,
-          });
-        }
-      }
-
-      // Convert to FriendPopularAlbum array and filter albums with multiple listeners
-      const friendPopularAlbums: FriendPopularAlbum[] = [];
-
-      albumPopularity.forEach((entry, _albumId) => {
-        // Only include albums that have been listened to by 1+ friends
-        if (entry.friendsWhoListened.size >= 1) {
-          friendPopularAlbums.push({
-            album: entry.album,
-            friendsWhoListened: entry.friendData.slice(0, 3), // Show max 3 for UI
-            totalFriends: entry.friendsWhoListened.size,
-          });
-        }
-      });
-
-      // Sort by number of friends who listened (descending) and limit to 20
-      friendPopularAlbums.sort((a, b) => b.totalFriends - a.totalFriends);
-      setPopularWithFriends(friendPopularAlbums.slice(0, 20));
-    } catch (error) {
-      console.error('Error loading popular with friends:', error);
-      setPopularWithFriends([]);
-    } finally {
-      setLoadingStates(prev => ({ ...prev, popularWithFriends: false }));
-    }
-  }, [currentUser]);
+    },
+    [currentUser],
+  );
 
   const loadFriendsData = useCallback(async () => {
     const currentUserId = currentUser?.id;
@@ -316,7 +349,9 @@ export default function HomeScreen() {
       if (users.length > 0) {
         // Filter out current user from potential friends
         const currentUsername = currentUser?.username || 'musiclover2024';
-        const potentialUsers = users.filter(user => user.username !== currentUsername);
+        const potentialUsers = users.filter(
+          user => user.username !== currentUsername,
+        );
 
         if (potentialUsers.length === 0) {
           setDiscoverFriends([]);
@@ -326,7 +361,10 @@ export default function HomeScreen() {
 
         // Get mutual follower counts for all users in one batch call
         const targetUserIds = potentialUsers.map(user => user.id);
-        const mutualCounts = await userService.getMutualFollowersCountBatch(currentUserId, targetUserIds);
+        const mutualCounts = await userService.getMutualFollowersCountBatch(
+          currentUserId,
+          targetUserIds,
+        );
 
         const potentialFriends = potentialUsers.map(user => ({
           user,
@@ -405,7 +443,10 @@ export default function HomeScreen() {
       onPress={() => navigateToAlbum(album.id)}
     >
       <FastImage
-        source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -422,10 +463,15 @@ export default function HomeScreen() {
     <TouchableOpacity
       key={`${activity.friend.id}-${activity.album.id}-${activity.diaryEntryId}`}
       style={styles.albumCard}
-      onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}
+      onPress={() =>
+        navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)
+      }
     >
       <FastImage
-        source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: activity.album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -436,10 +482,7 @@ export default function HomeScreen() {
         {activity.album.artist}
       </Text>
       <View style={styles.friendBadge}>
-        <ProfileAvatar
-          uri={activity.friend.profilePicture}
-          size={16}
-        />
+        <ProfileAvatar uri={activity.friend.profilePicture} size={16} />
         <Text variant="bodySmall" style={styles.friendBadgeText}>
           @{activity.friend.username}
         </Text>
@@ -454,7 +497,10 @@ export default function HomeScreen() {
       onPress={() => navigateToAlbum(popularAlbum.album.id)}
     >
       <FastImage
-        source={{ uri: popularAlbum.album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: popularAlbum.album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -478,10 +524,7 @@ export default function HomeScreen() {
       style={styles.userCard}
       onPress={() => navigateToUserProfile(potentialFriend.user.id)}
     >
-      <ProfileAvatar
-        uri={potentialFriend.user.avatar_url}
-        size={60}
-      />
+      <ProfileAvatar uri={potentialFriend.user.avatar_url} size={60} />
       <Text variant="bodySmall" numberOfLines={1} style={styles.username}>
         @{potentialFriend.user.username}
       </Text>
@@ -512,11 +555,15 @@ export default function HomeScreen() {
     >
       {/* Popular This Week */}
       <View style={styles.section}>
-        {renderSectionHeader('Popular This Week', () => navigation.navigate('PopularThisWeek'))}
+        {renderSectionHeader('Popular This Week', () =>
+          navigation.navigate('PopularThisWeek'),
+        )}
         {loadingStates.popularThisWeek && popularThisWeek.length === 0 ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" />
-            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
+            <Text variant="bodySmall" style={styles.loadingText}>
+              Loading...
+            </Text>
           </View>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -529,11 +576,15 @@ export default function HomeScreen() {
 
       {/* New From Friends */}
       <View style={styles.section}>
-        {renderSectionHeader('New From Friends', () => navigation.navigate('NewFromFriends'))}
+        {renderSectionHeader('New From Friends', () =>
+          navigation.navigate('NewFromFriends'),
+        )}
         {loadingStates.newFromFriends && newFromFriends.length === 0 ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" />
-            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
+            <Text variant="bodySmall" style={styles.loadingText}>
+              Loading...
+            </Text>
           </View>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -546,11 +597,15 @@ export default function HomeScreen() {
 
       {/* Popular With Friends */}
       <View style={styles.section}>
-        {renderSectionHeader('Popular With Friends', () => navigation.navigate('PopularWithFriends'))}
+        {renderSectionHeader('Popular With Friends', () =>
+          navigation.navigate('PopularWithFriends'),
+        )}
         {loadingStates.popularWithFriends && popularWithFriends.length === 0 ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" />
-            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
+            <Text variant="bodySmall" style={styles.loadingText}>
+              Loading...
+            </Text>
           </View>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -567,7 +622,9 @@ export default function HomeScreen() {
         {loadingStates.discoverFriends && discoverFriends.length === 0 ? (
           <View style={styles.loadingSection}>
             <ActivityIndicator size="small" />
-            <Text variant="bodySmall" style={styles.loadingText}>Loading...</Text>
+            <Text variant="bodySmall" style={styles.loadingText}>
+              Loading...
+            </Text>
           </View>
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -586,126 +643,127 @@ export default function HomeScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  loadingSection: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-    paddingTop: spacing.md,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-  },
-  sectionDescription: {
-    color: theme.colors.onSurfaceVariant,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  seeAllButton: {
-    padding: spacing.sm,
-  },
-  seeAllText: {
-    fontSize: 20,
-    color: theme.colors.onSurfaceVariant,
-    fontWeight: 'bold',
-  },
-  horizontalList: {
-    flexDirection: 'row',
-    paddingLeft: spacing.lg,
-  },
-  albumCard: {
-    width: ALBUM_CARD_WIDTH,
-    marginRight: spacing.md,
-  },
-  albumCover: {
-    width: ALBUM_CARD_WIDTH,
-    height: ALBUM_CARD_WIDTH,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-  },
-  friendBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    padding: 4,
-  },
-  friendBadgeText: {
-    marginLeft: 4,
-    fontSize: 10,
-    color: theme.colors.onSurfaceVariant,
-  },
-  friendsCounter: {
-    marginTop: spacing.xs,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    alignSelf: 'flex-start',
-  },
-  friendsCountText: {
-    fontSize: 10,
-    color: theme.colors.onPrimary,
-    fontWeight: 'bold',
-  },
-  userCard: {
-    width: USER_CARD_WIDTH,
-    marginRight: spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-  },
-  username: {
-    fontWeight: '600',
-    marginTop: spacing.sm,
-    marginBottom: spacing.xs,
-    textAlign: 'center',
-  },
-  mutualFollowers: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    fontSize: 12,
-  },
-  adContainer: {
-    marginVertical: spacing.lg,
-    alignItems: 'center',
-    paddingBottom: spacing.lg,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    loadingSection: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.xl,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+      paddingTop: spacing.md,
+    },
+    sectionTitle: {
+      fontWeight: 'bold',
+    },
+    sectionDescription: {
+      color: theme.colors.onSurfaceVariant,
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    seeAllButton: {
+      padding: spacing.sm,
+    },
+    seeAllText: {
+      fontSize: 20,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: 'bold',
+    },
+    horizontalList: {
+      flexDirection: 'row',
+      paddingLeft: spacing.lg,
+    },
+    albumCard: {
+      width: ALBUM_CARD_WIDTH,
+      marginRight: spacing.md,
+    },
+    albumCover: {
+      width: ALBUM_CARD_WIDTH,
+      height: ALBUM_CARD_WIDTH,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      resizeMode: 'cover',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+      lineHeight: 16,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 14,
+    },
+    friendBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.xs,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+      padding: 4,
+    },
+    friendBadgeText: {
+      marginLeft: 4,
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+    },
+    friendsCounter: {
+      marginTop: spacing.xs,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 4,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      alignSelf: 'flex-start',
+    },
+    friendsCountText: {
+      fontSize: 10,
+      color: theme.colors.onPrimary,
+      fontWeight: 'bold',
+    },
+    userCard: {
+      width: USER_CARD_WIDTH,
+      marginRight: spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+    },
+    username: {
+      fontWeight: '600',
+      marginTop: spacing.sm,
+      marginBottom: spacing.xs,
+      textAlign: 'center',
+    },
+    mutualFollowers: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 12,
+    },
+    adContainer: {
+      marginVertical: spacing.lg,
+      alignItems: 'center',
+      paddingBottom: spacing.lg,
+    },
+  });

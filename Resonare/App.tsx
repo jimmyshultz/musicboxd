@@ -30,7 +30,7 @@ suppressConsoleForBetaUsers();
 
 // Register background message handler (must be at module level, not inside a component)
 // This handles push notifications when the app is in the background or killed
-messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+messaging().setBackgroundMessageHandler(async remoteMessage => {
   console.log('📱 Push: Background message received:', remoteMessage);
   // The notification is automatically displayed by the system
   // Any data processing can be done here
@@ -61,7 +61,9 @@ function AppContent() {
         // Validate Spotify integration (only logs in development now)
         const { configured } = quickValidation();
         if (!configured && Environment.isDevelopment) {
-          console.warn('⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.');
+          console.warn(
+            '⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.',
+          );
         }
       } catch (error) {
         console.error('Failed to initialize app services:', error);
@@ -73,9 +75,7 @@ function AppContent() {
 
   return (
     <SafeAreaProvider>
-      <PaperProvider
-        theme={currentTheme}
-      >
+      <PaperProvider theme={currentTheme}>
         <StatusBar
           barStyle={isDarkMode ? 'light-content' : 'dark-content'}
           backgroundColor={currentTheme.colors.surface}

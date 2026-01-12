@@ -112,31 +112,27 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => {
-            dispatch(signOutUser());
-          },
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: () => {
+          dispatch(signOutUser());
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleDeleteAccount = () => {
     Alert.alert(
       'Delete Account',
       'This will permanently delete your account and all your data including:\n\n' +
-      '- Your profile\n' +
-      '- All ratings and reviews\n' +
-      '- Diary entries\n' +
-      '- Followers and following\n\n' +
-      'This action cannot be undone.',
+        '- Your profile\n' +
+        '- All ratings and reviews\n' +
+        '- Diary entries\n' +
+        '- Followers and following\n\n' +
+        'This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -144,7 +140,7 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: confirmDeleteAccount,
         },
-      ]
+      ],
     );
   };
 
@@ -165,13 +161,13 @@ export default function SettingsScreen() {
             } catch (error: any) {
               Alert.alert(
                 'Error',
-                error || 'Failed to delete account. Please try again.'
+                error || 'Failed to delete account. Please try again.',
               );
               setDeleting(false);
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -180,7 +176,7 @@ export default function SettingsScreen() {
     description: string,
     value: boolean,
     onToggle: () => void,
-    disabled = false
+    disabled = false,
   ) => (
     <View style={styles.settingItem}>
       <View style={styles.settingContent}>
@@ -234,14 +230,14 @@ export default function SettingsScreen() {
             'Private Profile',
             'Only approved followers can see your profile and activity',
             settings.isPrivate,
-            () => updateSetting('isPrivate', !settings.isPrivate)
+            () => updateSetting('isPrivate', !settings.isPrivate),
           )}
           {renderSettingItem(
             'Show Activity',
             'Let others see your listening activity and ratings',
             settings.showActivity,
             () => updateSetting('showActivity', !settings.showActivity),
-            settings.isPrivate // Disabled if profile is private
+            settings.isPrivate, // Disabled if profile is private
           )}
 
           {/* Follow Requests navigation - only show for private profiles */}
@@ -258,7 +254,7 @@ export default function SettingsScreen() {
           )}
 
           <Divider style={styles.divider} />
-        </>
+        </>,
       )}
 
       {renderSection(
@@ -269,7 +265,7 @@ export default function SettingsScreen() {
             'Let other users follow you and see your activity',
             settings.allowFollowers,
             () => updateSetting('allowFollowers', !settings.allowFollowers),
-            settings.isPrivate // Could be extended for more granular control
+            settings.isPrivate, // Could be extended for more granular control
           )}
 
           <TouchableOpacity
@@ -283,7 +279,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <Divider style={styles.divider} />
-        </>
+        </>,
       )}
 
       {renderSection(
@@ -299,13 +295,16 @@ export default function SettingsScreen() {
             <Icon name="chevron-right" size={16} color="#666" />
           </TouchableOpacity>
           <Divider style={styles.divider} />
-        </>
+        </>,
       )}
 
       {renderSection(
         'Account',
         <>
-          <TouchableOpacity style={styles.accountItem} onPress={() => navigation.navigate('EditProfile')}>
+          <TouchableOpacity
+            style={styles.accountItem}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
             <Text variant="titleMedium" style={styles.accountItemText}>
               Edit Profile
             </Text>
@@ -328,7 +327,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           <Divider style={styles.divider} />
-        </>
+        </>,
       )}
 
       <View style={styles.logoutSection}>
@@ -355,89 +354,90 @@ export default function SettingsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.md,
-    fontWeight: '600',
-    color: theme.colors.primary,
-  },
-  settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: theme.colors.surface,
-  },
-  settingContent: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  settingTitle: {
-    fontWeight: '500',
-    marginBottom: spacing.xs,
-  },
-  settingDescription: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 16,
-  },
-  accountItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    backgroundColor: theme.colors.surface,
-  },
-  accountItemText: {
-    fontWeight: '500',
-    color: theme.colors.onSurface,
-  },
-  deleteAccountText: {
-    fontWeight: '500',
-    color: theme.colors.error,
-  },
-  chevron: {
-    fontSize: 20,
-    color: theme.colors.onSurfaceVariant,
-  },
-  divider: {
-    backgroundColor: theme.colors.outline,
-    height: 1,
-  },
-  logoutSection: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xl,
-  },
-  logoutButton: {
-    borderColor: theme.colors.error,
-  },
-  footer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  footerText: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionTitle: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.md,
+      fontWeight: '600',
+      color: theme.colors.primary,
+    },
+    settingItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: theme.colors.surface,
+    },
+    settingContent: {
+      flex: 1,
+      marginRight: spacing.md,
+    },
+    settingTitle: {
+      fontWeight: '500',
+      marginBottom: spacing.xs,
+    },
+    settingDescription: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 16,
+    },
+    accountItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      backgroundColor: theme.colors.surface,
+    },
+    accountItemText: {
+      fontWeight: '500',
+      color: theme.colors.onSurface,
+    },
+    deleteAccountText: {
+      fontWeight: '500',
+      color: theme.colors.error,
+    },
+    chevron: {
+      fontSize: 20,
+      color: theme.colors.onSurfaceVariant,
+    },
+    divider: {
+      backgroundColor: theme.colors.outline,
+      height: 1,
+    },
+    logoutSection: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.xl,
+    },
+    logoutButton: {
+      borderColor: theme.colors.error,
+    },
+    footer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    footerText: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      marginBottom: spacing.xs,
+    },
+  });

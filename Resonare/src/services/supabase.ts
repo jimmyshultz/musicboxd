@@ -52,17 +52,20 @@ export const supabase = createClient<Database>(config.url, config.anonKey, {
 
 // Test Supabase connection (environment-aware logging)
 setTimeout(() => {
-  supabase.auth.getSession().then(({ data, error }) => {
-    if (error) {
-      Logger.warn('Supabase connection test failed', error.message);
-    } else {
-      Logger.debug('Supabase connection test successful', {
-        hasSession: !!data.session,
-      });
-    }
-  }).catch((err) => {
-    Logger.error('Supabase connection test error', err);
-  });
+  supabase.auth
+    .getSession()
+    .then(({ data, error }) => {
+      if (error) {
+        Logger.warn('Supabase connection test failed', error.message);
+      } else {
+        Logger.debug('Supabase connection test successful', {
+          hasSession: !!data.session,
+        });
+      }
+    })
+    .catch(err => {
+      Logger.error('Supabase connection test error', err);
+    });
 }, 1000);
 
 // Export types for TypeScript support

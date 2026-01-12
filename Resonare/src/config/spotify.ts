@@ -4,10 +4,10 @@ import { ENV_CONFIG } from './env';
 export const SPOTIFY_CONFIG = {
   // API Base URL
   API_BASE_URL: 'https://api.spotify.com/v1',
-  
+
   // Authentication endpoints
   AUTH_URL: 'https://accounts.spotify.com/api/token',
-  
+
   // Client credentials from environment configuration
   // For development, you'll need to:
   // 1. Go to https://developer.spotify.com/dashboard
@@ -15,8 +15,9 @@ export const SPOTIFY_CONFIG = {
   // 3. Get your Client ID and Client Secret
   // 4. Create env.local.ts with your credentials (see env.ts for example)
   CLIENT_ID: ENV_CONFIG.SPOTIFY_CLIENT_ID || 'your_spotify_client_id',
-  CLIENT_SECRET: ENV_CONFIG.SPOTIFY_CLIENT_SECRET || 'your_spotify_client_secret',
-  
+  CLIENT_SECRET:
+    ENV_CONFIG.SPOTIFY_CLIENT_SECRET || 'your_spotify_client_secret',
+
   // API Endpoints
   ENDPOINTS: {
     SEARCH: '/search',
@@ -24,14 +25,14 @@ export const SPOTIFY_CONFIG = {
     ARTISTS: '/artists',
     TRACKS: '/tracks',
   },
-  
+
   // Rate limiting configuration
   RATE_LIMIT: {
     REQUESTS_PER_SECOND: 10, // Conservative limit to avoid hitting rate limits
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY: 1000, // 1 second
   },
-  
+
   // Search configuration
   SEARCH: {
     DEFAULT_LIMIT: 20,
@@ -46,8 +47,13 @@ export const SPOTIFY_CONFIG = {
 };
 
 // Validate configuration on load
-if (SPOTIFY_CONFIG.CLIENT_ID === 'your_spotify_client_id' || SPOTIFY_CONFIG.CLIENT_SECRET === 'your_spotify_client_secret') {
-  console.warn('⚠️ Spotify API credentials not configured. Using mock data fallback.');
+if (
+  SPOTIFY_CONFIG.CLIENT_ID === 'your_spotify_client_id' ||
+  SPOTIFY_CONFIG.CLIENT_SECRET === 'your_spotify_client_secret'
+) {
+  console.warn(
+    '⚠️ Spotify API credentials not configured. Using mock data fallback.',
+  );
 }
 
 // Environment setup instructions

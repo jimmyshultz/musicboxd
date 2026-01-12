@@ -38,24 +38,31 @@ class UserAlbumsService {
   /**
    * Mark an album as listened for a user
    */
-  async markAsListened(userId: string, albumId: string, listenedAt?: Date): Promise<UserAlbumInteraction> {
+  async markAsListened(
+    userId: string,
+    albumId: string,
+    listenedAt?: Date,
+  ): Promise<UserAlbumInteraction> {
     try {
       // Ensure album exists in database
       await albumCacheService.ensureAlbumExists(albumId);
 
       const timestamp = listenedAt || new Date();
-      
+
       const { data, error } = await supabase
         .from('user_albums')
-        .upsert({
-          user_id: userId,
-          album_id: albumId,
-          is_listened: true,
-          listened_at: timestamp.toISOString(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,album_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            album_id: albumId,
+            is_listened: true,
+            listened_at: timestamp.toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id,album_id',
+          },
+        )
         .select()
         .single();
 
@@ -73,19 +80,25 @@ class UserAlbumsService {
   /**
    * Unmark an album as listened for a user
    */
-  async unmarkAsListened(userId: string, albumId: string): Promise<UserAlbumInteraction> {
+  async unmarkAsListened(
+    userId: string,
+    albumId: string,
+  ): Promise<UserAlbumInteraction> {
     try {
       const { data, error } = await supabase
         .from('user_albums')
-        .upsert({
-          user_id: userId,
-          album_id: albumId,
-          is_listened: false,
-          listened_at: null,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,album_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            album_id: albumId,
+            is_listened: false,
+            listened_at: null,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id,album_id',
+          },
+        )
         .select()
         .single();
 
@@ -103,10 +116,18 @@ class UserAlbumsService {
   /**
    * Rate an album for a user
    */
-  async rateAlbum(userId: string, albumId: string, rating: number): Promise<UserAlbumInteraction> {
+  async rateAlbum(
+    userId: string,
+    albumId: string,
+    rating: number,
+  ): Promise<UserAlbumInteraction> {
     try {
       // Validate rating (must be in 0.5 increments between 0.5 and 5.0)
-      if (rating < 0.5 || rating > 5.0 || (rating * 2) !== Math.floor(rating * 2)) {
+      if (
+        rating < 0.5 ||
+        rating > 5.0 ||
+        rating * 2 !== Math.floor(rating * 2)
+      ) {
         throw new Error('Rating must be between 0.5 and 5.0 in 0.5 increments');
       }
 
@@ -115,14 +136,17 @@ class UserAlbumsService {
 
       const { data, error } = await supabase
         .from('user_albums')
-        .upsert({
-          user_id: userId,
-          album_id: albumId,
-          rating: rating,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,album_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            album_id: albumId,
+            rating: rating,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id,album_id',
+          },
+        )
         .select()
         .single();
 
@@ -140,18 +164,24 @@ class UserAlbumsService {
   /**
    * Remove rating from an album for a user
    */
-  async removeRating(userId: string, albumId: string): Promise<UserAlbumInteraction> {
+  async removeRating(
+    userId: string,
+    albumId: string,
+  ): Promise<UserAlbumInteraction> {
     try {
       const { data, error } = await supabase
         .from('user_albums')
-        .upsert({
-          user_id: userId,
-          album_id: albumId,
-          rating: null,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,album_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            album_id: albumId,
+            rating: null,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id,album_id',
+          },
+        )
         .select()
         .single();
 
@@ -169,7 +199,10 @@ class UserAlbumsService {
   /**
    * Get user's interaction with a specific album
    */
-  async getUserAlbumInteraction(userId: string, albumId: string): Promise<UserAlbumInteraction | null> {
+  async getUserAlbumInteraction(
+    userId: string,
+    albumId: string,
+  ): Promise<UserAlbumInteraction | null> {
     try {
       const { data, error } = await supabase
         .from('user_albums')
@@ -192,14 +225,20 @@ class UserAlbumsService {
   /**
    * Get user's listening history (chronological order)
    */
-  async getUserListeningHistory(userId: string, limit: number = 50, offset: number = 0): Promise<AlbumWithInteraction[]> {
+  async getUserListeningHistory(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<AlbumWithInteraction[]> {
     try {
       const { data, error } = await supabase
         .from('user_albums')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .eq('is_listened', true)
         .order('listened_at', { ascending: false })
@@ -220,8 +259,8 @@ class UserAlbumsService {
           listened_at: item.listened_at,
           review: item.review,
           created_at: item.created_at,
-          updated_at: item.updated_at
-        }
+          updated_at: item.updated_at,
+        },
       }));
     } catch (error) {
       console.error('Error getting user listening history:', error);
@@ -232,14 +271,20 @@ class UserAlbumsService {
   /**
    * Get user's rated albums
    */
-  async getUserRatedAlbums(userId: string, limit: number = 50, offset: number = 0): Promise<AlbumWithInteraction[]> {
+  async getUserRatedAlbums(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<AlbumWithInteraction[]> {
     try {
       const { data, error } = await supabase
         .from('user_albums')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .not('rating', 'is', null)
         .order('updated_at', { ascending: false })
@@ -260,8 +305,8 @@ class UserAlbumsService {
           listened_at: item.listened_at,
           review: item.review,
           created_at: item.created_at,
-          updated_at: item.updated_at
-        }
+          updated_at: item.updated_at,
+        },
       }));
     } catch (error) {
       console.error('Error getting user rated albums:', error);
@@ -275,7 +320,7 @@ class UserAlbumsService {
   async getUserAlbumStats(userId: string): Promise<UserAlbumStats> {
     try {
       const currentYear = new Date().getFullYear();
-      
+
       // Get total albums listened
       const { count: totalAlbums, error: albumsError } = await supabase
         .from('user_albums')
@@ -309,9 +354,10 @@ class UserAlbumsService {
         throw avgError;
       }
 
-      const averageRating = avgData.length > 0 
-        ? avgData.reduce((sum, item) => sum + item.rating, 0) / avgData.length 
-        : 0;
+      const averageRating =
+        avgData.length > 0
+          ? avgData.reduce((sum, item) => sum + item.rating, 0) / avgData.length
+          : 0;
 
       // Get albums this year
       const { count: albumsThisYear, error: yearAlbumsError } = await supabase
@@ -344,7 +390,7 @@ class UserAlbumsService {
         totalRatings: totalRatings || 0,
         averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal place
         albumsThisYear: albumsThisYear || 0,
-        ratingsThisYear: ratingsThisYear || 0
+        ratingsThisYear: ratingsThisYear || 0,
       };
     } catch (error) {
       console.error('Error getting user album stats:', error);
@@ -355,7 +401,10 @@ class UserAlbumsService {
   /**
    * Get multiple user album interactions in batch
    */
-  async getUserAlbumInteractions(userId: string, albumIds: string[]): Promise<Record<string, UserAlbumInteraction>> {
+  async getUserAlbumInteractions(
+    userId: string,
+    albumIds: string[],
+  ): Promise<Record<string, UserAlbumInteraction>> {
     try {
       if (albumIds.length === 0) {
         return {};
@@ -386,7 +435,10 @@ class UserAlbumsService {
   /**
    * Check if user has listened to an album
    */
-  async hasUserListenedToAlbum(userId: string, albumId: string): Promise<boolean> {
+  async hasUserListenedToAlbum(
+    userId: string,
+    albumId: string,
+  ): Promise<boolean> {
     try {
       const interaction = await this.getUserAlbumInteraction(userId, albumId);
       return interaction?.is_listened || false;
@@ -399,7 +451,10 @@ class UserAlbumsService {
   /**
    * Get user's rating for an album
    */
-  async getUserAlbumRating(userId: string, albumId: string): Promise<number | null> {
+  async getUserAlbumRating(
+    userId: string,
+    albumId: string,
+  ): Promise<number | null> {
     try {
       const interaction = await this.getUserAlbumInteraction(userId, albumId);
       return interaction?.rating || null;

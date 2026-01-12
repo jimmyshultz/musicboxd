@@ -1,39 +1,43 @@
 import { supabase } from './supabase';
-import { 
-  ContentReport, 
-  ContentReportType, 
-  ContentReportReason, 
-  ContentReportStatus 
+import {
+  ContentReport,
+  ContentReportType,
+  ContentReportReason,
+  ContentReportStatus,
 } from '../types/database';
 
 /**
  * Report reasons with user-friendly labels
  */
-export const REPORT_REASONS: { value: ContentReportReason; label: string; description: string }[] = [
-  { 
-    value: 'spam', 
-    label: 'Spam', 
-    description: 'Unwanted promotional content or repetitive messages' 
+export const REPORT_REASONS: {
+  value: ContentReportReason;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: 'spam',
+    label: 'Spam',
+    description: 'Unwanted promotional content or repetitive messages',
   },
-  { 
-    value: 'harassment', 
-    label: 'Harassment', 
-    description: 'Bullying, threats, or targeted abuse' 
+  {
+    value: 'harassment',
+    label: 'Harassment',
+    description: 'Bullying, threats, or targeted abuse',
   },
-  { 
-    value: 'hate_speech', 
-    label: 'Hate Speech', 
-    description: 'Content that promotes hatred against protected groups' 
+  {
+    value: 'hate_speech',
+    label: 'Hate Speech',
+    description: 'Content that promotes hatred against protected groups',
   },
-  { 
-    value: 'inappropriate', 
-    label: 'Inappropriate Content', 
-    description: 'Sexual, violent, or otherwise objectionable content' 
+  {
+    value: 'inappropriate',
+    label: 'Inappropriate Content',
+    description: 'Sexual, violent, or otherwise objectionable content',
   },
-  { 
-    value: 'other', 
-    label: 'Other', 
-    description: 'Other violation of community guidelines' 
+  {
+    value: 'other',
+    label: 'Other',
+    description: 'Other violation of community guidelines',
   },
 ];
 
@@ -72,11 +76,14 @@ class ReportService {
         params.reporterId,
         params.reportedUserId,
         params.contentType,
-        params.contentId
+        params.contentId,
       );
 
       if (existingReport) {
-        return { success: false, error: 'You have already reported this content' };
+        return {
+          success: false,
+          error: 'You have already reported this content',
+        };
       }
 
       const { data, error } = await supabase
@@ -101,7 +108,10 @@ class ReportService {
       return { success: true, report: data };
     } catch (error) {
       console.error('Error submitting report:', error);
-      return { success: false, error: 'Failed to submit report. Please try again.' };
+      return {
+        success: false,
+        error: 'Failed to submit report. Please try again.',
+      };
     }
   }
 
@@ -112,7 +122,7 @@ class ReportService {
     reporterId: string,
     reportedUserId: string,
     contentType: ContentReportType,
-    contentId?: string
+    contentId?: string,
   ): Promise<boolean> {
     try {
       let query = supabase
@@ -171,7 +181,7 @@ class ReportService {
     reporterId: string,
     reportedUserId: string,
     reason: ContentReportReason,
-    description?: string
+    description?: string,
   ): Promise<{ success: boolean; error?: string }> {
     return this.submitReport({
       reporterId,
@@ -190,7 +200,7 @@ class ReportService {
     reportedUserId: string,
     ratingId: string,
     reason: ContentReportReason,
-    description?: string
+    description?: string,
   ): Promise<{ success: boolean; error?: string }> {
     return this.submitReport({
       reporterId,
@@ -210,7 +220,7 @@ class ReportService {
     reportedUserId: string,
     entryId: string,
     reason: ContentReportReason,
-    description?: string
+    description?: string,
   ): Promise<{ success: boolean; error?: string }> {
     return this.submitReport({
       reporterId,

@@ -36,15 +36,18 @@ class AlbumListensService {
 
       const { data, error } = await supabase
         .from('album_listens')
-        .upsert({
-          user_id: userId,
-          album_id: albumId,
-          is_listened: true,
-          first_listened_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,album_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            album_id: albumId,
+            is_listened: true,
+            first_listened_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id,album_id',
+          },
+        )
         .select()
         .single();
 
@@ -83,7 +86,10 @@ class AlbumListensService {
   /**
    * Check if user has listened to an album
    */
-  async hasUserListenedToAlbum(userId: string, albumId: string): Promise<boolean> {
+  async hasUserListenedToAlbum(
+    userId: string,
+    albumId: string,
+  ): Promise<boolean> {
     try {
       const { data, error } = await supabase
         .from('album_listens')
@@ -106,14 +112,20 @@ class AlbumListensService {
   /**
    * Get user's listened albums with album details
    */
-  async getUserListenedAlbums(userId: string, limit: number = 50, offset: number = 0): Promise<AlbumListenWithAlbum[]> {
+  async getUserListenedAlbums(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ): Promise<AlbumListenWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('album_listens')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .eq('is_listened', true)
         .order('first_listened_at', { ascending: false })
@@ -181,7 +193,10 @@ class AlbumListensService {
   /**
    * Get user's album listen status for multiple albums
    */
-  async getUserAlbumListenStatus(userId: string, albumIds: string[]): Promise<Record<string, boolean>> {
+  async getUserAlbumListenStatus(
+    userId: string,
+    albumIds: string[],
+  ): Promise<Record<string, boolean>> {
     try {
       if (albumIds.length === 0) {
         return {};
@@ -212,11 +227,14 @@ class AlbumListensService {
   /**
    * Get all listens for a user with album details
    */
-  async getUserListensWithAlbums(userId: string): Promise<AlbumListenWithAlbum[]> {
+  async getUserListensWithAlbums(
+    userId: string,
+  ): Promise<AlbumListenWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('album_listens')
-        .select(`
+        .select(
+          `
           *,
           albums (
             id,
@@ -229,7 +247,8 @@ class AlbumListensService {
             album_type,
             genres
           )
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .eq('is_listened', true)
         .order('first_listened_at', { ascending: false });
@@ -257,7 +276,8 @@ class AlbumListensService {
 
       const { data, error } = await supabase
         .from('album_listens')
-        .select(`
+        .select(
+          `
           *,
           albums (
             id,
@@ -270,7 +290,8 @@ class AlbumListensService {
             album_type,
             genres
           )
-        `)
+        `,
+        )
         .in('user_id', userIds)
         .eq('is_listened', true)
         .order('first_listened_at', { ascending: false });

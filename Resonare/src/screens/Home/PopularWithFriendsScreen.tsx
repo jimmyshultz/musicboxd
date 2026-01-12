@@ -25,8 +25,6 @@ type PopularWithFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const CARDS_PER_ROW = 3;
 
-
-
 interface FriendPopularAlbum {
   album: Album;
   friendsWhoListened: {
@@ -50,9 +48,15 @@ export default function PopularWithFriendsScreen() {
   // Calculate card width to ensure 3 cards always fit per row
   const totalHorizontalPadding = HORIZONTAL_SPACING * 2;
   const totalMarginsBetweenCards = CARD_MARGIN * (CARDS_PER_ROW - 1);
-  const availableWidth = width - totalHorizontalPadding - totalMarginsBetweenCards;
+  const availableWidth =
+    width - totalHorizontalPadding - totalMarginsBetweenCards;
   const albumCardWidth = Math.floor(availableWidth / CARDS_PER_ROW);
-  const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
+  const styles = createStyles(
+    theme,
+    albumCardWidth,
+    HORIZONTAL_SPACING,
+    CARD_MARGIN,
+  );
   const [albums, setAlbums] = useState<FriendPopularAlbum[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,7 +76,9 @@ export default function PopularWithFriendsScreen() {
 
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
-      const friendsOnly = users.filter(user => user.username !== currentUsername);
+      const friendsOnly = users.filter(
+        user => user.username !== currentUsername,
+      );
 
       // Early return if no friends available
       if (friendsOnly.length === 0) {
@@ -85,14 +91,22 @@ export default function PopularWithFriendsScreen() {
       const friendIds = friendsOnly.map(f => f.id);
 
       // BATCH QUERY: Get all listens for all friends in ONE query (album data already joined)
-      const allListens = await albumListensService.getListensForUsers(friendIds);
+      const allListens =
+        await albumListensService.getListensForUsers(friendIds);
 
       // Track album popularity: albumId -> { album, friendsWhoListened }
-      const albumPopularity = new Map<string, {
-        album: Album;
-        friendsWhoListened: Set<string>;
-        friendData: { id: string; username: string; profilePicture?: string; }[];
-      }>();
+      const albumPopularity = new Map<
+        string,
+        {
+          album: Album;
+          friendsWhoListened: Set<string>;
+          friendData: {
+            id: string;
+            username: string;
+            profilePicture?: string;
+          }[];
+        }
+      >();
 
       // Process all listens (no additional queries needed - album data already included)
       for (const listen of allListens) {
@@ -177,26 +191,31 @@ export default function PopularWithFriendsScreen() {
     navigation.navigate('AlbumDetails', { albumId });
   };
 
-  const renderFriendAvatars = (friends: FriendPopularAlbum['friendsWhoListened'], totalFriends: number) => {
+  const renderFriendAvatars = (
+    friends: FriendPopularAlbum['friendsWhoListened'],
+    totalFriends: number,
+  ) => {
     const displayedFriends = friends.slice(0, 3);
     const remainingCount = totalFriends - displayedFriends.length;
 
     return (
       <View style={styles.friendAvatars}>
         {displayedFriends.map((friend, index) => (
-          <View key={friend.id} style={[styles.friendAvatar, index > 0 && styles.overlappingAvatar]}>
-            <ProfileAvatar
-              uri={friend.profilePicture}
-              size={24}
-            />
+          <View
+            key={friend.id}
+            style={[styles.friendAvatar, index > 0 && styles.overlappingAvatar]}
+          >
+            <ProfileAvatar uri={friend.profilePicture} size={24} />
           </View>
         ))}
         {remainingCount > 0 && (
-          <View style={[
-            styles.friendAvatar,
-            styles.remainingCount,
-            displayedFriends.length > 0 && styles.overlappingAvatar
-          ]}>
+          <View
+            style={[
+              styles.friendAvatar,
+              styles.remainingCount,
+              displayedFriends.length > 0 && styles.overlappingAvatar,
+            ]}
+          >
             <Text style={styles.remainingText}>+{remainingCount}</Text>
           </View>
         )}
@@ -214,7 +233,10 @@ export default function PopularWithFriendsScreen() {
         onPress={() => navigateToAlbum(popularAlbum.album.id)}
       >
         <FastImage
-          source={{ uri: popularAlbum.album.coverImageUrl, priority: FastImage.priority.normal }}
+          source={{
+            uri: popularAlbum.album.coverImageUrl,
+            priority: FastImage.priority.normal,
+          }}
           style={styles.albumCover}
           resizeMode={FastImage.resizeMode.cover}
         />
@@ -226,9 +248,13 @@ export default function PopularWithFriendsScreen() {
         </Text>
 
         <View style={styles.friendsInfo}>
-          {renderFriendAvatars(popularAlbum.friendsWhoListened, popularAlbum.totalFriends)}
+          {renderFriendAvatars(
+            popularAlbum.friendsWhoListened,
+            popularAlbum.totalFriends,
+          )}
           <Text variant="bodySmall" style={styles.friendsCount}>
-            {popularAlbum.totalFriends} friend{popularAlbum.totalFriends !== 1 ? 's' : ''}
+            {popularAlbum.totalFriends} friend
+            {popularAlbum.totalFriends !== 1 ? 's' : ''}
           </Text>
         </View>
 
@@ -271,125 +297,131 @@ export default function PopularWithFriendsScreen() {
   );
 }
 
-const createStyles = (theme: any, albumCardWidth: number, horizontalSpacing: number, cardMargin: number) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
+const createStyles = (
+  theme: any,
+  albumCardWidth: number,
+  horizontalSpacing: number,
+  cardMargin: number,
+) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
 
-  headerTitle: {
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  placeholder: {
-    width: 48, // Same width as back button for centering
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: horizontalSpacing,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
-    justifyContent: 'flex-start',
-  },
-  albumCard: {
-    width: albumCardWidth,
-    marginBottom: spacing.lg,
-    marginRight: cardMargin,
-    position: 'relative',
-  },
-  albumCardLastInRow: {
-    marginRight: 0,
-  },
-  albumCover: {
-    width: albumCardWidth,
-    height: albumCardWidth,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-    marginBottom: spacing.sm,
-  },
-  friendsInfo: {
-    marginTop: spacing.xs,
-  },
-  friendAvatars: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  friendAvatar: {
-    borderWidth: 2,
-    borderColor: theme.colors.background,
-  },
-  overlappingAvatar: {
-    marginLeft: -8, // Adjust for overlapping avatars
-  },
-  remainingCount: {
-    backgroundColor: theme.colors.onSurfaceVariant,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-  },
-  remainingText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  friendsCount: {
-    fontSize: 11,
-    color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
-  },
-  rankBadge: {
-    position: 'absolute',
-    top: spacing.sm,
-    left: spacing.sm,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-  },
-  rankText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-});
+    headerTitle: {
+      fontWeight: 'bold',
+      flex: 1,
+      textAlign: 'center',
+    },
+    placeholder: {
+      width: 48, // Same width as back button for centering
+    },
+    scrollContainer: {
+      flex: 1,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: horizontalSpacing,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.lg,
+      justifyContent: 'flex-start',
+    },
+    albumCard: {
+      width: albumCardWidth,
+      marginBottom: spacing.lg,
+      marginRight: cardMargin,
+      position: 'relative',
+    },
+    albumCardLastInRow: {
+      marginRight: 0,
+    },
+    albumCover: {
+      width: albumCardWidth,
+      height: albumCardWidth,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      resizeMode: 'cover',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+      lineHeight: 16,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 14,
+      marginBottom: spacing.sm,
+    },
+    friendsInfo: {
+      marginTop: spacing.xs,
+    },
+    friendAvatars: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: spacing.xs,
+    },
+    friendAvatar: {
+      borderWidth: 2,
+      borderColor: theme.colors.background,
+    },
+    overlappingAvatar: {
+      marginLeft: -8, // Adjust for overlapping avatars
+    },
+    remainingCount: {
+      backgroundColor: theme.colors.onSurfaceVariant,
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+    },
+    remainingText: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: 'white',
+    },
+    friendsCount: {
+      fontSize: 11,
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+    },
+    rankBadge: {
+      position: 'absolute',
+      top: spacing.sm,
+      left: spacing.sm,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 12,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: 2,
+    },
+    rankText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 12,
+    },
+  });

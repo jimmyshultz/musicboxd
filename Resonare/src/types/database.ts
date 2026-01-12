@@ -147,7 +147,12 @@ export interface UserActivity {
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment';
+  type:
+    | 'follow'
+    | 'follow_request'
+    | 'follow_request_accepted'
+    | 'diary_like'
+    | 'diary_comment';
   actor_id: string;
   reference_id?: string;
   read: boolean;
@@ -193,8 +198,17 @@ export interface BlockedUser {
 }
 
 export type ContentReportType = 'profile' | 'rating' | 'diary_entry';
-export type ContentReportReason = 'spam' | 'harassment' | 'hate_speech' | 'inappropriate' | 'other';
-export type ContentReportStatus = 'pending' | 'reviewed' | 'actioned' | 'dismissed';
+export type ContentReportReason =
+  | 'spam'
+  | 'harassment'
+  | 'hate_speech'
+  | 'inappropriate'
+  | 'other';
+export type ContentReportStatus =
+  | 'pending'
+  | 'reviewed'
+  | 'actioned'
+  | 'dismissed';
 
 export interface ContentReport {
   id: string;
@@ -257,17 +271,32 @@ export interface Database {
       album_listens: {
         Row: AlbumListen;
         Insert: Omit<AlbumListen, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<AlbumListen, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<
+          Omit<
+            AlbumListen,
+            'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'
+          >
+        >;
       };
       album_ratings: {
         Row: AlbumRating;
         Insert: Omit<AlbumRating, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<AlbumRating, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<
+          Omit<
+            AlbumRating,
+            'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'
+          >
+        >;
       };
       diary_entries: {
         Row: DiaryEntry;
         Insert: Omit<DiaryEntry, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<DiaryEntry, 'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<
+          Omit<
+            DiaryEntry,
+            'id' | 'user_id' | 'album_id' | 'created_at' | 'updated_at'
+          >
+        >;
       };
       diary_entry_likes: {
         Row: DiaryEntryLike;
@@ -277,7 +306,9 @@ export interface Database {
       diary_entry_comments: {
         Row: DiaryEntryComment;
         Insert: Omit<DiaryEntryComment, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Pick<DiaryEntryComment, 'body' | 'is_deleted' | 'updated_at'>>;
+        Update: Partial<
+          Pick<DiaryEntryComment, 'body' | 'is_deleted' | 'updated_at'>
+        >;
       };
       user_follows: {
         Row: UserFollow;
@@ -301,8 +332,16 @@ export interface Database {
       };
       content_reports: {
         Row: ContentReport;
-        Insert: Omit<ContentReport, 'id' | 'created_at' | 'reviewed_at' | 'reviewed_by' | 'action_taken'>;
-        Update: Partial<Pick<ContentReport, 'status' | 'reviewed_at' | 'reviewed_by' | 'action_taken'>>;
+        Insert: Omit<
+          ContentReport,
+          'id' | 'created_at' | 'reviewed_at' | 'reviewed_by' | 'action_taken'
+        >;
+        Update: Partial<
+          Pick<
+            ContentReport,
+            'status' | 'reviewed_at' | 'reviewed_by' | 'action_taken'
+          >
+        >;
       };
       notifications: {
         Row: Notification;
@@ -317,7 +356,9 @@ export interface Database {
       push_preferences: {
         Row: PushPreferences;
         Insert: Omit<PushPreferences, 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<PushPreferences, 'user_id' | 'created_at' | 'updated_at'>>;
+        Update: Partial<
+          Omit<PushPreferences, 'user_id' | 'created_at' | 'updated_at'>
+        >;
       };
     };
   };

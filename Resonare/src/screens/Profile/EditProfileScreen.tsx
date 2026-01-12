@@ -28,7 +28,8 @@ import { contentModerationService } from '../../services/contentModerationServic
 import { updateProfile } from '../../store/slices/authSlice';
 import { spacing } from '../../utils/theme';
 
-type EditProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
+type EditProfileScreenNavigationProp =
+  StackNavigationProp<ProfileStackParamList>;
 
 export default function EditProfileScreen() {
   const navigation = useNavigation<EditProfileScreenNavigationProp>();
@@ -38,7 +39,9 @@ export default function EditProfileScreen() {
   const styles = createStyles(theme);
 
   const [username, setUsername] = useState(user?.username || '');
-  const [_profilePicture, _setProfilePicture] = useState(user?.profilePicture || '');
+  const [_profilePicture, _setProfilePicture] = useState(
+    user?.profilePicture || '',
+  );
   const [newImageUri, setNewImageUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -55,7 +58,7 @@ export default function EditProfileScreen() {
 
   // Handle back button with unsaved changes warning
   useLayoutEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+    const unsubscribe = navigation.addListener('beforeRemove', e => {
       // Don't show warning if we're bypassing, saving, or no unsaved changes
       if (bypassWarningRef.current || isSaving || !hasUnsavedChanges) {
         bypassWarningRef.current = false; // Reset for next time
@@ -77,14 +80,12 @@ export default function EditProfileScreen() {
               navigation.dispatch(e.data.action);
             },
           },
-        ]
+        ],
       );
     });
 
     return unsubscribe;
   }, [navigation, hasUnsavedChanges, isSaving]);
-
-
 
   const validateUsername = (usernameToValidate: string): string | null => {
     // Length validation
@@ -102,9 +103,12 @@ export default function EditProfileScreen() {
     }
 
     // Content moderation check
-    const moderationResult = contentModerationService.validateUsername(usernameToValidate);
+    const moderationResult =
+      contentModerationService.validateUsername(usernameToValidate);
     if (!moderationResult.isValid) {
-      return moderationResult.error || 'Username contains inappropriate content';
+      return (
+        moderationResult.error || 'Username contains inappropriate content'
+      );
     }
 
     return null;
@@ -128,21 +132,23 @@ export default function EditProfileScreen() {
       mediaType: 'photo',
       includeBase64: true, // Include base64 for easier upload
       forceJpg: true, // Force JPEG format for consistency
-    }).then(image => {
-      console.log('Image picker result:', {
-        path: image.path,
-        mime: image.mime,
-        size: image.size,
-        width: image.width,
-        height: image.height,
+    })
+      .then(image => {
+        console.log('Image picker result:', {
+          path: image.path,
+          mime: image.mime,
+          size: image.size,
+          width: image.width,
+          height: image.height,
+        });
+        setNewImageUri(image.path);
+      })
+      .catch(error => {
+        if (error.code !== 'E_PICKER_CANCELLED') {
+          console.error('Image picker error:', error);
+          Alert.alert('Error', 'Unable to select image. Please try again.');
+        }
       });
-      setNewImageUri(image.path);
-    }).catch(error => {
-      if (error.code !== 'E_PICKER_CANCELLED') {
-        console.error('Image picker error:', error);
-        Alert.alert('Error', 'Unable to select image. Please try again.');
-      }
-    });
   };
 
   const handleSave = async () => {
@@ -150,7 +156,7 @@ export default function EditProfileScreen() {
 
     setLoading(true);
     setIsSaving(true);
-    
+
     try {
       // Validate username uniqueness if it changed
       if (username !== user.username) {
@@ -165,7 +171,7 @@ export default function EditProfileScreen() {
 
       // Prepare updates
       const updates: any = {};
-      
+
       if (username !== user.username) {
         updates.username = username;
       }
@@ -177,13 +183,19 @@ export default function EditProfileScreen() {
           if (user.profilePicture) {
             await storageService.deleteProfilePicture(user.profilePicture);
           }
-          
+
           // Upload new profile picture
-          const newAvatarUrl = await storageService.uploadProfilePicture(user.id, newImageUri);
+          const newAvatarUrl = await storageService.uploadProfilePicture(
+            user.id,
+            newImageUri,
+          );
           updates.avatar_url = newAvatarUrl;
         } catch (uploadError) {
           console.error('Error uploading profile picture:', uploadError);
-          Alert.alert('Upload Error', 'Unable to upload profile picture. Please try again.');
+          Alert.alert(
+            'Upload Error',
+            'Unable to upload profile picture. Please try again.',
+          );
           setLoading(false);
           setIsSaving(false);
           return;
@@ -192,27 +204,31 @@ export default function EditProfileScreen() {
 
       // Update profile
       if (Object.keys(updates).length > 0) {
-        const updatedProfile = await userService.updateProfile(user.id, updates);
-        
+        const updatedProfile = await userService.updateProfile(
+          user.id,
+          updates,
+        );
+
         // Update Redux store
-        dispatch(updateProfile({
-          username: updatedProfile.username,
-          profilePicture: updatedProfile.avatar_url || undefined,
-        }));
+        dispatch(
+          updateProfile({
+            username: updatedProfile.username,
+            profilePicture: updatedProfile.avatar_url || undefined,
+          }),
+        );
       }
 
       // Set bypass flag and clear unsaved changes before navigating
       bypassWarningRef.current = true;
       setHasUnsavedChanges(false);
-      
+
       Alert.alert('Success', 'Profile updated successfully!');
       navigation.goBack();
-      
     } catch (error) {
       console.error('Error updating profile:', error);
       Alert.alert('Error', 'Unable to update profile. Please try again.');
     }
-    
+
     setLoading(false);
     setIsSaving(false);
   };
@@ -224,16 +240,16 @@ export default function EditProfileScreen() {
         'You have unsaved changes. Are you sure you want to leave?',
         [
           { text: 'Stay', style: 'cancel' },
-          { 
-            text: 'Leave', 
+          {
+            text: 'Leave',
             style: 'destructive',
             onPress: () => {
               // Set bypass flag to prevent beforeRemove listener from showing another alert
               bypassWarningRef.current = true;
               navigation.goBack();
-            }
+            },
           },
-        ]
+        ],
       );
     } else {
       navigation.goBack();
@@ -251,15 +267,21 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+    >
       {/* Profile Picture Section */}
       <Card style={styles.section} elevation={1}>
         <Card.Content style={styles.profilePictureSection}>
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Profile Picture
           </Text>
-          
-          <TouchableOpacity onPress={handleSelectImage} style={styles.avatarContainer}>
+
+          <TouchableOpacity
+            onPress={handleSelectImage}
+            style={styles.avatarContainer}
+          >
             <Avatar.Image
               size={120}
               source={getCurrentProfileImage()}
@@ -269,11 +291,11 @@ export default function EditProfileScreen() {
               <Icon name="camera" size={24} color="#fff" />
             </View>
           </TouchableOpacity>
-          
+
           <Text variant="bodySmall" style={styles.avatarHint}>
             Tap to change profile picture
           </Text>
-          
+
           {newImageUri && (
             <Button
               mode="text"
@@ -292,7 +314,7 @@ export default function EditProfileScreen() {
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Username
           </Text>
-          
+
           <TextInput
             label="Username"
             value={username}
@@ -303,15 +325,16 @@ export default function EditProfileScreen() {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          
+
           {usernameError && (
             <Text variant="bodySmall" style={styles.errorText}>
               {usernameError}
             </Text>
           )}
-          
+
           <Text variant="bodySmall" style={styles.usernameHint}>
-            5-16 characters. Letters, numbers, periods, dashes, and underscores only.
+            5-16 characters. Letters, numbers, periods, dashes, and underscores
+            only.
           </Text>
         </Card.Content>
       </Card>
@@ -323,7 +346,7 @@ export default function EditProfileScreen() {
             <Text variant="titleMedium" style={styles.sectionTitle}>
               Preview
             </Text>
-            
+
             <View style={styles.previewContainer}>
               <Avatar.Image
                 size={60}
@@ -331,7 +354,9 @@ export default function EditProfileScreen() {
                 style={styles.previewAvatar}
               />
               <View style={styles.previewText}>
-                <Text variant="titleMedium" style={styles.previewUsername}>{username}</Text>
+                <Text variant="titleMedium" style={styles.previewUsername}>
+                  {username}
+                </Text>
                 <Text variant="bodySmall" style={styles.previewLabel}>
                   This is how your profile will look
                 </Text>
@@ -365,94 +390,95 @@ export default function EditProfileScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContent: {
-    padding: spacing.lg,
-  },
-  section: {
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  sectionTitle: {
-    marginBottom: spacing.md,
-    color: theme.colors.primary,
-  },
-  profilePictureSection: {
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: spacing.sm,
-  },
-  avatar: {
-    backgroundColor: theme.colors.surfaceVariant,
-  },
-  avatarOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.surface,
-  },
-  avatarHint: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-  },
-  removeImageButton: {
-    marginTop: spacing.xs,
-  },
-  usernameInput: {
-    marginBottom: spacing.sm,
-  },
-  errorText: {
-    color: theme.colors.error,
-    marginBottom: spacing.xs,
-  },
-  usernameHint: {
-    color: theme.colors.onSurfaceVariant,
-  },
-  previewContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.md,
-    backgroundColor: theme.colors.surfaceVariant,
-    borderRadius: 8,
-  },
-  previewAvatar: {
-    marginRight: spacing.md,
-  },
-  previewText: {
-    flex: 1,
-  },
-  previewUsername: {
-    color: theme.colors.onSurface,
-    fontWeight: '600',
-  },
-  previewLabel: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.lg,
-    marginBottom: spacing.xl,
-    gap: spacing.md,
-  },
-  cancelButton: {
-    flex: 1,
-  },
-  saveButton: {
-    flex: 1,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContent: {
+      padding: spacing.lg,
+    },
+    section: {
+      marginBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    sectionTitle: {
+      marginBottom: spacing.md,
+      color: theme.colors.primary,
+    },
+    profilePictureSection: {
+      alignItems: 'center',
+    },
+    avatarContainer: {
+      position: 'relative',
+      marginBottom: spacing.sm,
+    },
+    avatar: {
+      backgroundColor: theme.colors.surfaceVariant,
+    },
+    avatarOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      backgroundColor: theme.colors.primary,
+      borderRadius: 15,
+      width: 30,
+      height: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: theme.colors.surface,
+    },
+    avatarHint: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+    },
+    removeImageButton: {
+      marginTop: spacing.xs,
+    },
+    usernameInput: {
+      marginBottom: spacing.sm,
+    },
+    errorText: {
+      color: theme.colors.error,
+      marginBottom: spacing.xs,
+    },
+    usernameHint: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    previewContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.md,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 8,
+    },
+    previewAvatar: {
+      marginRight: spacing.md,
+    },
+    previewText: {
+      flex: 1,
+    },
+    previewUsername: {
+      color: theme.colors.onSurface,
+      fontWeight: '600',
+    },
+    previewLabel: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.lg,
+      marginBottom: spacing.xl,
+      gap: spacing.md,
+    },
+    cancelButton: {
+      flex: 1,
+    },
+    saveButton: {
+      flex: 1,
+    },
+  });

@@ -11,7 +11,7 @@ export const colors = {
   textSecondary: '#666666',
   border: '#E0E0E0',
   card: '#FFFFFF',
-  
+
   // Dark mode colors
   dark: {
     primary: '#BB86FC',
@@ -23,7 +23,7 @@ export const colors = {
     textSecondary: '#AAAAAA',
     border: '#333333',
     card: '#1E1E1E',
-  }
+  },
 };
 
 export const lightTheme = {

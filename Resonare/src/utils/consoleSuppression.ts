@@ -8,7 +8,7 @@ export const suppressConsoleForBetaUsers = () => {
   if (Environment.isStaging || Environment.isProduction) {
     // Store original console methods for crash reporting
     const originalConsole = { ...console };
-    
+
     // Make original console available for crash reporting services
     (global as any).__DEV_CONSOLE__ = originalConsole;
 
@@ -50,7 +50,7 @@ export const suppressConsoleForBetaUsers = () => {
     if (typeof ErrorUtils !== 'undefined') {
       ErrorUtils.setGlobalHandler = () => {};
       ErrorUtils.getGlobalHandler = () => () => {};
-      
+
       // Override the error reporter
       if (ErrorUtils.reportError) {
         ErrorUtils.reportError = () => {};

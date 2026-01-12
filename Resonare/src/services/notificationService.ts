@@ -63,7 +63,7 @@ class NotificationService {
       console.log('✅ Notification service marked as ready');
 
       // Test connection in background (non-blocking)
-      this.testRealtimeConnection().catch((error) => {
+      this.testRealtimeConnection().catch(error => {
         console.warn('⚠️ Background real-time connection test failed:', error);
         // Connection issues will be handled by retry logic in actual subscriptions
       });
@@ -84,7 +84,8 @@ class NotificationService {
   private async testRealtimeConnection(): Promise<void> {
     try {
       // Verify session first
-      const { data: sessionData, error: sessionError } = await this.client.auth.getSession();
+      const { data: sessionData, error: sessionError } =
+        await this.client.auth.getSession();
       if (sessionError) {
         console.warn('⚠️ Could not verify Supabase session:', sessionError);
       } else {
@@ -94,7 +95,7 @@ class NotificationService {
       // Test real-time connection by creating a temporary test channel
       const testChannelName = `test:${Date.now()}`;
       const testChannel = this.client.channel(testChannelName);
-      
+
       return new Promise<void>((resolve, _reject) => {
         const timeout = setTimeout(() => {
           testChannel.unsubscribe();
@@ -103,22 +104,21 @@ class NotificationService {
           resolve(); // Resolve, not reject - timeout is acceptable
         }, 2000);
 
-        testChannel
-          .subscribe((status) => {
-            if (status === 'SUBSCRIBED') {
-              clearTimeout(timeout);
-              testChannel.unsubscribe();
-              this.client.removeChannel(testChannel);
-              console.log('✅ Real-time connection test successful');
-              resolve();
-            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-              clearTimeout(timeout);
-              testChannel.unsubscribe();
-              this.client.removeChannel(testChannel);
-              console.warn(`⚠️ Real-time connection test returned ${status}`);
-              resolve(); // Resolve, not reject - errors are handled by retry logic
-            }
-          });
+        testChannel.subscribe(status => {
+          if (status === 'SUBSCRIBED') {
+            clearTimeout(timeout);
+            testChannel.unsubscribe();
+            this.client.removeChannel(testChannel);
+            console.log('✅ Real-time connection test successful');
+            resolve();
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            clearTimeout(timeout);
+            testChannel.unsubscribe();
+            this.client.removeChannel(testChannel);
+            console.warn(`⚠️ Real-time connection test returned ${status}`);
+            resolve(); // Resolve, not reject - errors are handled by retry logic
+          }
+        });
       });
     } catch (error) {
       console.warn('⚠️ Error during background connection test:', error);
@@ -149,7 +149,10 @@ class NotificationService {
       return Promise.race([
         this.initializationPromise,
         new Promise<void>((_, reject) =>
-          setTimeout(() => reject(new Error('Service initialization timeout')), timeoutMs)
+          setTimeout(
+            () => reject(new Error('Service initialization timeout')),
+            timeoutMs,
+          ),
         ),
       ]);
     }
@@ -168,11 +171,12 @@ class NotificationService {
   async getNotifications(
     userId: string,
     limit: number = 50,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<Notification[]> {
     const { data, error } = await this.client
       .from('notifications')
-      .select(`
+      .select(
+        `
         *,
         actor:user_profiles!notifications_actor_id_fkey (
           id,
@@ -180,7 +184,8 @@ class NotificationService {
           display_name,
           avatar_url
         )
-      `)
+      `,
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -190,12 +195,14 @@ class NotificationService {
     // Transform the data to match Notification interface
     return (data || []).map((notification: any) => ({
       ...notification,
-      actor: notification.actor ? {
-        id: notification.actor.id,
-        username: notification.actor.username,
-        display_name: notification.actor.display_name,
-        avatar_url: notification.actor.avatar_url,
-      } : undefined,
+      actor: notification.actor
+        ? {
+            id: notification.actor.id,
+            username: notification.actor.username,
+            display_name: notification.actor.display_name,
+            avatar_url: notification.actor.avatar_url,
+          }
+        : undefined,
     }));
   }
 
@@ -220,8 +227,7 @@ class NotificationService {
    * @param notificationId - The notification ID to mark as read
    */
   async markAsRead(notificationId: string): Promise<void> {
-    const { error } = await (this.client
-      .from('notifications') as any)
+    const { error } = await (this.client.from('notifications') as any)
       .update({ read: true })
       .eq('id', notificationId);
 
@@ -233,8 +239,7 @@ class NotificationService {
    * @param userId - The user ID to mark all notifications as read for
    */
   async markAllAsRead(userId: string): Promise<void> {
-    const { error } = await (this.client
-      .from('notifications') as any)
+    const { error } = await (this.client.from('notifications') as any)
       .update({ read: true })
       .eq('user_id', userId)
       .eq('read', false);
@@ -276,7 +281,7 @@ class NotificationService {
   private calculateBackoffDelay(retryCount: number): number {
     const delay = Math.min(
       this.INITIAL_RETRY_DELAY * Math.pow(2, retryCount),
-      this.MAX_RETRY_DELAY
+      this.MAX_RETRY_DELAY,
     );
     // Add jitter to prevent thundering herd
     const jitter = Math.random() * 0.3 * delay; // Up to 30% jitter
@@ -292,11 +297,13 @@ class NotificationService {
   private retrySubscription(
     userId: string,
     callback: (notification: Notification) => void,
-    retryCount: number
+    retryCount: number,
   ): void {
     const subscriptionInfo = this.subscriptionInfo.get(userId);
     if (!subscriptionInfo) {
-      console.log('📡 No subscription info found for retry, creating new subscription');
+      console.log(
+        '📡 No subscription info found for retry, creating new subscription',
+      );
       this._createSubscription(userId, callback, 0);
       return;
     }
@@ -305,8 +312,14 @@ class NotificationService {
     const channel = this.subscriptions.get(userId);
     if (channel) {
       const channelState = channel.state as string;
-      if (channelState === 'joined' || String(channelState).includes('SUBSCRIBED')) {
-        console.log('✅ Channel is already successfully subscribed, cancelling retry for user:', userId);
+      if (
+        channelState === 'joined' ||
+        String(channelState).includes('SUBSCRIBED')
+      ) {
+        console.log(
+          '✅ Channel is already successfully subscribed, cancelling retry for user:',
+          userId,
+        );
         // Clear any pending retry timers
         if (subscriptionInfo.retryTimer) {
           clearTimeout(subscriptionInfo.retryTimer);
@@ -324,7 +337,11 @@ class NotificationService {
     }
 
     if (retryCount >= this.MAX_RETRY_ATTEMPTS) {
-      console.warn('⚠️ Max retry attempts reached for user:', userId, '- giving up');
+      console.warn(
+        '⚠️ Max retry attempts reached for user:',
+        userId,
+        '- giving up',
+      );
       subscriptionInfo.isRetrying = false;
       return;
     }
@@ -333,25 +350,35 @@ class NotificationService {
     subscriptionInfo.retryCount = retryCount;
 
     const delay = this.calculateBackoffDelay(retryCount);
-    console.log(`🔄 Scheduling retry ${retryCount + 1}/${this.MAX_RETRY_ATTEMPTS} for user ${userId} in ${delay}ms`);
+    console.log(
+      `🔄 Scheduling retry ${retryCount + 1}/${this.MAX_RETRY_ATTEMPTS} for user ${userId} in ${delay}ms`,
+    );
 
     subscriptionInfo.retryTimer = setTimeout(() => {
       // Double-check channel is still not healthy before retrying
       const currentChannel = this.subscriptions.get(userId);
       const currentInfo = this.subscriptionInfo.get(userId);
-      
+
       if (currentChannel && currentInfo) {
         const currentState = currentChannel.state as string;
-        if (currentState === 'joined' || String(currentState).includes('SUBSCRIBED')) {
-          console.log('✅ Channel became healthy before retry timer fired, cancelling retry for user:', userId);
+        if (
+          currentState === 'joined' ||
+          String(currentState).includes('SUBSCRIBED')
+        ) {
+          console.log(
+            '✅ Channel became healthy before retry timer fired, cancelling retry for user:',
+            userId,
+          );
           currentInfo.isRetrying = false;
           currentInfo.retryCount = 0;
           currentInfo.retryTimer = null;
           return;
         }
       }
-      
-      console.log(`🔄 Retrying subscription for user: ${userId} (attempt ${retryCount + 1})`);
+
+      console.log(
+        `🔄 Retrying subscription for user: ${userId} (attempt ${retryCount + 1})`,
+      );
       // Clean up old channel but preserve subscription info
       this.cleanupChannel(userId);
       // Create new subscription (subscriptionInfo is preserved, will be updated by _createSubscription)
@@ -368,7 +395,7 @@ class NotificationService {
   private _createSubscription(
     userId: string,
     callback: (notification: Notification) => void,
-    retryCount: number = 0
+    retryCount: number = 0,
   ): void {
     // Clean up any existing channel first (shouldn't exist, but be safe)
     this.cleanupChannel(userId);
@@ -376,13 +403,16 @@ class NotificationService {
     // Create a unique channel name for this user
     const channelName = `notifications:${userId}`;
     if (retryCount > 0) {
-      console.log(`📡 Creating real-time channel (retry ${retryCount}):`, channelName);
+      console.log(
+        `📡 Creating real-time channel (retry ${retryCount}):`,
+        channelName,
+      );
     } else {
       console.log('📡 Creating real-time channel:', channelName);
     }
     console.log('📡 User ID for filter:', userId);
     console.log('📡 Filter string:', `user_id=eq.${userId}`);
-    
+
     // Store channel immediately so we can track it
     const channel = this.client
       .channel(channelName, {
@@ -398,14 +428,14 @@ class NotificationService {
           schema: 'public',
           table: 'notifications',
         },
-        async (payload) => {
+        async payload => {
           console.log('🔍 [DEBUG] Received notification event (NO FILTER):', {
             id: payload.new?.id,
             user_id: payload.new?.user_id,
             target_user_id: userId,
             matches: payload.new?.user_id === userId,
           });
-        }
+        },
       )
       .on(
         'postgres_changes',
@@ -415,19 +445,21 @@ class NotificationService {
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         },
-        async (payload) => {
+        async payload => {
           try {
             console.log('🔔 Real-time notification received:', payload);
             console.log('🔔 Payload new data:', payload.new);
             console.log('🔔 Payload event type:', payload.eventType);
             console.log('🔔 Payload table:', payload.table);
             console.log('🔔 Payload schema:', payload.schema);
-            
+
             // Try to fetch the full notification with actor data
             // If RLS blocks it, we'll use the payload data directly
-            const { data, error } = await (this.client
-              .from('notifications') as any)
-              .select(`
+            const { data, error } = await (
+              this.client.from('notifications') as any
+            )
+              .select(
+                `
                 *,
                 actor:user_profiles!notifications_actor_id_fkey (
                   id,
@@ -435,7 +467,8 @@ class NotificationService {
                   display_name,
                   avatar_url
                 )
-              `)
+              `,
+              )
               .eq('id', payload.new.id)
               .single();
 
@@ -449,26 +482,33 @@ class NotificationService {
                   .select('id, username, display_name, avatar_url')
                   .eq('id', payload.new.actor_id)
                   .single();
-                
+
                 const notification: Notification = {
                   id: payload.new.id as string,
                   user_id: payload.new.user_id as string,
-                  type: payload.new.type as 'follow' | 'follow_request' | 'follow_request_accepted',
+                  type: payload.new.type as
+                    | 'follow'
+                    | 'follow_request'
+                    | 'follow_request_accepted',
                   actor_id: payload.new.actor_id as string,
                   reference_id: payload.new.reference_id as string | undefined,
                   read: payload.new.read as boolean,
                   created_at: payload.new.created_at as string,
-                  actor: actorData ? {
-                    id: (actorData as any).id,
-                    username: (actorData as any).username,
-                    display_name: (actorData as any).display_name,
-                    avatar_url: (actorData as any).avatar_url,
-                    is_private: false,
-                    created_at: '',
-                    updated_at: '',
-                  } : undefined,
+                  actor: actorData
+                    ? {
+                        id: (actorData as any).id,
+                        username: (actorData as any).username,
+                        display_name: (actorData as any).display_name,
+                        avatar_url: (actorData as any).avatar_url,
+                        is_private: false,
+                        created_at: '',
+                        updated_at: '',
+                      }
+                    : undefined,
                 };
-                console.log('🔔 Calling callback with fallback notification data');
+                console.log(
+                  '🔔 Calling callback with fallback notification data',
+                );
                 callback(notification);
                 return;
               } catch (actorError) {
@@ -477,13 +517,20 @@ class NotificationService {
                 const notification: Notification = {
                   id: payload.new.id as string,
                   user_id: payload.new.user_id as string,
-                  type: payload.new.type as 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment',
+                  type: payload.new.type as
+                    | 'follow'
+                    | 'follow_request'
+                    | 'follow_request_accepted'
+                    | 'diary_like'
+                    | 'diary_comment',
                   actor_id: payload.new.actor_id as string,
                   reference_id: payload.new.reference_id as string | undefined,
                   read: payload.new.read as boolean,
                   created_at: payload.new.created_at as string,
                 };
-                console.log('🔔 Calling callback with minimal notification data');
+                console.log(
+                  '🔔 Calling callback with minimal notification data',
+                );
                 callback(notification);
                 return;
               }
@@ -494,20 +541,27 @@ class NotificationService {
               const notification: Notification = {
                 id: notificationData.id,
                 user_id: notificationData.user_id,
-                type: notificationData.type as 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment',
+                type: notificationData.type as
+                  | 'follow'
+                  | 'follow_request'
+                  | 'follow_request_accepted'
+                  | 'diary_like'
+                  | 'diary_comment',
                 actor_id: notificationData.actor_id,
                 reference_id: notificationData.reference_id,
                 read: notificationData.read,
                 created_at: notificationData.created_at,
-                actor: notificationData.actor ? {
-                  id: notificationData.actor.id,
-                  username: notificationData.actor.username,
-                  display_name: notificationData.actor.display_name,
-                  avatar_url: notificationData.actor.avatar_url,
-                  is_private: false,
-                  created_at: '',
-                  updated_at: '',
-                } : undefined,
+                actor: notificationData.actor
+                  ? {
+                      id: notificationData.actor.id,
+                      username: notificationData.actor.username,
+                      display_name: notificationData.actor.display_name,
+                      avatar_url: notificationData.actor.avatar_url,
+                      is_private: false,
+                      created_at: '',
+                      updated_at: '',
+                    }
+                  : undefined,
               };
               console.log('🔔 Calling callback with full notification data');
               callback(notification);
@@ -515,20 +569,28 @@ class NotificationService {
               console.warn('⚠️ No notification data returned from query');
             }
           } catch (error) {
-            console.error('❌ Unexpected error in real-time notification handler:', error);
+            console.error(
+              '❌ Unexpected error in real-time notification handler:',
+              error,
+            );
           }
-        }
+        },
       )
       .subscribe((status, err) => {
         console.log('📡 Notification subscription status:', status);
         if (err) {
           console.error('📡 Subscription error details:', err);
         }
-        
+
         if (status === 'SUBSCRIBED') {
-          console.log('✅ Successfully subscribed to notifications for user:', userId);
-          console.log('✅ Channel is active and listening for INSERT events on notifications table');
-          
+          console.log(
+            '✅ Successfully subscribed to notifications for user:',
+            userId,
+          );
+          console.log(
+            '✅ Channel is active and listening for INSERT events on notifications table',
+          );
+
           // Reset retry state on successful subscription - clear ALL retry timers
           const subscriptionInfo = this.subscriptionInfo.get(userId);
           if (subscriptionInfo) {
@@ -540,7 +602,7 @@ class NotificationService {
               subscriptionInfo.retryTimer = null;
             }
           }
-          
+
           // Ensure channel is in map (it should already be there, but double-check)
           if (!this.subscriptions.has(userId)) {
             this.subscriptions.set(userId, channel);
@@ -548,12 +610,17 @@ class NotificationService {
           } else {
             console.log('✅ Channel already in subscriptions map');
           }
-          
+
           // Log channel details for debugging
-          console.log('✅ Active subscriptions count:', this.subscriptions.size);
+          console.log(
+            '✅ Active subscriptions count:',
+            this.subscriptions.size,
+          );
           console.log('✅ Channel topic:', channel.topic);
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          console.log('⚠️ Channel error or timeout - will attempt automatic reconnection');
+          console.log(
+            '⚠️ Channel error or timeout - will attempt automatic reconnection',
+          );
           // Only trigger retry if not already retrying
           const subscriptionInfo = this.subscriptionInfo.get(userId);
           if (!subscriptionInfo?.isRetrying) {
@@ -570,24 +637,36 @@ class NotificationService {
             if (currentChannel) {
               const currentState = currentChannel.state as string;
               // If channel is already healthy, don't retry
-              if (currentState === 'joined' || String(currentState).includes('SUBSCRIBED')) {
-                console.log('✅ Channel is healthy despite CLOSED status, not retrying');
+              if (
+                currentState === 'joined' ||
+                String(currentState).includes('SUBSCRIBED')
+              ) {
+                console.log(
+                  '✅ Channel is healthy despite CLOSED status, not retrying',
+                );
                 return;
               }
             }
-            console.log('⚠️ Subscription closed - will attempt automatic reconnection');
+            console.log(
+              '⚠️ Subscription closed - will attempt automatic reconnection',
+            );
             this.retrySubscription(userId, callback, retryCount);
           } else {
             console.log('📡 Retry already in progress, ignoring CLOSED status');
           }
         } else {
-          console.log('⏳ Subscription status:', status, 'Channel state:', channel.state);
+          console.log(
+            '⏳ Subscription status:',
+            status,
+            'Channel state:',
+            channel.state,
+          );
         }
       });
 
     // Store channel and subscription info immediately (before subscription completes)
     this.subscriptions.set(userId, channel);
-    
+
     // Store subscription info for retry logic
     const subscriptionInfo: SubscriptionInfo = {
       channel,
@@ -597,7 +676,7 @@ class NotificationService {
       isRetrying: false,
     };
     this.subscriptionInfo.set(userId, subscriptionInfo);
-    
+
     console.log('📡 Channel stored in subscriptions map (pre-subscribe)');
   }
 
@@ -609,25 +688,38 @@ class NotificationService {
    */
   subscribeToNotifications(
     userId: string,
-    callback: (notification: Notification) => void
+    callback: (notification: Notification) => void,
   ): () => void {
     // Check if subscription already exists for this user
     const existingChannel = this.subscriptions.get(userId);
     const existingInfo = this.subscriptionInfo.get(userId);
-    
+
     if (existingChannel && existingInfo) {
       // Verify the channel is still active
       const channelState = existingChannel.state as string;
-      console.log('📡 Existing subscription found for user:', userId, 'State:', channelState);
+      console.log(
+        '📡 Existing subscription found for user:',
+        userId,
+        'State:',
+        channelState,
+      );
       // Check if channel is in a subscribed/active state
-      if (channelState === 'joined' || String(channelState).includes('SUBSCRIBED') || String(channelState).includes('joined')) {
+      if (
+        channelState === 'joined' ||
+        String(channelState).includes('SUBSCRIBED') ||
+        String(channelState).includes('joined')
+      ) {
         console.log('📡 Using existing active subscription');
         // Update callback in case it changed
         existingInfo.callback = callback;
         // Return unsubscribe function for existing subscription
         return () => this.unsubscribeFromNotifications(userId);
       } else {
-        console.log('📡 Existing subscription is not active (state:', channelState, '), removing and creating new one');
+        console.log(
+          '📡 Existing subscription is not active (state:',
+          channelState,
+          '), removing and creating new one',
+        );
         this.unsubscribeFromNotifications(userId);
       }
     }
@@ -649,7 +741,12 @@ class NotificationService {
   private cleanupChannel(userId: string): void {
     const channel = this.subscriptions.get(userId);
     if (channel) {
-      console.log('📡 Cleaning up channel for user:', userId, 'Channel state:', channel.state);
+      console.log(
+        '📡 Cleaning up channel for user:',
+        userId,
+        'Channel state:',
+        channel.state,
+      );
       this.client.removeChannel(channel);
       this.subscriptions.delete(userId);
     }
@@ -662,22 +759,30 @@ class NotificationService {
   unsubscribeFromNotifications(userId: string): void {
     const channel = this.subscriptions.get(userId);
     const subscriptionInfo = this.subscriptionInfo.get(userId);
-    
+
     // Clear any pending retry timers
     if (subscriptionInfo?.retryTimer) {
       clearTimeout(subscriptionInfo.retryTimer);
       subscriptionInfo.retryTimer = null;
     }
-    
+
     if (channel) {
-      console.log('📡 Removing channel for user:', userId, 'Channel state:', channel.state);
+      console.log(
+        '📡 Removing channel for user:',
+        userId,
+        'Channel state:',
+        channel.state,
+      );
       this.client.removeChannel(channel);
       this.subscriptions.delete(userId);
-      console.log('📡 Channel removed, remaining subscriptions:', this.subscriptions.size);
+      console.log(
+        '📡 Channel removed, remaining subscriptions:',
+        this.subscriptions.size,
+      );
     } else {
       console.log('📡 No channel found to unsubscribe for user:', userId);
     }
-    
+
     // Remove subscription info
     if (subscriptionInfo) {
       this.subscriptionInfo.delete(userId);
@@ -703,7 +808,7 @@ class NotificationService {
     }
     subscriptionInfo.isRetrying = false;
     subscriptionInfo.retryCount = 0;
-    
+
     // Clean up existing subscription
     this.unsubscribeFromNotifications(userId);
     // Create new subscription with existing callback (reset retry count)
@@ -717,16 +822,22 @@ class NotificationService {
   checkConnectionHealth(userId: string): void {
     const channel = this.subscriptions.get(userId);
     const subscriptionInfo = this.subscriptionInfo.get(userId);
-    
+
     if (!channel || !subscriptionInfo) {
       return;
     }
 
     const channelState = channel.state as string;
-    const isHealthy = channelState === 'joined' || String(channelState).includes('SUBSCRIBED');
-    
+    const isHealthy =
+      channelState === 'joined' || String(channelState).includes('SUBSCRIBED');
+
     if (!isHealthy && !subscriptionInfo.isRetrying) {
-      console.log('🔍 Connection health check failed for user:', userId, 'State:', channelState);
+      console.log(
+        '🔍 Connection health check failed for user:',
+        userId,
+        'State:',
+        channelState,
+      );
       console.log('🔄 Triggering reconnection...');
       this.retrySubscription(userId, subscriptionInfo.callback, 0);
     }
@@ -737,17 +848,17 @@ class NotificationService {
    */
   unsubscribeAll(): void {
     // Clear all retry timers
-    this.subscriptionInfo.forEach((info) => {
+    this.subscriptionInfo.forEach(info => {
       if (info.retryTimer) {
         clearTimeout(info.retryTimer);
       }
     });
-    
+
     // Remove all channels
-    this.subscriptions.forEach((channel) => {
+    this.subscriptions.forEach(channel => {
       this.client.removeChannel(channel);
     });
-    
+
     // Clear all maps
     this.subscriptions.clear();
     this.subscriptionInfo.clear();

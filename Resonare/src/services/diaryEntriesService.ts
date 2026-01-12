@@ -59,12 +59,18 @@ class DiaryEntriesService {
     albumId: string,
     diaryDate: string,
     rating?: number,
-    notes?: string
+    notes?: string,
   ): Promise<{ success: boolean; entry?: DiaryEntry; message?: string }> {
     try {
       // Validate rating if provided (must be in 0.5 increments between 0.5 and 5.0)
-      if (rating !== undefined && (rating < 0.5 || rating > 5.0 || (rating * 2) !== Math.floor(rating * 2))) {
-        return { success: false, message: 'Rating must be between 0.5 and 5.0 in 0.5 increments' };
+      if (
+        rating !== undefined &&
+        (rating < 0.5 || rating > 5.0 || rating * 2 !== Math.floor(rating * 2))
+      ) {
+        return {
+          success: false,
+          message: 'Rating must be between 0.5 and 5.0 in 0.5 increments',
+        };
       }
 
       // First, ensure the album exists in the albums table
@@ -83,8 +89,12 @@ class DiaryEntriesService {
         .single();
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          return { success: false, message: 'You already logged this album for that date.' };
+        if (error.code === '23505') {
+          // Unique constraint violation
+          return {
+            success: false,
+            message: 'You already logged this album for that date.',
+          };
         }
         throw error;
       }
@@ -101,16 +111,29 @@ class DiaryEntriesService {
    */
   async updateDiaryEntry(
     entryId: string,
-    updates: { diaryDate?: string; rating?: number | null; notes?: string | null }
+    updates: {
+      diaryDate?: string;
+      rating?: number | null;
+      notes?: string | null;
+    },
   ): Promise<{ success: boolean; entry?: DiaryEntry; message?: string }> {
     try {
       // Validate rating if provided (must be in 0.5 increments between 0.5 and 5.0)
-      if (updates.rating !== undefined && updates.rating !== null && (updates.rating < 0.5 || updates.rating > 5.0 || (updates.rating * 2) !== Math.floor(updates.rating * 2))) {
-        return { success: false, message: 'Rating must be between 0.5 and 5.0 in 0.5 increments' };
+      if (
+        updates.rating !== undefined &&
+        updates.rating !== null &&
+        (updates.rating < 0.5 ||
+          updates.rating > 5.0 ||
+          updates.rating * 2 !== Math.floor(updates.rating * 2))
+      ) {
+        return {
+          success: false,
+          message: 'Rating must be between 0.5 and 5.0 in 0.5 increments',
+        };
       }
 
       const updateData: any = {
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       if (updates.diaryDate !== undefined) {
@@ -133,8 +156,12 @@ class DiaryEntriesService {
         .single();
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
-          return { success: false, message: 'You already logged this album for that date.' };
+        if (error.code === '23505') {
+          // Unique constraint violation
+          return {
+            success: false,
+            message: 'You already logged this album for that date.',
+          };
         }
         throw error;
       }
@@ -170,7 +197,10 @@ class DiaryEntriesService {
   /**
    * Get diary entry by ID
    */
-  async getDiaryEntryById(entryId: string, _currentUserId?: string): Promise<DiaryEntry | null> {
+  async getDiaryEntryById(
+    entryId: string,
+    _currentUserId?: string,
+  ): Promise<DiaryEntry | null> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
@@ -200,16 +230,22 @@ class DiaryEntriesService {
    */
   async getDiaryEntriesByUser(
     userId: string,
-    params: { startAfterMonth?: string; monthWindow?: number } = {}
-  ): Promise<{ entries: DiaryEntryWithAlbum[]; lastMonth?: string; hasMore: boolean }> {
+    params: { startAfterMonth?: string; monthWindow?: number } = {},
+  ): Promise<{
+    entries: DiaryEntryWithAlbum[];
+    lastMonth?: string;
+    hasMore: boolean;
+  }> {
     try {
       const monthWindow = params.monthWindow ?? 3;
       let query = supabase
         .from('diary_entries')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .order('diary_date', { ascending: false })
         .order('created_at', { ascending: false });
@@ -241,11 +277,11 @@ class DiaryEntriesService {
 
       for (const entry of data) {
         const monthKey = getMonthKey(entry.diary_date);
-        
+
         if (!seenMonths.has(monthKey) && seenMonths.size >= monthWindow) {
           break;
         }
-        
+
         seenMonths.add(monthKey);
         result.push(entry);
         lastMonth = monthKey;
@@ -264,14 +300,19 @@ class DiaryEntriesService {
   /**
    * Get recent diary entries for activity feed
    */
-  async getRecentDiaryEntries(userId: string, limit: number = 5): Promise<DiaryEntryWithAlbum[]> {
+  async getRecentDiaryEntries(
+    userId: string,
+    limit: number = 5,
+  ): Promise<DiaryEntryWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .order('diary_date', { ascending: false })
         .order('created_at', { ascending: false })
@@ -312,7 +353,11 @@ class DiaryEntriesService {
   /**
    * Check if user has diary entry for album on specific date
    */
-  async hasDiaryEntry(userId: string, albumId: string, diaryDate: string): Promise<boolean> {
+  async hasDiaryEntry(
+    userId: string,
+    albumId: string,
+    diaryDate: string,
+  ): Promise<boolean> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
@@ -336,7 +381,10 @@ class DiaryEntriesService {
   /**
    * Get user's diary entries for a specific album
    */
-  async getUserDiaryEntriesForAlbum(userId: string, albumId: string): Promise<DiaryEntry[]> {
+  async getUserDiaryEntriesForAlbum(
+    userId: string,
+    albumId: string,
+  ): Promise<DiaryEntry[]> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
@@ -360,12 +408,16 @@ class DiaryEntriesService {
   /**
    * Get friends' diary entries for a specific album
    */
-  async getFriendsDiaryEntriesForAlbum(userId: string, albumId: string, limit: number = 10): Promise<DiaryEntryWithUserProfile[]> {
+  async getFriendsDiaryEntriesForAlbum(
+    userId: string,
+    albumId: string,
+    limit: number = 10,
+  ): Promise<DiaryEntryWithUserProfile[]> {
     try {
       // First, get the user's following list (friends)
       const { userService } = await import('./userService');
       const friends = await userService.getUserFollowing(userId);
-      
+
       if (friends.length === 0) {
         return [];
       }
@@ -394,15 +446,19 @@ class DiaryEntriesService {
       const friendsMap = new Map(friends.map(f => [f.id, f]));
 
       // Combine diary entries with user profile data
-      const entriesWithProfiles: DiaryEntryWithUserProfile[] = entries.map(entry => ({
-        ...entry,
-        user_profiles: friendsMap.get(entry.user_id) ? {
-          id: friendsMap.get(entry.user_id)!.id,
-          username: friendsMap.get(entry.user_id)!.username,
-          avatar_url: friendsMap.get(entry.user_id)!.avatar_url,
-          display_name: friendsMap.get(entry.user_id)!.display_name,
-        } : undefined
-      }));
+      const entriesWithProfiles: DiaryEntryWithUserProfile[] = entries.map(
+        entry => ({
+          ...entry,
+          user_profiles: friendsMap.get(entry.user_id)
+            ? {
+                id: friendsMap.get(entry.user_id)!.id,
+                username: friendsMap.get(entry.user_id)!.username,
+                avatar_url: friendsMap.get(entry.user_id)!.avatar_url,
+                display_name: friendsMap.get(entry.user_id)!.display_name,
+              }
+            : undefined,
+        }),
+      );
 
       return entriesWithProfiles;
     } catch (error) {
@@ -414,7 +470,10 @@ class DiaryEntriesService {
   /**
    * Get social info (likes count, comments count, has liked) for a diary entry
    */
-  async getDiaryEntrySocialInfo(entryId: string, currentUserId?: string): Promise<DiaryEntrySocialInfo> {
+  async getDiaryEntrySocialInfo(
+    entryId: string,
+    currentUserId?: string,
+  ): Promise<DiaryEntrySocialInfo> {
     try {
       // Get the entry with counts
       const { data: entry, error: entryError } = await supabase
@@ -463,7 +522,10 @@ class DiaryEntriesService {
   /**
    * Like a diary entry
    */
-  async likeDiaryEntry(entryId: string, userId: string): Promise<{ success: boolean; message?: string }> {
+  async likeDiaryEntry(
+    entryId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       console.log('Attempting to like diary entry:', { entryId, userId });
       const { data, error } = await supabase
@@ -476,11 +538,20 @@ class DiaryEntriesService {
 
       if (error) {
         console.error('Error inserting like:', error);
-        if (error.code === '23505') { // Unique constraint violation
-          return { success: false, message: 'You have already liked this entry' };
+        if (error.code === '23505') {
+          // Unique constraint violation
+          return {
+            success: false,
+            message: 'You have already liked this entry',
+          };
         }
-        if (error.code === '42501') { // Insufficient privilege
-          return { success: false, message: 'Permission denied. Please check your account permissions.' };
+        if (error.code === '42501') {
+          // Insufficient privilege
+          return {
+            success: false,
+            message:
+              'Permission denied. Please check your account permissions.',
+          };
         }
         throw error;
       }
@@ -489,14 +560,21 @@ class DiaryEntriesService {
       return { success: true };
     } catch (error) {
       console.error('Error liking diary entry:', error);
-      return { success: false, message: error instanceof Error ? error.message : 'Failed to like diary entry' };
+      return {
+        success: false,
+        message:
+          error instanceof Error ? error.message : 'Failed to like diary entry',
+      };
     }
   }
 
   /**
    * Unlike a diary entry
    */
-  async unlikeDiaryEntry(entryId: string, userId: string): Promise<{ success: boolean; message?: string }> {
+  async unlikeDiaryEntry(
+    entryId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       console.log('Attempting to unlike diary entry:', { entryId, userId });
       const { error, data } = await supabase
@@ -508,8 +586,13 @@ class DiaryEntriesService {
 
       if (error) {
         console.error('Error deleting like:', error);
-        if (error.code === '42501') { // Insufficient privilege
-          return { success: false, message: 'Permission denied. Please check your account permissions.' };
+        if (error.code === '42501') {
+          // Insufficient privilege
+          return {
+            success: false,
+            message:
+              'Permission denied. Please check your account permissions.',
+          };
         }
         throw error;
       }
@@ -518,7 +601,13 @@ class DiaryEntriesService {
       return { success: true };
     } catch (error) {
       console.error('Error unliking diary entry:', error);
-      return { success: false, message: error instanceof Error ? error.message : 'Failed to unlike diary entry' };
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to unlike diary entry',
+      };
     }
   }
 
@@ -527,7 +616,7 @@ class DiaryEntriesService {
    */
   async getDiaryEntryComments(
     entryId: string,
-    options: { limit?: number; offset?: number } = {}
+    options: { limit?: number; offset?: number } = {},
   ): Promise<DiaryEntryComment[]> {
     try {
       const limit = options.limit || 50;
@@ -535,7 +624,8 @@ class DiaryEntriesService {
 
       const { data, error } = await supabase
         .from('diary_entry_comments')
-        .select(`
+        .select(
+          `
           *,
           user_profiles (
             id,
@@ -543,7 +633,8 @@ class DiaryEntriesService {
             avatar_url,
             display_name
           )
-        `)
+        `,
+        )
         .eq('entry_id', entryId)
         .eq('is_deleted', false)
         .order('created_at', { ascending: true })
@@ -562,15 +653,17 @@ class DiaryEntriesService {
         created_at: comment.created_at,
         updated_at: comment.updated_at,
         is_deleted: comment.is_deleted,
-        user_profile: comment.user_profiles ? {
-          id: comment.user_profiles.id,
-          username: comment.user_profiles.username,
-          avatar_url: comment.user_profiles.avatar_url,
-          display_name: comment.user_profiles.display_name,
-          is_private: false,
-          created_at: '',
-          updated_at: '',
-        } : undefined,
+        user_profile: comment.user_profiles
+          ? {
+              id: comment.user_profiles.id,
+              username: comment.user_profiles.username,
+              avatar_url: comment.user_profiles.avatar_url,
+              display_name: comment.user_profiles.display_name,
+              is_private: false,
+              created_at: '',
+              updated_at: '',
+            }
+          : undefined,
       }));
     } catch (error) {
       console.error('Error getting diary entry comments:', error);
@@ -584,8 +677,12 @@ class DiaryEntriesService {
   async createDiaryEntryComment(
     entryId: string,
     userId: string,
-    body: string
-  ): Promise<{ success: boolean; comment?: DiaryEntryComment; message?: string }> {
+    body: string,
+  ): Promise<{
+    success: boolean;
+    comment?: DiaryEntryComment;
+    message?: string;
+  }> {
     try {
       // Validate body
       const trimmedBody = body.trim();
@@ -593,7 +690,10 @@ class DiaryEntriesService {
         return { success: false, message: 'Comment cannot be empty' };
       }
       if (trimmedBody.length > 2000) {
-        return { success: false, message: 'Comment cannot exceed 2000 characters' };
+        return {
+          success: false,
+          message: 'Comment cannot exceed 2000 characters',
+        };
       }
 
       const { data, error } = await supabase
@@ -603,7 +703,8 @@ class DiaryEntriesService {
           user_id: userId,
           body: trimmedBody,
         })
-        .select(`
+        .select(
+          `
           *,
           user_profiles (
             id,
@@ -611,7 +712,8 @@ class DiaryEntriesService {
             avatar_url,
             display_name
           )
-        `)
+        `,
+        )
         .single();
 
       if (error) {
@@ -626,15 +728,17 @@ class DiaryEntriesService {
         created_at: data.created_at,
         updated_at: data.updated_at,
         is_deleted: data.is_deleted,
-        user_profile: data.user_profiles ? {
-          id: data.user_profiles.id,
-          username: data.user_profiles.username,
-          avatar_url: data.user_profiles.avatar_url,
-          display_name: data.user_profiles.display_name,
-          is_private: false,
-          created_at: '',
-          updated_at: '',
-        } : undefined,
+        user_profile: data.user_profiles
+          ? {
+              id: data.user_profiles.id,
+              username: data.user_profiles.username,
+              avatar_url: data.user_profiles.avatar_url,
+              display_name: data.user_profiles.display_name,
+              is_private: false,
+              created_at: '',
+              updated_at: '',
+            }
+          : undefined,
       };
 
       return { success: true, comment };
@@ -647,7 +751,10 @@ class DiaryEntriesService {
   /**
    * Delete a comment (soft delete via is_deleted flag)
    */
-  async deleteDiaryEntryComment(commentId: string, userId: string): Promise<{ success: boolean; message?: string }> {
+  async deleteDiaryEntryComment(
+    commentId: string,
+    userId: string,
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       // First check if user owns the comment or the diary entry
       const { data: comment, error: commentError } = await supabase
@@ -673,7 +780,10 @@ class DiaryEntriesService {
       const isEntryOwner = !entryError && entry && entry.user_id === userId;
 
       if (!isCommentAuthor && !isEntryOwner) {
-        return { success: false, message: 'You do not have permission to delete this comment' };
+        return {
+          success: false,
+          message: 'You do not have permission to delete this comment',
+        };
       }
 
       // Soft delete by setting is_deleted flag

@@ -43,8 +43,9 @@ export default function ReportModal({
 }: ReportModalProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
-  
-  const [selectedReason, setSelectedReason] = useState<ContentReportReason | null>(null);
+
+  const [selectedReason, setSelectedReason] =
+    useState<ContentReportReason | null>(null);
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -69,7 +70,7 @@ export default function ReportModal({
         Alert.alert(
           'Report Submitted',
           'Thank you for your report. Our team will review it within 24 hours.',
-          [{ text: 'OK', onPress: handleClose }]
+          [{ text: 'OK', onPress: handleClose }],
         );
         onReportSubmitted?.();
       } else {
@@ -114,11 +115,7 @@ export default function ReportModal({
           <Text variant="headlineSmall" style={styles.title}>
             Report {getContentTypeLabel()}
           </Text>
-          <IconButton
-            icon="close"
-            size={24}
-            onPress={handleClose}
-          />
+          <IconButton icon="close" size={24} onPress={handleClose} />
         </View>
 
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -132,9 +129,11 @@ export default function ReportModal({
 
           <RadioButton.Group
             value={selectedReason || ''}
-            onValueChange={(value) => setSelectedReason(value as ContentReportReason)}
+            onValueChange={value =>
+              setSelectedReason(value as ContentReportReason)
+            }
           >
-            {REPORT_REASONS.map((reason) => (
+            {REPORT_REASONS.map(reason => (
               <TouchableOpacity
                 key={reason.value}
                 style={[
@@ -177,7 +176,8 @@ export default function ReportModal({
           </Text>
 
           <Text variant="bodySmall" style={styles.disclaimer}>
-            Reports are reviewed by our team within 24 hours. False reports may result in action against your account.
+            Reports are reviewed by our team within 24 hours. False reports may
+            result in action against your account.
           </Text>
         </ScrollView>
 
@@ -205,88 +205,89 @@ export default function ReportModal({
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline,
-  },
-  title: {
-    fontWeight: 'bold',
-  },
-  content: {
-    flex: 1,
-    padding: spacing.lg,
-  },
-  subtitle: {
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.md,
-    marginTop: spacing.md,
-  },
-  reasonItem: {
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    borderRadius: 12,
-    marginBottom: spacing.sm,
-    backgroundColor: theme.colors.surface,
-  },
-  reasonItemSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primaryContainer,
-  },
-  reasonContent: {
-    padding: spacing.sm,
-  },
-  reasonHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  reasonLabel: {
-    fontWeight: '600',
-    flex: 1,
-  },
-  reasonDescription: {
-    color: theme.colors.onSurfaceVariant,
-    marginLeft: 40,
-    marginTop: -4,
-  },
-  textInput: {
-    backgroundColor: theme.colors.surface,
-  },
-  charCount: {
-    textAlign: 'right',
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-  },
-  disclaimer: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.lg,
-    fontStyle: 'italic',
-    lineHeight: 18,
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.outline,
-    gap: spacing.md,
-  },
-  cancelButton: {
-    flex: 1,
-  },
-  submitButton: {
-    flex: 1,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    title: {
+      fontWeight: 'bold',
+    },
+    content: {
+      flex: 1,
+      padding: spacing.lg,
+    },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: spacing.lg,
+    },
+    sectionTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.md,
+      marginTop: spacing.md,
+    },
+    reasonItem: {
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      borderRadius: 12,
+      marginBottom: spacing.sm,
+      backgroundColor: theme.colors.surface,
+    },
+    reasonItemSelected: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primaryContainer,
+    },
+    reasonContent: {
+      padding: spacing.sm,
+    },
+    reasonHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    reasonLabel: {
+      fontWeight: '600',
+      flex: 1,
+    },
+    reasonDescription: {
+      color: theme.colors.onSurfaceVariant,
+      marginLeft: 40,
+      marginTop: -4,
+    },
+    textInput: {
+      backgroundColor: theme.colors.surface,
+    },
+    charCount: {
+      textAlign: 'right',
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+    },
+    disclaimer: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.lg,
+      fontStyle: 'italic',
+      lineHeight: 18,
+    },
+    footer: {
+      flexDirection: 'row',
+      padding: spacing.lg,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.outline,
+      gap: spacing.md,
+    },
+    cancelButton: {
+      flex: 1,
+    },
+    submitButton: {
+      flex: 1,
+    },
+  });

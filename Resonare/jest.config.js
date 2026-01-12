@@ -10,9 +10,7 @@ module.exports = {
       '|react-native-safe-area-context' +
       '|@react-navigation' +
       '|react-redux' +
-      ')/)'
+      ')/)',
   ],
-  setupFiles: [
-    '<rootDir>/jest.setup.js'
-  ],
+  setupFiles: ['<rootDir>/jest.setup.js'],
 };

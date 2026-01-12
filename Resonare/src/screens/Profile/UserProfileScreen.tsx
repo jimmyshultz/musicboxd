@@ -9,14 +9,35 @@ import {
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 
-import { Text, ActivityIndicator, Button, SegmentedButtons, useTheme, Menu, IconButton } from 'react-native-paper';
+import {
+  Text,
+  ActivityIndicator,
+  Button,
+  SegmentedButtons,
+  useTheme,
+  Menu,
+  IconButton,
+} from 'react-native-paper';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import {
+  RouteProp,
+  useRoute,
+  useNavigation,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Album, Listen, Review, SerializedUser } from '../../types';
+import {
+  HomeStackParamList,
+  SearchStackParamList,
+  ProfileStackParamList,
+  Album,
+  Listen,
+  Review,
+  SerializedUser,
+} from '../../types';
 import { UserProfile } from '../../types/database';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { RootState } from '../../store';
@@ -29,8 +50,13 @@ import { spacing, shadows } from '../../utils/theme';
 import BannerAdComponent from '../../components/BannerAd';
 import ReportModal from '../../components/ReportModal';
 
-type UserProfileScreenRouteProp = RouteProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList, 'UserProfile'>;
-type UserProfileScreenNavigationProp = StackNavigationProp<HomeStackParamList | SearchStackParamList | ProfileStackParamList>;
+type UserProfileScreenRouteProp = RouteProp<
+  HomeStackParamList | SearchStackParamList | ProfileStackParamList,
+  'UserProfile'
+>;
+type UserProfileScreenNavigationProp = StackNavigationProp<
+  HomeStackParamList | SearchStackParamList | ProfileStackParamList
+>;
 
 const ALBUM_CARD_WIDTH = 120;
 
@@ -73,7 +99,9 @@ export default function UserProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [initialLoadDone, setInitialLoadDone] = useState(false);
-  const [followActionType, setFollowActionType] = useState<'follow' | 'request' | 'requested' | 'following'>('follow');
+  const [followActionType, setFollowActionType] = useState<
+    'follow' | 'request' | 'requested' | 'following'
+  >('follow');
   const [followLoading, setFollowLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -81,10 +109,9 @@ export default function UserProfileScreen() {
   const [_blockLoading, setBlockLoading] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
-
-  const isOwnProfile = useMemo(() =>
-    currentUser?.id === userId,
-    [currentUser?.id, userId]
+  const isOwnProfile = useMemo(
+    () => currentUser?.id === userId,
+    [currentUser?.id, userId],
   );
 
   const loadUserProfile = useCallback(async () => {
@@ -108,7 +135,8 @@ export default function UserProfileScreen() {
 
     try {
       // Get favorite albums from database (limited to 5 ranked favorites)
-      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(userData.id, 5);
+      const favoriteAlbumsData =
+        await favoriteAlbumsService.getUserFavoriteAlbums(userData.id, 5);
 
       // Convert to the Album format expected by the UI
       const albums = favoriteAlbumsData.map(favorite => ({
@@ -134,7 +162,10 @@ export default function UserProfileScreen() {
     if (!userData?.id) return;
 
     try {
-      const recentActivityData = await userStatsServiceV2.getRecentActivity(userData.id, 5);
+      const recentActivityData = await userStatsServiceV2.getRecentActivity(
+        userData.id,
+        5,
+      );
       setRecentActivity(recentActivityData);
     } catch (error) {
       console.error('Error loading recent activity:', error);
@@ -167,7 +198,10 @@ export default function UserProfileScreen() {
     if (!currentUser || isOwnProfile) return;
 
     try {
-      const actionType = await userService.getFollowActionType(currentUser.id, userId);
+      const actionType = await userService.getFollowActionType(
+        currentUser.id,
+        userId,
+      );
       setFollowActionType(actionType);
     } catch (error) {
       console.error('Error loading follow action type:', error);
@@ -205,7 +239,15 @@ export default function UserProfileScreen() {
       setLoading(false);
       setInitialLoadDone(true);
     }
-  }, [initialLoadDone, loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats, loadFollowActionType, loadBlockStatus]);
+  }, [
+    initialLoadDone,
+    loadUserProfile,
+    loadFavoriteAlbums,
+    loadRecentActivity,
+    loadUserStats,
+    loadFollowActionType,
+    loadBlockStatus,
+  ]);
 
   // Use focus effect to load data only when screen comes into focus
   useFocusEffect(
@@ -217,10 +259,8 @@ export default function UserProfileScreen() {
         loadRecentActivity(user);
         loadUserStats(user);
       }
-    }, [loadAllData, initialLoadDone, user, loadRecentActivity, loadUserStats])
+    }, [loadAllData, initialLoadDone, user, loadRecentActivity, loadUserStats]),
   );
-
-
 
   // Reset initial load flag when userId changes
   useEffect(() => {
@@ -253,7 +293,13 @@ export default function UserProfileScreen() {
     } finally {
       setRefreshing(false);
     }
-  }, [loadUserProfile, loadFavoriteAlbums, loadRecentActivity, loadUserStats, loadFollowActionType]);
+  }, [
+    loadUserProfile,
+    loadFavoriteAlbums,
+    loadRecentActivity,
+    loadUserStats,
+    loadFollowActionType,
+  ]);
 
   const handleFollowToggle = async () => {
     if (!user || !currentUser || followLoading) return;
@@ -293,9 +339,11 @@ export default function UserProfileScreen() {
               },
               privacy: {
                 showActivity: !user.is_private,
-                activityVisibility: user.is_private ? 'private' as const : 'public' as const,
-              }
-            }
+                activityVisibility: user.is_private
+                  ? ('private' as const)
+                  : ('public' as const),
+              },
+            },
           };
           dispatch(addFollowing(serializedUser));
           setFollowActionType('following');
@@ -331,14 +379,23 @@ export default function UserProfileScreen() {
             setMenuVisible(false);
             try {
               if (isBlocked) {
-                const result = await blockService.unblockUser(currentUser.id, userId);
+                const result = await blockService.unblockUser(
+                  currentUser.id,
+                  userId,
+                );
                 if (result.success) {
                   setIsBlocked(false);
                 } else {
-                  Alert.alert('Error', result.error || 'Failed to unblock user');
+                  Alert.alert(
+                    'Error',
+                    result.error || 'Failed to unblock user',
+                  );
                 }
               } else {
-                const result = await blockService.blockUser(currentUser.id, userId);
+                const result = await blockService.blockUser(
+                  currentUser.id,
+                  userId,
+                );
                 if (result.success) {
                   setIsBlocked(true);
                   // If we were following them, update the UI
@@ -358,7 +415,7 @@ export default function UserProfileScreen() {
             }
           },
         },
-      ]
+      ],
     );
   };
 
@@ -376,7 +433,7 @@ export default function UserProfileScreen() {
       navigation.navigate('Followers', {
         userId: user.id,
         username: user.username,
-        initialTab: 'followers'
+        initialTab: 'followers',
       });
     }
   };
@@ -386,7 +443,7 @@ export default function UserProfileScreen() {
       navigation.navigate('Followers', {
         userId: user.id,
         username: user.username,
-        initialTab: 'following'
+        initialTab: 'following',
       });
     }
   };
@@ -409,8 +466,6 @@ export default function UserProfileScreen() {
     }
   };
 
-
-
   const renderFavoriteAlbum = (album: Album) => (
     <TouchableOpacity
       key={album.id}
@@ -418,7 +473,10 @@ export default function UserProfileScreen() {
       onPress={() => navigateToAlbum(album.id)}
     >
       <FastImage
-        source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -431,14 +489,20 @@ export default function UserProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecentActivityItem = (activity: RecentActivity, index: number) => (
+  const renderRecentActivityItem = (
+    activity: RecentActivity,
+    index: number,
+  ) => (
     <TouchableOpacity
       key={`${activity.album.id}-${activity.listen.id}-${index}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
       <FastImage
-        source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: activity.album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -456,13 +520,14 @@ export default function UserProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderStatCard = (title: string, value: number, onPress?: () => void) => {
+  const renderStatCard = (
+    title: string,
+    value: number,
+    onPress?: () => void,
+  ) => {
     return (
       <TouchableOpacity
-        style={[
-          styles.statCard,
-          { backgroundColor: theme.colors.surface },
-        ]}
+        style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
         onPress={onPress}
         disabled={!onPress}
       >
@@ -506,7 +571,10 @@ export default function UserProfileScreen() {
           value={'profile'}
           onValueChange={(v: any) => {
             if (v === 'diary' && user) {
-              navigation.navigate('Diary', { userId: user.id, username: user.username });
+              navigation.navigate('Diary', {
+                userId: user.id,
+                username: user.username,
+              });
             }
           }}
           buttons={[
@@ -538,16 +606,18 @@ export default function UserProfileScreen() {
           {!isOwnProfile && (
             <View style={styles.followContainer}>
               <Button
-                mode={followActionType === 'following' ? "outlined" : "contained"}
+                mode={
+                  followActionType === 'following' ? 'outlined' : 'contained'
+                }
                 onPress={handleFollowToggle}
                 style={styles.followButton}
                 loading={followLoading}
                 disabled={followLoading || isBlocked}
               >
-                {followActionType === 'following' && "Following"}
-                {followActionType === 'follow' && "Follow"}
-                {followActionType === 'request' && "Request"}
-                {followActionType === 'requested' && "Requested"}
+                {followActionType === 'following' && 'Following'}
+                {followActionType === 'follow' && 'Follow'}
+                {followActionType === 'request' && 'Request'}
+                {followActionType === 'requested' && 'Requested'}
               </Button>
 
               <Menu
@@ -564,8 +634,8 @@ export default function UserProfileScreen() {
               >
                 <Menu.Item
                   onPress={handleBlockUser}
-                  title={isBlocked ? "Unblock User" : "Block User"}
-                  leadingIcon={isBlocked ? "account-check" : "account-cancel"}
+                  title={isBlocked ? 'Unblock User' : 'Block User'}
+                  leadingIcon={isBlocked ? 'account-check' : 'account-cancel'}
                 />
                 <Menu.Item
                   onPress={handleReportUser}
@@ -615,12 +685,16 @@ export default function UserProfileScreen() {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" />
-              <Text variant="bodyMedium" style={styles.loadingText}>Loading recent activity...</Text>
+              <Text variant="bodyMedium" style={styles.loadingText}>
+                Loading recent activity...
+              </Text>
             </View>
           ) : recentActivity.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.horizontalList}>
-                {recentActivity.map((activity, index) => renderRecentActivityItem(activity, index))}
+                {recentActivity.map((activity, index) =>
+                  renderRecentActivityItem(activity, index),
+                )}
               </View>
             </ScrollView>
           ) : (
@@ -629,7 +703,9 @@ export default function UserProfileScreen() {
                 No recent activity
               </Text>
               <Text variant="bodyMedium" style={styles.emptyActivitySubtext}>
-                {isOwnProfile ? "Start listening to some albums!" : "This user hasn't listened to any albums recently"}
+                {isOwnProfile
+                  ? 'Start listening to some albums!'
+                  : "This user hasn't listened to any albums recently"}
               </Text>
             </View>
           )}
@@ -647,14 +723,36 @@ export default function UserProfileScreen() {
           </Text>
           <View style={styles.statsContainer}>
             <View style={styles.statsRow}>
-              {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
-              {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
-              {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
+              {renderStatCard(
+                'Albums This Year',
+                userStats.albumsThisYear,
+                () => navigateToListenedAlbums('year'),
+              )}
+              {renderStatCard('Albums All Time', userStats.albumsAllTime, () =>
+                navigateToListenedAlbums('alltime'),
+              )}
+              {renderStatCard(
+                'Ratings This Year',
+                userStats.ratingsThisYear,
+                () => navigateToUserReviews('year'),
+              )}
             </View>
             <View style={styles.statsRow}>
-              {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-              {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
-              {renderStatCard('Following', userStats.following, navigateToFollowing)}
+              {renderStatCard(
+                'Ratings All Time',
+                userStats.ratingsAllTime,
+                () => navigateToUserReviews('alltime'),
+              )}
+              {renderStatCard(
+                'Followers',
+                userStats.followers,
+                navigateToFollowers,
+              )}
+              {renderStatCard(
+                'Following',
+                userStats.following,
+                navigateToFollowing,
+              )}
             </View>
           </View>
         </View>
@@ -676,177 +774,178 @@ export default function UserProfileScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.xs,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline,
-  },
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    scrollContainer: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.xs,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
 
-  segmentHeader: {
-    padding: spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  profilePicture: {
-    marginBottom: spacing.md,
-  },
-  username: {
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
-  },
-  followContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  followButton: {
-    minWidth: 120,
-  },
-  moreButton: {
-    marginLeft: spacing.xs,
-  },
-  blockedText: {
-    color: theme.colors.error,
-    marginTop: spacing.sm,
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  horizontalList: {
-    flexDirection: 'row',
-    paddingLeft: spacing.lg,
-  },
-  albumCard: {
-    width: ALBUM_CARD_WIDTH,
-    marginRight: spacing.md,
-  },
-  albumCover: {
-    width: ALBUM_CARD_WIDTH,
-    height: ALBUM_CARD_WIDTH,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    marginTop: spacing.xs,
-    justifyContent: 'flex-start',
-  },
+    segmentHeader: {
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    profileHeader: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    profilePicture: {
+      marginBottom: spacing.md,
+    },
+    username: {
+      fontWeight: 'bold',
+      marginBottom: spacing.md,
+    },
+    followContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.md,
+    },
+    followButton: {
+      minWidth: 120,
+    },
+    moreButton: {
+      marginLeft: spacing.xs,
+    },
+    blockedText: {
+      color: theme.colors.error,
+      marginTop: spacing.sm,
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionTitle: {
+      fontWeight: 'bold',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    horizontalList: {
+      flexDirection: 'row',
+      paddingLeft: spacing.lg,
+    },
+    albumCard: {
+      width: ALBUM_CARD_WIDTH,
+      marginRight: spacing.md,
+    },
+    albumCover: {
+      width: ALBUM_CARD_WIDTH,
+      height: ALBUM_CARD_WIDTH,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      resizeMode: 'cover',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+      lineHeight: 16,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 14,
+    },
+    ratingContainer: {
+      flexDirection: 'row',
+      marginTop: spacing.xs,
+      justifyContent: 'flex-start',
+    },
 
-  statsContainer: {
-    paddingHorizontal: spacing.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    aspectRatio: 1.2,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.small,
-  },
-  statValue: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    textAlign: 'center',
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  emptyFavoritesContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    marginHorizontal: spacing.lg,
-    ...shadows.small,
-  },
-  emptyFavoritesText: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  emptyFavoritesSubtext: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  emptyActivityContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    marginHorizontal: spacing.lg,
-    ...shadows.small,
-  },
-  emptyActivityText: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  emptyActivitySubtext: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  adContainer: {
-    marginVertical: spacing.lg,
-    alignItems: 'center',
-    paddingBottom: spacing.lg,
-  },
-});
+    statsContainer: {
+      paddingHorizontal: spacing.md,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    statCard: {
+      flex: 1,
+      aspectRatio: 1.2,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.small,
+    },
+    statValue: {
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    emptyFavoritesContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginHorizontal: spacing.lg,
+      ...shadows.small,
+    },
+    emptyFavoritesText: {
+      fontWeight: 'bold',
+      marginBottom: spacing.xs,
+    },
+    emptyFavoritesSubtext: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 14,
+    },
+    emptyActivityContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginHorizontal: spacing.lg,
+      ...shadows.small,
+    },
+    emptyActivityText: {
+      fontWeight: 'bold',
+      marginBottom: spacing.xs,
+    },
+    emptyActivitySubtext: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 14,
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
+    },
+    adContainer: {
+      marginVertical: spacing.lg,
+      alignItems: 'center',
+      paddingBottom: spacing.lg,
+    },
+  });

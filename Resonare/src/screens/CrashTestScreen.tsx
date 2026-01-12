@@ -7,13 +7,13 @@ import { View, StyleSheet, Alert } from 'react-native';
 import { Text, Button, Card } from 'react-native-paper';
 import { colors, spacing } from '../utils/theme';
 import { Environment } from '../config/environment';
-import { 
-  triggerTestCrash, 
-  recordError, 
-  recordNonFatalError, 
-  setUserId, 
+import {
+  triggerTestCrash,
+  recordError,
+  recordNonFatalError,
+  setUserId,
   setUserAttributes,
-  logMessage 
+  logMessage,
 } from '../services/crashAnalytics';
 
 const CrashTestScreen = () => {
@@ -42,12 +42,12 @@ const CrashTestScreen = () => {
       'This will crash the app to test crash reporting. Continue?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Crash App', 
+        {
+          text: 'Crash App',
           style: 'destructive',
-          onPress: triggerTestCrash
-        }
-      ]
+          onPress: triggerTestCrash,
+        },
+      ],
     );
   };
 
@@ -59,7 +59,10 @@ const CrashTestScreen = () => {
       screen: 'CrashTestScreen',
     });
     setTestCount(testCount + 1);
-    Alert.alert('Error Recorded', 'Test error has been sent to crash analytics.');
+    Alert.alert(
+      'Error Recorded',
+      'Test error has been sent to crash analytics.',
+    );
   };
 
   const handleTestNonFatalError = () => {
@@ -70,7 +73,10 @@ const CrashTestScreen = () => {
       screen: 'CrashTestScreen',
     });
     setTestCount(testCount + 1);
-    Alert.alert('Non-Fatal Error Recorded', 'Test non-fatal error has been sent to crash analytics.');
+    Alert.alert(
+      'Non-Fatal Error Recorded',
+      'Test non-fatal error has been sent to crash analytics.',
+    );
   };
 
   const handleSetTestUser = () => {
@@ -87,7 +93,10 @@ const CrashTestScreen = () => {
   const handleLogMessage = () => {
     const message = `Test log message at ${new Date().toISOString()}`;
     logMessage(message);
-    Alert.alert('Message Logged', 'Test message has been logged to crash analytics.');
+    Alert.alert(
+      'Message Logged',
+      'Test message has been logged to crash analytics.',
+    );
   };
 
   const handleJavaScriptError = () => {
@@ -95,7 +104,10 @@ const CrashTestScreen = () => {
     setTimeout(() => {
       throw new Error('Test JavaScript error for crash analytics');
     }, 1000);
-    Alert.alert('JavaScript Error Triggered', 'An unhandled JavaScript error will occur in 1 second.');
+    Alert.alert(
+      'JavaScript Error Triggered',
+      'An unhandled JavaScript error will occur in 1 second.',
+    );
   };
 
   return (
@@ -116,7 +128,7 @@ const CrashTestScreen = () => {
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Crash Testing
           </Text>
-          
+
           <Button
             mode="contained"
             onPress={handleTestCrash}
@@ -125,7 +137,7 @@ const CrashTestScreen = () => {
           >
             Trigger Test Crash
           </Button>
-          
+
           <Button
             mode="contained"
             onPress={handleJavaScriptError}
@@ -142,7 +154,7 @@ const CrashTestScreen = () => {
           <Text variant="titleMedium" style={styles.sectionTitle}>
             Error Reporting
           </Text>
-          
+
           <Button
             mode="contained"
             onPress={handleTestError}
@@ -150,7 +162,7 @@ const CrashTestScreen = () => {
           >
             Record Test Error
           </Button>
-          
+
           <Button
             mode="contained"
             onPress={handleTestNonFatalError}
@@ -166,7 +178,7 @@ const CrashTestScreen = () => {
           <Text variant="titleMedium" style={styles.sectionTitle}>
             User & Logging
           </Text>
-          
+
           <Button
             mode="contained"
             onPress={handleSetTestUser}
@@ -174,7 +186,7 @@ const CrashTestScreen = () => {
           >
             Set Test User
           </Button>
-          
+
           <Button
             mode="contained"
             onPress={handleLogMessage}

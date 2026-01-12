@@ -51,7 +51,8 @@ export function createAppError(error: any): AppError {
       return {
         type: ErrorType.AUTHENTICATION,
         message: 'Spotify authentication failed',
-        userMessage: 'There was an authentication issue. The app will use cached data.',
+        userMessage:
+          'There was an authentication issue. The app will use cached data.',
         retryable: false,
       };
     }
@@ -78,7 +79,8 @@ export function createAppError(error: any): AppError {
       return {
         type: ErrorType.API_ERROR,
         message: 'Spotify server error',
-        userMessage: 'Spotify is experiencing issues. Using cached data instead.',
+        userMessage:
+          'Spotify is experiencing issues. Using cached data instead.',
         retryable: true,
       };
     }
@@ -89,7 +91,8 @@ export function createAppError(error: any): AppError {
     return {
       type: ErrorType.AUTHENTICATION,
       message: 'Authentication failed',
-      userMessage: 'Unable to authenticate with music service. Using offline data.',
+      userMessage:
+        'Unable to authenticate with music service. Using offline data.',
       retryable: false,
     };
   }
@@ -130,23 +133,23 @@ export function createAppError(error: any): AppError {
  */
 export function logError(error: AppError, context: string = '') {
   const logMessage = `[${error.type}] ${context}: ${error.message}`;
-  
+
   switch (error.type) {
     case ErrorType.NETWORK:
     case ErrorType.RATE_LIMIT:
       console.warn(logMessage, error.details);
       break;
-    
+
     case ErrorType.AUTHENTICATION:
     case ErrorType.API_ERROR:
       console.error(logMessage, error.details);
       break;
-    
+
     case ErrorType.NOT_FOUND:
     case ErrorType.VALIDATION:
       console.info(logMessage);
       break;
-    
+
     default:
       console.error(logMessage, error.details);
   }
@@ -155,13 +158,19 @@ export function logError(error: AppError, context: string = '') {
 /**
  * Determine if an error should trigger a retry
  */
-export function shouldRetry(error: AppError, attemptCount: number = 1): boolean {
+export function shouldRetry(
+  error: AppError,
+  attemptCount: number = 1,
+): boolean {
   if (!error.retryable || attemptCount >= 3) {
     return false;
   }
 
   // Don't retry authentication or validation errors
-  if (error.type === ErrorType.AUTHENTICATION || error.type === ErrorType.VALIDATION) {
+  if (
+    error.type === ErrorType.AUTHENTICATION ||
+    error.type === ErrorType.VALIDATION
+  ) {
     return false;
   }
 
@@ -178,14 +187,14 @@ export function shouldRetry(error: AppError, attemptCount: number = 1): boolean 
  */
 export function getRetryDelay(error: AppError, attemptCount: number): number {
   const baseDelay = 1000; // 1 second
-  
+
   switch (error.type) {
     case ErrorType.RATE_LIMIT:
       return baseDelay * Math.pow(2, attemptCount); // Exponential backoff
-    
+
     case ErrorType.NETWORK:
       return baseDelay * attemptCount; // Linear backoff
-    
+
     default:
       return baseDelay;
   }
@@ -206,35 +215,35 @@ export function getErrorNotification(error: AppError): {
         message: error.userMessage,
         type: 'warning',
       };
-    
+
     case ErrorType.RATE_LIMIT:
       return {
         title: 'Please Wait',
         message: error.userMessage,
         type: 'info',
       };
-    
+
     case ErrorType.AUTHENTICATION:
       return {
         title: 'Service Unavailable',
         message: error.userMessage,
         type: 'info',
       };
-    
+
     case ErrorType.NOT_FOUND:
       return {
         title: 'Not Found',
         message: error.userMessage,
         type: 'info',
       };
-    
+
     case ErrorType.VALIDATION:
       return {
         title: 'Setup Required',
         message: error.userMessage,
         type: 'info',
       };
-    
+
     default:
       return {
         title: 'Something Went Wrong',
@@ -250,7 +259,7 @@ export function getErrorNotification(error: AppError): {
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
   context: string,
-  fallback?: T
+  fallback?: T,
 ): Promise<{ data: T | null; error: AppError | null }> {
   try {
     const data = await operation();
@@ -258,10 +267,10 @@ export async function withErrorHandling<T>(
   } catch (rawError) {
     const error = createAppError(rawError);
     logError(error, context);
-    
-    return { 
-      data: fallback || null, 
-      error 
+
+    return {
+      data: fallback || null,
+      error,
     };
   }
 }
@@ -272,25 +281,25 @@ export async function withErrorHandling<T>(
 export async function withRetry<T>(
   operation: () => Promise<T>,
   context: string,
-  maxAttempts: number = 3
+  maxAttempts: number = 3,
 ): Promise<T> {
   let lastError: AppError;
-  
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await operation();
     } catch (rawError) {
       lastError = createAppError(rawError);
       logError(lastError, `${context} (attempt ${attempt}/${maxAttempts})`);
-      
+
       if (!shouldRetry(lastError, attempt) || attempt === maxAttempts) {
         throw lastError;
       }
-      
+
       const delay = getRetryDelay(lastError, attempt);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  
+
   throw lastError!;
 }

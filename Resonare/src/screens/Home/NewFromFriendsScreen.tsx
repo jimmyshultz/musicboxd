@@ -25,7 +25,6 @@ type NewFromFriendsNavigationProp = StackNavigationProp<HomeStackParamList>;
 
 const CARDS_PER_ROW = 3;
 
-
 interface FriendActivity {
   album: Album;
   diaryEntryId: string; // Store diary entry ID for navigation
@@ -52,9 +51,15 @@ export default function NewFromFriendsScreen() {
   // Calculate card width to ensure 3 cards always fit per row
   const totalHorizontalPadding = HORIZONTAL_SPACING * 2;
   const totalMarginsBetweenCards = CARD_MARGIN * (CARDS_PER_ROW - 1);
-  const availableWidth = width - totalHorizontalPadding - totalMarginsBetweenCards;
+  const availableWidth =
+    width - totalHorizontalPadding - totalMarginsBetweenCards;
   const albumCardWidth = Math.floor(availableWidth / CARDS_PER_ROW);
-  const styles = createStyles(theme, albumCardWidth, HORIZONTAL_SPACING, CARD_MARGIN);
+  const styles = createStyles(
+    theme,
+    albumCardWidth,
+    HORIZONTAL_SPACING,
+    CARD_MARGIN,
+  );
   const [activities, setActivities] = useState<FriendActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -74,7 +79,9 @@ export default function NewFromFriendsScreen() {
 
       // Filter out current user from friends list
       const currentUsername = currentUser?.username || 'musiclover2024';
-      const friendsOnly = users.filter(user => user.username !== currentUsername);
+      const friendsOnly = users.filter(
+        user => user.username !== currentUsername,
+      );
 
       // Early return if no friends available
       if (friendsOnly.length === 0) {
@@ -87,7 +94,10 @@ export default function NewFromFriendsScreen() {
       const friendIds = friendsOnly.map(f => f.id);
 
       // BATCH QUERY: Get all diary entries for all friends in ONE query
-      const allDiaryEntries = await diaryService.getRecentDiaryEntriesForUsers(friendIds, 100);
+      const allDiaryEntries = await diaryService.getRecentDiaryEntriesForUsers(
+        friendIds,
+        100,
+      );
 
       // Transform diary entries to FriendActivity[]
       const friendActivities: FriendActivity[] = allDiaryEntries
@@ -122,7 +132,9 @@ export default function NewFromFriendsScreen() {
         });
 
       // Sort by most recent first and limit to 60 items for performance
-      friendActivities.sort((a, b) => b.diaryDate.getTime() - a.diaryDate.getTime());
+      friendActivities.sort(
+        (a, b) => b.diaryDate.getTime() - a.diaryDate.getTime(),
+      );
       setActivities(friendActivities.slice(0, 60));
     } catch (error) {
       console.error('Error loading friend activities:', error);
@@ -144,8 +156,6 @@ export default function NewFromFriendsScreen() {
       setRefreshing(false);
     }
   }, [loadFriendActivities]);
-
-
 
   const navigateToUserProfile = (userId: string) => {
     navigation.navigate('UserProfile', { userId });
@@ -171,10 +181,20 @@ export default function NewFromFriendsScreen() {
     const isLastInRow = (index + 1) % CARDS_PER_ROW === 0;
 
     return (
-      <View key={`${activity.album.id}_${index}`} style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}>
-        <TouchableOpacity onPress={() => navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)}>
+      <View
+        key={`${activity.album.id}_${index}`}
+        style={[styles.albumCard, isLastInRow && styles.albumCardLastInRow]}
+      >
+        <TouchableOpacity
+          onPress={() =>
+            navigateToDiaryEntry(activity.diaryEntryId, activity.friend.id)
+          }
+        >
           <FastImage
-            source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+            source={{
+              uri: activity.album.coverImageUrl,
+              priority: FastImage.priority.normal,
+            }}
             style={styles.albumCover}
             resizeMode={FastImage.resizeMode.cover}
           />
@@ -190,12 +210,13 @@ export default function NewFromFriendsScreen() {
           style={styles.friendInfo}
           onPress={() => navigateToUserProfile(activity.friend.id)}
         >
-          <ProfileAvatar
-            uri={activity.friend.profilePicture}
-            size={20}
-          />
+          <ProfileAvatar uri={activity.friend.profilePicture} size={20} />
           <View style={styles.friendDetails}>
-            <Text variant="bodySmall" numberOfLines={1} style={styles.friendName}>
+            <Text
+              variant="bodySmall"
+              numberOfLines={1}
+              style={styles.friendName}
+            >
               @{activity.friend.username}
             </Text>
             <Text variant="bodySmall" style={styles.timeAgo}>
@@ -229,7 +250,9 @@ export default function NewFromFriendsScreen() {
           }
         >
           <View style={styles.grid}>
-            {activities.map((activity, index) => renderActivityCard(activity, index))}
+            {activities.map((activity, index) =>
+              renderActivityCard(activity, index),
+            )}
           </View>
         </ScrollView>
       </View>
@@ -237,96 +260,102 @@ export default function NewFromFriendsScreen() {
   );
 }
 
-const createStyles = (theme: any, albumCardWidth: number, horizontalSpacing: number, cardMargin: number) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
+const createStyles = (
+  theme: any,
+  albumCardWidth: number,
+  horizontalSpacing: number,
+  cardMargin: number,
+) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
 
-  headerTitle: {
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  placeholder: {
-    width: 48, // Same width as back button for centering
-  },
-  scrollContainer: {
-    flex: 1,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: horizontalSpacing,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
-    justifyContent: 'flex-start',
-  },
-  albumCard: {
-    width: albumCardWidth,
-    marginBottom: spacing.lg,
-    marginRight: cardMargin,
-  },
-  albumCardLastInRow: {
-    marginRight: 0,
-  },
-  albumCover: {
-    width: albumCardWidth,
-    height: albumCardWidth,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-    marginBottom: spacing.sm,
-  },
-  friendInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  friendDetails: {
-    marginLeft: spacing.sm,
-    flex: 1,
-  },
-  friendName: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: theme.colors.onSurfaceVariant,
-  },
-  timeAgo: {
-    fontSize: 10,
-    color: theme.colors.onSurfaceVariant,
-    opacity: 0.7,
-  },
-});
+    headerTitle: {
+      fontWeight: 'bold',
+      flex: 1,
+      textAlign: 'center',
+    },
+    placeholder: {
+      width: 48, // Same width as back button for centering
+    },
+    scrollContainer: {
+      flex: 1,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      paddingHorizontal: horizontalSpacing,
+      paddingTop: spacing.lg,
+      paddingBottom: spacing.lg,
+      justifyContent: 'flex-start',
+    },
+    albumCard: {
+      width: albumCardWidth,
+      marginBottom: spacing.lg,
+      marginRight: cardMargin,
+    },
+    albumCardLastInRow: {
+      marginRight: 0,
+    },
+    albumCover: {
+      width: albumCardWidth,
+      height: albumCardWidth,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      resizeMode: 'cover',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+      lineHeight: 16,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 14,
+      marginBottom: spacing.sm,
+    },
+    friendInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: spacing.xs,
+    },
+    friendDetails: {
+      marginLeft: spacing.sm,
+      flex: 1,
+    },
+    friendName: {
+      fontSize: 11,
+      fontWeight: '500',
+      color: theme.colors.onSurfaceVariant,
+    },
+    timeAgo: {
+      fontSize: 10,
+      color: theme.colors.onSurfaceVariant,
+      opacity: 0.7,
+    },
+  });

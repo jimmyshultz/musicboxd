@@ -22,11 +22,21 @@ import {
   useTheme,
   TextInput,
 } from 'react-native-paper';
-import { RouteProp, useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import {
+  RouteProp,
+  useRoute,
+  useNavigation,
+  useFocusEffect,
+} from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { HomeStackParamList, SearchStackParamList, ProfileStackParamList, Track } from '../../types';
+import {
+  HomeStackParamList,
+  SearchStackParamList,
+  ProfileStackParamList,
+  Track,
+} from '../../types';
 import { RootState } from '../../store';
 import ProfileAvatar from '../../components/ProfileAvatar';
 import { HalfStarRating } from '../../components/HalfStarRating';
@@ -34,12 +44,16 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {
   setCurrentAlbum,
   setCurrentAlbumUserReview,
-  setCurrentAlbumIsListened
+  setCurrentAlbumIsListened,
 } from '../../store/slices/albumSlice';
 import { AlbumService } from '../../services/albumService';
 import { albumListensService } from '../../services/albumListensService';
 import { albumRatingsService } from '../../services/albumRatingsService';
-import { diaryEntriesService, DiaryEntry, DiaryEntryWithUserProfile } from '../../services/diaryEntriesService';
+import {
+  diaryEntriesService,
+  DiaryEntry,
+  DiaryEntryWithUserProfile,
+} from '../../services/diaryEntriesService';
 import { spacing, shadows } from '../../utils/theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Switch, IconButton } from 'react-native-paper';
@@ -57,15 +71,24 @@ type AlbumDetailsNavigationProp = StackNavigationProp<
 >;
 
 // Icon components to avoid creating them during render
-const CheckIcon = (props: any) => <Icon name="check" size={16} color={props.color || '#666'} />;
-const PlusIcon = (props: any) => <Icon name="plus" size={16} color={props.color || '#666'} />;
+const CheckIcon = (props: any) => (
+  <Icon name="check" size={16} color={props.color || '#666'} />
+);
+const PlusIcon = (props: any) => (
+  <Icon name="plus" size={16} color={props.color || '#666'} />
+);
 
 const { width } = Dimensions.get('window');
 const COVER_SIZE = width * 0.6;
 
-
-
-const TrackListItem = ({ track, theme }: { track: Track; albumArtist: string; theme: any }) => {
+const TrackListItem = ({
+  track,
+  theme,
+}: {
+  track: Track;
+  albumArtist: string;
+  theme: any;
+}) => {
   const styles = createStyles(theme);
   return (
     <View style={styles.trackItem}>
@@ -98,9 +121,12 @@ export default function AlbumDetailsScreen() {
   const theme = useTheme();
   const { albumId } = route.params;
 
-  const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } = useSelector((state: RootState) => state.albums);
+  const { currentAlbum, currentAlbumUserReview, currentAlbumIsListened } =
+    useSelector((state: RootState) => state.albums);
   const { user } = useSelector((state: RootState) => state.auth);
-  const { interactions, loading: userAlbumsLoading } = useSelector((state: RootState) => state.userAlbums);
+  const { interactions, loading: userAlbumsLoading } = useSelector(
+    (state: RootState) => state.userAlbums,
+  );
 
   // Get current album interaction from the new database-backed state
   const currentAlbumInteraction = interactions[albumId];
@@ -114,18 +140,24 @@ export default function AlbumDetailsScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userDiaryEntries, setUserDiaryEntries] = useState<DiaryEntry[]>([]);
-  const [friendsDiaryEntries, setFriendsDiaryEntries] = useState<DiaryEntryWithUserProfile[]>([]);
+  const [friendsDiaryEntries, setFriendsDiaryEntries] = useState<
+    DiaryEntryWithUserProfile[]
+  >([]);
   const [loadingInteractions, setLoadingInteractions] = useState(false);
   const [loadingDiaryEntries, setLoadingDiaryEntries] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
-  const [reportingEntry, setReportingEntry] = useState<DiaryEntryWithUserProfile | null>(null);
-  const [lastLoadedAlbumId, setLastLoadedAlbumId] = useState<string | null>(null);
+  const [reportingEntry, setReportingEntry] =
+    useState<DiaryEntryWithUserProfile | null>(null);
+  const [lastLoadedAlbumId, setLastLoadedAlbumId] = useState<string | null>(
+    null,
+  );
 
   const openDiaryModal = () => {
     setAddToDiary(true);
     setDiaryDate(new Date());
     // Pre-fill rating from existing album rating if available
-    const existingRating = currentAlbumInteraction?.rating || currentAlbumUserReview?.rating;
+    const existingRating =
+      currentAlbumInteraction?.rating || currentAlbumUserReview?.rating;
     setDiaryRating(existingRating || undefined);
     setDiaryReview('');
     setShowDiaryModal(true);
@@ -136,9 +168,15 @@ export default function AlbumDetailsScreen() {
 
     // Validate review content before submitting
     if (diaryReview.trim()) {
-      const reviewValidation = contentModerationService.validateDiaryNotes(diaryReview.trim());
+      const reviewValidation = contentModerationService.validateDiaryNotes(
+        diaryReview.trim(),
+      );
       if (!reviewValidation.isValid) {
-        Alert.alert('Content Issue', reviewValidation.error || 'Your review contains inappropriate content. Please revise it.');
+        Alert.alert(
+          'Content Issue',
+          reviewValidation.error ||
+            'Your review contains inappropriate content. Please revise it.',
+        );
         return;
       }
     }
@@ -148,14 +186,28 @@ export default function AlbumDetailsScreen() {
       if (addToDiary) {
         const iso = `${diaryDate.getFullYear()}-${String(diaryDate.getMonth() + 1).padStart(2, '0')}-${String(diaryDate.getDate()).padStart(2, '0')}`;
         const reviewText = diaryReview.trim() || undefined;
-        const res = await diaryEntriesService.createDiaryEntry(user.id, currentAlbum.id, iso, diaryRating, reviewText);
+        const res = await diaryEntriesService.createDiaryEntry(
+          user.id,
+          currentAlbum.id,
+          iso,
+          diaryRating,
+          reviewText,
+        );
         if (!res.success) {
           console.warn(res.message);
         } else {
           // If user has not rated the album yet and provided a diary rating, set the overall album rating now
-          if (typeof diaryRating === 'number' && diaryRating > 0 && (!currentAlbumUserReview || currentAlbumUserReview.rating <= 0)) {
+          if (
+            typeof diaryRating === 'number' &&
+            diaryRating > 0 &&
+            (!currentAlbumUserReview || currentAlbumUserReview.rating <= 0)
+          ) {
             try {
-              await albumRatingsService.rateAlbum(user.id, currentAlbum.id, diaryRating);
+              await albumRatingsService.rateAlbum(
+                user.id,
+                currentAlbum.id,
+                diaryRating,
+              );
               const newReview = {
                 id: `review_${currentAlbum.id}_${user.id}`,
                 userId: user.id,
@@ -174,7 +226,11 @@ export default function AlbumDetailsScreen() {
 
           // Reload user's diary entries after successful creation
           if (res.success) {
-            const userEntries = await diaryEntriesService.getUserDiaryEntriesForAlbum(user.id, currentAlbum.id);
+            const userEntries =
+              await diaryEntriesService.getUserDiaryEntriesForAlbum(
+                user.id,
+                currentAlbum.id,
+              );
             setUserDiaryEntries(userEntries);
           }
         }
@@ -274,7 +330,8 @@ export default function AlbumDetailsScreen() {
 
             // Load friends' diary entries in background (non-blocking)
             setLoadingDiaryEntries(true);
-            diaryEntriesService.getFriendsDiaryEntriesForAlbum(user.id, albumId, 10)
+            diaryEntriesService
+              .getFriendsDiaryEntriesForAlbum(user.id, albumId, 10)
               .then(friendsEntries => {
                 setFriendsDiaryEntries(friendsEntries);
                 setLoadingDiaryEntries(false);
@@ -283,23 +340,22 @@ export default function AlbumDetailsScreen() {
                 console.error('Error loading friends diary entries:', error);
                 setLoadingDiaryEntries(false);
               });
-
           } catch (error) {
             console.error('Error loading user album interactions:', error);
             setLoadingInteractions(false);
-          setLoadingDiaryEntries(false);
+            setLoadingDiaryEntries(false);
+          }
         }
+
+        // Mark this album as loaded
+        setLastLoadedAlbumId(albumId);
       }
-      
-      // Mark this album as loaded
-      setLastLoadedAlbumId(albumId);
+    } catch (error) {
+      console.error('Error loading album details:', error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error loading album details:', error);
-  } finally {
-    setLoading(false);
-  }
-}, [albumId, dispatch, user]);
+  }, [albumId, dispatch, user]);
 
   // Use useFocusEffect to reload when screen comes into focus
   // Only reload if album ID changed - prevents unnecessary reloads for same album
@@ -309,7 +365,7 @@ export default function AlbumDetailsScreen() {
       if (albumId !== lastLoadedAlbumId) {
         loadAlbumDetails();
       }
-    }, [albumId, lastLoadedAlbumId, loadAlbumDetails])
+    }, [albumId, lastLoadedAlbumId, loadAlbumDetails]),
   );
 
   const onRefresh = useCallback(async () => {
@@ -383,7 +439,10 @@ export default function AlbumDetailsScreen() {
       {/* Album Header */}
       <View style={styles.header}>
         <FastImage
-          source={{ uri: currentAlbum.coverImageUrl, priority: FastImage.priority.high }}
+          source={{
+            uri: currentAlbum.coverImageUrl,
+            priority: FastImage.priority.high,
+          }}
           style={styles.albumCover}
           resizeMode={FastImage.resizeMode.cover}
         />
@@ -407,7 +466,8 @@ export default function AlbumDetailsScreen() {
             </Text>
           </TouchableOpacity>
           <Text variant="bodyMedium" style={styles.albumMeta}>
-            {albumYear} • {currentAlbum.trackList.length} tracks • {AlbumService.formatDuration(totalDuration)}
+            {albumYear} • {currentAlbum.trackList.length} tracks •{' '}
+            {AlbumService.formatDuration(totalDuration)}
           </Text>
 
           {/* Genres */}
@@ -424,14 +484,14 @@ export default function AlbumDetailsScreen() {
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
         <Button
-          mode={currentAlbumIsListened ? "contained" : "outlined"}
+          mode={currentAlbumIsListened ? 'contained' : 'outlined'}
           onPress={handleMarkAsListened}
           style={styles.actionButton}
           icon={currentAlbumIsListened ? CheckIcon : PlusIcon}
           disabled={submitting || !user || userAlbumsLoading.markAsListened}
           loading={submitting || userAlbumsLoading.markAsListened}
         >
-          {currentAlbumIsListened ? "Listened" : "Mark as Listened"}
+          {currentAlbumIsListened ? 'Listened' : 'Mark as Listened'}
         </Button>
         {currentAlbumIsListened && (
           <Button
@@ -453,15 +513,29 @@ export default function AlbumDetailsScreen() {
           </Text>
           <View style={styles.starContainer}>
             <HalfStarRating
-              rating={currentAlbumInteraction?.rating || currentAlbumUserReview?.rating || 0}
+              rating={
+                currentAlbumInteraction?.rating ||
+                currentAlbumUserReview?.rating ||
+                0
+              }
               onRatingChange={handleRating}
               disabled={submitting || !user || userAlbumsLoading.rating}
               size="large"
             />
           </View>
-          {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) && (
+          {(currentAlbumInteraction?.rating ||
+            currentAlbumUserReview?.rating) && (
             <Text variant="bodyMedium" style={styles.ratingText}>
-              You rated this {(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating)?.toFixed(1)} star{(currentAlbumInteraction?.rating || currentAlbumUserReview?.rating) !== 1 ? 's' : ''}
+              You rated this{' '}
+              {(
+                currentAlbumInteraction?.rating ||
+                currentAlbumUserReview?.rating
+              )?.toFixed(1)}{' '}
+              star
+              {(currentAlbumInteraction?.rating ||
+                currentAlbumUserReview?.rating) !== 1
+                ? 's'
+                : ''}
             </Text>
           )}
           {!user && (
@@ -499,8 +573,14 @@ export default function AlbumDetailsScreen() {
           </Text>
           {currentAlbum.trackList.map((track, index) => (
             <View key={track.id}>
-              <TrackListItem track={track} albumArtist={currentAlbum.artist} theme={theme} />
-              {index < currentAlbum.trackList.length - 1 && <Divider style={styles.trackDivider} />}
+              <TrackListItem
+                track={track}
+                albumArtist={currentAlbum.artist}
+                theme={theme}
+              />
+              {index < currentAlbum.trackList.length - 1 && (
+                <Divider style={styles.trackDivider} />
+              )}
             </View>
           ))}
         </Card.Content>
@@ -513,15 +593,25 @@ export default function AlbumDetailsScreen() {
             Album Information
           </Text>
           <View style={styles.infoRow}>
-            <Text variant="bodyMedium" style={styles.infoLabel}>Release Date:</Text>
-            <Text variant="bodyMedium">{new Date(currentAlbum.releaseDate).toLocaleDateString()}</Text>
+            <Text variant="bodyMedium" style={styles.infoLabel}>
+              Release Date:
+            </Text>
+            <Text variant="bodyMedium">
+              {new Date(currentAlbum.releaseDate).toLocaleDateString()}
+            </Text>
           </View>
           <View style={styles.infoRow}>
-            <Text variant="bodyMedium" style={styles.infoLabel}>Total Duration:</Text>
-            <Text variant="bodyMedium">{AlbumService.formatDuration(totalDuration)}</Text>
+            <Text variant="bodyMedium" style={styles.infoLabel}>
+              Total Duration:
+            </Text>
+            <Text variant="bodyMedium">
+              {AlbumService.formatDuration(totalDuration)}
+            </Text>
           </View>
           <View style={styles.infoRow}>
-            <Text variant="bodyMedium" style={styles.infoLabel}>Number of Tracks:</Text>
+            <Text variant="bodyMedium" style={styles.infoLabel}>
+              Number of Tracks:
+            </Text>
             <Text variant="bodyMedium">{currentAlbum.trackList.length}</Text>
           </View>
         </Card.Content>
@@ -540,38 +630,63 @@ export default function AlbumDetailsScreen() {
               </View>
             ) : (
               <>
-                {userDiaryEntries.slice(0, 1).map((entry) => (
+                {userDiaryEntries.slice(0, 1).map(entry => (
                   <TouchableOpacity
                     key={entry.id}
-                    onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: user.id })}
+                    onPress={() =>
+                      navigation.navigate('DiaryEntryDetails', {
+                        entryId: entry.id,
+                        userId: user.id,
+                      })
+                    }
                     style={styles.diaryEntryItem}
                   >
                     <View style={styles.diaryEntryContent}>
                       <View style={styles.diaryEntryHeader}>
-                        <Text variant="bodyMedium" style={styles.diaryEntryDate}>
+                        <Text
+                          variant="bodyMedium"
+                          style={styles.diaryEntryDate}
+                        >
                           {new Date(entry.diary_date).toLocaleDateString()}
                         </Text>
                         {entry.rating && (
                           <View style={styles.diaryEntryRating}>
-                            <Icon name="star" size={14} color={theme.colors.primary} />
-                            <Text variant="bodyMedium" style={styles.ratingValue}>
+                            <Icon
+                              name="star"
+                              size={14}
+                              color={theme.colors.primary}
+                            />
+                            <Text
+                              variant="bodyMedium"
+                              style={styles.ratingValue}
+                            >
                               {entry.rating.toFixed(1)}
                             </Text>
                           </View>
                         )}
                       </View>
                       {entry.notes && (
-                        <Text variant="bodySmall" numberOfLines={2} style={styles.diaryEntryNotes}>
+                        <Text
+                          variant="bodySmall"
+                          numberOfLines={2}
+                          style={styles.diaryEntryNotes}
+                        >
                           {entry.notes}
                         </Text>
                       )}
                     </View>
-                    <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+                    <Icon
+                      name="chevron-right"
+                      size={16}
+                      color={theme.colors.onSurfaceVariant}
+                    />
                   </TouchableOpacity>
                 ))}
                 {userDiaryEntries.length > 1 && (
                   <Text variant="bodySmall" style={styles.moreEntriesText}>
-                    You have {userDiaryEntries.length} {userDiaryEntries.length === 1 ? 'entry' : 'entries'} for this album
+                    You have {userDiaryEntries.length}{' '}
+                    {userDiaryEntries.length === 1 ? 'entry' : 'entries'} for
+                    this album
                   </Text>
                 )}
               </>
@@ -593,10 +708,15 @@ export default function AlbumDetailsScreen() {
               </View>
             ) : (
               <>
-                {friendsDiaryEntries.map((entry) => (
+                {friendsDiaryEntries.map(entry => (
                   <TouchableOpacity
                     key={entry.id}
-                    onPress={() => navigation.navigate('DiaryEntryDetails', { entryId: entry.id, userId: entry.user_id })}
+                    onPress={() =>
+                      navigation.navigate('DiaryEntryDetails', {
+                        entryId: entry.id,
+                        userId: entry.user_id,
+                      })
+                    }
                     style={styles.friendDiaryEntryItem}
                   >
                     <View style={styles.friendDiaryEntryContent}>
@@ -605,17 +725,30 @@ export default function AlbumDetailsScreen() {
                         size={32}
                       />
                       <View style={styles.friendDiaryInfo}>
-                        <Text variant="bodyMedium" style={styles.friendUsername}>
+                        <Text
+                          variant="bodyMedium"
+                          style={styles.friendUsername}
+                        >
                           {entry.user_profiles?.username || 'Unknown'}
                         </Text>
                         <View style={styles.friendDiaryDateRatingRow}>
-                          <Text variant="bodySmall" style={styles.friendDiaryDate}>
+                          <Text
+                            variant="bodySmall"
+                            style={styles.friendDiaryDate}
+                          >
                             {new Date(entry.diary_date).toLocaleDateString()}
                           </Text>
                           {entry.rating && (
                             <View style={styles.friendDiaryRating}>
-                              <Icon name="star" size={14} color={theme.colors.primary} />
-                              <Text variant="bodyMedium" style={styles.ratingValue}>
+                              <Icon
+                                name="star"
+                                size={14}
+                                color={theme.colors.primary}
+                              />
+                              <Text
+                                variant="bodyMedium"
+                                style={styles.ratingValue}
+                              >
                                 {entry.rating.toFixed(1)}
                               </Text>
                             </View>
@@ -627,14 +760,18 @@ export default function AlbumDetailsScreen() {
                       <IconButton
                         icon="flag-outline"
                         size={16}
-                        onPress={(e) => {
+                        onPress={e => {
                           e.stopPropagation();
                           setReportingEntry(entry);
                           setShowReportModal(true);
                         }}
                         style={styles.reportIconButton}
                       />
-                      <Icon name="chevron-right" size={16} color={theme.colors.onSurfaceVariant} />
+                      <Icon
+                        name="chevron-right"
+                        size={16}
+                        color={theme.colors.onSurfaceVariant}
+                      />
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -658,17 +795,36 @@ export default function AlbumDetailsScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={0}
         >
-          <View style={[styles.diaryModalContainer, { backgroundColor: theme.colors.background }]}>
+          <View
+            style={[
+              styles.diaryModalContainer,
+              { backgroundColor: theme.colors.background },
+            ]}
+          >
             {/* Header */}
-            <View style={[styles.diaryModalHeader, { borderBottomColor: theme.colors.outline }]}>
+            <View
+              style={[
+                styles.diaryModalHeader,
+                { borderBottomColor: theme.colors.outline },
+              ]}
+            >
               <TouchableOpacity onPress={() => setShowDiaryModal(false)}>
-                <Text variant="bodyLarge" style={styles.cancelButton}>Cancel</Text>
+                <Text variant="bodyLarge" style={styles.cancelButton}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
-              <Text variant="titleLarge" style={styles.diaryModalTitle}>Add to Diary</Text>
-              <TouchableOpacity onPress={handleConfirmDiaryModal} disabled={submitting}>
+              <Text variant="titleLarge" style={styles.diaryModalTitle}>
+                Add to Diary
+              </Text>
+              <TouchableOpacity
+                onPress={handleConfirmDiaryModal}
+                disabled={submitting}
+              >
                 <Text
                   variant="bodyLarge"
-                  style={submitting ? styles.saveButtonDisabled : styles.saveButton}
+                  style={
+                    submitting ? styles.saveButtonDisabled : styles.saveButton
+                  }
                 >
                   Save
                 </Text>
@@ -687,10 +843,15 @@ export default function AlbumDetailsScreen() {
               </View>
 
               <View style={styles.diaryDateContainer}>
-                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Date</Text>
+                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>
+                  Date
+                </Text>
                 {Platform.OS === 'ios' ? (
                   <>
-                    <Button mode="outlined" onPress={() => setShowDatePicker(!showDatePicker)}>
+                    <Button
+                      mode="outlined"
+                      onPress={() => setShowDatePicker(!showDatePicker)}
+                    >
                       {diaryDate.toLocaleDateString()}
                     </Button>
                     {showDatePicker && (
@@ -711,24 +872,34 @@ export default function AlbumDetailsScreen() {
                     )}
                   </>
                 ) : (
-                  <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
+                  <Button
+                    mode="outlined"
+                    onPress={() => setShowDatePicker(true)}
+                  >
                     {diaryDate.toLocaleDateString()}
                   </Button>
                 )}
               </View>
 
               <View style={styles.diaryRatingContainer}>
-                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Optional rating</Text>
-                <HalfStarRating rating={diaryRating || 0} onRatingChange={(r) => setDiaryRating(r || undefined)} />
+                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>
+                  Optional rating
+                </Text>
+                <HalfStarRating
+                  rating={diaryRating || 0}
+                  onRatingChange={r => setDiaryRating(r || undefined)}
+                />
               </View>
 
               <View style={styles.diaryReviewContainer}>
-                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>Review (optional)</Text>
+                <Text variant="bodyMedium" style={{ marginBottom: spacing.xs }}>
+                  Review (optional)
+                </Text>
                 <TextInput
                   mode="outlined"
                   placeholder="Share your thoughts about this album..."
                   value={diaryReview}
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     if (text.length <= 280) {
                       setDiaryReview(text);
                     }
@@ -789,323 +960,324 @@ export default function AlbumDetailsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  header: {
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  albumCover: {
-    width: COVER_SIZE,
-    height: COVER_SIZE,
-    borderRadius: 12,
-    marginBottom: spacing.lg,
-    resizeMode: 'cover',
-    ...shadows.large,
-  },
-  albumInfoContainer: {
-    alignItems: 'center',
-  },
-  albumTitle: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  artistNameClickable: {
-    color: theme.colors.primary,
-    textDecorationLine: 'underline',
-  },
-  albumMeta: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  genresContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
-  genreChip: {
-    marginBottom: spacing.sm,
-  },
-  actionsContainer: {
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  actionButton: {
-    marginBottom: spacing.sm,
-  },
-  ratingCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  ratingTitle: {
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  starContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  ratingText: {
-    textAlign: 'center',
-    color: theme.colors.onSurfaceVariant,
-  },
-  loginPrompt: {
-    textAlign: 'center',
-    color: theme.colors.onSurfaceVariant,
-    fontStyle: 'italic',
-    marginTop: spacing.sm,
-  },
-  descriptionCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  trackListCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  infoCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  sectionTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  description: {
-    lineHeight: 22,
-  },
-  trackItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-  },
-  trackNumber: {
-    width: 30,
-    alignItems: 'center',
-  },
-  trackNumberText: {
-    color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
-  },
-  trackInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  trackTitle: {
-    fontWeight: '500',
-    marginBottom: spacing.xs,
-  },
-  trackArtist: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  trackDuration: {
-    color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
-    minWidth: 40,
-    textAlign: 'right',
-  },
-  trackDivider: {
-    marginVertical: spacing.xs,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  infoLabel: {
-    fontWeight: '500',
-  },
-  bottomPadding: {
-    height: spacing.xl,
-  },
-  diaryModalContainer: {
-    flex: 1,
-  },
-  diaryModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-  },
-  diaryModalTitle: {
-    fontWeight: '600',
-  },
-  diaryModalScroll: {
-    flex: 1,
-  },
-  diaryModalContent: {
-    padding: spacing.lg,
-  },
-  diaryToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.lg,
-  },
-  diaryDateContainer: {
-    marginBottom: spacing.lg,
-  },
-  datePickerContainer: {
-    marginTop: spacing.md,
-    backgroundColor: theme.colors.surfaceVariant,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  datePicker: {
-    width: '100%',
-    height: 200,
-  },
-  diaryRatingContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  diaryReviewContainer: {
-    marginTop: spacing.md,
-  },
-  diaryReviewInput: {
-    minHeight: 100,
-  },
-  characterCount: {
-    textAlign: 'right',
-    marginTop: spacing.xs,
-    color: theme.colors.onSurfaceVariant,
-  },
-  keyboardAvoidingView: {
-    flex: 1,
-  },
-  cancelButton: {
-    color: theme.colors.primary,
-  },
-  saveButton: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  saveButtonDisabled: {
-    color: theme.colors.onSurfaceDisabled,
-    fontWeight: '600',
-  },
-  keyboardPaddingView: {
-    height: 200,
-  },
-  diaryEntriesCard: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.lg,
-    backgroundColor: theme.colors.surface,
-  },
-  loadingSection: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  diaryEntryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outlineVariant,
-  },
-  diaryEntryContent: {
-    flex: 1,
-  },
-  diaryEntryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginBottom: spacing.xs,
-  },
-  diaryEntryDate: {
-    fontWeight: '500',
-  },
-  diaryEntryRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingValue: {
-    fontWeight: '500',
-    color: theme.colors.primary,
-  },
-  diaryEntryNotes: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-  },
-  moreEntriesText: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.md,
-    fontStyle: 'italic',
-  },
-  friendDiaryEntryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outlineVariant,
-  },
-  friendDiaryEntryContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  friendDiaryInfo: {
-    flex: 1,
-  },
-  friendUsername: {
-    fontWeight: '500',
-    marginBottom: spacing.xs,
-  },
-  friendDiaryDateRatingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  friendDiaryDate: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  friendDiaryRating: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  friendEntryActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  reportIconButton: {
-    margin: 0,
-    marginRight: spacing.xs,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    header: {
+      padding: spacing.lg,
+      alignItems: 'center',
+    },
+    albumCover: {
+      width: COVER_SIZE,
+      height: COVER_SIZE,
+      borderRadius: 12,
+      marginBottom: spacing.lg,
+      resizeMode: 'cover',
+      ...shadows.large,
+    },
+    albumInfoContainer: {
+      alignItems: 'center',
+    },
+    albumTitle: {
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    artistNameClickable: {
+      color: theme.colors.primary,
+      textDecorationLine: 'underline',
+    },
+    albumMeta: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    genresContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+    genreChip: {
+      marginBottom: spacing.sm,
+    },
+    actionsContainer: {
+      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+    },
+    actionButton: {
+      marginBottom: spacing.sm,
+    },
+    ratingCard: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    ratingTitle: {
+      textAlign: 'center',
+      marginBottom: spacing.md,
+    },
+    starContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: spacing.sm,
+    },
+    ratingText: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+    },
+    loginPrompt: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+      fontStyle: 'italic',
+      marginTop: spacing.sm,
+    },
+    descriptionCard: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    trackListCard: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    infoCard: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    sectionTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.md,
+    },
+    description: {
+      lineHeight: 22,
+    },
+    trackItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+    },
+    trackNumber: {
+      width: 30,
+      alignItems: 'center',
+    },
+    trackNumberText: {
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+    },
+    trackInfo: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    trackTitle: {
+      fontWeight: '500',
+      marginBottom: spacing.xs,
+    },
+    trackArtist: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    trackDuration: {
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+      minWidth: 40,
+      textAlign: 'right',
+    },
+    trackDivider: {
+      marginVertical: spacing.xs,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: spacing.sm,
+    },
+    infoLabel: {
+      fontWeight: '500',
+    },
+    bottomPadding: {
+      height: spacing.xl,
+    },
+    diaryModalContainer: {
+      flex: 1,
+    },
+    diaryModalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      borderBottomWidth: 1,
+    },
+    diaryModalTitle: {
+      fontWeight: '600',
+    },
+    diaryModalScroll: {
+      flex: 1,
+    },
+    diaryModalContent: {
+      padding: spacing.lg,
+    },
+    diaryToggleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: spacing.lg,
+    },
+    diaryDateContainer: {
+      marginBottom: spacing.lg,
+    },
+    datePickerContainer: {
+      marginTop: spacing.md,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    datePicker: {
+      width: '100%',
+      height: 200,
+    },
+    diaryRatingContainer: {
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    diaryReviewContainer: {
+      marginTop: spacing.md,
+    },
+    diaryReviewInput: {
+      minHeight: 100,
+    },
+    characterCount: {
+      textAlign: 'right',
+      marginTop: spacing.xs,
+      color: theme.colors.onSurfaceVariant,
+    },
+    keyboardAvoidingView: {
+      flex: 1,
+    },
+    cancelButton: {
+      color: theme.colors.primary,
+    },
+    saveButton: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    saveButtonDisabled: {
+      color: theme.colors.onSurfaceDisabled,
+      fontWeight: '600',
+    },
+    keyboardPaddingView: {
+      height: 200,
+    },
+    diaryEntriesCard: {
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.lg,
+      backgroundColor: theme.colors.surface,
+    },
+    loadingSection: {
+      paddingVertical: spacing.lg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    diaryEntryItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+    },
+    diaryEntryContent: {
+      flex: 1,
+    },
+    diaryEntryHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+      marginBottom: spacing.xs,
+    },
+    diaryEntryDate: {
+      fontWeight: '500',
+    },
+    diaryEntryRating: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    ratingValue: {
+      fontWeight: '500',
+      color: theme.colors.primary,
+    },
+    diaryEntryNotes: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+    },
+    moreEntriesText: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.md,
+      fontStyle: 'italic',
+    },
+    friendDiaryEntryItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outlineVariant,
+    },
+    friendDiaryEntryContent: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+    },
+    friendDiaryInfo: {
+      flex: 1,
+    },
+    friendUsername: {
+      fontWeight: '500',
+      marginBottom: spacing.xs,
+    },
+    friendDiaryDateRatingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.md,
+    },
+    friendDiaryDate: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    friendDiaryRating: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    friendEntryActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    reportIconButton: {
+      margin: 0,
+      marginRight: spacing.xs,
+    },
+  });

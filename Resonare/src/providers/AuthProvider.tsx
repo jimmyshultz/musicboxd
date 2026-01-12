@@ -36,25 +36,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Check if app was opened with a deep link
     Linking.getInitialURL()
-      .then((url) => {
+      .then(url => {
         if (url) {
           handleDeepLink(url);
         }
       })
-      .catch((error) => {
+      .catch(error => {
         console.warn('Error getting initial URL:', error);
       });
 
     // Set up auth state listener for real-time updates
-    const { data: authListener } = AuthService.onAuthStateChange((event, _session) => {
-      if (event === 'SIGNED_OUT') {
-        // Handle sign out
-        dispatch(initializeAuth());
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Handle sign in or token refresh
-        dispatch(initializeAuth());
-      }
-    });
+    const { data: authListener } = AuthService.onAuthStateChange(
+      (event, _session) => {
+        if (event === 'SIGNED_OUT') {
+          // Handle sign out
+          dispatch(initializeAuth());
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Handle sign in or token refresh
+          dispatch(initializeAuth());
+        }
+      },
+    );
 
     return () => {
       // Cleanup listeners

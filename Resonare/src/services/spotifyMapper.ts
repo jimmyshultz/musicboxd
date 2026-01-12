@@ -44,13 +44,13 @@ export class SpotifyMapper {
     // If no album genres, try to get from artists (if available)
     // Note: Basic album objects from search don't include artist genres
     // This would require additional API calls to get full artist data
-    
+
     // For now, return default genres based on album type or use a fallback
     const defaultGenres = ['Music']; // Generic fallback
-    
+
     // You could enhance this by making additional API calls to get artist details
     // or by using the album's market/popularity to infer likely genres
-    
+
     return defaultGenres;
   }
 
@@ -70,9 +70,13 @@ export class SpotifyMapper {
       trackNumber: spotifyTrack.track_number,
       title: spotifyTrack.name,
       duration: SpotifyMapper.msToSeconds(spotifyTrack.duration_ms),
-      artist: spotifyTrack.artists.length > 1 
-        ? spotifyTrack.artists.slice(1).map(a => a.name).join(', ') // Featured artists
-        : undefined,
+      artist:
+        spotifyTrack.artists.length > 1
+          ? spotifyTrack.artists
+              .slice(1)
+              .map(a => a.name)
+              .join(', ') // Featured artists
+          : undefined,
     };
   }
 
@@ -82,7 +86,9 @@ export class SpotifyMapper {
   static mapSpotifyAlbumToAlbum(spotifyAlbum: SpotifyAlbum): Album {
     // Convert tracks if available
     const trackList: Track[] = spotifyAlbum.tracks?.items
-      ? spotifyAlbum.tracks.items.map(track => SpotifyMapper.mapSpotifyTrackToTrack(track))
+      ? spotifyAlbum.tracks.items.map(track =>
+          SpotifyMapper.mapSpotifyTrackToTrack(track),
+        )
       : [];
 
     return {
@@ -107,34 +113,44 @@ export class SpotifyMapper {
    */
   private static generateAlbumDescription(spotifyAlbum: SpotifyAlbum): string {
     const parts: string[] = [];
-    
+
     // Album type and year
-    const albumType = spotifyAlbum.album_type.charAt(0).toUpperCase() + spotifyAlbum.album_type.slice(1);
+    const albumType =
+      spotifyAlbum.album_type.charAt(0).toUpperCase() +
+      spotifyAlbum.album_type.slice(1);
     const releaseYear = new Date(spotifyAlbum.release_date).getFullYear();
     parts.push(`${albumType} released in ${releaseYear}`);
-    
+
     // Track count
-    parts.push(`${spotifyAlbum.total_tracks} track${spotifyAlbum.total_tracks !== 1 ? 's' : ''}`);
-    
+    parts.push(
+      `${spotifyAlbum.total_tracks} track${spotifyAlbum.total_tracks !== 1 ? 's' : ''}`,
+    );
+
     // Label if available
     if (spotifyAlbum.label) {
       parts.push(`Released by ${spotifyAlbum.label}`);
     }
-    
+
     // Artists
     if (spotifyAlbum.artists.length > 1) {
-      parts.push(`Collaboration between ${spotifyAlbum.artists.map(a => a.name).join(', ')}`);
+      parts.push(
+        `Collaboration between ${spotifyAlbum.artists.map(a => a.name).join(', ')}`,
+      );
     }
-    
+
     return parts.join(' • ');
   }
 
   /**
    * Convert Spotify search response to our SearchResult interface
    */
-  static mapSpotifySearchToSearchResult(spotifySearch: SpotifySearchResponse): SearchResult {
+  static mapSpotifySearchToSearchResult(
+    spotifySearch: SpotifySearchResponse,
+  ): SearchResult {
     const albums: Album[] = spotifySearch.albums?.items
-      ? spotifySearch.albums.items.map(album => SpotifyMapper.mapSpotifyAlbumToAlbum(album))
+      ? spotifySearch.albums.items.map(album =>
+          SpotifyMapper.mapSpotifyAlbumToAlbum(album),
+        )
       : [];
 
     // Extract unique artists from albums
@@ -161,7 +177,8 @@ export class SpotifyMapper {
       artist,
       releaseDate: new Date().toISOString().split('T')[0], // Today's date
       genre: ['Unknown'],
-      coverImageUrl: 'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image',
+      coverImageUrl:
+        'https://via.placeholder.com/300x300/cccccc/666666?text=No+Image',
       trackList: [],
       description: 'Album information unavailable',
       externalIds: {},
@@ -174,14 +191,16 @@ export class SpotifyMapper {
    */
   static async enhanceAlbumWithTracks(
     album: Album,
-    getFullAlbumData: (spotifyId: string) => Promise<SpotifyAlbum>
+    getFullAlbumData: (spotifyId: string) => Promise<SpotifyAlbum>,
   ): Promise<Album> {
     if (!album.externalIds.spotify || album.trackList.length > 0) {
       return album; // Already has tracks or no Spotify ID
     }
 
     try {
-      const fullSpotifyAlbum = await getFullAlbumData(album.externalIds.spotify);
+      const fullSpotifyAlbum = await getFullAlbumData(
+        album.externalIds.spotify,
+      );
       return SpotifyMapper.mapSpotifyAlbumToAlbum(fullSpotifyAlbum);
     } catch (error) {
       console.warn('Failed to enhance album with tracks:', error);
@@ -238,7 +257,7 @@ export class SpotifyMapper {
       album_type: spotifyAlbum.album_type || 'album',
       genres: this.extractGenres(spotifyAlbum),
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
   }
 

@@ -4,23 +4,26 @@ class StorageService {
   /**
    * Upload profile picture to Supabase storage
    */
-  async uploadProfilePicture(userId: string, imageUri: string): Promise<string> {
+  async uploadProfilePicture(
+    userId: string,
+    imageUri: string,
+  ): Promise<string> {
     try {
       console.log('Starting upload for user:', userId);
       console.log('Image URI:', imageUri);
-      
+
       // Create a filename that matches our RLS policy (must contain userId)
       const timestamp = Date.now();
       const fileName = `${userId}_${timestamp}.jpg`;
       const filePath = `profile-pictures/${fileName}`;
-      
+
       console.log('Upload path:', filePath);
       console.log('Filename:', fileName);
 
       // Read the file using fetch (works better in React Native)
       const response = await fetch(imageUri);
       const arrayBuffer = await response.arrayBuffer();
-      
+
       console.log('File size after fetch:', arrayBuffer.byteLength);
 
       // Upload the array buffer to Supabase storage
