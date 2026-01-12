@@ -33,27 +33,29 @@ export class SpotifyService {
 
     try {
       const authString = Buffer.from(
-        `${SPOTIFY_CONFIG.CLIENT_ID}:${SPOTIFY_CONFIG.CLIENT_SECRET}`
+        `${SPOTIFY_CONFIG.CLIENT_ID}:${SPOTIFY_CONFIG.CLIENT_SECRET}`,
       ).toString('base64');
 
       const response = await fetch(SPOTIFY_CONFIG.AUTH_URL, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${authString}`,
+          Authorization: `Basic ${authString}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: 'grant_type=client_credentials',
       });
 
       if (!response.ok) {
-        throw new Error(`Authentication failed: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Authentication failed: ${response.status} ${response.statusText}`,
+        );
       }
 
       const authData: SpotifyAuthResponse = await response.json();
-      
+
       this.accessToken = authData.access_token;
-      this.tokenExpiresAt = now + (authData.expires_in * 1000);
-      
+      this.tokenExpiresAt = now + authData.expires_in * 1000;
+
       return this.accessToken;
     } catch (error) {
       console.error('Spotify authentication error:', error);
@@ -66,7 +68,7 @@ export class SpotifyService {
    * Ensures we don't exceed Spotify's rate limits
    */
   private static async enforceRateLimit(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const now = Date.now();
       const timeSinceLastRequest = now - this.lastRequestTime;
       const minInterval = 1000 / SPOTIFY_CONFIG.RATE_LIMIT.REQUESTS_PER_SECOND;
@@ -89,25 +91,29 @@ export class SpotifyService {
    */
   private static async makeRequest<T>(
     endpoint: string,
-    params?: Record<string, string>
+    params?: Record<string, string>,
   ): Promise<T> {
     await this.enforceRateLimit();
-    
+
     const accessToken = await this.getAccessToken();
     const url = new URL(SPOTIFY_CONFIG.API_BASE_URL + endpoint);
-    
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         url.searchParams.append(key, value);
       });
     }
 
-    for (let attempt = 1; attempt <= SPOTIFY_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS; attempt++) {
+    for (
+      let attempt = 1;
+      attempt <= SPOTIFY_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS;
+      attempt++
+    ) {
       try {
         const response = await fetch(url.toString(), {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
         });
@@ -115,8 +121,12 @@ export class SpotifyService {
         if (response.status === 429) {
           // Rate limited - wait and retry
           const retryAfter = response.headers.get('Retry-After');
-          const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : SPOTIFY_CONFIG.RATE_LIMIT.RETRY_DELAY * attempt;
-          console.warn(`Rate limited by Spotify. Waiting ${delay}ms before retry ${attempt}/${SPOTIFY_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS}`);
+          const delay = retryAfter
+            ? parseInt(retryAfter, 10) * 1000
+            : SPOTIFY_CONFIG.RATE_LIMIT.RETRY_DELAY * attempt;
+          console.warn(
+            `Rate limited by Spotify. Waiting ${delay}ms before retry ${attempt}/${SPOTIFY_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS}`,
+          );
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -132,25 +142,37 @@ export class SpotifyService {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(`Spotify API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`);
+          throw new Error(
+            `Spotify API error: ${response.status} ${response.statusText} - ${JSON.stringify(errorData)}`,
+          );
         }
 
         const data: T = await response.json();
-        
+
         // Check if the response is a Spotify error
         if (isSpotifyError(data)) {
-          throw new Error(`Spotify API error: ${data.error.status} - ${data.error.message}`);
+          throw new Error(
+            `Spotify API error: ${data.error.status} - ${data.error.message}`,
+          );
         }
 
         return data;
       } catch (error) {
         if (attempt === SPOTIFY_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS) {
-          console.error(`Spotify API request failed after ${attempt} attempts:`, error);
+          console.error(
+            `Spotify API request failed after ${attempt} attempts:`,
+            error,
+          );
           throw error;
         }
-        
-        console.warn(`Spotify API request attempt ${attempt} failed, retrying...`, error);
-        await new Promise(resolve => setTimeout(resolve, SPOTIFY_CONFIG.RATE_LIMIT.RETRY_DELAY * attempt));
+
+        console.warn(
+          `Spotify API request attempt ${attempt} failed, retrying...`,
+          error,
+        );
+        await new Promise(resolve =>
+          setTimeout(resolve, SPOTIFY_CONFIG.RATE_LIMIT.RETRY_DELAY * attempt),
+        );
       }
     }
 
@@ -160,7 +182,9 @@ export class SpotifyService {
   /**
    * Search for albums, artists, or tracks
    */
-  static async search(params: SpotifySearchParams): Promise<SpotifySearchResponse> {
+  static async search(
+    params: SpotifySearchParams,
+  ): Promise<SpotifySearchResponse> {
     const searchParams: Record<string, string> = {
       q: params.q,
       type: params.type,
@@ -176,17 +200,20 @@ export class SpotifyService {
       searchParams.include_external = params.include_external;
     }
 
-    return this.makeRequest<SpotifySearchResponse>(SPOTIFY_CONFIG.ENDPOINTS.SEARCH, searchParams);
+    return this.makeRequest<SpotifySearchResponse>(
+      SPOTIFY_CONFIG.ENDPOINTS.SEARCH,
+      searchParams,
+    );
   }
 
   /**
    * Search specifically for albums
    */
   static async searchAlbums(
-    query: string, 
+    query: string,
     limit: number = SPOTIFY_CONFIG.SEARCH.DEFAULT_LIMIT,
     offset: number = 0,
-    market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET
+    market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET,
   ): Promise<SpotifySearchResponse> {
     return this.search({
       q: query,
@@ -201,18 +228,18 @@ export class SpotifyService {
    * Get album details by ID
    */
   static async getAlbum(
-    albumId: string, 
-    params?: SpotifyAlbumParams
+    albumId: string,
+    params?: SpotifyAlbumParams,
   ): Promise<SpotifyAlbum> {
     const requestParams: Record<string, string> = {};
-    
+
     if (params?.market) {
       requestParams.market = params.market;
     }
 
     return this.makeRequest<SpotifyAlbum>(
       `${SPOTIFY_CONFIG.ENDPOINTS.ALBUMS}/${albumId}`,
-      Object.keys(requestParams).length > 0 ? requestParams : undefined
+      Object.keys(requestParams).length > 0 ? requestParams : undefined,
     );
   }
 
@@ -220,7 +247,7 @@ export class SpotifyService {
    * Get multiple albums by IDs
    */
   static async getMultipleAlbums(
-    params: SpotifyMultipleAlbumsParams
+    params: SpotifyMultipleAlbumsParams,
   ): Promise<{ albums: SpotifyAlbum[] }> {
     const requestParams: Record<string, string> = {
       ids: params.ids.join(','),
@@ -232,7 +259,7 @@ export class SpotifyService {
 
     return this.makeRequest<{ albums: SpotifyAlbum[] }>(
       SPOTIFY_CONFIG.ENDPOINTS.ALBUMS,
-      requestParams
+      requestParams,
     );
   }
 
@@ -243,7 +270,7 @@ export class SpotifyService {
     albumId: string,
     limit: number = 50,
     offset: number = 0,
-    market?: string
+    market?: string,
   ) {
     const requestParams: Record<string, string> = {
       limit: limit.toString(),
@@ -256,7 +283,7 @@ export class SpotifyService {
 
     return this.makeRequest(
       `${SPOTIFY_CONFIG.ENDPOINTS.ALBUMS}/${albumId}/tracks`,
-      requestParams
+      requestParams,
     );
   }
 
@@ -265,7 +292,7 @@ export class SpotifyService {
    */
   static async getArtist(artistId: string): Promise<SpotifyArtistFull> {
     return this.makeRequest<SpotifyArtistFull>(
-      `${SPOTIFY_CONFIG.ENDPOINTS.ARTISTS}/${artistId}`
+      `${SPOTIFY_CONFIG.ENDPOINTS.ARTISTS}/${artistId}`,
     );
   }
 
@@ -274,7 +301,7 @@ export class SpotifyService {
    */
   static async getArtistAlbums(
     artistId: string,
-    params?: SpotifyArtistAlbumsParams
+    params?: SpotifyArtistAlbumsParams,
   ): Promise<SpotifyArtistAlbumsResponse> {
     const requestParams: Record<string, string> = {
       include_groups: params?.include_groups || 'album,single',
@@ -288,7 +315,7 @@ export class SpotifyService {
 
     return this.makeRequest<SpotifyArtistAlbumsResponse>(
       `${SPOTIFY_CONFIG.ENDPOINTS.ARTISTS}/${artistId}/albums`,
-      requestParams
+      requestParams,
     );
   }
 
@@ -299,7 +326,7 @@ export class SpotifyService {
     query: string,
     limit: number = SPOTIFY_CONFIG.SEARCH.DEFAULT_LIMIT,
     offset: number = 0,
-    market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET
+    market: string = SPOTIFY_CONFIG.SEARCH.DEFAULT_MARKET,
   ): Promise<SpotifySearchResponse> {
     return this.search({
       q: query,
@@ -312,9 +339,9 @@ export class SpotifyService {
 
   /**
    * Get popular albums - REMOVED
-   * This method was removed because "popular albums" should be based on 
+   * This method was removed because "popular albums" should be based on
    * user activity within our app, not arbitrary Spotify searches.
-   * 
+   *
    * Popular albums should come from analyzing user listening data in our database,
    * not from hardcoded artist searches that don't reflect our community's preferences.
    */
@@ -323,10 +350,12 @@ export class SpotifyService {
    * Check if the service is properly configured
    */
   static isConfigured(): boolean {
-    return SPOTIFY_CONFIG.CLIENT_ID !== 'your_spotify_client_id' &&
-           SPOTIFY_CONFIG.CLIENT_SECRET !== 'your_spotify_client_secret' &&
-           SPOTIFY_CONFIG.CLIENT_ID.length > 0 &&
-           SPOTIFY_CONFIG.CLIENT_SECRET.length > 0;
+    return (
+      SPOTIFY_CONFIG.CLIENT_ID !== 'your_spotify_client_id' &&
+      SPOTIFY_CONFIG.CLIENT_SECRET !== 'your_spotify_client_secret' &&
+      SPOTIFY_CONFIG.CLIENT_ID.length > 0 &&
+      SPOTIFY_CONFIG.CLIENT_SECRET.length > 0
+    );
   }
 
   /**

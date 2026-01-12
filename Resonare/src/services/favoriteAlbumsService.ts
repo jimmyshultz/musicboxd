@@ -29,7 +29,11 @@ class FavoriteAlbumsService {
   /**
    * Add an album to user's favorites with a specific ranking
    */
-  async addToFavorites(userId: string, albumId: string, ranking: number): Promise<FavoriteAlbum> {
+  async addToFavorites(
+    userId: string,
+    albumId: string,
+    ranking: number,
+  ): Promise<FavoriteAlbum> {
     try {
       // Validate ranking
       if (ranking < 1 || ranking > 5) {
@@ -64,7 +68,11 @@ class FavoriteAlbumsService {
   /**
    * Update the ranking of a favorite album
    */
-  async updateFavoriteRanking(userId: string, albumId: string, newRanking: number): Promise<FavoriteAlbum> {
+  async updateFavoriteRanking(
+    userId: string,
+    albumId: string,
+    newRanking: number,
+  ): Promise<FavoriteAlbum> {
     try {
       // Validate ranking
       if (newRanking < 1 || newRanking > 5) {
@@ -75,7 +83,7 @@ class FavoriteAlbumsService {
         .from('favorite_albums')
         .update({
           ranking: newRanking,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
         .eq('album_id', albumId)
@@ -97,7 +105,10 @@ class FavoriteAlbumsService {
    * Set user's complete favorite albums list with rankings
    * This replaces all existing favorites
    */
-  async setUserFavorites(userId: string, favorites: { albumId: string; ranking: number }[]): Promise<FavoriteAlbum[]> {
+  async setUserFavorites(
+    userId: string,
+    favorites: { albumId: string; ranking: number }[],
+  ): Promise<FavoriteAlbum[]> {
     try {
       // Validate all rankings
       for (const fav of favorites) {
@@ -113,13 +124,12 @@ class FavoriteAlbumsService {
       }
 
       // Ensure all albums exist
-      await Promise.all(favorites.map(fav => albumCacheService.ensureAlbumExists(fav.albumId)));
+      await Promise.all(
+        favorites.map(fav => albumCacheService.ensureAlbumExists(fav.albumId)),
+      );
 
       // Delete existing favorites
-      await supabase
-        .from('favorite_albums')
-        .delete()
-        .eq('user_id', userId);
+      await supabase.from('favorite_albums').delete().eq('user_id', userId);
 
       // Insert new favorites if any provided
       if (favorites.length > 0) {
@@ -131,7 +141,7 @@ class FavoriteAlbumsService {
               album_id: fav.albumId,
               ranking: fav.ranking,
               favorited_at: new Date().toISOString(),
-            }))
+            })),
           )
           .select();
 
@@ -153,7 +163,11 @@ class FavoriteAlbumsService {
    * Reorder user's favorites by moving an album to a new position
    * This handles the complex logic of shifting other albums
    */
-  async reorderFavorites(userId: string, albumId: string, newRanking: number): Promise<FavoriteAlbum[]> {
+  async reorderFavorites(
+    userId: string,
+    albumId: string,
+    newRanking: number,
+  ): Promise<FavoriteAlbum[]> {
     try {
       if (newRanking < 1 || newRanking > 5) {
         throw new Error('Ranking must be between 1 and 5');
@@ -161,9 +175,11 @@ class FavoriteAlbumsService {
 
       // Get current favorites
       const currentFavorites = await this.getUserFavoriteAlbums(userId);
-      
+
       // Find the album being moved
-      const albumIndex = currentFavorites.findIndex(fav => fav.album_id === albumId);
+      const albumIndex = currentFavorites.findIndex(
+        fav => fav.album_id === albumId,
+      );
       if (albumIndex === -1) {
         throw new Error('Album not found in favorites');
       }
@@ -176,7 +192,7 @@ class FavoriteAlbumsService {
       // Update rankings
       const newFavorites = reorderedFavorites.map((fav, index) => ({
         albumId: fav.album_id,
-        ranking: index + 1
+        ranking: index + 1,
       }));
 
       // Apply the new order
@@ -194,13 +210,13 @@ class FavoriteAlbumsService {
     try {
       // Get current favorites
       const currentFavorites = await this.getUserFavoriteAlbums(userId);
-      
+
       // Filter out the album to remove
       const remainingFavorites = currentFavorites
         .filter(fav => fav.album_id !== albumId)
         .map((fav, index) => ({
           albumId: fav.album_id,
-          ranking: index + 1  // Recompute rankings 1, 2, 3, etc.
+          ranking: index + 1, // Recompute rankings 1, 2, 3, etc.
         }));
 
       // Apply the new order (this will delete and recreate all)
@@ -237,14 +253,19 @@ class FavoriteAlbumsService {
   /**
    * Get user's favorite albums with album details, ordered by ranking
    */
-  async getUserFavoriteAlbums(userId: string, limit: number = 5): Promise<FavoriteAlbumWithAlbum[]> {
+  async getUserFavoriteAlbums(
+    userId: string,
+    limit: number = 5,
+  ): Promise<FavoriteAlbumWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('favorite_albums')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .order('ranking', { ascending: true }) // Order by ranking 1-5
         .limit(limit);
@@ -263,7 +284,10 @@ class FavoriteAlbumsService {
   /**
    * Get user's favorite album for a specific ranking position
    */
-  async getUserFavoriteByRanking(userId: string, ranking: number): Promise<FavoriteAlbumWithAlbum | null> {
+  async getUserFavoriteByRanking(
+    userId: string,
+    ranking: number,
+  ): Promise<FavoriteAlbumWithAlbum | null> {
     try {
       if (ranking < 1 || ranking > 5) {
         throw new Error('Ranking must be between 1 and 5');
@@ -271,10 +295,12 @@ class FavoriteAlbumsService {
 
       const { data, error } = await supabase
         .from('favorite_albums')
-        .select(`
+        .select(
+          `
           *,
           albums (*)
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .eq('ranking', ranking)
         .single();
@@ -314,7 +340,10 @@ class FavoriteAlbumsService {
   /**
    * Get user's favorite status for multiple albums
    */
-  async getUserAlbumFavoriteStatus(userId: string, albumIds: string[]): Promise<Record<string, boolean>> {
+  async getUserAlbumFavoriteStatus(
+    userId: string,
+    albumIds: string[],
+  ): Promise<Record<string, boolean>> {
     try {
       if (albumIds.length === 0) {
         return {};
@@ -348,14 +377,18 @@ class FavoriteAlbumsService {
   /**
    * Get most favorited albums (for discovery)
    */
-  async getMostFavoritedAlbums(limit: number = 20): Promise<{ album_id: string; favorite_count: number; albums: any }[]> {
+  async getMostFavoritedAlbums(
+    limit: number = 20,
+  ): Promise<{ album_id: string; favorite_count: number; albums: any }[]> {
     try {
       const { data, error } = await supabase
         .from('favorite_albums')
-        .select(`
+        .select(
+          `
           album_id,
           albums (*)
-        `)
+        `,
+        )
         .limit(limit);
 
       if (error) {
@@ -370,7 +403,7 @@ class FavoriteAlbumsService {
         } else {
           albumCounts[item.album_id] = {
             count: 1,
-            album: item.albums
+            album: item.albums,
           };
         }
       });
@@ -380,7 +413,7 @@ class FavoriteAlbumsService {
         .map(([album_id, { count, album }]) => ({
           album_id,
           favorite_count: count,
-          albums: album
+          albums: album,
         }))
         .sort((a, b) => b.favorite_count - a.favorite_count)
         .slice(0, limit);

@@ -8,7 +8,7 @@ import { Environment } from '../config/environment';
  */
 export const AdUnitIds = {
   banner: Platform.select({
-    ios: Environment.isProduction 
+    ios: Environment.isProduction
       ? 'ca-app-pub-5443760017915120/2921056271' // iOS banner ad unit ID
       : 'ca-app-pub-3940256099942544/2934735716', // Test ID
     android: Environment.isProduction
@@ -46,13 +46,13 @@ export const initializeAdMob = async (): Promise<void> => {
     await mobileAds().setRequestConfiguration({
       // Set maximum ad content rating (G, PG, T, MA)
       maxAdContentRating: MaxAdContentRating.PG,
-      
+
       // Tag for child-directed treatment (true/false/null for unspecified)
       tagForChildDirectedTreatment: false,
-      
+
       // Tag for under age of consent
       tagForUnderAgeOfConsent: false,
-      
+
       // Add test device IDs for development
       // testDeviceIdentifiers: ['EMULATOR'], // Add your device ID here for testing
     });
@@ -77,4 +77,3 @@ export const isAdMobInitialized = async (): Promise<boolean> => {
     return false;
   }
 };
-

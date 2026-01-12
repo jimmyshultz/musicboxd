@@ -35,7 +35,7 @@ const artistSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    clearCurrentArtist: (state) => {
+    clearCurrentArtist: state => {
       state.currentArtist = null;
       state.currentArtistAlbums = [];
       state.loading = false;
@@ -48,7 +48,9 @@ const artistSlice = createSlice({
     },
     addAlbumToArtist: (state, action: PayloadAction<Album>) => {
       // Add album if it doesn't already exist
-      const exists = state.currentArtistAlbums.some(album => album.id === action.payload.id);
+      const exists = state.currentArtistAlbums.some(
+        album => album.id === action.payload.id,
+      );
       if (!exists) {
         state.currentArtistAlbums.push(action.payload);
       }
@@ -58,7 +60,7 @@ const artistSlice = createSlice({
       state.loading = false;
       state.albumsLoading = false;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },
@@ -76,4 +78,3 @@ export const {
 } = artistSlice.actions;
 
 export default artistSlice.reducer;
-

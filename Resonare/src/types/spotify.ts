@@ -163,5 +163,7 @@ export interface SpotifyArtistAlbumsParams {
 
 // Utility type to check if response is an error
 export function isSpotifyError(response: any): response is SpotifyError {
-  return response && response.error && typeof response.error.status === 'number';
+  return (
+    response && response.error && typeof response.error.status === 'number'
+  );
 }

@@ -29,11 +29,14 @@ class DiaryService {
   /**
    * Get diary entries for a user with album details
    */
-  async getUserDiaryEntriesWithAlbums(userId: string): Promise<DiaryEntryWithAlbum[]> {
+  async getUserDiaryEntriesWithAlbums(
+    userId: string,
+  ): Promise<DiaryEntryWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
-        .select(`
+        .select(
+          `
           *,
           albums (
             id,
@@ -46,7 +49,8 @@ class DiaryService {
             album_type,
             genres
           )
-        `)
+        `,
+        )
         .eq('user_id', userId)
         .order('diary_date', { ascending: false })
         .order('created_at', { ascending: false }); // Secondary sort by creation time
@@ -65,11 +69,15 @@ class DiaryService {
   /**
    * Get recent diary entries for multiple users (for friend feeds)
    */
-  async getRecentDiaryEntriesForUsers(userIds: string[], limit: number = 50): Promise<DiaryEntryWithAlbum[]> {
+  async getRecentDiaryEntriesForUsers(
+    userIds: string[],
+    limit: number = 50,
+  ): Promise<DiaryEntryWithAlbum[]> {
     try {
       const { data, error } = await supabase
         .from('diary_entries')
-        .select(`
+        .select(
+          `
           *,
           albums (
             id,
@@ -82,7 +90,8 @@ class DiaryService {
             album_type,
             genres
           )
-        `)
+        `,
+        )
         .in('user_id', userIds)
         .order('diary_date', { ascending: false })
         .order('created_at', { ascending: false })
@@ -102,14 +111,18 @@ class DiaryService {
   /**
    * Get diary entries from the last N days
    */
-  async getRecentDiaryEntries(days: number = 7, limit: number = 50): Promise<DiaryEntryWithAlbum[]> {
+  async getRecentDiaryEntries(
+    days: number = 7,
+    limit: number = 50,
+  ): Promise<DiaryEntryWithAlbum[]> {
     try {
       const dateThreshold = new Date();
       dateThreshold.setDate(dateThreshold.getDate() - days);
 
       const { data, error } = await supabase
         .from('diary_entries')
-        .select(`
+        .select(
+          `
           *,
           albums (
             id,
@@ -122,7 +135,8 @@ class DiaryService {
             album_type,
             genres
           )
-        `)
+        `,
+        )
         .gte('diary_date', dateThreshold.toISOString().split('T')[0]) // Format as YYYY-MM-DD
         .order('diary_date', { ascending: false })
         .order('created_at', { ascending: false })

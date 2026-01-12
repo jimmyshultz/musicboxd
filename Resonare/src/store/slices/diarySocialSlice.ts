@@ -36,9 +36,12 @@ const initialState: DiarySocialState = {
 export const loadDiaryEntrySocialInfo = createAsyncThunk(
   'diarySocial/loadSocialInfo',
   async ({ entryId, userId }: { entryId: string; userId?: string }) => {
-    const socialInfo = await diaryEntriesService.getDiaryEntrySocialInfo(entryId, userId);
+    const socialInfo = await diaryEntriesService.getDiaryEntrySocialInfo(
+      entryId,
+      userId,
+    );
     return { entryId, ...socialInfo };
-  }
+  },
 );
 
 /**
@@ -46,34 +49,58 @@ export const loadDiaryEntrySocialInfo = createAsyncThunk(
  */
 export const toggleDiaryEntryLike = createAsyncThunk(
   'diarySocial/toggleLike',
-  async ({ entryId, userId, currentHasLiked }: { entryId: string; userId: string; currentHasLiked?: boolean }, { getState, rejectWithValue }) => {
+  async (
+    {
+      entryId,
+      userId,
+      currentHasLiked,
+    }: { entryId: string; userId: string; currentHasLiked?: boolean },
+    { getState, rejectWithValue },
+  ) => {
     const state = getState() as RootState;
     const currentLikeState = state.diarySocial.likesByEntryId[entryId];
     // Use passed value if provided, otherwise read from state
-    const currentlyLiked = currentHasLiked !== undefined ? currentHasLiked : (currentLikeState?.hasLiked || false);
+    const currentlyLiked =
+      currentHasLiked !== undefined
+        ? currentHasLiked
+        : currentLikeState?.hasLiked || false;
 
     try {
       if (currentlyLiked) {
-        const result = await diaryEntriesService.unlikeDiaryEntry(entryId, userId);
+        const result = await diaryEntriesService.unlikeDiaryEntry(
+          entryId,
+          userId,
+        );
         if (!result.success) {
           throw new Error(result.message || 'Failed to unlike');
         }
         // After unlike, fetch the actual count from database
-        const socialInfo = await diaryEntriesService.getDiaryEntrySocialInfo(entryId, userId);
+        const socialInfo = await diaryEntriesService.getDiaryEntrySocialInfo(
+          entryId,
+          userId,
+        );
         return { entryId, hasLiked: false, likesCount: socialInfo.likesCount };
       } else {
-        const result = await diaryEntriesService.likeDiaryEntry(entryId, userId);
+        const result = await diaryEntriesService.likeDiaryEntry(
+          entryId,
+          userId,
+        );
         if (!result.success) {
           throw new Error(result.message || 'Failed to like');
         }
         // After like, fetch the actual count from database
-        const socialInfo = await diaryEntriesService.getDiaryEntrySocialInfo(entryId, userId);
+        const socialInfo = await diaryEntriesService.getDiaryEntrySocialInfo(
+          entryId,
+          userId,
+        );
         return { entryId, hasLiked: true, likesCount: socialInfo.likesCount };
       }
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Failed to toggle like');
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Failed to toggle like',
+      );
     }
-  }
+  },
 );
 
 /**
@@ -81,18 +108,21 @@ export const toggleDiaryEntryLike = createAsyncThunk(
  */
 export const loadDiaryEntryComments = createAsyncThunk(
   'diarySocial/loadComments',
-  async ({ entryId, reset = false }: { entryId: string; reset?: boolean }, { getState }) => {
+  async (
+    { entryId, reset = false }: { entryId: string; reset?: boolean },
+    { getState },
+  ) => {
     const state = getState() as RootState;
     const currentState = state.diarySocial.commentsByEntryId[entryId];
-    const offset = reset ? 0 : (currentState?.comments.length || 0);
-    
+    const offset = reset ? 0 : currentState?.comments.length || 0;
+
     const comments = await diaryEntriesService.getDiaryEntryComments(entryId, {
       limit: 50,
       offset,
     });
 
     return { entryId, comments, reset, hasMore: comments.length === 50 };
-  }
+  },
 );
 
 /**
@@ -100,13 +130,24 @@ export const loadDiaryEntryComments = createAsyncThunk(
  */
 export const createDiaryEntryComment = createAsyncThunk(
   'diarySocial/createComment',
-  async ({ entryId, userId, body }: { entryId: string; userId: string; body: string }, { rejectWithValue }) => {
-    const result = await diaryEntriesService.createDiaryEntryComment(entryId, userId, body);
+  async (
+    {
+      entryId,
+      userId,
+      body,
+    }: { entryId: string; userId: string; body: string },
+    { rejectWithValue },
+  ) => {
+    const result = await diaryEntriesService.createDiaryEntryComment(
+      entryId,
+      userId,
+      body,
+    );
     if (!result.success || !result.comment) {
       return rejectWithValue(result.message || 'Failed to create comment');
     }
     return { entryId, comment: result.comment };
-  }
+  },
 );
 
 /**
@@ -114,13 +155,23 @@ export const createDiaryEntryComment = createAsyncThunk(
  */
 export const deleteDiaryEntryComment = createAsyncThunk(
   'diarySocial/deleteComment',
-  async ({ commentId, entryId, userId }: { commentId: string; entryId: string; userId: string }, { rejectWithValue }) => {
-    const result = await diaryEntriesService.deleteDiaryEntryComment(commentId, userId);
+  async (
+    {
+      commentId,
+      entryId,
+      userId,
+    }: { commentId: string; entryId: string; userId: string },
+    { rejectWithValue },
+  ) => {
+    const result = await diaryEntriesService.deleteDiaryEntryComment(
+      commentId,
+      userId,
+    );
     if (!result.success) {
       return rejectWithValue(result.message || 'Failed to delete comment');
     }
     return { commentId, entryId };
-  }
+  },
 );
 
 const diarySocialSlice = createSlice({
@@ -138,21 +189,32 @@ const diarySocialSlice = createSlice({
     // Update social info from entry data (when entry is loaded)
     updateSocialInfoFromEntry: (
       state,
-      action: PayloadAction<{ entryId: string; likesCount?: number; commentsCount?: number; hasLiked?: boolean }>
+      action: PayloadAction<{
+        entryId: string;
+        likesCount?: number;
+        commentsCount?: number;
+        hasLiked?: boolean;
+      }>,
     ) => {
       const { entryId, likesCount, hasLiked } = action.payload;
-      
+
       if (likesCount !== undefined || hasLiked !== undefined) {
-        const currentLikeState = state.likesByEntryId[entryId] || { hasLiked: false, likesCount: 0, loading: false };
+        const currentLikeState = state.likesByEntryId[entryId] || {
+          hasLiked: false,
+          likesCount: 0,
+          loading: false,
+        };
         state.likesByEntryId[entryId] = {
           ...currentLikeState,
-          likesCount: likesCount !== undefined ? likesCount : currentLikeState.likesCount,
-          hasLiked: hasLiked !== undefined ? hasLiked : currentLikeState.hasLiked,
+          likesCount:
+            likesCount !== undefined ? likesCount : currentLikeState.likesCount,
+          hasLiked:
+            hasLiked !== undefined ? hasLiked : currentLikeState.hasLiked,
         };
       }
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Load social info
     builder
       .addCase(loadDiaryEntrySocialInfo.pending, (state, action) => {
@@ -161,10 +223,10 @@ const diarySocialSlice = createSlice({
         // Don't set loading to true if we're loading social info - this is just a data fetch
         // Only set loading if there's no existing state (initial load)
         if (!currentLikeState) {
-          state.likesByEntryId[entryId] = { 
-            hasLiked: false, 
-            likesCount: 0, 
-            loading: false 
+          state.likesByEntryId[entryId] = {
+            hasLiked: false,
+            likesCount: 0,
+            loading: false,
           };
         }
       })
@@ -182,7 +244,11 @@ const diarySocialSlice = createSlice({
       })
       .addCase(loadDiaryEntrySocialInfo.rejected, (state, action) => {
         const entryId = action.meta.arg.entryId;
-        const currentLikeState = state.likesByEntryId[entryId] || { hasLiked: false, likesCount: 0, loading: false };
+        const currentLikeState = state.likesByEntryId[entryId] || {
+          hasLiked: false,
+          likesCount: 0,
+          loading: false,
+        };
         state.likesByEntryId[entryId] = { ...currentLikeState, loading: false };
       });
 
@@ -190,11 +256,16 @@ const diarySocialSlice = createSlice({
     builder
       .addCase(toggleDiaryEntryLike.pending, (state, action) => {
         const entryId = action.meta.arg.entryId;
-        const currentLikeState = state.likesByEntryId[entryId] || { hasLiked: false, likesCount: 0, loading: false };
+        const currentLikeState = state.likesByEntryId[entryId] || {
+          hasLiked: false,
+          likesCount: 0,
+          loading: false,
+        };
         // Use the currentHasLiked from action if provided, otherwise use state
-        const currentlyLiked = action.meta.arg.currentHasLiked !== undefined 
-          ? action.meta.arg.currentHasLiked 
-          : currentLikeState.hasLiked;
+        const currentlyLiked =
+          action.meta.arg.currentHasLiked !== undefined
+            ? action.meta.arg.currentHasLiked
+            : currentLikeState.hasLiked;
         // Optimistic update - flip the like state
         state.likesByEntryId[entryId] = {
           hasLiked: !currentlyLiked,
@@ -219,7 +290,9 @@ const diarySocialSlice = createSlice({
           const wasLikedBeforeToggle = !currentLikeState.hasLiked; // Current state is after toggle, so before was opposite
           state.likesByEntryId[entryId] = {
             hasLiked: wasLikedBeforeToggle,
-            likesCount: currentLikeState.likesCount + (currentLikeState.hasLiked ? -1 : 1), // Revert count change
+            likesCount:
+              currentLikeState.likesCount +
+              (currentLikeState.hasLiked ? -1 : 1), // Revert count change
             loading: false,
           };
         }
@@ -232,7 +305,7 @@ const diarySocialSlice = createSlice({
         const reset = action.meta.arg.reset;
         const currentState = state.commentsByEntryId[entryId];
         state.commentsByEntryId[entryId] = {
-          comments: reset ? [] : (currentState?.comments || []),
+          comments: reset ? [] : currentState?.comments || [],
           loading: true,
           error: null,
           hasMore: currentState?.hasMore || false,
@@ -240,7 +313,12 @@ const diarySocialSlice = createSlice({
       })
       .addCase(loadDiaryEntryComments.fulfilled, (state, action) => {
         const { entryId, comments, reset, hasMore } = action.payload;
-        const currentState = state.commentsByEntryId[entryId] || { comments: [], loading: false, error: null, hasMore: false };
+        const currentState = state.commentsByEntryId[entryId] || {
+          comments: [],
+          loading: false,
+          error: null,
+          hasMore: false,
+        };
         state.commentsByEntryId[entryId] = {
           comments: reset ? comments : [...currentState.comments, ...comments],
           loading: false,
@@ -262,7 +340,12 @@ const diarySocialSlice = createSlice({
     builder
       .addCase(createDiaryEntryComment.fulfilled, (state, action) => {
         const { entryId, comment } = action.payload;
-        const currentState = state.commentsByEntryId[entryId] || { comments: [], loading: false, error: null, hasMore: false };
+        const currentState = state.commentsByEntryId[entryId] || {
+          comments: [],
+          loading: false,
+          error: null,
+          hasMore: false,
+        };
         state.commentsByEntryId[entryId] = {
           ...currentState,
           comments: [...currentState.comments, comment],
@@ -278,27 +361,25 @@ const diarySocialSlice = createSlice({
         const entryId = action.meta.arg.entryId;
         const currentState = state.commentsByEntryId[entryId];
         if (currentState) {
-          currentState.error = action.error.message || 'Failed to create comment';
+          currentState.error =
+            action.error.message || 'Failed to create comment';
         }
       });
 
     // Delete comment
-    builder
-      .addCase(deleteDiaryEntryComment.fulfilled, (state, action) => {
-        const { commentId, entryId } = action.payload;
-        const currentState = state.commentsByEntryId[entryId];
-        if (currentState) {
-          currentState.comments = currentState.comments.filter(c => c.id !== commentId);
-        }
-      });
+    builder.addCase(deleteDiaryEntryComment.fulfilled, (state, action) => {
+      const { commentId, entryId } = action.payload;
+      const currentState = state.commentsByEntryId[entryId];
+      if (currentState) {
+        currentState.comments = currentState.comments.filter(
+          c => c.id !== commentId,
+        );
+      }
+    });
   },
 });
 
-export const {
-  clearComments,
-  clearLikeState,
-  updateSocialInfoFromEntry,
-} = diarySocialSlice.actions;
+export const { clearComments, clearLikeState, updateSocialInfoFromEntry } =
+  diarySocialSlice.actions;
 
 export default diarySocialSlice.reducer;
-

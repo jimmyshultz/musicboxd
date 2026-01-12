@@ -32,7 +32,9 @@ type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
 const ALBUM_CARD_WIDTH = 120;
 
 // Icon components to avoid creating them during render
-const ChevronIcon = (_props: any) => <Icon name="chevron-right" size={14} color="#666" />;
+const ChevronIcon = (_props: any) => (
+  <Icon name="chevron-right" size={14} color="#666" />
+);
 
 interface UserStats {
   albumsThisYear: number;
@@ -83,7 +85,8 @@ export default function ProfileScreen() {
 
     try {
       // Get favorite albums from database (limited to 5 ranked favorites)
-      const favoriteAlbumsData = await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
+      const favoriteAlbumsData =
+        await favoriteAlbumsService.getUserFavoriteAlbums(user.id, 5);
 
       // Convert to the Album format expected by the UI
       const albums = favoriteAlbumsData.map(favorite => ({
@@ -134,50 +137,62 @@ export default function ProfileScreen() {
       ]);
 
       // Update Redux store with social data - convert UserProfile to SerializedUser
-      dispatch(setFollowers(followersData.map(follower => ({
-        id: follower.id,
-        username: follower.username,
-        email: '', // UserProfile doesn't have email
-        profilePicture: follower.avatar_url,
-        bio: follower.bio,
-        joinedDate: follower.created_at, // Map created_at to joinedDate
-        lastActiveDate: follower.updated_at, // Map updated_at to lastActiveDate
-        preferences: {
-          favoriteGenres: [],
-          favoriteAlbumIds: [],
-          notifications: {
-            newFollowers: true,
-            albumRecommendations: true,
-            friendActivity: true,
-          },
-          privacy: {
-            showActivity: !follower.is_private,
-            activityVisibility: follower.is_private ? 'private' as const : 'public' as const,
-          }
-        }
-      }))));
-      dispatch(setFollowing(followingData.map(following => ({
-        id: following.id,
-        username: following.username,
-        email: '', // UserProfile doesn't have email
-        profilePicture: following.avatar_url,
-        bio: following.bio,
-        joinedDate: following.created_at, // Map created_at to joinedDate
-        lastActiveDate: following.updated_at, // Map updated_at to lastActiveDate
-        preferences: {
-          favoriteGenres: [],
-          favoriteAlbumIds: [],
-          notifications: {
-            newFollowers: true,
-            albumRecommendations: true,
-            friendActivity: true,
-          },
-          privacy: {
-            showActivity: !following.is_private,
-            activityVisibility: following.is_private ? 'private' as const : 'public' as const,
-          }
-        }
-      }))));
+      dispatch(
+        setFollowers(
+          followersData.map(follower => ({
+            id: follower.id,
+            username: follower.username,
+            email: '', // UserProfile doesn't have email
+            profilePicture: follower.avatar_url,
+            bio: follower.bio,
+            joinedDate: follower.created_at, // Map created_at to joinedDate
+            lastActiveDate: follower.updated_at, // Map updated_at to lastActiveDate
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                albumRecommendations: true,
+                friendActivity: true,
+              },
+              privacy: {
+                showActivity: !follower.is_private,
+                activityVisibility: follower.is_private
+                  ? ('private' as const)
+                  : ('public' as const),
+              },
+            },
+          })),
+        ),
+      );
+      dispatch(
+        setFollowing(
+          followingData.map(following => ({
+            id: following.id,
+            username: following.username,
+            email: '', // UserProfile doesn't have email
+            profilePicture: following.avatar_url,
+            bio: following.bio,
+            joinedDate: following.created_at, // Map created_at to joinedDate
+            lastActiveDate: following.updated_at, // Map updated_at to lastActiveDate
+            preferences: {
+              favoriteGenres: [],
+              favoriteAlbumIds: [],
+              notifications: {
+                newFollowers: true,
+                albumRecommendations: true,
+                friendActivity: true,
+              },
+              privacy: {
+                showActivity: !following.is_private,
+                activityVisibility: following.is_private
+                  ? ('private' as const)
+                  : ('public' as const),
+              },
+            },
+          })),
+        ),
+      );
 
       console.log('User stats from new service:', stats); // Debug log
       setUserStats({
@@ -208,7 +223,7 @@ export default function ProfileScreen() {
           loadUserStats(),
           loadFavoriteAlbums(),
         ]);
-        
+
         // Mark initial refresh time
         setLastRefreshTime(Date.now());
       } finally {
@@ -218,7 +233,14 @@ export default function ProfileScreen() {
     };
 
     loadAllData();
-  }, [user?.id, loadRecentActivity, loadUserStats, loadFavoriteAlbums, initialLoadDone, user]);
+  }, [
+    user?.id,
+    loadRecentActivity,
+    loadUserStats,
+    loadFavoriteAlbums,
+    initialLoadDone,
+    user,
+  ]);
 
   // Refresh stats when screen comes into focus (with cooldown)
   useFocusEffect(
@@ -226,7 +248,7 @@ export default function ProfileScreen() {
       if (initialLoadDone && user?.id) {
         const now = Date.now();
         const timeSinceLastRefresh = now - lastRefreshTime;
-        
+
         // Only refresh if cooldown period has elapsed
         if (timeSinceLastRefresh > REFRESH_COOLDOWN_MS) {
           loadUserStats();
@@ -234,7 +256,13 @@ export default function ProfileScreen() {
           setLastRefreshTime(now);
         }
       }
-    }, [loadUserStats, loadRecentActivity, user?.id, initialLoadDone, lastRefreshTime])
+    }, [
+      loadUserStats,
+      loadRecentActivity,
+      user?.id,
+      initialLoadDone,
+      lastRefreshTime,
+    ]),
   );
 
   // Reset when user changes
@@ -260,7 +288,7 @@ export default function ProfileScreen() {
         loadUserStats(),
         loadFavoriteAlbums(),
       ]);
-      
+
       // Update refresh timestamp after manual refresh
       setLastRefreshTime(Date.now());
     } finally {
@@ -285,7 +313,7 @@ export default function ProfileScreen() {
       navigation.navigate('Followers', {
         userId: user.id,
         username: user.username,
-        initialTab: 'followers'
+        initialTab: 'followers',
       });
     }
   };
@@ -295,7 +323,7 @@ export default function ProfileScreen() {
       navigation.navigate('Followers', {
         userId: user.id,
         username: user.username,
-        initialTab: 'following'
+        initialTab: 'following',
       });
     }
   };
@@ -318,8 +346,6 @@ export default function ProfileScreen() {
     }
   };
 
-
-
   const renderFavoriteAlbum = (album: Album) => (
     <TouchableOpacity
       key={album.id}
@@ -327,7 +353,10 @@ export default function ProfileScreen() {
       onPress={() => navigateToAlbum(album.id)}
     >
       <FastImage
-        source={{ uri: album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -340,14 +369,20 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderRecentActivityItem = (activity: RecentActivity, index: number) => (
+  const renderRecentActivityItem = (
+    activity: RecentActivity,
+    index: number,
+  ) => (
     <TouchableOpacity
       key={`${activity.album.id}-${activity.listen.id}-${index}`}
       style={styles.albumCard}
       onPress={() => navigateToAlbum(activity.album.id)}
     >
       <FastImage
-        source={{ uri: activity.album.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: activity.album.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCover}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -365,13 +400,14 @@ export default function ProfileScreen() {
     </TouchableOpacity>
   );
 
-  const renderStatCard = (title: string, value: number, onPress?: () => void) => {
+  const renderStatCard = (
+    title: string,
+    value: number,
+    onPress?: () => void,
+  ) => {
     return (
       <TouchableOpacity
-        style={[
-          styles.statCard,
-          { backgroundColor: theme.colors.surface },
-        ]}
+        style={[styles.statCard, { backgroundColor: theme.colors.surface }]}
         onPress={onPress}
         disabled={!onPress}
       >
@@ -415,7 +451,10 @@ export default function ProfileScreen() {
           value={'profile'}
           onValueChange={(v: any) => {
             if (v === 'diary') {
-              navigation.replace('Diary', { userId: user.id, username: user.username });
+              navigation.replace('Diary', {
+                userId: user.id,
+                username: user.username,
+              });
             }
           }}
           buttons={[
@@ -486,12 +525,16 @@ export default function ProfileScreen() {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" />
-              <Text variant="bodyMedium" style={styles.loadingText}>Loading recent activity...</Text>
+              <Text variant="bodyMedium" style={styles.loadingText}>
+                Loading recent activity...
+              </Text>
             </View>
           ) : recentActivity.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={styles.horizontalList}>
-                {recentActivity.map((activity, index) => renderRecentActivityItem(activity, index))}
+                {recentActivity.map((activity, index) =>
+                  renderRecentActivityItem(activity, index),
+                )}
               </View>
             </ScrollView>
           ) : (
@@ -518,14 +561,36 @@ export default function ProfileScreen() {
           </Text>
           <View style={styles.statsContainer}>
             <View style={styles.statsRow}>
-              {renderStatCard('Albums This Year', userStats.albumsThisYear, () => navigateToListenedAlbums('year'))}
-              {renderStatCard('Albums All Time', userStats.albumsAllTime, () => navigateToListenedAlbums('alltime'))}
-              {renderStatCard('Ratings This Year', userStats.ratingsThisYear, () => navigateToUserReviews('year'))}
+              {renderStatCard(
+                'Albums This Year',
+                userStats.albumsThisYear,
+                () => navigateToListenedAlbums('year'),
+              )}
+              {renderStatCard('Albums All Time', userStats.albumsAllTime, () =>
+                navigateToListenedAlbums('alltime'),
+              )}
+              {renderStatCard(
+                'Ratings This Year',
+                userStats.ratingsThisYear,
+                () => navigateToUserReviews('year'),
+              )}
             </View>
             <View style={styles.statsRow}>
-              {renderStatCard('Ratings All Time', userStats.ratingsAllTime, () => navigateToUserReviews('alltime'))}
-              {renderStatCard('Followers', userStats.followers, navigateToFollowers)}
-              {renderStatCard('Following', userStats.following, navigateToFollowing)}
+              {renderStatCard(
+                'Ratings All Time',
+                userStats.ratingsAllTime,
+                () => navigateToUserReviews('alltime'),
+              )}
+              {renderStatCard(
+                'Followers',
+                userStats.followers,
+                navigateToFollowers,
+              )}
+              {renderStatCard(
+                'Following',
+                userStats.following,
+                navigateToFollowing,
+              )}
             </View>
           </View>
         </View>
@@ -536,12 +601,18 @@ export default function ProfileScreen() {
             Settings
           </Text>
           <View style={styles.settingsContainer}>
-            <TouchableOpacity style={styles.settingsItem} onPress={() => navigation.navigate('Settings')}>
+            <TouchableOpacity
+              style={styles.settingsItem}
+              onPress={() => navigation.navigate('Settings')}
+            >
               <Text style={styles.settingsText}>Account Settings</Text>
               <ChevronIcon />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.settingsItem} onPress={handleLogout}>
+            <TouchableOpacity
+              style={styles.settingsItem}
+              onPress={handleLogout}
+            >
               <Text style={styles.settingsText}>Logout</Text>
             </TouchableOpacity>
           </View>
@@ -551,187 +622,188 @@ export default function ProfileScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  segmentHeader: {
-    padding: spacing.md,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  profilePicture: {
-    marginBottom: spacing.md,
-  },
-  username: {
-    fontWeight: 'bold',
-  },
-  section: {
-    marginBottom: spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  sectionHeaderWithButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  sectionTitleInHeader: {
-    fontWeight: 'bold',
-    paddingBottom: 0, // Container handles bottom padding
-  },
-  editButton: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  horizontalList: {
-    flexDirection: 'row',
-    paddingLeft: spacing.lg,
-  },
-  albumCard: {
-    width: ALBUM_CARD_WIDTH,
-    marginRight: spacing.md,
-  },
-  albumCover: {
-    width: ALBUM_CARD_WIDTH,
-    height: ALBUM_CARD_WIDTH,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-    resizeMode: 'cover',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-    lineHeight: 16,
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 14,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    marginTop: spacing.xs,
-    justifyContent: 'flex-start',
-  },
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    segmentHeader: {
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
+    profileHeader: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    profilePicture: {
+      marginBottom: spacing.md,
+    },
+    username: {
+      fontWeight: 'bold',
+    },
+    section: {
+      marginBottom: spacing.xl,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    sectionHeaderWithButton: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    sectionTitle: {
+      fontWeight: 'bold',
+      paddingHorizontal: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    sectionTitleInHeader: {
+      fontWeight: 'bold',
+      paddingBottom: 0, // Container handles bottom padding
+    },
+    editButton: {
+      color: theme.colors.primary,
+      fontWeight: '600',
+    },
+    horizontalList: {
+      flexDirection: 'row',
+      paddingLeft: spacing.lg,
+    },
+    albumCard: {
+      width: ALBUM_CARD_WIDTH,
+      marginRight: spacing.md,
+    },
+    albumCover: {
+      width: ALBUM_CARD_WIDTH,
+      height: ALBUM_CARD_WIDTH,
+      borderRadius: 8,
+      marginBottom: spacing.sm,
+      resizeMode: 'cover',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+      lineHeight: 16,
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 14,
+    },
+    ratingContainer: {
+      flexDirection: 'row',
+      marginTop: spacing.xs,
+      justifyContent: 'flex-start',
+    },
 
-  statsContainer: {
-    paddingHorizontal: spacing.md,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginBottom: spacing.md,
-    gap: spacing.sm,
-  },
-  statCard: {
-    flex: 1,
-    aspectRatio: 1.2,
-    borderRadius: 12,
-    padding: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.small,
-  },
-  statValue: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    textAlign: 'center',
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  settingsContainer: {
-    paddingHorizontal: spacing.lg,
-  },
-  settingsText: {
-    fontSize: 16,
-    color: theme.colors.onSurface,
-  },
-  settingsItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    minHeight: 44, // Maintain touchable area
-  },
-  emptyFavoritesContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    marginHorizontal: spacing.lg,
-    ...shadows.small,
-  },
-  emptyFavoritesText: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  emptyFavoritesSubtext: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  emptyActivityContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    marginHorizontal: spacing.lg,
-    ...shadows.small,
-  },
-  emptyActivityText: {
-    fontWeight: 'bold',
-    marginBottom: spacing.xs,
-  },
-  emptyActivitySubtext: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  adContainer: {
-    marginVertical: spacing.lg,
-    alignItems: 'center',
-    paddingBottom: spacing.lg,
-  },
-});
+    statsContainer: {
+      paddingHorizontal: spacing.md,
+    },
+    statsRow: {
+      flexDirection: 'row',
+      marginBottom: spacing.md,
+      gap: spacing.sm,
+    },
+    statCard: {
+      flex: 1,
+      aspectRatio: 1.2,
+      borderRadius: 12,
+      padding: spacing.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      ...shadows.small,
+    },
+    statValue: {
+      fontWeight: 'bold',
+      textAlign: 'center',
+      marginBottom: spacing.xs,
+    },
+    statLabel: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    settingsContainer: {
+      paddingHorizontal: spacing.lg,
+    },
+    settingsText: {
+      fontSize: 16,
+      color: theme.colors.onSurface,
+    },
+    settingsItem: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: spacing.sm,
+      minHeight: 44, // Maintain touchable area
+    },
+    emptyFavoritesContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginHorizontal: spacing.lg,
+      ...shadows.small,
+    },
+    emptyFavoritesText: {
+      fontWeight: 'bold',
+      marginBottom: spacing.xs,
+    },
+    emptyFavoritesSubtext: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 14,
+    },
+    emptyActivityContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      paddingHorizontal: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginHorizontal: spacing.lg,
+      ...shadows.small,
+    },
+    emptyActivityText: {
+      fontWeight: 'bold',
+      marginBottom: spacing.xs,
+    },
+    emptyActivitySubtext: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      fontSize: 14,
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      paddingVertical: spacing.lg,
+      paddingHorizontal: spacing.lg,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    adContainer: {
+      marginVertical: spacing.lg,
+      alignItems: 'center',
+      paddingBottom: spacing.lg,
+    },
+  });

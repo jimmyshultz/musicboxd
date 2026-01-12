@@ -14,7 +14,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
   rating,
   onRatingChange,
   disabled = false,
-  size = 'medium'
+  size = 'medium',
 }) => {
   const theme = useTheme();
 
@@ -39,10 +39,10 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
     // - Second tap on same full star: change to half star
     // - Third tap on same half star: remove rating (0)
     // - Tapping different star: give new full star
-    
+
     const fullStarRating = starNumber;
     const halfStarRating = starNumber - 0.5;
-    
+
     if (rating === fullStarRating) {
       // Currently at full star, change to half star
       onRatingChange(halfStarRating);
@@ -70,7 +70,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
 
   const getStarColor = (starNumber: number) => {
     const halfStarThreshold = starNumber - 0.5;
-    
+
     if (rating >= halfStarThreshold) {
       return theme.colors.primary;
     } else {
@@ -80,7 +80,7 @@ export const HalfStarRating: React.FC<HalfStarRatingProps> = ({
 
   return (
     <View style={styles.container}>
-      {[1, 2, 3, 4, 5].map((starNumber) => (
+      {[1, 2, 3, 4, 5].map(starNumber => (
         <TouchableOpacity
           key={starNumber}
           onPress={() => handleStarPress(starNumber)}
@@ -106,7 +106,7 @@ interface HalfStarDisplayProps {
 
 export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
   rating,
-  size = 'medium'
+  size = 'medium',
 }) => {
   const theme = useTheme();
 
@@ -138,7 +138,7 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
 
   const getStarColor = (starNumber: number) => {
     const halfStarThreshold = starNumber - 0.5;
-    
+
     if (rating >= halfStarThreshold) {
       return theme.colors.primary;
     } else {
@@ -148,7 +148,7 @@ export const HalfStarDisplay: React.FC<HalfStarDisplayProps> = ({
 
   return (
     <View style={styles.displayContainer}>
-      {[1, 2, 3, 4, 5].map((starNumber) => (
+      {[1, 2, 3, 4, 5].map(starNumber => (
         <Icon
           key={starNumber}
           name={getStarIcon(starNumber)}

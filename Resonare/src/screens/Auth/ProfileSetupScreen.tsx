@@ -25,19 +25,23 @@ import { contentModerationService } from '../../services/contentModerationServic
 import { spacing } from '../../utils/theme';
 
 // Terms of Service and Community Guidelines URLs
-const TERMS_OF_SERVICE_URL = 'https://jimmyshultz.github.io/musicboxd/terms.html';
-const COMMUNITY_GUIDELINES_URL = 'https://jimmyshultz.github.io/musicboxd/guidelines.html';
+const TERMS_OF_SERVICE_URL =
+  'https://jimmyshultz.github.io/musicboxd/terms.html';
+const COMMUNITY_GUIDELINES_URL =
+  'https://jimmyshultz.github.io/musicboxd/guidelines.html';
 
 interface ProfileSetupScreenProps {
   navigation: any;
 }
 
-export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenProps) {
+export default function ProfileSetupScreen({
+  navigation,
+}: ProfileSetupScreenProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const theme = useTheme();
   const styles = createStyles(theme);
-  
+
   const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -63,28 +67,39 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
     }
 
     if (!termsAccepted) {
-      Alert.alert('Error', 'You must accept the Terms of Service and Community Guidelines to continue');
+      Alert.alert(
+        'Error',
+        'You must accept the Terms of Service and Community Guidelines to continue',
+      );
       return;
     }
 
     // Validate username for inappropriate content
-    const usernameValidation = contentModerationService.validateUsername(username.trim());
+    const usernameValidation = contentModerationService.validateUsername(
+      username.trim(),
+    );
     if (!usernameValidation.isValid) {
-      Alert.alert('Invalid Username', usernameValidation.error || 'Please choose a different username');
+      Alert.alert(
+        'Invalid Username',
+        usernameValidation.error || 'Please choose a different username',
+      );
       return;
     }
 
     // Validate bio for inappropriate content
     const bioValidation = contentModerationService.validateBio(bio.trim());
     if (!bioValidation.isValid) {
-      Alert.alert('Invalid Bio', bioValidation.error || 'Please revise your bio');
+      Alert.alert(
+        'Invalid Bio',
+        bioValidation.error || 'Please revise your bio',
+      );
       return;
     }
 
     setIsLoading(true);
     try {
       const termsAcceptedAt = new Date().toISOString();
-      
+
       // Update profile in database with terms acceptance timestamp
       await userService.updateUserProfile(user.id, {
         username: username.trim(),
@@ -95,18 +110,20 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
 
       // Update Redux state (including termsAcceptedAt so navigation works)
       // Pass termsAcceptedAt as string to avoid Redux serialization issues
-      dispatch(updateProfile({
-        username: username.trim(),
-        bio: bio.trim(),
-        termsAcceptedAt: termsAcceptedAt,
-        preferences: {
-          ...user.preferences,
-          privacy: {
-            profileVisibility: isPrivate ? 'private' : 'public',
-            activityVisibility: isPrivate ? 'private' : 'public',
+      dispatch(
+        updateProfile({
+          username: username.trim(),
+          bio: bio.trim(),
+          termsAcceptedAt: termsAcceptedAt,
+          preferences: {
+            ...user.preferences,
+            privacy: {
+              profileVisibility: isPrivate ? 'private' : 'public',
+              activityVisibility: isPrivate ? 'private' : 'public',
+            },
           },
-        },
-      }));
+        }),
+      );
 
       Alert.alert(
         'Profile Updated',
@@ -116,19 +133,18 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
             text: 'Continue',
             onPress: () => navigation.replace('MainTabs'),
           },
-        ]
+        ],
       );
     } catch (error: any) {
       console.error('Error saving profile:', error);
       Alert.alert(
         'Error',
-        error.message || 'Failed to save profile. Please try again.'
+        error.message || 'Failed to save profile. Please try again.',
       );
     } finally {
       setIsLoading(false);
     }
   };
-
 
   return (
     <ScrollView style={styles.container}>
@@ -145,8 +161,8 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
             <View style={styles.avatarContainer}>
               <Avatar.Image
                 size={80}
-                source={{ 
-                  uri: user?.profilePicture || 'https://via.placeholder.com/80' 
+                source={{
+                  uri: user?.profilePicture || 'https://via.placeholder.com/80',
                 }}
               />
             </View>
@@ -182,10 +198,7 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
                   Only approved followers can see your activity
                 </Text>
               </View>
-              <Switch
-                value={isPrivate}
-                onValueChange={setIsPrivate}
-              />
+              <Switch value={isPrivate} onValueChange={setIsPrivate} />
             </View>
           </Card.Content>
         </Card>
@@ -193,7 +206,7 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
         {/* Terms of Service and Community Guidelines */}
         <Card style={styles.termsCard} elevation={2}>
           <Card.Content>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.termsContainer}
               onPress={() => setTermsAccepted(!termsAccepted)}
               activeOpacity={0.7}
@@ -209,14 +222,16 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
                   I agree to the{' '}
                   <Text style={styles.termsLink} onPress={handleOpenTerms}>
                     Terms of Service
-                  </Text>
-                  {' '}and{' '}
+                  </Text>{' '}
+                  and{' '}
                   <Text style={styles.termsLink} onPress={handleOpenGuidelines}>
                     Community Guidelines
                   </Text>
                 </Text>
                 <Text variant="bodySmall" style={styles.termsDescription}>
-                  Our community guidelines prohibit objectionable content and abusive behavior. Violations may result in account termination.
+                  Our community guidelines prohibit objectionable content and
+                  abusive behavior. Violations may result in account
+                  termination.
                 </Text>
               </View>
             </TouchableOpacity>
@@ -239,89 +254,90 @@ export default function ProfileSetupScreen({ navigation }: ProfileSetupScreenPro
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  content: {
-    padding: spacing.lg,
-  },
-  title: {
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    marginBottom: spacing.xl,
-  },
-  profileCard: {
-    marginBottom: spacing.xl,
-    backgroundColor: theme.colors.surface,
-  },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  input: {
-    marginBottom: spacing.md,
-  },
-  privacyContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-  },
-  privacyTextContainer: {
-    flex: 1,
-    marginRight: spacing.md,
-  },
-  privacyTitle: {
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  privacyDescription: {
-    color: theme.colors.onSurfaceVariant,
-    lineHeight: 16,
-  },
-  buttonContainer: {
-    gap: spacing.md,
-  },
-  saveButton: {
-    paddingVertical: spacing.xs,
-  },
-  termsCard: {
-    marginBottom: spacing.xl,
-    backgroundColor: theme.colors.surface,
-  },
-  termsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  checkboxWrapper: {
-    borderWidth: 2,
-    borderColor: theme.colors.outline,
-    borderRadius: 4,
-    marginRight: spacing.xs,
-  },
-  termsTextContainer: {
-    flex: 1,
-    marginLeft: spacing.xs,
-  },
-  termsText: {
-    lineHeight: 22,
-  },
-  termsLink: {
-    color: theme.colors.primary,
-    textDecorationLine: 'underline',
-  },
-  termsDescription: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-    lineHeight: 16,
-  },
-});
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      padding: spacing.lg,
+    },
+    title: {
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    subtitle: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      marginBottom: spacing.xl,
+    },
+    profileCard: {
+      marginBottom: spacing.xl,
+      backgroundColor: theme.colors.surface,
+    },
+    avatarContainer: {
+      alignItems: 'center',
+      marginBottom: spacing.lg,
+    },
+    input: {
+      marginBottom: spacing.md,
+    },
+    privacyContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: spacing.md,
+      marginTop: spacing.md,
+    },
+    privacyTextContainer: {
+      flex: 1,
+      marginRight: spacing.md,
+    },
+    privacyTitle: {
+      fontWeight: '600',
+      marginBottom: 2,
+    },
+    privacyDescription: {
+      color: theme.colors.onSurfaceVariant,
+      lineHeight: 16,
+    },
+    buttonContainer: {
+      gap: spacing.md,
+    },
+    saveButton: {
+      paddingVertical: spacing.xs,
+    },
+    termsCard: {
+      marginBottom: spacing.xl,
+      backgroundColor: theme.colors.surface,
+    },
+    termsContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    checkboxWrapper: {
+      borderWidth: 2,
+      borderColor: theme.colors.outline,
+      borderRadius: 4,
+      marginRight: spacing.xs,
+    },
+    termsTextContainer: {
+      flex: 1,
+      marginLeft: spacing.xs,
+    },
+    termsText: {
+      lineHeight: 22,
+    },
+    termsLink: {
+      color: theme.colors.primary,
+      textDecorationLine: 'underline',
+    },
+    termsDescription: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+      lineHeight: 16,
+    },
+  });

@@ -136,7 +136,12 @@ export interface Activity {
 export interface AppNotification {
   id: string;
   userId: string;
-  type: 'follow' | 'follow_request' | 'follow_request_accepted' | 'diary_like' | 'diary_comment';
+  type:
+    | 'follow'
+    | 'follow_request'
+    | 'follow_request_accepted'
+    | 'diary_like'
+    | 'diary_comment';
   actorId: string;
   actorUsername?: string;
   actorAvatar?: string;
@@ -205,7 +210,11 @@ export type HomeStackParamList = {
   AlbumDetails: { albumId: string };
   ArtistDetails: { artistId: string; artistName?: string };
   UserProfile: { userId: string };
-  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+  Followers: {
+    userId: string;
+    username: string;
+    initialTab?: 'followers' | 'following';
+  };
   ListenedAlbums: { userId: string; username: string };
   UserReviews: { userId: string; username: string };
   PopularThisWeek: undefined;
@@ -223,7 +232,11 @@ export type SearchStackParamList = {
   AlbumDetails: { albumId: string };
   ArtistDetails: { artistId: string; artistName?: string };
   UserProfile: { userId: string };
-  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+  Followers: {
+    userId: string;
+    username: string;
+    initialTab?: 'followers' | 'following';
+  };
   ListenedAlbums: { userId: string; username: string };
   UserReviews: { userId: string; username: string };
   PopularThisWeek: undefined;
@@ -240,7 +253,11 @@ export type ProfileStackParamList = {
   AlbumDetails: { albumId: string };
   ArtistDetails: { artistId: string; artistName?: string };
   UserProfile: { userId: string };
-  Followers: { userId: string; username: string; initialTab?: 'followers' | 'following' };
+  Followers: {
+    userId: string;
+    username: string;
+    initialTab?: 'followers' | 'following';
+  };
   ListenedAlbums: { userId: string; username: string };
   UserReviews: { userId: string; username: string };
   PopularThisWeek: undefined;

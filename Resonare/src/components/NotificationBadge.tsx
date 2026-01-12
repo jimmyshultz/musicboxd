@@ -8,13 +8,15 @@ interface NotificationBadgeProps {
 
 /**
  * Notification Badge Component
- * 
+ *
  * Displays a badge with unread notification count.
  * Hides when count is 0.
  */
-export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ count }) => {
+export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
+  count,
+}) => {
   const theme = useTheme();
-  
+
   if (count <= 0) {
     return null;
   }

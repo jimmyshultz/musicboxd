@@ -9,12 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
-import {
-  Text,
-  Chip,
-  ActivityIndicator,
-  useTheme,
-} from 'react-native-paper';
+import { Text, Chip, ActivityIndicator, useTheme } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -45,7 +40,7 @@ const CustomSearchbar = ({
   onSubmitEditing,
   value,
   style,
-  theme
+  theme,
 }: {
   placeholder: string;
   onChangeText: (text: string) => void;
@@ -58,7 +53,12 @@ const CustomSearchbar = ({
 
   return (
     <View style={[styles.searchInputContainer, style]}>
-      <Icon name="search" size={18} color={theme.colors.onSurfaceVariant} style={styles.searchIcon} />
+      <Icon
+        name="search"
+        size={18}
+        color={theme.colors.onSurfaceVariant}
+        style={styles.searchIcon}
+      />
       <TextInput
         style={styles.searchInput}
         placeholder={placeholder}
@@ -69,7 +69,10 @@ const CustomSearchbar = ({
         returnKeyType="search"
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
+        <TouchableOpacity
+          onPress={() => onChangeText('')}
+          style={styles.clearButton}
+        >
           <Icon name="times" size={16} color={theme.colors.onSurfaceVariant} />
         </TouchableOpacity>
       )}
@@ -82,66 +85,67 @@ export default function SearchScreen() {
   const dispatch = useDispatch();
   const theme = useTheme();
 
-  const {
-    searchQuery,
-    searchResults,
-    recentSearches,
-    loading,
-  } = useSelector((state: RootState) => state.search);
+  const { searchQuery, searchResults, recentSearches, loading } = useSelector(
+    (state: RootState) => state.search,
+  );
 
-  const [searchMode, setSearchMode] = useState<'albums' | 'artists' | 'users'>('albums');
+  const [searchMode, setSearchMode] = useState<'albums' | 'artists' | 'users'>(
+    'albums',
+  );
   const [artistSearchResults, setArtistSearchResults] = useState<Artist[]>([]);
   const [userSearchResults, setUserSearchResults] = useState<UserProfile[]>([]);
   const [artistSearchLoading, setArtistSearchLoading] = useState(false);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-
-  const performSearch = useCallback(async (query: string) => {
-    if (query.trim()) {
-      if (searchMode === 'albums') {
-        dispatch(searchStart());
-        try {
-          const response = await AlbumService.searchAlbums(query);
-          if (response.success) {
-            dispatch(searchSuccess(response.data));
+  const performSearch = useCallback(
+    async (query: string) => {
+      if (query.trim()) {
+        if (searchMode === 'albums') {
+          dispatch(searchStart());
+          try {
+            const response = await AlbumService.searchAlbums(query);
+            if (response.success) {
+              dispatch(searchSuccess(response.data));
+            }
+          } catch (error) {
+            console.error('Album search error:', error);
           }
-        } catch (error) {
-          console.error('Album search error:', error);
-        }
-      } else if (searchMode === 'artists') {
-        setArtistSearchLoading(true);
-        try {
-          const response = await ArtistService.searchArtists(query, 20);
-          if (response.success) {
-            setArtistSearchResults(response.data);
-          } else {
+        } else if (searchMode === 'artists') {
+          setArtistSearchLoading(true);
+          try {
+            const response = await ArtistService.searchArtists(query, 20);
+            if (response.success) {
+              setArtistSearchResults(response.data);
+            } else {
+              setArtistSearchResults([]);
+            }
+          } catch (error) {
+            console.error('Artist search error:', error);
             setArtistSearchResults([]);
+          } finally {
+            setArtistSearchLoading(false);
           }
-        } catch (error) {
-          console.error('Artist search error:', error);
-          setArtistSearchResults([]);
-        } finally {
-          setArtistSearchLoading(false);
-        }
-      } else {
-        setUserSearchLoading(true);
-        try {
-          const users = await userService.searchUsers(query, 20);
-          setUserSearchResults(users);
-        } catch (error) {
-          console.error('User search error:', error);
-          setUserSearchResults([]);
-        } finally {
-          setUserSearchLoading(false);
+        } else {
+          setUserSearchLoading(true);
+          try {
+            const users = await userService.searchUsers(query, 20);
+            setUserSearchResults(users);
+          } catch (error) {
+            console.error('User search error:', error);
+            setUserSearchResults([]);
+          } finally {
+            setUserSearchLoading(false);
+          }
         }
       }
-    }
-  }, [dispatch, searchMode]);
+    },
+    [dispatch, searchMode],
+  );
 
   const debouncedSearch = useMemo(
     () => debounce(performSearch, 300),
-    [performSearch]
+    [performSearch],
   );
 
   const handleSearchChange = (query: string) => {
@@ -191,7 +195,10 @@ export default function SearchScreen() {
       onPress={() => navigateToAlbum(item.id)}
     >
       <FastImage
-        source={{ uri: item.coverImageUrl, priority: FastImage.priority.normal }}
+        source={{
+          uri: item.coverImageUrl,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.albumCoverSmall}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -203,7 +210,8 @@ export default function SearchScreen() {
           {item.artist}
         </Text>
         <Text variant="bodySmall" style={styles.albumYear}>
-          {AlbumService.getAlbumYear(item.releaseDate)} • {item.genre.join(', ')}
+          {AlbumService.getAlbumYear(item.releaseDate)} •{' '}
+          {item.genre.join(', ')}
         </Text>
       </View>
     </TouchableOpacity>
@@ -215,7 +223,10 @@ export default function SearchScreen() {
       onPress={() => navigateToArtist(item.id, item.name)}
     >
       <FastImage
-        source={{ uri: item.imageUrl || 'https://via.placeholder.com/60', priority: FastImage.priority.normal }}
+        source={{
+          uri: item.imageUrl || 'https://via.placeholder.com/60',
+          priority: FastImage.priority.normal,
+        }}
         style={styles.artistImage}
         resizeMode={FastImage.resizeMode.cover}
       />
@@ -224,7 +235,11 @@ export default function SearchScreen() {
           {item.name}
         </Text>
         {item.genres && item.genres.length > 0 && (
-          <Text variant="bodySmall" numberOfLines={1} style={styles.artistGenres}>
+          <Text
+            variant="bodySmall"
+            numberOfLines={1}
+            style={styles.artistGenres}
+          >
             {item.genres.slice(0, 3).join(', ')}
           </Text>
         )}
@@ -234,7 +249,8 @@ export default function SearchScreen() {
               ? `${(item.followerCount / 1000000).toFixed(1)}M`
               : item.followerCount >= 1000
                 ? `${(item.followerCount / 1000).toFixed(1)}K`
-                : item.followerCount} followers
+                : item.followerCount}{' '}
+            followers
           </Text>
         )}
       </View>
@@ -247,12 +263,21 @@ export default function SearchScreen() {
       onPress={() => navigateToUserProfile(item.id)}
     >
       <FastImage
-        source={{ uri: item.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.username)}&background=random`, priority: FastImage.priority.normal }}
+        source={{
+          uri:
+            item.avatar_url ||
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(item.username)}&background=random`,
+          priority: FastImage.priority.normal,
+        }}
         style={styles.userAvatar}
         resizeMode={FastImage.resizeMode.cover}
       />
       <View style={styles.userDetailsContainer}>
-        <Text variant="titleMedium" numberOfLines={1} style={styles.userDisplayName}>
+        <Text
+          variant="titleMedium"
+          numberOfLines={1}
+          style={styles.userDisplayName}
+        >
           {item.display_name || item.username}
         </Text>
         <Text variant="bodyMedium" style={styles.username}>
@@ -267,11 +292,21 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
-  const showAlbumResults = searchMode === 'albums' && searchQuery.trim() && searchResults;
-  const showArtistResults = searchMode === 'artists' && searchQuery.trim() && artistSearchResults.length > 0;
-  const showUserResults = searchMode === 'users' && searchQuery.trim() && userSearchResults.length > 0;
-  const showEmptyState = searchQuery.trim() &&
-    ((searchMode === 'albums' && searchResults && searchResults.albums.length === 0) ||
+  const showAlbumResults =
+    searchMode === 'albums' && searchQuery.trim() && searchResults;
+  const showArtistResults =
+    searchMode === 'artists' &&
+    searchQuery.trim() &&
+    artistSearchResults.length > 0;
+  const showUserResults =
+    searchMode === 'users' &&
+    searchQuery.trim() &&
+    userSearchResults.length > 0;
+  const showEmptyState =
+    searchQuery.trim() &&
+    ((searchMode === 'albums' &&
+      searchResults &&
+      searchResults.albums.length === 0) ||
       (searchMode === 'artists' && artistSearchResults.length === 0) ||
       (searchMode === 'users' && userSearchResults.length === 0));
 
@@ -283,10 +318,10 @@ export default function SearchScreen() {
         <CustomSearchbar
           placeholder={
             searchMode === 'albums'
-              ? "Search albums..."
+              ? 'Search albums...'
               : searchMode === 'artists'
-                ? "Search artists..."
-                : "Search users..."
+                ? 'Search artists...'
+                : 'Search users...'
           }
           onChangeText={handleSearchChange}
           onSubmitEditing={handleSearchSubmit}
@@ -297,26 +332,50 @@ export default function SearchScreen() {
         {/* Search Mode Toggle */}
         <View style={styles.modeToggleContainer}>
           <TouchableOpacity
-            style={[styles.modeToggle, searchMode === 'albums' && styles.activeModeToggle]}
+            style={[
+              styles.modeToggle,
+              searchMode === 'albums' && styles.activeModeToggle,
+            ]}
             onPress={() => setSearchMode('albums')}
           >
-            <Text style={[styles.modeToggleText, searchMode === 'albums' && styles.activeModeToggleText]}>
+            <Text
+              style={[
+                styles.modeToggleText,
+                searchMode === 'albums' && styles.activeModeToggleText,
+              ]}
+            >
               Albums
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeToggle, searchMode === 'artists' && styles.activeModeToggle]}
+            style={[
+              styles.modeToggle,
+              searchMode === 'artists' && styles.activeModeToggle,
+            ]}
             onPress={() => setSearchMode('artists')}
           >
-            <Text style={[styles.modeToggleText, searchMode === 'artists' && styles.activeModeToggleText]}>
+            <Text
+              style={[
+                styles.modeToggleText,
+                searchMode === 'artists' && styles.activeModeToggleText,
+              ]}
+            >
               Artists
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeToggle, searchMode === 'users' && styles.activeModeToggle]}
+            style={[
+              styles.modeToggle,
+              searchMode === 'users' && styles.activeModeToggle,
+            ]}
             onPress={() => setSearchMode('users')}
           >
-            <Text style={[styles.modeToggleText, searchMode === 'users' && styles.activeModeToggleText]}>
+            <Text
+              style={[
+                styles.modeToggleText,
+                searchMode === 'users' && styles.activeModeToggleText,
+              ]}
+            >
               Users
             </Text>
           </TouchableOpacity>
@@ -333,7 +392,7 @@ export default function SearchScreen() {
         <FlatList
           data={searchResults.albums}
           renderItem={renderAlbumItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           style={styles.searchResults}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -351,7 +410,7 @@ export default function SearchScreen() {
         <FlatList
           data={artistSearchResults}
           renderItem={renderArtistItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           style={styles.searchResults}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -369,7 +428,7 @@ export default function SearchScreen() {
         <FlatList
           data={userSearchResults}
           renderItem={renderUserItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={item => item.id}
           style={styles.searchResults}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -383,26 +442,27 @@ export default function SearchScreen() {
         />
       )}
 
-      {showEmptyState && !loading && !artistSearchLoading && !userSearchLoading && (
-        <View style={styles.emptyStateContainer}>
-          <Text variant="bodyLarge" style={styles.emptyStateText}>
-            {searchMode === 'albums'
-              ? `No albums found for "${searchQuery}"`
-              : searchMode === 'artists'
-                ? `No artists found for "${searchQuery}"`
-                : `No users found for "${searchQuery}"`
-            }
-          </Text>
-          <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
-            {searchMode === 'albums'
-              ? "Try searching for a different album name"
-              : searchMode === 'artists'
-                ? "Try searching for a different artist name"
-                : "Try searching for a different username or display name"
-            }
-          </Text>
-        </View>
-      )}
+      {showEmptyState &&
+        !loading &&
+        !artistSearchLoading &&
+        !userSearchLoading && (
+          <View style={styles.emptyStateContainer}>
+            <Text variant="bodyLarge" style={styles.emptyStateText}>
+              {searchMode === 'albums'
+                ? `No albums found for "${searchQuery}"`
+                : searchMode === 'artists'
+                  ? `No artists found for "${searchQuery}"`
+                  : `No users found for "${searchQuery}"`}
+            </Text>
+            <Text variant="bodyMedium" style={styles.emptyStateSubtext}>
+              {searchMode === 'albums'
+                ? 'Try searching for a different album name'
+                : searchMode === 'artists'
+                  ? 'Try searching for a different artist name'
+                  : 'Try searching for a different username or display name'}
+            </Text>
+          </View>
+        )}
 
       {!searchQuery.trim() && (
         <ScrollView
@@ -442,205 +502,207 @@ export default function SearchScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  searchContainer: {
-    padding: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  modeToggleContainer: {
-    flexDirection: 'row',
-    marginTop: spacing.md,
-    backgroundColor: theme.colors.surfaceVariant,
-    borderRadius: 8,
-    padding: 2,
-  },
-  modeToggle: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderRadius: 6,
-  },
-  activeModeToggle: {
-    backgroundColor: theme.colors.primary,
-  },
-  modeToggleText: {
-    color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
-  },
-  activeModeToggleText: {
-    color: theme.colors.onPrimary,
-  },
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    searchContainer: {
+      padding: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    modeToggleContainer: {
+      flexDirection: 'row',
+      marginTop: spacing.md,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 8,
+      padding: 2,
+    },
+    modeToggle: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      alignItems: 'center',
+      borderRadius: 6,
+    },
+    activeModeToggle: {
+      backgroundColor: theme.colors.primary,
+    },
+    modeToggleText: {
+      color: theme.colors.onSurfaceVariant,
+      fontWeight: '500',
+    },
+    activeModeToggleText: {
+      color: theme.colors.onPrimary,
+    },
 
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchResults: {
-    flex: 1,
-    paddingHorizontal: spacing.lg,
-  },
-  searchResultItem: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    backgroundColor: theme.colors.surface,
-    marginBottom: spacing.sm,
-    borderRadius: 8,
-  },
-  albumCoverSmall: {
-    width: 60,
-    height: 60,
-    borderRadius: 4,
-    resizeMode: 'cover',
-  },
-  albumDetailsContainer: {
-    flex: 1,
-    marginLeft: spacing.md,
-    justifyContent: 'center',
-  },
-  albumTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  albumArtistName: {
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: spacing.xs,
-  },
-  albumYear: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  artistResultItem: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    backgroundColor: theme.colors.surface,
-    marginBottom: spacing.sm,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  artistImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    resizeMode: 'cover',
-  },
-  artistDetailsContainer: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  artistName: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  artistGenres: {
-    color: theme.colors.onSurfaceVariant,
-    marginBottom: spacing.xs,
-    fontSize: 12,
-  },
-  artistFollowers: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  userResultItem: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    backgroundColor: theme.colors.surface,
-    marginBottom: spacing.sm,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  userAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    resizeMode: 'cover',
-  },
-  userDetailsContainer: {
-    flex: 1,
-    marginLeft: spacing.md,
-  },
-  userDisplayName: {
-    fontWeight: '600',
-    marginBottom: spacing.xs,
-  },
-  username: {
-    color: theme.colors.primary,
-    marginBottom: spacing.xs,
-  },
-  userBio: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  emptyStateContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  emptyStateText: {
-    textAlign: 'center',
-    marginBottom: spacing.sm,
-  },
-  emptyStateSubtext: {
-    textAlign: 'center',
-    color: theme.colors.onSurfaceVariant,
-  },
-  discoveryContainer: {
-    flex: 1,
-  },
-  section: {
-    padding: spacing.lg,
-    paddingBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  chipsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  chip: {
-    marginBottom: spacing.sm,
-  },
-  adContainer: {
-    marginVertical: spacing.lg,
-    alignItems: 'center',
-    paddingBottom: spacing.lg,
-  },
-});
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    searchResults: {
+      flex: 1,
+      paddingHorizontal: spacing.lg,
+    },
+    searchResultItem: {
+      flexDirection: 'row',
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      marginBottom: spacing.sm,
+      borderRadius: 8,
+    },
+    albumCoverSmall: {
+      width: 60,
+      height: 60,
+      borderRadius: 4,
+      resizeMode: 'cover',
+    },
+    albumDetailsContainer: {
+      flex: 1,
+      marginLeft: spacing.md,
+      justifyContent: 'center',
+    },
+    albumTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+    },
+    albumArtistName: {
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: spacing.xs,
+    },
+    albumYear: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    artistResultItem: {
+      flexDirection: 'row',
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      marginBottom: spacing.sm,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    artistImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      resizeMode: 'cover',
+    },
+    artistDetailsContainer: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    artistName: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+    },
+    artistGenres: {
+      color: theme.colors.onSurfaceVariant,
+      marginBottom: spacing.xs,
+      fontSize: 12,
+    },
+    artistFollowers: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    userResultItem: {
+      flexDirection: 'row',
+      padding: spacing.md,
+      backgroundColor: theme.colors.surface,
+      marginBottom: spacing.sm,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    userAvatar: {
+      width: 50,
+      height: 50,
+      borderRadius: 25,
+      resizeMode: 'cover',
+    },
+    userDetailsContainer: {
+      flex: 1,
+      marginLeft: spacing.md,
+    },
+    userDisplayName: {
+      fontWeight: '600',
+      marginBottom: spacing.xs,
+    },
+    username: {
+      color: theme.colors.primary,
+      marginBottom: spacing.xs,
+    },
+    userBio: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    emptyStateContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: spacing.xl,
+    },
+    emptyStateText: {
+      textAlign: 'center',
+      marginBottom: spacing.sm,
+    },
+    emptyStateSubtext: {
+      textAlign: 'center',
+      color: theme.colors.onSurfaceVariant,
+    },
+    discoveryContainer: {
+      flex: 1,
+    },
+    section: {
+      padding: spacing.lg,
+      paddingBottom: spacing.md,
+    },
+    sectionTitle: {
+      fontWeight: '600',
+      marginBottom: spacing.md,
+    },
+    chipsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    chip: {
+      marginBottom: spacing.sm,
+    },
+    adContainer: {
+      marginVertical: spacing.lg,
+      alignItems: 'center',
+      paddingBottom: spacing.lg,
+    },
+  });
 
-const createSearchInputStyles = (theme: any) => StyleSheet.create({
-  searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 0,
-    paddingHorizontal: spacing.sm,
-    fontSize: 16,
-    color: theme.colors.onSurface,
-  },
-  searchIcon: {
-    fontSize: 24,
-    marginRight: spacing.sm,
-  },
-  clearButton: {
-    padding: spacing.sm,
-  },
-  clearIcon: {
-    fontSize: 20,
-  },
-});
+const createSearchInputStyles = (theme: any) =>
+  StyleSheet.create({
+    searchInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+      borderRadius: 8,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+    },
+    searchInput: {
+      flex: 1,
+      paddingVertical: 0,
+      paddingHorizontal: spacing.sm,
+      fontSize: 16,
+      color: theme.colors.onSurface,
+    },
+    searchIcon: {
+      fontSize: 24,
+      marginRight: spacing.sm,
+    },
+    clearButton: {
+      padding: spacing.sm,
+    },
+    clearIcon: {
+      fontSize: 20,
+    },
+  });

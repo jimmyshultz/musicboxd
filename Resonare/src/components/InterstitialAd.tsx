@@ -1,14 +1,18 @@
 import { useEffect, useState } from 'react';
-import { InterstitialAd, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import {
+  InterstitialAd,
+  AdEventType,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { AdUnitIds } from '../services/adMobService';
 
 /**
  * Hook to manage interstitial ads
- * 
+ *
  * @example
  * ```tsx
  * const { showAd, isLoaded } = useInterstitialAd();
- * 
+ *
  * // Show ad when needed
  * if (isLoaded) {
  *   showAd();
@@ -23,7 +27,7 @@ export const useInterstitialAd = (adUnitId?: string) => {
   useEffect(() => {
     // Use provided ad unit ID or default from service
     const unitId = adUnitId || AdUnitIds.interstitial || TestIds.INTERSTITIAL;
-    
+
     // Create interstitial ad instance
     const ad = InterstitialAd.createForAdRequest(unitId, {
       requestNonPersonalizedAdsOnly: false,
@@ -38,7 +42,7 @@ export const useInterstitialAd = (adUnitId?: string) => {
       }
     });
 
-    const unsubscribeError = ad.addAdEventListener(AdEventType.ERROR, (error) => {
+    const unsubscribeError = ad.addAdEventListener(AdEventType.ERROR, error => {
       setIsLoading(false);
       if (__DEV__) {
         console.warn('Interstitial ad error:', error);
@@ -53,7 +57,7 @@ export const useInterstitialAd = (adUnitId?: string) => {
     });
 
     setInterstitial(ad);
-    
+
     // Load the ad
     ad.load();
     setIsLoading(true);
@@ -82,4 +86,3 @@ export const useInterstitialAd = (adUnitId?: string) => {
     isLoading,
   };
 };
-

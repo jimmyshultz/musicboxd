@@ -8,18 +8,20 @@ import {
 } from 'react-native';
 import FastImage from '@d11/react-native-fast-image';
 // SafeAreaView import removed - using regular View since header handles safe area
-import {
-  Text,
-  ActivityIndicator,
-  useTheme,
-} from 'react-native-paper';
+import { Text, ActivityIndicator, useTheme } from 'react-native-paper';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { HalfStarDisplay } from '../../components/HalfStarRating';
 import { useSelector } from 'react-redux';
 
 import { spacing, shadows } from '../../utils/theme';
-import { Review, Album, HomeStackParamList, SearchStackParamList, ProfileStackParamList } from '../../types';
+import {
+  Review,
+  Album,
+  HomeStackParamList,
+  SearchStackParamList,
+  ProfileStackParamList,
+} from '../../types';
 import { userStatsServiceV2 } from '../../services/userStatsServiceV2';
 import { RootState } from '../../store';
 
@@ -27,16 +29,13 @@ type UserReviewsScreenRouteProp = RouteProp<
   HomeStackParamList | SearchStackParamList | ProfileStackParamList,
   'UserReviews'
 >;
-type UserReviewsScreenNavigationProp = StackNavigationProp<ProfileStackParamList>;
-
-
+type UserReviewsScreenNavigationProp =
+  StackNavigationProp<ProfileStackParamList>;
 
 interface ReviewData {
   review: Review;
   album: Album;
 }
-
-
 
 export default function UserReviewsScreen() {
   const route = useRoute<UserReviewsScreenRouteProp>();
@@ -54,7 +53,11 @@ export default function UserReviewsScreen() {
     setLoading(true);
     try {
       // Use the new service to get rated albums
-      const ratedAlbums = await userStatsServiceV2.getUserRatedAlbums(userId, 50, 0);
+      const ratedAlbums = await userStatsServiceV2.getUserRatedAlbums(
+        userId,
+        50,
+        0,
+      );
 
       // Convert to the format expected by this screen
       const reviewsData: ReviewData[] = ratedAlbums
@@ -79,7 +82,7 @@ export default function UserReviewsScreen() {
             rating: item.interaction!.rating!,
             review: item.interaction!.review || '',
             dateReviewed: new Date(item.interaction!.updated_at),
-          }
+          },
         }));
 
       setReviews(reviewsData);
@@ -109,7 +112,9 @@ export default function UserReviewsScreen() {
 
   const formatReviewDate = (date: Date) => {
     const now = new Date();
-    const diffInDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+    const diffInDays = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+    );
 
     if (diffInDays === 0) return 'Today';
     if (diffInDays === 1) return 'Yesterday';
@@ -126,15 +131,26 @@ export default function UserReviewsScreen() {
     >
       <View style={styles.reviewHeader}>
         <FastImage
-          source={{ uri: data.album.coverImageUrl, priority: FastImage.priority.normal }}
+          source={{
+            uri: data.album.coverImageUrl,
+            priority: FastImage.priority.normal,
+          }}
           style={styles.albumCover}
           resizeMode={FastImage.resizeMode.cover}
         />
         <View style={styles.albumInfo}>
-          <Text variant="titleMedium" numberOfLines={2} style={styles.albumTitle}>
+          <Text
+            variant="titleMedium"
+            numberOfLines={2}
+            style={styles.albumTitle}
+          >
             {data.album.title}
           </Text>
-          <Text variant="bodyMedium" numberOfLines={1} style={styles.artistName}>
+          <Text
+            variant="bodyMedium"
+            numberOfLines={1}
+            style={styles.artistName}
+          >
             {data.album.artist}
           </Text>
           <View style={styles.ratingRow}>
@@ -159,9 +175,11 @@ export default function UserReviewsScreen() {
     );
   }
 
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((sum, data) => sum + data.review.rating, 0) / reviews.length
-    : 0;
+  const averageRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, data) => sum + data.review.rating, 0) /
+        reviews.length
+      : 0;
 
   return (
     <View style={styles.safeArea}>
@@ -172,7 +190,8 @@ export default function UserReviewsScreen() {
             Ratings
           </Text>
           <Text variant="bodyMedium" style={styles.headerSubtitle}>
-            @{username} • {reviews.length} rating{reviews.length !== 1 ? 's' : ''}
+            @{username} • {reviews.length} rating
+            {reviews.length !== 1 ? 's' : ''}
             {reviews.length > 0 && ` • ${averageRating.toFixed(1)}★ avg`}
           </Text>
         </View>
@@ -184,7 +203,9 @@ export default function UserReviewsScreen() {
             No Ratings Yet
           </Text>
           <Text variant="bodyMedium" style={styles.emptyText}>
-            {userId === currentUser?.id ? 'Start rating albums and they\'ll appear here!' : `${username} hasn't rated any albums yet.`}
+            {userId === currentUser?.id
+              ? "Start rating albums and they'll appear here!"
+              : `${username} hasn't rated any albums yet.`}
           </Text>
         </View>
       ) : (
@@ -205,107 +226,108 @@ export default function UserReviewsScreen() {
   );
 }
 
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  loadingText: {
-    marginTop: spacing.md,
-    color: theme.colors.onSurfaceVariant,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: spacing.lg,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline,
-  },
+const createStyles = (theme: any) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      marginTop: spacing.md,
+      color: theme.colors.onSurfaceVariant,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: spacing.lg,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.outline,
+    },
 
-  headerContent: {
-    flex: 1,
-    marginLeft: spacing.sm,
-  },
-  headerTitle: {
-    fontWeight: 'bold',
-    color: theme.colors.onSurface,
-  },
-  headerSubtitle: {
-    color: theme.colors.onSurfaceVariant,
-    marginTop: spacing.xs,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  reviewsList: {
-    padding: spacing.lg,
-  },
-  reviewCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    marginBottom: spacing.lg,
-    ...shadows.small,
-  },
-  reviewHeader: {
-    flexDirection: 'row',
-    padding: spacing.md,
-  },
-  albumCover: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    resizeMode: 'cover',
-  },
-  albumInfo: {
-    flex: 1,
-    marginLeft: spacing.md,
-    justifyContent: 'space-between',
-  },
-  albumTitle: {
-    fontWeight: '600',
-  },
-  artistName: {
-    color: theme.colors.onSurfaceVariant,
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
+    headerContent: {
+      flex: 1,
+      marginLeft: spacing.sm,
+    },
+    headerTitle: {
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+    },
+    headerSubtitle: {
+      color: theme.colors.onSurfaceVariant,
+      marginTop: spacing.xs,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    reviewsList: {
+      padding: spacing.lg,
+    },
+    reviewCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 12,
+      marginBottom: spacing.lg,
+      ...shadows.small,
+    },
+    reviewHeader: {
+      flexDirection: 'row',
+      padding: spacing.md,
+    },
+    albumCover: {
+      width: 80,
+      height: 80,
+      borderRadius: 8,
+      resizeMode: 'cover',
+    },
+    albumInfo: {
+      flex: 1,
+      marginLeft: spacing.md,
+      justifyContent: 'space-between',
+    },
+    albumTitle: {
+      fontWeight: '600',
+    },
+    artistName: {
+      color: theme.colors.onSurfaceVariant,
+    },
+    ratingRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
 
-  reviewDate: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: 12,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
-  },
-  emptyTitle: {
-    fontWeight: 'bold',
-    marginBottom: spacing.md,
-    textAlign: 'center',
-    color: theme.colors.onSurface,
-  },
-  emptyText: {
-    color: theme.colors.onSurfaceVariant,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  bottomPadding: {
-    height: spacing.xl,
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-  },
-});
+    reviewDate: {
+      color: theme.colors.onSurfaceVariant,
+      fontSize: 12,
+    },
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.xl,
+    },
+    emptyTitle: {
+      fontWeight: 'bold',
+      marginBottom: spacing.md,
+      textAlign: 'center',
+      color: theme.colors.onSurface,
+    },
+    emptyText: {
+      color: theme.colors.onSurfaceVariant,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    bottomPadding: {
+      height: spacing.xl,
+    },
+    safeArea: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+    },
+  });

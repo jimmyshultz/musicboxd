@@ -1,5 +1,10 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { userAlbumsService, UserAlbumInteraction, UserAlbumStats, AlbumWithInteraction } from '../../services/userAlbumsService';
+import {
+  userAlbumsService,
+  UserAlbumInteraction,
+  UserAlbumStats,
+  AlbumWithInteraction,
+} from '../../services/userAlbumsService';
 
 interface UserAlbumsState {
   interactions: Record<string, UserAlbumInteraction>; // Keyed by album_id
@@ -36,26 +41,53 @@ const initialState: UserAlbumsState = {
 // Async thunks
 export const markAlbumAsListened = createAsyncThunk(
   'userAlbums/markAsListened',
-  async ({ userId, albumId, listenedAt }: { userId: string; albumId: string; listenedAt?: Date }) => {
-    const interaction = await userAlbumsService.markAsListened(userId, albumId, listenedAt);
+  async ({
+    userId,
+    albumId,
+    listenedAt,
+  }: {
+    userId: string;
+    albumId: string;
+    listenedAt?: Date;
+  }) => {
+    const interaction = await userAlbumsService.markAsListened(
+      userId,
+      albumId,
+      listenedAt,
+    );
     return interaction;
-  }
+  },
 );
 
 export const unmarkAlbumAsListened = createAsyncThunk(
   'userAlbums/unmarkAsListened',
   async ({ userId, albumId }: { userId: string; albumId: string }) => {
-    const interaction = await userAlbumsService.unmarkAsListened(userId, albumId);
+    const interaction = await userAlbumsService.unmarkAsListened(
+      userId,
+      albumId,
+    );
     return interaction;
-  }
+  },
 );
 
 export const rateAlbum = createAsyncThunk(
   'userAlbums/rateAlbum',
-  async ({ userId, albumId, rating }: { userId: string; albumId: string; rating: number }) => {
-    const interaction = await userAlbumsService.rateAlbum(userId, albumId, rating);
+  async ({
+    userId,
+    albumId,
+    rating,
+  }: {
+    userId: string;
+    albumId: string;
+    rating: number;
+  }) => {
+    const interaction = await userAlbumsService.rateAlbum(
+      userId,
+      albumId,
+      rating,
+    );
     return interaction;
-  }
+  },
 );
 
 export const removeAlbumRating = createAsyncThunk(
@@ -63,31 +95,58 @@ export const removeAlbumRating = createAsyncThunk(
   async ({ userId, albumId }: { userId: string; albumId: string }) => {
     const interaction = await userAlbumsService.removeRating(userId, albumId);
     return interaction;
-  }
+  },
 );
 
 export const fetchUserAlbumInteractions = createAsyncThunk(
   'userAlbums/fetchInteractions',
   async ({ userId, albumIds }: { userId: string; albumIds: string[] }) => {
-    const interactions = await userAlbumsService.getUserAlbumInteractions(userId, albumIds);
+    const interactions = await userAlbumsService.getUserAlbumInteractions(
+      userId,
+      albumIds,
+    );
     return interactions;
-  }
+  },
 );
 
 export const fetchUserListeningHistory = createAsyncThunk(
   'userAlbums/fetchListeningHistory',
-  async ({ userId, limit = 50, offset = 0 }: { userId: string; limit?: number; offset?: number }) => {
-    const history = await userAlbumsService.getUserListeningHistory(userId, limit, offset);
+  async ({
+    userId,
+    limit = 50,
+    offset = 0,
+  }: {
+    userId: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const history = await userAlbumsService.getUserListeningHistory(
+      userId,
+      limit,
+      offset,
+    );
     return { history, offset };
-  }
+  },
 );
 
 export const fetchUserRatedAlbums = createAsyncThunk(
   'userAlbums/fetchRatedAlbums',
-  async ({ userId, limit = 50, offset = 0 }: { userId: string; limit?: number; offset?: number }) => {
-    const albums = await userAlbumsService.getUserRatedAlbums(userId, limit, offset);
+  async ({
+    userId,
+    limit = 50,
+    offset = 0,
+  }: {
+    userId: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const albums = await userAlbumsService.getUserRatedAlbums(
+      userId,
+      limit,
+      offset,
+    );
     return { albums, offset };
-  }
+  },
 );
 
 export const fetchUserAlbumStats = createAsyncThunk(
@@ -95,30 +154,33 @@ export const fetchUserAlbumStats = createAsyncThunk(
   async (userId: string) => {
     const stats = await userAlbumsService.getUserAlbumStats(userId);
     return stats;
-  }
+  },
 );
 
 const userAlbumsSlice = createSlice({
   name: 'userAlbums',
   initialState,
   reducers: {
-    clearUserAlbumsError: (state) => {
+    clearUserAlbumsError: state => {
       state.error = null;
     },
     resetUserAlbumsState: () => {
       return initialState;
     },
-    updateLocalInteraction: (state, action: PayloadAction<UserAlbumInteraction>) => {
+    updateLocalInteraction: (
+      state,
+      action: PayloadAction<UserAlbumInteraction>,
+    ) => {
       state.interactions[action.payload.album_id] = action.payload;
     },
     removeLocalInteraction: (state, action: PayloadAction<string>) => {
       delete state.interactions[action.payload];
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     // Mark as listened
     builder
-      .addCase(markAlbumAsListened.pending, (state) => {
+      .addCase(markAlbumAsListened.pending, state => {
         state.loading.markAsListened = true;
         state.error = null;
       })
@@ -128,12 +190,13 @@ const userAlbumsSlice = createSlice({
       })
       .addCase(markAlbumAsListened.rejected, (state, action) => {
         state.loading.markAsListened = false;
-        state.error = action.error.message || 'Failed to mark album as listened';
+        state.error =
+          action.error.message || 'Failed to mark album as listened';
       });
 
     // Unmark as listened
     builder
-      .addCase(unmarkAlbumAsListened.pending, (state) => {
+      .addCase(unmarkAlbumAsListened.pending, state => {
         state.loading.markAsListened = true;
         state.error = null;
       })
@@ -143,12 +206,13 @@ const userAlbumsSlice = createSlice({
       })
       .addCase(unmarkAlbumAsListened.rejected, (state, action) => {
         state.loading.markAsListened = false;
-        state.error = action.error.message || 'Failed to unmark album as listened';
+        state.error =
+          action.error.message || 'Failed to unmark album as listened';
       });
 
     // Rate album
     builder
-      .addCase(rateAlbum.pending, (state) => {
+      .addCase(rateAlbum.pending, state => {
         state.loading.rating = true;
         state.error = null;
       })
@@ -163,7 +227,7 @@ const userAlbumsSlice = createSlice({
 
     // Remove rating
     builder
-      .addCase(removeAlbumRating.pending, (state) => {
+      .addCase(removeAlbumRating.pending, state => {
         state.loading.rating = true;
         state.error = null;
       })
@@ -178,7 +242,7 @@ const userAlbumsSlice = createSlice({
 
     // Fetch interactions
     builder
-      .addCase(fetchUserAlbumInteractions.pending, (state) => {
+      .addCase(fetchUserAlbumInteractions.pending, state => {
         state.loading.interactions = true;
         state.error = null;
       })
@@ -188,12 +252,13 @@ const userAlbumsSlice = createSlice({
       })
       .addCase(fetchUserAlbumInteractions.rejected, (state, action) => {
         state.loading.interactions = false;
-        state.error = action.error.message || 'Failed to fetch album interactions';
+        state.error =
+          action.error.message || 'Failed to fetch album interactions';
       });
 
     // Fetch listening history
     builder
-      .addCase(fetchUserListeningHistory.pending, (state) => {
+      .addCase(fetchUserListeningHistory.pending, state => {
         state.loading.listeningHistory = true;
         state.error = null;
       })
@@ -204,17 +269,21 @@ const userAlbumsSlice = createSlice({
           state.listeningHistory = action.payload.history;
         } else {
           // Append to existing history for pagination
-          state.listeningHistory = [...state.listeningHistory, ...action.payload.history];
+          state.listeningHistory = [
+            ...state.listeningHistory,
+            ...action.payload.history,
+          ];
         }
       })
       .addCase(fetchUserListeningHistory.rejected, (state, action) => {
         state.loading.listeningHistory = false;
-        state.error = action.error.message || 'Failed to fetch listening history';
+        state.error =
+          action.error.message || 'Failed to fetch listening history';
       });
 
     // Fetch rated albums
     builder
-      .addCase(fetchUserRatedAlbums.pending, (state) => {
+      .addCase(fetchUserRatedAlbums.pending, state => {
         state.loading.ratedAlbums = true;
         state.error = null;
       })
@@ -235,7 +304,7 @@ const userAlbumsSlice = createSlice({
 
     // Fetch stats
     builder
-      .addCase(fetchUserAlbumStats.pending, (state) => {
+      .addCase(fetchUserAlbumStats.pending, state => {
         state.loading.stats = true;
         state.error = null;
       })

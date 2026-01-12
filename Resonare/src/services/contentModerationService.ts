@@ -1,15 +1,14 @@
 /**
  * Content Moderation Service
- * 
+ *
  * Provides basic profanity filtering and content moderation for user-generated content.
  * This service can be extended to use more sophisticated filtering libraries like 'bad-words'.
- * 
+ *
  * To install a more comprehensive filter:
  * npm install bad-words
- * 
+ *
  * Then uncomment the bad-words import and modify the filterProfanity method.
  */
-
 
 import { Filter } from 'bad-words';
 const filter = new Filter();
@@ -27,12 +26,12 @@ const BLOCKED_WORDS: string[] = [
  * Characters that are commonly used to evade filters
  */
 const EVASION_MAP: Record<string, string[]> = {
-  'a': ['@', '4'],
-  'e': ['3'],
-  'i': ['1', '!'],
-  'o': ['0'],
-  's': ['$', '5'],
-  't': ['7'],
+  a: ['@', '4'],
+  e: ['3'],
+  i: ['1', '!'],
+  o: ['0'],
+  s: ['$', '5'],
+  t: ['7'],
 };
 
 interface ModerationResult {
@@ -66,20 +65,24 @@ class ContentModerationService {
     }
 
     // If using bad-words library, uncomment this:
-     if (filter.isProfane(text)) {
-       return {
-         isClean: false,
-         filteredText: filter.clean(text),
-         flaggedWords: ['[filtered]'],
-         reason: 'Contains profanity or objectionable content',
-       };
-     }
+    if (filter.isProfane(text)) {
+      return {
+        isClean: false,
+        filteredText: filter.clean(text),
+        flaggedWords: ['[filtered]'],
+        reason: 'Contains profanity or objectionable content',
+      };
+    }
 
     return {
       isClean: flaggedWords.length === 0,
-      filteredText: flaggedWords.length > 0 ? this.filterText(text, flaggedWords) : text,
+      filteredText:
+        flaggedWords.length > 0 ? this.filterText(text, flaggedWords) : text,
       flaggedWords,
-      reason: flaggedWords.length > 0 ? 'Contains potentially objectionable words' : undefined,
+      reason:
+        flaggedWords.length > 0
+          ? 'Contains potentially objectionable words'
+          : undefined,
     };
   }
 
@@ -105,13 +108,16 @@ class ContentModerationService {
    */
   private normalizeText(text: string): string {
     let normalized = text.toLowerCase();
-    
+
     for (const [letter, replacements] of Object.entries(EVASION_MAP)) {
       for (const replacement of replacements) {
-        normalized = normalized.replace(new RegExp('\\' + replacement, 'g'), letter);
+        normalized = normalized.replace(
+          new RegExp('\\' + replacement, 'g'),
+          letter,
+        );
       }
     }
-    
+
     return normalized;
   }
 
@@ -136,21 +142,34 @@ class ContentModerationService {
     }
 
     if (username.length < 3) {
-      return { isValid: false, error: 'Username must be at least 3 characters' };
+      return {
+        isValid: false,
+        error: 'Username must be at least 3 characters',
+      };
     }
 
     if (username.length > 30) {
-      return { isValid: false, error: 'Username must be less than 30 characters' };
+      return {
+        isValid: false,
+        error: 'Username must be less than 30 characters',
+      };
     }
 
     // Only allow alphanumeric, underscores, and periods
     if (!/^[a-zA-Z0-9_.]+$/.test(username)) {
-      return { isValid: false, error: 'Username can only contain letters, numbers, underscores, and periods' };
+      return {
+        isValid: false,
+        error:
+          'Username can only contain letters, numbers, underscores, and periods',
+      };
     }
 
     const contentCheck = this.checkContent(username);
     if (!contentCheck.isClean) {
-      return { isValid: false, error: 'Username contains inappropriate content' };
+      return {
+        isValid: false,
+        error: 'Username contains inappropriate content',
+      };
     }
 
     return { isValid: true };
@@ -159,7 +178,11 @@ class ContentModerationService {
   /**
    * Validate bio (length and content check)
    */
-  validateBio(bio: string): { isValid: boolean; error?: string; filteredBio?: string } {
+  validateBio(bio: string): {
+    isValid: boolean;
+    error?: string;
+    filteredBio?: string;
+  } {
     if (!bio || bio.trim().length === 0) {
       return { isValid: true }; // Bio is optional
     }
@@ -170,8 +193,8 @@ class ContentModerationService {
 
     const contentCheck = this.checkContent(bio);
     if (!contentCheck.isClean) {
-      return { 
-        isValid: false, 
+      return {
+        isValid: false,
         error: 'Bio contains inappropriate content',
         filteredBio: contentCheck.filteredText,
       };
@@ -183,19 +206,26 @@ class ContentModerationService {
   /**
    * Validate review text (length and content check)
    */
-  validateReview(review: string): { isValid: boolean; error?: string; filteredReview?: string } {
+  validateReview(review: string): {
+    isValid: boolean;
+    error?: string;
+    filteredReview?: string;
+  } {
     if (!review || review.trim().length === 0) {
       return { isValid: true }; // Review text is optional
     }
 
     if (review.length > 2000) {
-      return { isValid: false, error: 'Review must be less than 2000 characters' };
+      return {
+        isValid: false,
+        error: 'Review must be less than 2000 characters',
+      };
     }
 
     const contentCheck = this.checkContent(review);
     if (!contentCheck.isClean) {
-      return { 
-        isValid: false, 
+      return {
+        isValid: false,
         error: 'Review contains inappropriate content',
         filteredReview: contentCheck.filteredText,
       };
@@ -207,19 +237,26 @@ class ContentModerationService {
   /**
    * Validate diary entry notes (length and content check)
    */
-  validateDiaryNotes(notes: string): { isValid: boolean; error?: string; filteredNotes?: string } {
+  validateDiaryNotes(notes: string): {
+    isValid: boolean;
+    error?: string;
+    filteredNotes?: string;
+  } {
     if (!notes || notes.trim().length === 0) {
       return { isValid: true }; // Notes are optional
     }
 
     if (notes.length > 1000) {
-      return { isValid: false, error: 'Notes must be less than 1000 characters' };
+      return {
+        isValid: false,
+        error: 'Notes must be less than 1000 characters',
+      };
     }
 
     const contentCheck = this.checkContent(notes);
     if (!contentCheck.isClean) {
-      return { 
-        isValid: false, 
+      return {
+        isValid: false,
         error: 'Notes contain inappropriate content',
         filteredNotes: contentCheck.filteredText,
       };
@@ -231,19 +268,26 @@ class ContentModerationService {
   /**
    * Validate comment text (length and content check)
    */
-  validateComment(comment: string): { isValid: boolean; error?: string; filteredComment?: string } {
+  validateComment(comment: string): {
+    isValid: boolean;
+    error?: string;
+    filteredComment?: string;
+  } {
     if (!comment || comment.trim().length === 0) {
       return { isValid: false, error: 'Comment cannot be empty' };
     }
 
     if (comment.length > 280) {
-      return { isValid: false, error: 'Comment must be less than 280 characters' };
+      return {
+        isValid: false,
+        error: 'Comment must be less than 280 characters',
+      };
     }
 
     const contentCheck = this.checkContent(comment);
     if (!contentCheck.isClean) {
-      return { 
-        isValid: false, 
+      return {
+        isValid: false,
         error: 'Comment contains inappropriate content',
         filteredComment: contentCheck.filteredText,
       };

@@ -43,7 +43,9 @@ export class ArtistService {
    * Get artist by ID
    * First checks database, then fetches from Spotify if needed
    */
-  static async getArtistById(artistId: string): Promise<ApiResponse<Artist | null>> {
+  static async getArtistById(
+    artistId: string,
+  ): Promise<ApiResponse<Artist | null>> {
     try {
       // Check database first
       const { data: dbArtist, error: dbError } = await supabase
@@ -64,9 +66,10 @@ export class ArtistService {
       if (SpotifyService.isConfigured()) {
         try {
           const spotifyArtist = await SpotifyService.getArtist(artistId);
-          
+
           if (SpotifyMapper.isValidSpotifyArtist(spotifyArtist)) {
-            const artist = SpotifyMapper.mapSpotifyArtistToArtist(spotifyArtist);
+            const artist =
+              SpotifyMapper.mapSpotifyArtistToArtist(spotifyArtist);
 
             // Store in database for future requests
             const dbFormat = SpotifyMapper.mapArtistToDatabase(spotifyArtist);
@@ -104,7 +107,7 @@ export class ArtistService {
    */
   static async getArtistAlbums(
     artistId: string,
-    options?: { includeGroups?: string; limit?: number }
+    options?: { includeGroups?: string; limit?: number },
   ): Promise<ApiResponse<Album[]>> {
     try {
       // Query database for albums by this artist
@@ -127,10 +130,13 @@ export class ArtistService {
       // Fetch from Spotify if no cached albums
       if (SpotifyService.isConfigured()) {
         try {
-          const spotifyResponse = await SpotifyService.getArtistAlbums(artistId, {
-            include_groups: options?.includeGroups || 'album,single',
-            limit: options?.limit || 50,
-          });
+          const spotifyResponse = await SpotifyService.getArtistAlbums(
+            artistId,
+            {
+              include_groups: options?.includeGroups || 'album,single',
+              limit: options?.limit || 50,
+            },
+          );
 
           const albums: Album[] = [];
 
@@ -147,7 +153,8 @@ export class ArtistService {
           // Also store/update the artist info if we're fetching their albums
           try {
             const spotifyArtist = await SpotifyService.getArtist(artistId);
-            const dbArtistFormat = SpotifyMapper.mapArtistToDatabase(spotifyArtist);
+            const dbArtistFormat =
+              SpotifyMapper.mapArtistToDatabase(spotifyArtist);
             await supabase.from('artists').upsert(dbArtistFormat);
           } catch (artistError) {
             // Don't fail if artist update fails
@@ -183,7 +190,9 @@ export class ArtistService {
    * Search for artists by name
    * Useful for finding artist ID when only name is available
    */
-  static async searchArtistByName(name: string): Promise<ApiResponse<Artist | null>> {
+  static async searchArtistByName(
+    name: string,
+  ): Promise<ApiResponse<Artist | null>> {
     try {
       if (!name.trim()) {
         return {
@@ -204,8 +213,11 @@ export class ArtistService {
 
       // Search Spotify for artists
       const spotifyResponse = await SpotifyService.searchArtists(name, 1); // Get top result
-      
-      if (!spotifyResponse.artists?.items || spotifyResponse.artists.items.length === 0) {
+
+      if (
+        !spotifyResponse.artists?.items ||
+        spotifyResponse.artists.items.length === 0
+      ) {
         return {
           data: null,
           success: false,
@@ -215,7 +227,7 @@ export class ArtistService {
 
       // Get the first (most relevant) result
       const spotifyArtist = spotifyResponse.artists.items[0];
-      
+
       if (!SpotifyMapper.isValidSpotifyArtist(spotifyArtist)) {
         return {
           data: null,
@@ -276,7 +288,10 @@ export class ArtistService {
    * Search for multiple artists
    * Returns a list of artists matching the search query
    */
-  static async searchArtists(query: string, limit: number = 20): Promise<ApiResponse<Artist[]>> {
+  static async searchArtists(
+    query: string,
+    limit: number = 20,
+  ): Promise<ApiResponse<Artist[]>> {
     try {
       if (!query.trim()) {
         return {
@@ -297,8 +312,11 @@ export class ArtistService {
 
       // Search Spotify for artists
       const spotifyResponse = await SpotifyService.searchArtists(query, limit);
-      
-      if (!spotifyResponse.artists?.items || spotifyResponse.artists.items.length === 0) {
+
+      if (
+        !spotifyResponse.artists?.items ||
+        spotifyResponse.artists.items.length === 0
+      ) {
         return {
           data: [],
           success: true,
@@ -308,7 +326,7 @@ export class ArtistService {
 
       // Map and filter valid artists
       const artists: Artist[] = [];
-      
+
       for (const spotifyArtist of spotifyResponse.artists.items) {
         if (SpotifyMapper.isValidSpotifyArtist(spotifyArtist)) {
           const artist = SpotifyMapper.mapSpotifyArtistToArtist(spotifyArtist);
@@ -337,7 +355,8 @@ export class ArtistService {
       return {
         data: [],
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to search artists',
+        message:
+          error instanceof Error ? error.message : 'Failed to search artists',
       };
     }
   }
@@ -389,4 +408,3 @@ export class ArtistService {
     }
   }
 }
-

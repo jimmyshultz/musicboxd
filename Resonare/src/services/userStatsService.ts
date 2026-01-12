@@ -24,18 +24,18 @@ class UserStatsService {
    */
   calculateStats(activityData: UserActivityData): UserStats {
     const currentYear = new Date().getFullYear();
-    
+
     // Filter listens and reviews by year
     const thisYearListens = activityData.listens.filter(listen => {
       const listenYear = new Date(listen.dateListened).getFullYear();
       return listenYear === currentYear;
     });
-    
+
     const thisYearReviews = activityData.reviews.filter(review => {
       const reviewYear = new Date(review.dateReviewed).getFullYear();
       return reviewYear === currentYear;
     });
-    
+
     return {
       albumsThisYear: thisYearListens.length,
       albumsAllTime: activityData.listens.length,
@@ -89,7 +89,7 @@ class UserStatsService {
     listens: Listen[],
     reviews: Review[],
     followers: User[],
-    following: User[]
+    following: User[],
   ): UserStats {
     return this.calculateStats({
       listens,

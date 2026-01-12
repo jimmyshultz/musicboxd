@@ -21,7 +21,9 @@ export class UserService {
    * Get current user session
    */
   async getCurrentUser(): Promise<User | null> {
-    const { data: { user } } = await this.client.auth.getUser();
+    const {
+      data: { user },
+    } = await this.client.auth.getUser();
     return user;
   }
 
@@ -29,7 +31,9 @@ export class UserService {
    * Get current user session
    */
   async getSession() {
-    const { data: { session } } = await this.client.auth.getSession();
+    const {
+      data: { session },
+    } = await this.client.auth.getSession();
     return session;
   }
 
@@ -79,7 +83,9 @@ export class UserService {
   /**
    * Create or update user profile
    */
-  async upsertUserProfile(profile: Partial<UserProfile> & { id: string }): Promise<UserProfile> {
+  async upsertUserProfile(
+    profile: Partial<UserProfile> & { id: string },
+  ): Promise<UserProfile> {
     const { data, error } = await this.client
       .from('user_profiles')
       .upsert(profile)
@@ -93,7 +99,10 @@ export class UserService {
   /**
    * Update user profile
    */
-  async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+  async updateUserProfile(
+    userId: string,
+    updates: Partial<UserProfile>,
+  ): Promise<UserProfile> {
     const { data, error } = await this.client
       .from('user_profiles')
       .update(updates)
@@ -108,7 +117,10 @@ export class UserService {
   /**
    * Alias for updateUserProfile for convenience
    */
-  async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+  async updateProfile(
+    userId: string,
+    updates: Partial<UserProfile>,
+  ): Promise<UserProfile> {
     return this.updateUserProfile(userId, updates);
   }
 
@@ -117,7 +129,7 @@ export class UserService {
    */
   async searchUsers(query: string, limit: number = 10): Promise<UserProfile[]> {
     const currentUser = await this.getCurrentUser();
-    
+
     if (!currentUser) {
       // Not logged in - only show public profiles
       const { data, error } = await this.client
@@ -147,10 +159,12 @@ export class UserService {
     const { data, error } = await query_builder;
 
     if (error) throw error;
-    
+
     // Filter out blocked users client-side
-    const filteredData = (data || []).filter(user => !blockedIds.includes(user.id));
-    
+    const filteredData = (data || []).filter(
+      user => !blockedIds.includes(user.id),
+    );
+
     return filteredData.slice(0, limit);
   }
 
@@ -170,7 +184,7 @@ export class UserService {
     }
 
     if (error) throw error;
-    
+
     // Username exists
     return false;
   }
@@ -182,7 +196,9 @@ export class UserService {
   /**
    * Follow a user (handles both public follows and private requests)
    */
-  async followUser(followingId: string): Promise<{ type: 'followed' | 'requested' }> {
+  async followUser(
+    followingId: string,
+  ): Promise<{ type: 'followed' | 'requested' }> {
     const user = await this.getCurrentUser();
     if (!user) throw new Error('Must be authenticated to follow users');
 
@@ -192,7 +208,7 @@ export class UserService {
     if (actionType === 'following') {
       throw new Error('Already following this user');
     }
-    
+
     if (actionType === 'requested') {
       throw new Error('Follow request already sent');
     }
@@ -203,12 +219,10 @@ export class UserService {
       return { type: 'requested' };
     } else {
       // Direct follow for public profile
-      const { error } = await this.client
-        .from('user_follows')
-        .insert({
-          follower_id: user.id,
-          following_id: followingId,
-        });
+      const { error } = await this.client.from('user_follows').insert({
+        follower_id: user.id,
+        following_id: followingId,
+      });
 
       if (error) throw error;
       return { type: 'followed' };
@@ -227,7 +241,10 @@ export class UserService {
 
     if (actionType === 'requested') {
       // Cancel pending follow request
-      const pendingRequest = await this.getFollowRequestStatus(user.id, followingId);
+      const pendingRequest = await this.getFollowRequestStatus(
+        user.id,
+        followingId,
+      );
       if (pendingRequest) {
         await this.cancelFollowRequest(pendingRequest.id);
       }
@@ -243,12 +260,6 @@ export class UserService {
     }
     // If actionType is 'follow' or 'request', there's nothing to unfollow
   }
-
-  
-
-
-
-
 
   // Legacy method names for backward compatibility
   /**
@@ -266,11 +277,10 @@ export class UserService {
       const currentUser = await this.getCurrentUser();
       const viewerId = currentUser?.id || null;
 
-      const { data, error } = await this.client
-        .rpc('get_user_followers', { 
-          target_user_id: userId,
-          current_viewer_id: viewerId 
-        });
+      const { data, error } = await this.client.rpc('get_user_followers', {
+        target_user_id: userId,
+        current_viewer_id: viewerId,
+      });
 
       if (error) throw error;
       return data || [];
@@ -288,11 +298,10 @@ export class UserService {
       const currentUser = await this.getCurrentUser();
       const viewerId = currentUser?.id || null;
 
-      const { data, error } = await this.client
-        .rpc('get_user_following', { 
-          target_user_id: userId,
-          current_viewer_id: viewerId 
-        });
+      const { data, error } = await this.client.rpc('get_user_following', {
+        target_user_id: userId,
+        current_viewer_id: viewerId,
+      });
 
       if (error) throw error;
       return data || [];
@@ -319,7 +328,9 @@ export class UserService {
   /**
    * Get follower/following counts for a user
    */
-  async getFollowCounts(userId: string): Promise<{ followers: number; following: number }> {
+  async getFollowCounts(
+    userId: string,
+  ): Promise<{ followers: number; following: number }> {
     const [followersResult, followingResult] = await Promise.all([
       this.client
         .from('user_follows')
@@ -348,12 +359,15 @@ export class UserService {
    * Get suggested users to follow (basic implementation)
    * In a real app, this would use a recommendation algorithm
    */
-  async getSuggestedUsers(currentUserId: string, limit: number = 5): Promise<UserProfile[]> {
+  async getSuggestedUsers(
+    currentUserId: string,
+    limit: number = 5,
+  ): Promise<UserProfile[]> {
     if (!currentUserId) return [];
-    
+
     const user = await this.getCurrentUser();
     if (!user) return [];
-    
+
     // Use the authenticated user's ID instead of the parameter to avoid session/timing issues
     const authenticatedUserId = user.id;
 
@@ -365,10 +379,11 @@ export class UserService {
         .eq('follower_id', authenticatedUserId);
 
       const followingIds = followingData?.map(f => f.following_id) || [];
-      
+
       // Get blocked user IDs to filter them out
-      const blockedIds = await blockService.getAllBlockedUserIds(authenticatedUserId);
-      
+      const blockedIds =
+        await blockService.getAllBlockedUserIds(authenticatedUserId);
+
       // Build query to get public profiles, excluding current user and banned users
       let query = this.client
         .from('user_profiles')
@@ -391,7 +406,9 @@ export class UserService {
       }
 
       // Filter out blocked users client-side
-      const filteredData = (data || []).filter(profile => !blockedIds.includes(profile.id));
+      const filteredData = (data || []).filter(
+        profile => !blockedIds.includes(profile.id),
+      );
 
       return filteredData.slice(0, limit);
     } catch (error) {
@@ -441,9 +458,10 @@ export class UserService {
     const albumsListened = data?.filter(ua => ua.is_listened).length || 0;
     const ratingsData = data?.filter(ua => ua.rating !== null) || [];
     const reviews = ratingsData.length;
-    const averageRating = reviews > 0 
-      ? ratingsData.reduce((sum, ua) => sum + (ua.rating || 0), 0) / reviews 
-      : 0;
+    const averageRating =
+      reviews > 0
+        ? ratingsData.reduce((sum, ua) => sum + (ua.rating || 0), 0) / reviews
+        : 0;
 
     return {
       albumsListened,
@@ -459,7 +477,10 @@ export class UserService {
   /**
    * Send a follow request to a user
    */
-  async sendFollowRequest(requesterId: string, requestedId: string): Promise<FollowRequest> {
+  async sendFollowRequest(
+    requesterId: string,
+    requestedId: string,
+  ): Promise<FollowRequest> {
     // Check if there's already a request (any status)
     const { data: existing, error: checkError } = await this.client
       .from('follow_requests')
@@ -489,7 +510,7 @@ export class UserService {
           .insert({
             requester_id: requesterId,
             requested_id: requestedId,
-            status: 'pending'
+            status: 'pending',
           })
           .select()
           .single();
@@ -504,7 +525,7 @@ export class UserService {
         .insert({
           requester_id: requesterId,
           requested_id: requestedId,
-          status: 'pending'
+          status: 'pending',
         })
         .select()
         .single();
@@ -528,7 +549,8 @@ export class UserService {
       .single();
 
     if (fetchError) throw fetchError;
-    if (!request) throw new Error('Follow request not found or already processed');
+    if (!request)
+      throw new Error('Follow request not found or already processed');
 
     // Update request status to accepted
     const { error: updateError } = await this.client
@@ -543,7 +565,7 @@ export class UserService {
       .from('user_follows')
       .insert({
         follower_id: request.requester_id,
-        following_id: request.requested_id
+        following_id: request.requested_id,
       });
 
     if (followError) throw followError;
@@ -600,7 +622,9 @@ export class UserService {
     // Combine request data with requester profiles
     return requestData.map(request => ({
       ...request,
-      requester: profileData?.find(profile => profile.id === request.requester_id)
+      requester: profileData?.find(
+        profile => profile.id === request.requester_id,
+      ),
     }));
   }
 
@@ -631,14 +655,19 @@ export class UserService {
     // Combine request data with requested user profiles
     return requestData.map(request => ({
       ...request,
-      requested: profileData?.find(profile => profile.id === request.requested_id)
+      requested: profileData?.find(
+        profile => profile.id === request.requested_id,
+      ),
     }));
   }
 
   /**
    * Check if there's a pending follow request between two users
    */
-  async getFollowRequestStatus(requesterId: string, requestedId: string): Promise<FollowRequest | null> {
+  async getFollowRequestStatus(
+    requesterId: string,
+    requestedId: string,
+  ): Promise<FollowRequest | null> {
     const { data, error } = await this.client
       .from('follow_requests')
       .select('*')
@@ -654,7 +683,10 @@ export class UserService {
   /**
    * Check if user is following another user
    */
-  async isFollowing(currentUserId: string, targetUserId: string): Promise<boolean> {
+  async isFollowing(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<boolean> {
     const { data, error } = await this.client
       .from('user_follows')
       .select('id')
@@ -666,7 +698,7 @@ export class UserService {
       // No rows found, not following
       return false;
     }
-    
+
     if (error) throw error;
     return !!data;
   }
@@ -675,7 +707,10 @@ export class UserService {
    * Check what follow action is appropriate for a user
    * Returns: 'follow' | 'request' | 'requested' | 'following'
    */
-  async getFollowActionType(currentUserId: string, targetUserId: string): Promise<'follow' | 'request' | 'requested' | 'following'> {
+  async getFollowActionType(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<'follow' | 'request' | 'requested' | 'following'> {
     if (currentUserId === targetUserId) {
       throw new Error('Cannot follow yourself');
     }
@@ -687,7 +722,10 @@ export class UserService {
     }
 
     // Check if there's a pending request
-    const pendingRequest = await this.getFollowRequestStatus(currentUserId, targetUserId);
+    const pendingRequest = await this.getFollowRequestStatus(
+      currentUserId,
+      targetUserId,
+    );
     if (pendingRequest) {
       return 'requested';
     }
@@ -717,7 +755,10 @@ export class UserService {
   /**
    * Calculate mutual followers between current user and target user
    */
-  async getMutualFollowersCount(currentUserId: string, targetUserId: string): Promise<number> {
+  async getMutualFollowersCount(
+    currentUserId: string,
+    targetUserId: string,
+  ): Promise<number> {
     try {
       // Get followers of current user
       const currentUserFollowers = await this.getFollowers(currentUserId);
@@ -728,8 +769,8 @@ export class UserService {
       const targetUserFollowerIds = targetUserFollowers.map(user => user.id);
 
       // Find intersection (mutual followers)
-      const mutualFollowerIds = currentUserFollowerIds.filter(id => 
-        targetUserFollowerIds.includes(id)
+      const mutualFollowerIds = currentUserFollowerIds.filter(id =>
+        targetUserFollowerIds.includes(id),
       );
 
       return mutualFollowerIds.length;
@@ -748,13 +789,15 @@ export class UserService {
    */
   async getMutualFollowersCountBatch(
     currentUserId: string,
-    targetUserIds: string[]
+    targetUserIds: string[],
   ): Promise<Record<string, number>> {
     if (targetUserIds.length === 0) return {};
 
     try {
       // 1. Get current user's follower IDs (1 query)
-      const currentUserFollowerIds = new Set(await this.getFollowerIds(currentUserId));
+      const currentUserFollowerIds = new Set(
+        await this.getFollowerIds(currentUserId),
+      );
 
       // 2. Get followers for ALL target users in one query
       const { data: allFollowsData, error } = await this.client
@@ -765,21 +808,28 @@ export class UserService {
       if (error) throw error;
 
       // 3. Get blocked user IDs (1 query)
-      const blockedIds = new Set(await blockService.getAllBlockedUserIds(currentUserId));
+      const blockedIds = new Set(
+        await blockService.getAllBlockedUserIds(currentUserId),
+      );
 
       // 4. Calculate intersections in memory
       const mutualCounts: Record<string, number> = {};
-      
+
       // Initialize all targets to 0
-      targetUserIds.forEach(id => { mutualCounts[id] = 0; });
+      targetUserIds.forEach(id => {
+        mutualCounts[id] = 0;
+      });
 
       // Group followers by target user and count matches
       allFollowsData?.forEach(row => {
         const followerId = row.follower_id;
         const targetId = row.following_id;
-        
+
         // Check if this follower is mutual (follows current user) and not blocked
-        if (currentUserFollowerIds.has(followerId) && !blockedIds.has(followerId)) {
+        if (
+          currentUserFollowerIds.has(followerId) &&
+          !blockedIds.has(followerId)
+        ) {
           mutualCounts[targetId]++;
         }
       });
@@ -789,7 +839,9 @@ export class UserService {
       console.error('Error calculating mutual followers in batch:', error);
       // Return zeros for all users on error
       const emptyResults: Record<string, number> = {};
-      targetUserIds.forEach(id => { emptyResults[id] = 0; });
+      targetUserIds.forEach(id => {
+        emptyResults[id] = 0;
+      });
       return emptyResults;
     }
   }

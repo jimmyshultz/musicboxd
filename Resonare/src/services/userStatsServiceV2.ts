@@ -21,14 +21,15 @@ class UserStatsServiceV2 {
    */
   async getUserStats(userId: string): Promise<UserStatsV2> {
     try {
-      const { data, error } = await supabase
-        .rpc('get_user_stats', { target_user_id: userId });
+      const { data, error } = await supabase.rpc('get_user_stats', {
+        target_user_id: userId,
+      });
 
       if (error) throw error;
 
       // The function returns a single row
       const stats = data?.[0];
-      
+
       if (!stats) {
         throw new Error('No stats returned from database');
       }
@@ -41,7 +42,7 @@ class UserStatsServiceV2 {
         averageRating: Number(stats.average_rating) || 0,
         diaryEntries: Number(stats.diary_entries) || 0,
         followers: Number(stats.followers) || 0,
-        following: Number(stats.following) || 0
+        following: Number(stats.following) || 0,
       };
     } catch (error) {
       console.error('Error getting user stats:', error);
@@ -54,7 +55,7 @@ class UserStatsServiceV2 {
         averageRating: 0,
         diaryEntries: 0,
         followers: 0,
-        following: 0
+        following: 0,
       };
     }
   }
@@ -65,8 +66,11 @@ class UserStatsServiceV2 {
   async getRecentActivity(userId: string, limit: number = 5) {
     try {
       // Get recent diary entries which represent actual listening sessions
-      const recentEntries = await diaryEntriesService.getRecentDiaryEntries(userId, limit);
-      
+      const recentEntries = await diaryEntriesService.getRecentDiaryEntries(
+        userId,
+        limit,
+      );
+
       return recentEntries.map(entry => ({
         album: {
           id: entry.albums.id,
@@ -86,14 +90,16 @@ class UserStatsServiceV2 {
           albumId: entry.album_id,
           dateListened: new Date(entry.diary_date),
         },
-        review: entry.rating ? {
-          id: `review_${entry.album_id}_${entry.user_id}`,
-          userId: entry.user_id,
-          albumId: entry.album_id,
-          rating: entry.rating,
-          review: entry.notes || '',
-          dateReviewed: entry.created_at,
-        } : undefined
+        review: entry.rating
+          ? {
+              id: `review_${entry.album_id}_${entry.user_id}`,
+              userId: entry.user_id,
+              albumId: entry.album_id,
+              rating: entry.rating,
+              review: entry.notes || '',
+              dateReviewed: entry.created_at,
+            }
+          : undefined,
       }));
     } catch (error) {
       console.error('Error getting recent activity:', error);
@@ -104,10 +110,18 @@ class UserStatsServiceV2 {
   /**
    * Get user's listening history (for ListenedAlbumsScreen)
    */
-  async getUserListeningHistory(userId: string, limit: number = 50, offset: number = 0) {
+  async getUserListeningHistory(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ) {
     try {
-      const listeningHistory = await albumListensService.getUserListenedAlbums(userId, limit, offset);
-      
+      const listeningHistory = await albumListensService.getUserListenedAlbums(
+        userId,
+        limit,
+        offset,
+      );
+
       return listeningHistory.map(item => ({
         id: item.albums.id,
         name: item.albums.name,
@@ -127,8 +141,8 @@ class UserStatsServiceV2 {
           listened_at: item.first_listened_at,
           review: null,
           created_at: item.created_at,
-          updated_at: item.updated_at
-        }
+          updated_at: item.updated_at,
+        },
       }));
     } catch (error) {
       console.error('Error getting user listening history:', error);
@@ -139,10 +153,18 @@ class UserStatsServiceV2 {
   /**
    * Get user's rated albums (for UserReviewsScreen)
    */
-  async getUserRatedAlbums(userId: string, limit: number = 50, offset: number = 0) {
+  async getUserRatedAlbums(
+    userId: string,
+    limit: number = 50,
+    offset: number = 0,
+  ) {
     try {
-      const ratedAlbums = await albumRatingsService.getUserRatedAlbums(userId, limit, offset);
-      
+      const ratedAlbums = await albumRatingsService.getUserRatedAlbums(
+        userId,
+        limit,
+        offset,
+      );
+
       return ratedAlbums.map(item => ({
         id: item.albums.id,
         name: item.albums.name,
@@ -162,8 +184,8 @@ class UserStatsServiceV2 {
           listened_at: null,
           review: item.review,
           created_at: item.created_at,
-          updated_at: item.updated_at
-        }
+          updated_at: item.updated_at,
+        },
       }));
     } catch (error) {
       console.error('Error getting user rated albums:', error);

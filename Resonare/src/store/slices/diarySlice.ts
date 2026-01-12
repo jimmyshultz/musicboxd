@@ -23,17 +23,23 @@ const diarySlice = createSlice({
   name: 'diary',
   initialState,
   reducers: {
-    fetchDiaryStart: (state) => {
+    fetchDiaryStart: state => {
       state.loading = true;
       state.error = null;
     },
     fetchDiarySuccess: (
       state,
-      action: PayloadAction<{ userId: string; entries: DiaryEntry[]; lastMonth?: string; hasMore: boolean; reset?: boolean }>
+      action: PayloadAction<{
+        userId: string;
+        entries: DiaryEntry[];
+        lastMonth?: string;
+        hasMore: boolean;
+        reset?: boolean;
+      }>,
     ) => {
       const { userId, entries, lastMonth, hasMore, reset } = action.payload;
       const prev = state.byUserId[userId] || { entries: [], hasMore: true };
-      
+
       let finalEntries: DiaryEntry[];
       if (reset) {
         // Remove duplicates from the new entries
@@ -57,7 +63,7 @@ const diarySlice = createSlice({
           return true;
         });
       }
-      
+
       state.byUserId[userId] = {
         entries: finalEntries,
         lastMonth,
@@ -71,7 +77,10 @@ const diarySlice = createSlice({
     },
     upsertDiaryEntry: (state, action: PayloadAction<DiaryEntry>) => {
       const entry = action.payload;
-      const userState = state.byUserId[entry.userId] || { entries: [], hasMore: true };
+      const userState = state.byUserId[entry.userId] || {
+        entries: [],
+        hasMore: true,
+      };
       const idx = userState.entries.findIndex(e => e.id === entry.id);
       if (idx === -1) {
         userState.entries.unshift(entry);
@@ -80,7 +89,10 @@ const diarySlice = createSlice({
       }
       state.byUserId[entry.userId] = userState;
     },
-    removeDiaryEntry: (state, action: PayloadAction<{ userId: string; entryId: string }>) => {
+    removeDiaryEntry: (
+      state,
+      action: PayloadAction<{ userId: string; entryId: string }>,
+    ) => {
       const { userId, entryId } = action.payload;
       const userState = state.byUserId[userId];
       if (!userState) return;

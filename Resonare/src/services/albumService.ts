@@ -7,9 +7,10 @@ import { SpotifyMapper } from './spotifyMapper';
 function serializeReview(review: Review): any {
   return {
     ...review,
-    dateReviewed: review.dateReviewed instanceof Date
-      ? review.dateReviewed.toISOString()
-      : review.dateReviewed,
+    dateReviewed:
+      review.dateReviewed instanceof Date
+        ? review.dateReviewed.toISOString()
+        : review.dateReviewed,
   };
 }
 
@@ -17,9 +18,10 @@ function serializeReview(review: Review): any {
 function serializeListen(listen: Listen): any {
   return {
     ...listen,
-    dateListened: listen.dateListened instanceof Date
-      ? listen.dateListened.toISOString()
-      : listen.dateListened,
+    dateListened:
+      listen.dateListened instanceof Date
+        ? listen.dateListened.toISOString()
+        : listen.dateListened,
   };
 }
 
@@ -109,7 +111,7 @@ export class AlbumService {
       dateListened: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
     },
   ];
-  
+
   private static userReviews: Review[] = [
     // Demo review data removed - will be populated dynamically when user is authenticated
     // Add review data for user1 (indierocklover)
@@ -187,14 +189,15 @@ export class AlbumService {
     try {
       // Import the real service
       const { supabase } = await import('./supabase');
-      
+
       // Get popular albums based on listen counts from the last 7 days
       const oneWeekAgo = new Date();
       oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      
+
       const { data: popularData, error } = await supabase
         .from('album_listens')
-        .select(`
+        .select(
+          `
           album_id,
           albums (
             id,
@@ -207,7 +210,8 @@ export class AlbumService {
             album_type,
             genres
           )
-        `)
+        `,
+        )
         .eq('is_listened', true)
         .gte('first_listened_at', oneWeekAgo.toISOString())
         .order('first_listened_at', { ascending: false });
@@ -216,7 +220,7 @@ export class AlbumService {
         console.error('Error getting popular albums:', error);
         // Return empty array instead of fallback mock data
         return {
-          data: [], 
+          data: [],
           success: true,
           message: 'No popular albums data available',
         };
@@ -224,14 +228,14 @@ export class AlbumService {
 
       // Group by album and count listens
       const albumCounts: Record<string, { album: any; count: number }> = {};
-      
+
       popularData?.forEach(listen => {
         if (listen.albums) {
           const albumId = listen.album_id;
           if (!albumCounts[albumId]) {
             albumCounts[albumId] = {
               album: listen.albums,
-              count: 0
+              count: 0,
             };
           }
           albumCounts[albumId].count++;
@@ -294,19 +298,19 @@ export class AlbumService {
     try {
       // First check if this is a Spotify ID (should be alphanumeric)
       const isSpotifyId = /^[a-zA-Z0-9]+$/.test(id) && id.length > 10;
-      
+
       if (isSpotifyId && SpotifyService.isConfigured()) {
         try {
           // Try to fetch from Spotify API
           const spotifyAlbum = await SpotifyService.getAlbum(id);
-          
+
           if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
             const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
-            
+
             // NOTE: Artist data fetching is deferred for performance
             // It will be fetched when user navigates to artist details page
             // This significantly speeds up album loading on home page
-            
+
             return {
               data: album,
               success: true,
@@ -317,10 +321,10 @@ export class AlbumService {
           // Continue to check mock data if Spotify fails
         }
       }
-      
+
       // Check mock data (for backward compatibility and fallback)
       const mockAlbum = mockAlbums.find(a => a.id === id);
-      
+
       if (mockAlbum) {
         return {
           data: mockAlbum,
@@ -328,9 +332,11 @@ export class AlbumService {
           message: 'Album found in local data',
         };
       }
-      
+
       // If it's a Spotify ID but we couldn't fetch it, try to find by external ID in mock data
-      const albumBySpotifyId = mockAlbums.find(a => a.externalIds.spotify === id);
+      const albumBySpotifyId = mockAlbums.find(
+        a => a.externalIds.spotify === id,
+      );
       if (albumBySpotifyId) {
         return {
           data: albumBySpotifyId,
@@ -338,7 +344,7 @@ export class AlbumService {
           message: 'Album found by Spotify ID in local data',
         };
       }
-      
+
       return {
         data: null,
         success: false,
@@ -371,14 +377,15 @@ export class AlbumService {
 
       // Search Spotify API
       const spotifyResponse = await SpotifyService.searchAlbums(query, 20);
-      
+
       if (!spotifyResponse.albums?.items) {
         return this.searchMockData(query);
       }
 
       // Convert Spotify results to our format
-      const searchResult = SpotifyMapper.mapSpotifySearchToSearchResult(spotifyResponse);
-      
+      const searchResult =
+        SpotifyMapper.mapSpotifySearchToSearchResult(spotifyResponse);
+
       // If no results from Spotify, also search mock data for better coverage
       if (searchResult.albums.length === 0) {
         return this.searchMockData(query);
@@ -396,14 +403,17 @@ export class AlbumService {
   }
 
   // Helper method to search mock data
-  private static async searchMockData(query: string): Promise<ApiResponse<SearchResult>> {
+  private static async searchMockData(
+    query: string,
+  ): Promise<ApiResponse<SearchResult>> {
     const lowercaseQuery = query.toLowerCase();
-    
+
     // Filter albums by title or artist
-    const filteredAlbums = mockAlbums.filter(album => 
-      album.title.toLowerCase().includes(lowercaseQuery) ||
-      album.artist.toLowerCase().includes(lowercaseQuery) ||
-      album.genre.some(genre => genre.toLowerCase().includes(lowercaseQuery))
+    const filteredAlbums = mockAlbums.filter(
+      album =>
+        album.title.toLowerCase().includes(lowercaseQuery) ||
+        album.artist.toLowerCase().includes(lowercaseQuery) ||
+        album.genre.some(genre => genre.toLowerCase().includes(lowercaseQuery)),
     );
 
     // Extract unique artists from filtered albums
@@ -425,7 +435,7 @@ export class AlbumService {
   // Get albums by genre
   static async getAlbumsByGenre(genre: string): Promise<ApiResponse<Album[]>> {
     const filteredAlbums = mockAlbums.filter(album =>
-      album.genre.some(g => g.toLowerCase() === genre.toLowerCase())
+      album.genre.some(g => g.toLowerCase() === genre.toLowerCase()),
     );
 
     return {
@@ -440,14 +450,14 @@ export class AlbumService {
   // For now, returns mock data until social features and user activity tracking are implemented
   static async getTrendingAlbums(): Promise<ApiResponse<Album[]>> {
     // TODO: Implement actual trending logic when social features are ready:
-      // 1. Query Supabase for user_listens table
-      // 2. Filter by dateListened >= 7 days ago
-      // 3. Group by albumId and count occurrences
-      // 4. Order by listen count DESC
-      // 5. Take top 4-6 albums
-      // 6. Fetch album details for each trending album
-      
-      /* FUTURE IMPLEMENTATION (Week 4-5):
+    // 1. Query Supabase for user_listens table
+    // 2. Filter by dateListened >= 7 days ago
+    // 3. Group by albumId and count occurrences
+    // 4. Order by listen count DESC
+    // 5. Take top 4-6 albums
+    // 6. Fetch album details for each trending album
+
+    /* FUTURE IMPLEMENTATION (Week 4-5):
       
       const { data: recentListens, error } = await supabase
         .from('user_listens')
@@ -481,19 +491,21 @@ export class AlbumService {
       };
       
       */
-      
-      return {
-        data: [], // Empty until we have real user activity data
-        success: true,
-      message: 'Trending albums not available yet - requires social features implementation',
+
+    return {
+      data: [], // Empty until we have real user activity data
+      success: true,
+      message:
+        'Trending albums not available yet - requires social features implementation',
     };
   }
 
   // Get new releases (mock implementation)
   static async getNewReleases(): Promise<ApiResponse<Album[]>> {
     // Sort by release date (newest first) and return top 5
-    const sorted = [...mockAlbums].sort((a, b) => 
-      new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+    const sorted = [...mockAlbums].sort(
+      (a, b) =>
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime(),
     );
     return {
       data: sorted.slice(0, 5),
@@ -512,17 +524,21 @@ export class AlbumService {
   }
 
   // Add listen
-  static async addListened(userId: string, albumId: string, notes?: string): Promise<ApiResponse<Listen>> {
+  static async addListened(
+    userId: string,
+    albumId: string,
+    notes?: string,
+  ): Promise<ApiResponse<Listen>> {
     // Check if already listened
     const existingListen = this.userListens.find(
-      listen => listen.userId === userId && listen.albumId === albumId
+      listen => listen.userId === userId && listen.albumId === albumId,
     );
-    
+
     if (existingListen) {
       // Update the existing listen with new timestamp
       existingListen.dateListened = new Date();
       existingListen.notes = notes;
-      
+
       return {
         data: serializeListen(existingListen),
         success: true,
@@ -548,11 +564,14 @@ export class AlbumService {
   }
 
   // Remove listen
-  static async removeListened(userId: string, albumId: string): Promise<ApiResponse<void>> {
+  static async removeListened(
+    userId: string,
+    albumId: string,
+  ): Promise<ApiResponse<void>> {
     const index = this.userListens.findIndex(
-      listen => listen.userId === userId && listen.albumId === albumId
+      listen => listen.userId === userId && listen.albumId === albumId,
     );
-    
+
     if (index === -1) {
       return {
         data: undefined,
@@ -571,22 +590,25 @@ export class AlbumService {
   }
 
   // Check if user has listened to album
-  static async hasUserListened(userId: string, albumId: string): Promise<boolean> {
+  static async hasUserListened(
+    userId: string,
+    albumId: string,
+  ): Promise<boolean> {
     return this.userListens.some(
-      listen => listen.userId === userId && listen.albumId === albumId
+      listen => listen.userId === userId && listen.albumId === albumId,
     );
   }
 
   // Add or update rating
   static async addReview(
-    userId: string, 
-    albumId: string, 
-    rating: number, 
-    reviewText?: string
+    userId: string,
+    albumId: string,
+    rating: number,
+    reviewText?: string,
   ): Promise<ApiResponse<Review>> {
     // Check if review already exists
     const existingReviewIndex = this.userReviews.findIndex(
-      review => review.userId === userId && review.albumId === albumId
+      review => review.userId === userId && review.albumId === albumId,
     );
 
     if (existingReviewIndex !== -1) {
@@ -597,9 +619,9 @@ export class AlbumService {
         reviewText,
         dateReviewed: new Date(),
       };
-      
+
       this.userReviews[existingReviewIndex] = updatedReview;
-      
+
       return {
         data: serializeReview(updatedReview),
         success: true,
@@ -629,11 +651,14 @@ export class AlbumService {
   }
 
   // Remove review
-  static async removeReview(userId: string, albumId: string): Promise<ApiResponse<void>> {
+  static async removeReview(
+    userId: string,
+    albumId: string,
+  ): Promise<ApiResponse<void>> {
     const index = this.userReviews.findIndex(
-      review => review.userId === userId && review.albumId === albumId
+      review => review.userId === userId && review.albumId === albumId,
     );
-    
+
     if (index === -1) {
       return {
         data: undefined,
@@ -652,10 +677,14 @@ export class AlbumService {
   }
 
   // Get user's review for album
-  static async getUserReview(userId: string, albumId: string): Promise<Review | null> {
-    const review = this.userReviews.find(
-      r => r.userId === userId && r.albumId === albumId
-    ) || null;
+  static async getUserReview(
+    userId: string,
+    albumId: string,
+  ): Promise<Review | null> {
+    const review =
+      this.userReviews.find(
+        r => r.userId === userId && r.albumId === albumId,
+      ) || null;
     return review ? serializeReview(review) : null;
   }
 
@@ -664,10 +693,11 @@ export class AlbumService {
     try {
       // Import the real service (we'll need to add this import at the top)
       const { albumListensService } = await import('./albumListensService');
-      
+
       // Get real listen data from database
-      const albumListens = await albumListensService.getUserListensWithAlbums(userId);
-      
+      const albumListens =
+        await albumListensService.getUserListensWithAlbums(userId);
+
       // Convert to Listen format expected by the UI
       const listens: Listen[] = albumListens.map(listen => ({
         id: listen.id,
@@ -675,7 +705,7 @@ export class AlbumService {
         albumId: listen.album_id,
         dateListened: new Date(listen.first_listened_at),
       }));
-      
+
       return listens;
     } catch (error) {
       console.error('Error getting user listens:', error);
@@ -701,10 +731,12 @@ export class AlbumService {
   }> {
     const userListens = await this.getUserListens(userId);
     const userReviews = await this.getUserReviews(userId);
-    
-    const averageRating = userReviews.length > 0 
-      ? userReviews.reduce((sum, review) => sum + review.rating, 0) / userReviews.length
-      : 0;
+
+    const averageRating =
+      userReviews.length > 0
+        ? userReviews.reduce((sum, review) => sum + review.rating, 0) /
+          userReviews.length
+        : 0;
 
     return {
       albumsListened: userListens.length,

@@ -19,11 +19,14 @@ const notificationSlice = createSlice({
   name: 'notifications',
   initialState,
   reducers: {
-    fetchNotificationsStart: (state) => {
+    fetchNotificationsStart: state => {
       state.loading = true;
       state.error = null;
     },
-    fetchNotificationsSuccess: (state, action: PayloadAction<AppNotification[]>) => {
+    fetchNotificationsSuccess: (
+      state,
+      action: PayloadAction<AppNotification[]>,
+    ) => {
       state.loading = false;
       state.notifications = action.payload;
       // Recalculate unread count based on fetched notifications
@@ -39,10 +42,12 @@ const notificationSlice = createSlice({
         isUnread: !action.payload.read,
         currentUnreadCount: state.unreadCount,
       });
-      
+
       // Check if notification already exists to avoid duplicates
-      const existingIndex = state.notifications.findIndex(n => n.id === action.payload.id);
-      
+      const existingIndex = state.notifications.findIndex(
+        n => n.id === action.payload.id,
+      );
+
       if (existingIndex >= 0) {
         console.log('🔔 Notification already exists, updating');
         // Update existing notification
@@ -62,7 +67,12 @@ const notificationSlice = createSlice({
         // Increment unread count if notification is unread
         if (!action.payload.read) {
           const newUnreadCount = state.unreadCount + 1;
-          console.log('🔔 Incrementing unread count from', state.unreadCount, 'to', newUnreadCount);
+          console.log(
+            '🔔 Incrementing unread count from',
+            state.unreadCount,
+            'to',
+            newUnreadCount,
+          );
           state.unreadCount = newUnreadCount;
         } else {
           console.log('🔔 Notification is read, not incrementing count');
@@ -71,40 +81,46 @@ const notificationSlice = createSlice({
       console.log('🔔 Final unread count:', state.unreadCount);
     },
     markAsRead: (state, action: PayloadAction<string>) => {
-      const notification = state.notifications.find(n => n.id === action.payload);
+      const notification = state.notifications.find(
+        n => n.id === action.payload,
+      );
       if (notification && !notification.read) {
         notification.read = true;
         state.unreadCount = Math.max(0, state.unreadCount - 1);
       }
     },
-    markAllAsRead: (state) => {
+    markAllAsRead: state => {
       state.notifications.forEach(notification => {
         notification.read = true;
       });
       state.unreadCount = 0;
     },
     removeNotification: (state, action: PayloadAction<string>) => {
-      const notification = state.notifications.find(n => n.id === action.payload);
+      const notification = state.notifications.find(
+        n => n.id === action.payload,
+      );
       if (notification) {
         // Decrement unread count if notification was unread
         if (!notification.read) {
           state.unreadCount = Math.max(0, state.unreadCount - 1);
         }
         // Remove from array
-        state.notifications = state.notifications.filter(n => n.id !== action.payload);
+        state.notifications = state.notifications.filter(
+          n => n.id !== action.payload,
+        );
       }
     },
-    clearAllNotifications: (state) => {
+    clearAllNotifications: state => {
       state.notifications = [];
       state.unreadCount = 0;
     },
     setUnreadCount: (state, action: PayloadAction<number>) => {
       state.unreadCount = action.payload;
     },
-    incrementUnreadCount: (state) => {
+    incrementUnreadCount: state => {
       state.unreadCount += 1;
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },

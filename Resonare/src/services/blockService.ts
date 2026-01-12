@@ -9,18 +9,19 @@ class BlockService {
   /**
    * Block a user
    */
-  async blockUser(blockerId: string, blockedId: string): Promise<{ success: boolean; error?: string }> {
+  async blockUser(
+    blockerId: string,
+    blockedId: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       if (blockerId === blockedId) {
         return { success: false, error: 'You cannot block yourself' };
       }
 
-      const { error } = await supabase
-        .from('blocked_users')
-        .insert({
-          blocker_id: blockerId,
-          blocked_id: blockedId,
-        });
+      const { error } = await supabase.from('blocked_users').insert({
+        blocker_id: blockerId,
+        blocked_id: blockedId,
+      });
 
       if (error) {
         if (error.code === '23505') {
@@ -54,7 +55,10 @@ class BlockService {
   /**
    * Unblock a user
    */
-  async unblockUser(blockerId: string, blockedId: string): Promise<{ success: boolean; error?: string }> {
+  async unblockUser(
+    blockerId: string,
+    blockedId: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const { error } = await supabase
         .from('blocked_users')
@@ -100,12 +104,17 @@ class BlockService {
    * Check if either user has blocked the other (mutual block check)
    * This is useful for determining if content should be hidden
    */
-  async hasBlockRelationship(userId1: string, userId2: string): Promise<boolean> {
+  async hasBlockRelationship(
+    userId1: string,
+    userId2: string,
+  ): Promise<boolean> {
     try {
       const { data, error } = await supabase
         .from('blocked_users')
         .select('id')
-        .or(`and(blocker_id.eq.${userId1},blocked_id.eq.${userId2}),and(blocker_id.eq.${userId2},blocked_id.eq.${userId1})`)
+        .or(
+          `and(blocker_id.eq.${userId1},blocked_id.eq.${userId2}),and(blocker_id.eq.${userId2},blocked_id.eq.${userId1})`,
+        )
         .limit(1);
 
       if (error) {
@@ -220,7 +229,10 @@ class BlockService {
   /**
    * Filter an array of user IDs to remove blocked users
    */
-  async filterBlockedUsers(userId: string, userIds: string[]): Promise<string[]> {
+  async filterBlockedUsers(
+    userId: string,
+    userIds: string[],
+  ): Promise<string[]> {
     try {
       const blockedIds = await this.getAllBlockedUserIds(userId);
       return userIds.filter(id => !blockedIds.includes(id));
@@ -234,8 +246,8 @@ class BlockService {
    * Filter an array of objects with user_id field to remove blocked users
    */
   async filterBlockedContent<T extends { user_id: string }>(
-    userId: string, 
-    items: T[]
+    userId: string,
+    items: T[],
   ): Promise<T[]> {
     try {
       const blockedIds = await this.getAllBlockedUserIds(userId);

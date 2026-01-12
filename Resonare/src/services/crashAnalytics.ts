@@ -36,7 +36,9 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
     try {
       // In development, skip Firebase initialization entirely
       if (Environment.isDevelopment || !isFirebaseAvailable) {
-        console.log('[CrashAnalytics] Skipping Firebase initialization in development environment');
+        console.log(
+          '[CrashAnalytics] Skipping Firebase initialization in development environment',
+        );
         this.isInitialized = true;
         return;
       }
@@ -44,7 +46,7 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
       // Enable crash collection for staging/production
       const shouldCollect = Environment.isStaging || Environment.isProduction;
       await crashlytics().setCrashlyticsCollectionEnabled(shouldCollect);
-      
+
       if (shouldCollect) {
         // Set initial app info for production/staging
         crashlytics().setAttributes({
@@ -55,10 +57,12 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
         // Log successful initialization
         crashlytics().log('Crashlytics initialized successfully');
-        
-        console.log(`[CrashAnalytics] Initialized for ${Environment.current} environment`);
+
+        console.log(
+          `[CrashAnalytics] Initialized for ${Environment.current} environment`,
+        );
       }
-      
+
       this.isInitialized = true;
     } catch (error) {
       console.error('[CrashAnalytics] Failed to initialize:', error);
@@ -73,8 +77,16 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
   }
 
   recordError(error: Error, context?: Record<string, any>): void {
-    if (!this.isInitialized || !isFirebaseAvailable || Environment.isDevelopment) {
-      console.log('[CrashAnalytics] Would record error (disabled in development):', error.message, context);
+    if (
+      !this.isInitialized ||
+      !isFirebaseAvailable ||
+      Environment.isDevelopment
+    ) {
+      console.log(
+        '[CrashAnalytics] Would record error (disabled in development):',
+        error.message,
+        context,
+      );
       return;
     }
 
@@ -88,7 +100,7 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
       // Record the error
       crashlytics().recordError(error);
-      
+
       console.log('[CrashAnalytics] Recorded error:', error.message, context);
     } catch (recordingError) {
       console.error('[CrashAnalytics] Failed to record error:', recordingError);
@@ -96,8 +108,16 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
   }
 
   recordNonFatalError(error: Error, context?: Record<string, any>): void {
-    if (!this.isInitialized || !isFirebaseAvailable || Environment.isDevelopment) {
-      console.log('[CrashAnalytics] Would record non-fatal error (disabled in development):', error.message, context);
+    if (
+      !this.isInitialized ||
+      !isFirebaseAvailable ||
+      Environment.isDevelopment
+    ) {
+      console.log(
+        '[CrashAnalytics] Would record non-fatal error (disabled in development):',
+        error.message,
+        context,
+      );
       return;
     }
 
@@ -111,26 +131,40 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
       // Log the error context
       crashlytics().log(`Non-fatal error: ${error.message}`);
-      
+
       // Record as non-fatal
       crashlytics().recordError(error);
-      
-      console.log('[CrashAnalytics] Recorded non-fatal error:', error.message, context);
+
+      console.log(
+        '[CrashAnalytics] Recorded non-fatal error:',
+        error.message,
+        context,
+      );
     } catch (recordingError) {
-      console.error('[CrashAnalytics] Failed to record non-fatal error:', recordingError);
+      console.error(
+        '[CrashAnalytics] Failed to record non-fatal error:',
+        recordingError,
+      );
     }
   }
 
   setUserId(userId: string): void {
-    if (!this.isInitialized || !isFirebaseAvailable || Environment.isDevelopment) {
-      console.log('[CrashAnalytics] Would set user ID (disabled in development):', userId);
+    if (
+      !this.isInitialized ||
+      !isFirebaseAvailable ||
+      Environment.isDevelopment
+    ) {
+      console.log(
+        '[CrashAnalytics] Would set user ID (disabled in development):',
+        userId,
+      );
       return;
     }
 
     try {
       crashlytics().setUserId(userId);
       crashlytics().log(`User ID set: ${userId}`);
-      
+
       console.log('[CrashAnalytics] Set user ID:', userId);
     } catch (error) {
       console.error('[CrashAnalytics] Failed to set user ID:', error);
@@ -138,14 +172,21 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
   }
 
   setUserAttributes(attributes: Record<string, string>): void {
-    if (!this.isInitialized || !isFirebaseAvailable || Environment.isDevelopment) {
-      console.log('[CrashAnalytics] Would set user attributes (disabled in development):', attributes);
+    if (
+      !this.isInitialized ||
+      !isFirebaseAvailable ||
+      Environment.isDevelopment
+    ) {
+      console.log(
+        '[CrashAnalytics] Would set user attributes (disabled in development):',
+        attributes,
+      );
       return;
     }
 
     try {
       crashlytics().setAttributes(attributes);
-      
+
       console.log('[CrashAnalytics] Set user attributes:', attributes);
     } catch (error) {
       console.error('[CrashAnalytics] Failed to set user attributes:', error);
@@ -153,7 +194,11 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
   }
 
   log(message: string): void {
-    if (!this.isInitialized || !isFirebaseAvailable || Environment.isDevelopment) {
+    if (
+      !this.isInitialized ||
+      !isFirebaseAvailable ||
+      Environment.isDevelopment
+    ) {
       return;
     }
 
@@ -166,15 +211,21 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
   crash(): void {
     if (!this.isInitialized || !isFirebaseAvailable) {
-      console.warn('[CrashAnalytics] Cannot trigger test crash - Firebase not available');
+      console.warn(
+        '[CrashAnalytics] Cannot trigger test crash - Firebase not available',
+      );
       return;
     }
 
     if (Environment.isDevelopment) {
-      console.warn('[CrashAnalytics] Triggering test crash - this should only be used for testing!');
+      console.warn(
+        '[CrashAnalytics] Triggering test crash - this should only be used for testing!',
+      );
       crashlytics().crash();
     } else {
-      console.warn('[CrashAnalytics] Test crash disabled in non-development environments');
+      console.warn(
+        '[CrashAnalytics] Test crash disabled in non-development environments',
+      );
     }
   }
 }
@@ -186,11 +237,19 @@ class MockCrashAnalytics implements CrashAnalyticsService {
   }
 
   recordError(error: Error, context?: Record<string, any>): void {
-    console.log('[MockCrashAnalytics] Would record error:', error.message, context);
+    console.log(
+      '[MockCrashAnalytics] Would record error:',
+      error.message,
+      context,
+    );
   }
 
   recordNonFatalError(error: Error, context?: Record<string, any>): void {
-    console.log('[MockCrashAnalytics] Would record non-fatal error:', error.message, context);
+    console.log(
+      '[MockCrashAnalytics] Would record non-fatal error:',
+      error.message,
+      context,
+    );
   }
 
   setUserId(userId: string): void {
@@ -211,28 +270,33 @@ class MockCrashAnalytics implements CrashAnalyticsService {
 }
 
 // Export singleton instance - use mock in development, real in production
-export const crashAnalytics: CrashAnalyticsService = Environment.isDevelopment 
-  ? new MockCrashAnalytics() 
+export const crashAnalytics: CrashAnalyticsService = Environment.isDevelopment
+  ? new MockCrashAnalytics()
   : new FirebaseCrashAnalytics();
 
 // Export mock for testing
-export const mockCrashAnalytics: CrashAnalyticsService = new MockCrashAnalytics();
+export const mockCrashAnalytics: CrashAnalyticsService =
+  new MockCrashAnalytics();
 
 // Convenience functions
 export const initializeCrashAnalytics = () => crashAnalytics.initialize();
-export const recordError = (error: Error, context?: Record<string, any>) => 
+export const recordError = (error: Error, context?: Record<string, any>) =>
   crashAnalytics.recordError(error, context);
-export const recordNonFatalError = (error: Error, context?: Record<string, any>) => 
-  crashAnalytics.recordNonFatalError(error, context);
+export const recordNonFatalError = (
+  error: Error,
+  context?: Record<string, any>,
+) => crashAnalytics.recordNonFatalError(error, context);
 export const setUserId = (userId: string) => crashAnalytics.setUserId(userId);
-export const setUserAttributes = (attributes: Record<string, string>) => 
+export const setUserAttributes = (attributes: Record<string, string>) =>
   crashAnalytics.setUserAttributes(attributes);
 export const logMessage = (message: string) => crashAnalytics.log(message);
 
 // Development testing function
 export const triggerTestCrash = () => {
   if (Environment.isDevelopment) {
-    console.warn('⚠️ Test crash is only available in development with Firebase enabled');
+    console.warn(
+      '⚠️ Test crash is only available in development with Firebase enabled',
+    );
   } else {
     console.warn('Test crash is only available in development environment');
   }

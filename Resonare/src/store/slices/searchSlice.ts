@@ -26,7 +26,7 @@ const searchSlice = createSlice({
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
-    searchStart: (state) => {
+    searchStart: state => {
       state.loading = true;
       state.error = null;
     },
@@ -46,17 +46,17 @@ const searchSlice = createSlice({
         state.recentSearches = state.recentSearches.slice(0, 10);
       }
     },
-    clearRecentSearches: (state) => {
+    clearRecentSearches: state => {
       state.recentSearches = [];
     },
     setTrendingAlbums: (state, action: PayloadAction<Album[]>) => {
       state.trendingAlbums = action.payload;
     },
-    clearSearchResults: (state) => {
+    clearSearchResults: state => {
       state.searchResults = null;
       state.searchQuery = '';
     },
-    clearError: (state) => {
+    clearError: state => {
       state.error = null;
     },
   },

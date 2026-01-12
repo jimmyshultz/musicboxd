@@ -40,7 +40,9 @@ export async function validateSpotifyIntegration(): Promise<SpotifyValidationRep
     }
 
     // Step 3: Test search functionality (only if auth succeeded)
-    const authSuccess = results.find(r => r.step === 'Authentication Test')?.success;
+    const authSuccess = results.find(
+      r => r.step === 'Authentication Test',
+    )?.success;
     if (authSuccess) {
       try {
         const searchResult = await testSearch();
@@ -88,8 +90,12 @@ export async function validateSpotifyIntegration(): Promise<SpotifyValidationRep
  * Validate Spotify configuration
  */
 function validateConfiguration(): ValidationResult {
-  const hasClientId = SPOTIFY_CONFIG.CLIENT_ID && SPOTIFY_CONFIG.CLIENT_ID !== 'your_spotify_client_id';
-  const hasClientSecret = SPOTIFY_CONFIG.CLIENT_SECRET && SPOTIFY_CONFIG.CLIENT_SECRET !== 'your_spotify_client_secret';
+  const hasClientId =
+    SPOTIFY_CONFIG.CLIENT_ID &&
+    SPOTIFY_CONFIG.CLIENT_ID !== 'your_spotify_client_id';
+  const hasClientSecret =
+    SPOTIFY_CONFIG.CLIENT_SECRET &&
+    SPOTIFY_CONFIG.CLIENT_SECRET !== 'your_spotify_client_secret';
 
   if (hasClientId && hasClientSecret) {
     return {
@@ -118,7 +124,7 @@ async function testAuthentication(): ValidationResult {
   try {
     // This will trigger authentication internally
     await SpotifyService.searchAlbums('test', 1);
-    
+
     return {
       step: 'Authentication Test',
       success: true,
@@ -148,8 +154,11 @@ async function testAuthentication(): ValidationResult {
  */
 async function testSearch(): ValidationResult {
   try {
-    const response = await SpotifyService.searchAlbums('radiohead ok computer', 5);
-    
+    const response = await SpotifyService.searchAlbums(
+      'radiohead ok computer',
+      5,
+    );
+
     if (!response.albums?.items || response.albums.items.length === 0) {
       return {
         step: 'Search Test',
@@ -185,9 +194,15 @@ async function testSearch(): ValidationResult {
 async function testAlbumDetails(): ValidationResult {
   try {
     // First get an album ID from search
-    const searchResponse = await SpotifyService.searchAlbums('radiohead ok computer', 1);
-    
-    if (!searchResponse.albums?.items || searchResponse.albums.items.length === 0) {
+    const searchResponse = await SpotifyService.searchAlbums(
+      'radiohead ok computer',
+      1,
+    );
+
+    if (
+      !searchResponse.albums?.items ||
+      searchResponse.albums.items.length === 0
+    ) {
       return {
         step: 'Album Details Test',
         success: false,
@@ -230,7 +245,10 @@ async function testAlbumDetails(): ValidationResult {
 /**
  * Generate recommendations based on validation results
  */
-function generateRecommendations(results: ValidationResult[], recommendations: string[]): void {
+function generateRecommendations(
+  results: ValidationResult[],
+  recommendations: string[],
+): void {
   const failedSteps = results.filter(r => !r.success);
 
   if (failedSteps.length === 0) {
@@ -242,21 +260,33 @@ function generateRecommendations(results: ValidationResult[], recommendations: s
   // Configuration issues
   const configFailed = failedSteps.find(r => r.step === 'Configuration Check');
   if (configFailed) {
-    recommendations.push('1. Create a Spotify app at https://developer.spotify.com/dashboard');
-    recommendations.push('2. Copy .env.example to .env and add your credentials');
+    recommendations.push(
+      '1. Create a Spotify app at https://developer.spotify.com/dashboard',
+    );
+    recommendations.push(
+      '2. Copy .env.example to .env and add your credentials',
+    );
     recommendations.push('3. Restart the development server');
   }
 
   // Authentication issues
   const authFailed = failedSteps.find(r => r.step === 'Authentication Test');
   if (authFailed && !configFailed) {
-    recommendations.push('1. Verify your Spotify Client ID and Secret are correct');
-    recommendations.push('2. Check that your Spotify app is active (not suspended)');
-    recommendations.push('3. Test credentials with curl (see SPOTIFY_SETUP.md)');
+    recommendations.push(
+      '1. Verify your Spotify Client ID and Secret are correct',
+    );
+    recommendations.push(
+      '2. Check that your Spotify app is active (not suspended)',
+    );
+    recommendations.push(
+      '3. Test credentials with curl (see SPOTIFY_SETUP.md)',
+    );
   }
 
   // API issues
-  const apiFailed = failedSteps.filter(r => r.step.includes('Test') && r.step !== 'Authentication Test');
+  const apiFailed = failedSteps.filter(
+    r => r.step.includes('Test') && r.step !== 'Authentication Test',
+  );
   if (apiFailed.length > 0 && !configFailed && !authFailed) {
     recommendations.push('1. Check your internet connection');
     recommendations.push('2. Verify Spotify API is not experiencing outages');
@@ -265,7 +295,9 @@ function generateRecommendations(results: ValidationResult[], recommendations: s
 
   // Fallback recommendation
   if (recommendations.length === 0) {
-    recommendations.push('Check the console logs for detailed error information');
+    recommendations.push(
+      'Check the console logs for detailed error information',
+    );
     recommendations.push('Refer to SPOTIFY_SETUP.md for troubleshooting steps');
   }
 }
@@ -275,11 +307,11 @@ function generateRecommendations(results: ValidationResult[], recommendations: s
  */
 export function quickValidation(): { configured: boolean; message: string } {
   const configured = SpotifyService.isConfigured();
-  
+
   return {
     configured,
-    message: configured 
-      ? 'Spotify API configured' 
+    message: configured
+      ? 'Spotify API configured'
       : 'Spotify API not configured - using fallback data',
   };
 }
@@ -290,7 +322,7 @@ export function quickValidation(): { configured: boolean; message: string } {
 export function printValidationReport(report: SpotifyValidationReport): void {
   console.log('\n🎵 Spotify API Validation Report');
   console.log('================================');
-  
+
   report.results.forEach(result => {
     const status = result.success ? '✅' : '❌';
     console.log(`${status} ${result.step}: ${result.message}`);
@@ -304,6 +336,8 @@ export function printValidationReport(report: SpotifyValidationReport): void {
     console.log(`${index + 1}. ${rec}`);
   });
 
-  console.log(`\nOverall Status: ${report.overall ? '✅ PASSED' : '❌ NEEDS ATTENTION'}`);
+  console.log(
+    `\nOverall Status: ${report.overall ? '✅ PASSED' : '❌ NEEDS ATTENTION'}`,
+  );
   console.log('================================\n');
 }

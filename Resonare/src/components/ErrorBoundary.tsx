@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<Props, State> {
     if (Environment.isDevelopment) {
       Logger.error('ErrorBoundary caught an error', { error, errorInfo });
     }
-    
+
     // Send to crash reporting service in all environments
     try {
       recordError(error, {
@@ -41,7 +41,10 @@ class ErrorBoundary extends Component<Props, State> {
       });
     } catch (crashReportingError) {
       // Fail silently - don't crash the error boundary itself
-      console.error('Failed to report error to crash analytics:', crashReportingError);
+      console.error(
+        'Failed to report error to crash analytics:',
+        crashReportingError,
+      );
     }
   }
 
@@ -58,15 +61,16 @@ class ErrorBoundary extends Component<Props, State> {
               <Text variant="headlineSmall" style={styles.title}>
                 Oops! Something went wrong
               </Text>
-              
+
               <Text variant="bodyMedium" style={styles.message}>
-                The app encountered an unexpected error. Don't worry - your data is safe.
+                The app encountered an unexpected error. Don't worry - your data
+                is safe.
               </Text>
-              
+
               <Text variant="bodySmall" style={styles.suggestion}>
                 Try refreshing the app or restart if the problem continues.
               </Text>
-              
+
               <Button
                 mode="contained"
                 onPress={this.handleReset}
@@ -74,7 +78,7 @@ class ErrorBoundary extends Component<Props, State> {
               >
                 Try Again
               </Button>
-              
+
               {Environment.isDevelopment && this.state.error && (
                 <View style={styles.debugContainer}>
                   <Text variant="labelSmall" style={styles.debugTitle}>
