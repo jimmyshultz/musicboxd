@@ -16,12 +16,13 @@ This document outlines the dependency update strategy for Resonare following the
 - ✅ iOS pods updated and verified
 - ✅ Dependabot configured for automated updates
 - ✅ react-native-reanimated: 3.18.0 → 4.2.1
+- ✅ @react-native-google-signin/google-signin: 15.0.0 → 16.1.1
 
 **What Remains:**
-- 🟡 2 medium-impact updates requiring testing
+- 🟡 1 medium-impact update requiring testing
 - 🟢 3 low-impact tooling updates
 
-**Estimated Total Effort:** 4-6 hours across 2-3 PRs
+**Estimated Total Effort:** 3-5 hours across 2 PRs
 
 ---
 
@@ -220,7 +221,7 @@ cd ios && pod install && cd ..
 **Priority:** 🟡 MEDIUM  
 **Effort:** Low-Medium (2-3 hours)  
 **Impact:** Medium (Authentication flow)  
-**Status:** 📋 TODO
+**Status:** ✅ COMPLETED (January 11, 2026)
 
 **Location:**
 - `package.json` - Current: ^15.0.0, Target: ^16.1.1
@@ -575,7 +576,7 @@ git commit -m "chore: apply Prettier 3 formatting changes"
 | # | Update | Priority | Effort | Risk | Impact | Recommended Phase |
 |---|--------|----------|--------|------|--------|-------------------|
 | 1 | react-native-reanimated 3→4 | ✅ Done | Medium | High | Very High | ~~Phase 2~~ COMPLETED |
-| 2 | google-signin 15→16 | 🟡 Medium | Low-Med | Medium | Medium | Phase 3 (Week 2-3) |
+| 2 | google-signin 15→16 | ✅ Done | Low-Med | Medium | Medium | ~~Phase 3~~ COMPLETED |
 | 3 | url-polyfill 2→3 | 🟡 Medium | Low | Low | Low | Phase 3 (Week 2-3) |
 | 4 | eslint 8→9 | 🟢 Low | Medium | None | Low | Phase 4 (Week 4+) |
 | 5 | jest 29→30 | 🟢 Low | Low-Med | Low | Low | Phase 4 (Week 4+) |
@@ -840,12 +841,12 @@ Mark items as you complete them:
   - [x] PR submitted and merged
 
 ### Phase 3: Medium Priority
-- [ ] @react-native-google-signin/google-signin 16.1.1
-  - [ ] Review release notes
-  - [ ] Update package
-  - [ ] Test auth flows
-  - [ ] Verify Supabase integration
-  - [ ] PR submitted and merged
+- [x] @react-native-google-signin/google-signin 16.1.1
+  - [x] Review release notes
+  - [x] Update package
+  - [x] Test auth flows
+  - [x] Verify Supabase integration
+  - [x] PR submitted and merged
 - [ ] react-native-url-polyfill 3.0
   - [ ] Update package
   - [ ] Test URL features
@@ -894,4 +895,4 @@ After all updates are complete, you'll have:
 ---
 
 *Document created: January 11, 2026*  
-*Last updated: January 11, 2026 (Reanimated update completed)*
+*Last updated: January 11, 2026 (Google Sign-In update completed)*
