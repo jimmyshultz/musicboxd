@@ -6,7 +6,12 @@ This guide covers the configuration required for push notifications in Resonare.
 
 - Apple Developer Program membership (already active)
 - Firebase project configured (already done for Crashlytics)
-- Physical iOS device for testing (push notifications don't work on Simulator)
+- Physical device for testing (push notifications don't work on simulators/emulators)
+
+## Platform Notes
+
+**iOS**: Requires APNs key upload to Firebase (see below)
+**Android**: FCM works automatically with `google-services.json` - no additional setup needed
 
 ## iOS Configuration Steps
 

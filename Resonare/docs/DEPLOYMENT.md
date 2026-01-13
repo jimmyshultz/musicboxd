@@ -230,9 +230,106 @@ For critical bug fixes:
 
 ---
 
-## Android Deployment (Future)
+## Android Deployment
 
-Android deployment process will be documented when Android version is ready for production.
+### Prerequisites
+
+- Android Studio (for debugging and emulator)
+- JDK 17 or higher
+- Android SDK (API 35 for latest features)
+- Google Play Developer account ($25 one-time fee) - for Play Store distribution
+
+### Android Build Process
+
+#### 1. Update Version Numbers
+
+Update version in:
+- `package.json` - App version
+- `android/app/build.gradle` - `versionCode` and `versionName`
+
+```groovy
+defaultConfig {
+    versionCode 2      // Increment for each release
+    versionName "1.1"  // User-visible version
+}
+```
+
+#### 2. Generate Release Keystore (First Time Only)
+
+```bash
+cd android/app/keystore
+keytool -genkey -v -keystore release.keystore -alias resonare-key -keyalg RSA -keysize 2048 -validity 10000
+```
+
+**Important**: Store the keystore and passwords securely. You'll need them for every future release.
+
+#### 3. Configure Release Signing
+
+Create `android/keystore.properties` (from template):
+```bash
+cp android/keystore.properties.example android/keystore.properties
+# Edit with your actual passwords
+```
+
+Or set environment variables:
+```bash
+export ANDROID_KEYSTORE_PASSWORD=your_keystore_password
+export ANDROID_KEY_PASSWORD=your_key_password
+```
+
+#### 4. Build Release APK
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+Output: `android/app/build/outputs/apk/release/app-release.apk`
+
+#### 5. Build Release Bundle (for Play Store)
+
+```bash
+cd android
+./gradlew bundleRelease
+```
+
+Output: `android/app/build/outputs/bundle/release/app-release.aab`
+
+### Google Play Console Setup
+
+1. **Create App Listing**
+   - Go to [Google Play Console](https://play.google.com/console)
+   - Create new app: Resonare
+   - Category: Music & Audio
+
+2. **Configure App Content**
+   - Privacy policy URL
+   - Data safety form
+   - Content rating questionnaire
+   - Target audience and content (13+)
+
+3. **App Signing by Google**
+   - Enable Google Play App Signing (recommended)
+   - Upload your signing key
+
+4. **Internal Testing**
+   - Create internal testing track
+   - Upload AAB file
+   - Add tester emails
+   - Testers receive link to install via Play Store
+
+### Debug Build
+
+For development testing:
+```bash
+cd Resonare
+npm run android
+```
+
+Or specific environment:
+```bash
+npm run android:dev
+```
 
 ---
 

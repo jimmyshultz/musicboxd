@@ -1,34 +1,41 @@
 {
   "project_info": {
     "project_number": "148204198310",
-    "project_id": "resonare-app",
-    "storage_bucket": "resonare-app.appspot.com"
+    "project_id": "musicboxd-469416-f1",
+    "storage_bucket": "musicboxd-469416-f1.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:148204198310:android:8f0c7c7cc175fc084e5cd6",
+        "mobilesdk_app_id": "1:148204198310:android:f066d539078feab6ced767",
         "android_client_info": {
           "package_name": "com.jimmyshultz.resonare"
         }
       },
       "oauth_client": [
         {
-          "client_id": "148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com",
+          "client_id": "148204198310-jb85bku6g5sdoggvt6idqq3j31momvl7.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI"
+          "current_key": "AIzaSyBg3S_uSWfjTSq2Q5PBfZtIei7f_nUnmHY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com",
+              "client_id": "148204198310-jb85bku6g5sdoggvt6idqq3j31momvl7.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "148204198310-f563ltpvfnibugfc3e3c9quaupnejb17.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jimmyshultz.resonare"
+              }
             }
           ]
         }

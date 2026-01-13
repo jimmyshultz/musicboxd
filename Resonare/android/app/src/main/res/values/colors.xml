@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary app color for notifications and accents -->
+    <color name="notification_color">#6366F1</color>
+    
+    <!-- App theme colors -->
+    <color name="primary">#6366F1</color>
+    <color name="primary_dark">#4F46E5</color>
+    <color name="accent">#A855F7</color>
+    <color name="background">#0F172A</color>
+    <color name="surface">#1E293B</color>
+</resources>
