@@ -288,7 +288,7 @@ Now that Resonare is live on the Apple App Store, the focus shifts to growth, op
 - 🔄 **User Feedback Collection** - Ongoing
 - 🔄 **Performance Monitoring** - Ongoing
 - 🔄 **Performance Enhancements** - Ongoing
-- 🔄 **Android Version** - In development (native config complete, pending Play Store setup)
+- 🔄 **Android Version** - In development & testing (native config complete, internal testing begun, pending Play Store setup and closed testing)
 - 📋 **Enhanced Discovery Algorithms** - In planning
 - 📋 **Advanced Social Features** - In planning
 - 📋 **Fix: Stars Populating on Next Viewed Album From Previous** - To do
