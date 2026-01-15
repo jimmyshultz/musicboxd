@@ -283,15 +283,21 @@ Now that Resonare is live on the Apple App Store, the focus shifts to growth, op
 - ✅ **Crash Analytics** - Completed
 - ✅ **Diary Entry Social Enhancements** - Completed
 - ✅ **In-App Notifications** - Completed
-- ✅  **Push Notifications** - Completed
+- ✅ **Push Notifications** - Completed
+- ✅ **Initial Dependency Updates & Dependabot Setup** - Completed
 - 🔄 **User Feedback Collection** - Ongoing
 - 🔄 **Performance Monitoring** - Ongoing
+- 🔄 **Performance Enhancements** - Ongoing
 - 🔄 **Android Version** - In development (native config complete, pending Play Store setup)
 - 📋 **Enhanced Discovery Algorithms** - In planning
 - 📋 **Advanced Social Features** - In planning
+- 📋 **Fix: Stars Populating on Next Viewed Album From Previous** - To do
+- 📋 **Fix: All Albums Not Appearing on Artist Page** - To do
+- 📋 **Feat: Click on to user profile from diary entry** - To do
 
 ### **Growth Phase (Months 3-6)**
 - 📋 Android Play Store launch
+- 📋 Premium Subscription tier Features Outlined & Developed
 - 📋 Advanced social features (improved activity feeds, user discovery)
 - 📋 Enhanced user statistics and insights
 - 📋 Advanced recommendation engine
