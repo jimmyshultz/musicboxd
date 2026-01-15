@@ -230,9 +230,182 @@ For critical bug fixes:
 
 ---
 
-## Android Deployment (Future)
+## Android Deployment
 
-Android deployment process will be documented when Android version is ready for production.
+### Prerequisites
+
+- Android Studio (for debugging and emulator)
+- JDK 17 or higher
+- Android SDK (API 35 for latest features)
+- Google Play Developer account ($25 one-time fee) - for Play Store distribution
+
+### Android Build Process
+
+#### 1. Update Version Numbers
+
+Update version in:
+- `package.json` - App version
+- `android/app/build.gradle` - `versionCode` and `versionName`
+
+```groovy
+defaultConfig {
+    versionCode 2      // Increment for each release
+    versionName "1.1"  // User-visible version
+}
+```
+
+#### 2. Generate Release Keystore (First Time Only)
+
+```bash
+cd android/app/keystore
+keytool -genkey -v -keystore release.keystore -alias resonare-key -keyalg RSA -keysize 2048 -validity 10000
+```
+
+**Important**: Store the keystore and passwords securely. You'll need them for every future release.
+
+#### 3. Configure Release Signing
+
+Create `android/keystore.properties` (from template):
+```bash
+cp android/keystore.properties.example android/keystore.properties
+# Edit with your actual passwords
+```
+
+Or set environment variables:
+```bash
+export ANDROID_KEYSTORE_PASSWORD=your_keystore_password
+export ANDROID_KEY_PASSWORD=your_key_password
+```
+
+#### 4. Build Release APK
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+Output: `android/app/build/outputs/apk/release/app-release.apk`
+
+#### 5. Build Release Bundle (for Play Store)
+
+```bash
+cd android
+./gradlew bundleRelease
+```
+
+Output: `android/app/build/outputs/bundle/release/app-release.aab`
+
+### Google Play Console Setup
+
+#### 1. Create App
+
+1. Go to [Google Play Console](https://play.google.com/console)
+2. Click **Create app**
+3. Fill in:
+   - **App name**: Resonare
+   - **Default language**: English (United States)
+   - **App or game**: App
+   - **Free or paid**: Free
+4. Accept Developer Program Policies and US export laws
+5. Click **Create app**
+
+#### 2. Store Listing
+
+Navigate to **Main store listing** and complete:
+
+| Section | What to provide |
+|---------|-----------------|
+| **App name** | Resonare (max 30 characters) |
+| **Short description** | Brief compelling description (max 80 characters) |
+| **Full description** | Detailed app description (max 4000 characters) |
+| **App icon** | 512x512 PNG (32-bit, alpha) |
+| **Feature graphic** | 1024x500 PNG or JPEG |
+| **Phone screenshots** | Min 2, max 8 (16:9 or 9:16 aspect ratio) |
+| **Tablet screenshots** | Optional but recommended |
+
+#### 3. Content Rating
+
+1. Go to **Policy** → **App content** → **Content rating**
+2. Click **Start questionnaire**
+3. Select category: **Utility, Productivity, Communication, or other**
+4. Answer questions honestly about:
+   - Violence and fear
+   - Sexuality
+   - Language
+   - Controlled substances
+   - **Ads**: Yes (you have AdMob)
+   - User interaction features
+5. Submit questionnaire
+6. Review and apply the rating
+
+#### 4. App Content Declarations
+
+Complete all sections under **Policy** → **App content**:
+
+- **Privacy policy**: Add your privacy policy URL (required)
+- **Ads**: Declare that your app contains ads
+- **App access**: Provide test account if app requires login
+- **Data safety**: Complete the form about data collection:
+  - Account info (email, name)
+  - Device identifiers
+  - App activity
+  - Analytics data
+- **Government apps**: Not applicable
+- **Financial features**: Not applicable (unless you add subscriptions)
+
+#### 5. App Signing
+
+1. Go to **Release** → **Setup** → **App signing**
+2. Enable **Google Play App Signing** (recommended)
+3. Upload your upload key (the release keystore you generated)
+4. Google will manage the actual signing key
+
+#### 6. Create a Release
+
+##### Internal Testing (Recommended First)
+
+1. Go to **Release** → **Testing** → **Internal testing**
+2. Click **Create new release**
+3. Upload your `app-release.aab` file
+4. Add release notes describing what's new
+5. Click **Review release** → **Start rollout to Internal testing**
+6. Add testers:
+   - Go to **Testers** tab
+   - Create an email list
+   - Add up to 100 testers
+   - Share the opt-in link with testers
+
+##### Production Release
+
+1. Go to **Release** → **Production**
+2. Click **Create new release**
+3. Upload your `app-release.aab` file
+4. Add release notes
+5. Click **Review release**
+6. Fix any errors or warnings
+7. Click **Start rollout to Production**
+
+#### 7. Review Timeline
+
+| Release Type | Typical Review Time |
+|--------------|---------------------|
+| First submission | 3-7 days |
+| Updates | Few hours to 1-2 days |
+| Expedited review | Request via Play Console if critical |
+
+### Debug Build
+
+For development testing:
+```bash
+cd Resonare
+npm run android
+```
+
+Or specific environment:
+```bash
+npm run android:dev
+```
+
 
 ---
 

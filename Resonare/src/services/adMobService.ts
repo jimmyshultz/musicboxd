@@ -12,7 +12,7 @@ export const AdUnitIds = {
       ? 'ca-app-pub-5443760017915120/2921056271' // iOS banner ad unit ID
       : 'ca-app-pub-3940256099942544/2934735716', // Test ID
     android: Environment.isProduction
-      ? 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY' // Replace with your real Android banner ad unit ID
+      ? 'ca-app-pub-5443760017915120/6102905070' // Android banner ad unit ID
       : 'ca-app-pub-3940256099942544/6300978111', // Test ID
   }),
   interstitial: Platform.select({
@@ -20,7 +20,7 @@ export const AdUnitIds = {
       ? 'ca-app-pub-5443760017915120/2817663232' // iOS interstitial ad unit ID
       : 'ca-app-pub-3940256099942544/4411468910', // Test ID
     android: Environment.isProduction
-      ? 'ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY' // Replace with your real Android interstitial ad unit ID
+      ? 'ca-app-pub-5443760017915120/2051979429' // Android interstitial ad unit ID
       : 'ca-app-pub-3940256099942544/1033173712', // Test ID
   }),
   rewarded: Platform.select({

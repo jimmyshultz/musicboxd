@@ -1,6 +1,9 @@
 package com.jimmyshultz.resonare
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost
@@ -34,5 +37,28 @@ class MainApplication : Application(), ReactApplication {
   override fun onCreate() {
     super.onCreate()
     loadReactNative(this)
+    createNotificationChannel()
+  }
+
+  /**
+   * Create notification channel for FCM push notifications.
+   * Required for Android 8.0 (API 26) and above.
+   */
+  private fun createNotificationChannel() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      val channelId = "resonare_default_channel"
+      val channelName = "Resonare Notifications"
+      val channelDescription = "Notifications from Resonare about new follows, comments, and activity"
+      val importance = NotificationManager.IMPORTANCE_HIGH
+
+      val channel = NotificationChannel(channelId, channelName, importance).apply {
+        description = channelDescription
+        enableLights(true)
+        enableVibration(true)
+      }
+
+      val notificationManager = getSystemService(NotificationManager::class.java)
+      notificationManager?.createNotificationChannel(channel)
+    }
   }
 }

@@ -77,20 +77,7 @@ updates:
     #   - "jimmyshultz"
     # Ignore major versions of packages that need manual migration
     ignore:
-      # Reanimated 4 requires manual migration
-      - dependency-name: "react-native-reanimated"
-        update-types: ["version-update:semver-major"]
-      # ESLint 9 requires config migration to flat config
-      - dependency-name: "eslint"
-        update-types: ["version-update:semver-major"]
-      # Jest 30 is a major version change
-      - dependency-name: "jest"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "@types/jest"
-        update-types: ["version-update:semver-major"]
-      # Prettier 3 has formatting changes
-      - dependency-name: "prettier"
-        update-types: ["version-update:semver-major"]
+
       # React Native major versions need careful migration
       - dependency-name: "react-native"
         update-types: ["version-update:semver-major"]
