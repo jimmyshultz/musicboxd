@@ -1,9 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { useSelector } from 'react-redux';
-import messaging, {
-  FirebaseMessagingTypes,
+import {
+  getMessaging,
+  onMessage,
+  onNotificationOpenedApp,
+  getInitialNotification,
 } from '@react-native-firebase/messaging';
+import type { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
 import { RootState } from '../store';
 import { pushTokenService } from '../services/pushTokenService';
 import { handlePushNotificationNavigation } from '../services/navigationService';
@@ -74,7 +78,9 @@ export const PushNotificationProvider: React.FC<
       pushTokenService.setupTokenRefreshListener(user.id);
 
     // Set up foreground message handler
-    foregroundUnsubscribeRef.current = messaging().onMessage(
+    const messaging = getMessaging();
+    foregroundUnsubscribeRef.current = onMessage(
+      messaging,
       async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
         console.log('📱 Push: Foreground message received:', remoteMessage);
         // Foreground notifications are shown automatically by iOS via AppDelegate config
@@ -83,28 +89,27 @@ export const PushNotificationProvider: React.FC<
     );
 
     // Handle notification opened app (when app is in background)
-    notificationOpenedUnsubscribeRef.current =
-      messaging().onNotificationOpenedApp(
-        (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
-          console.log('📱 Push: Notification opened app:', remoteMessage);
-          if (remoteMessage.data) {
-            handlePushNotificationNavigation(
-              remoteMessage.data as {
-                notification_type?: string;
-                reference_id?: string;
-                notification_id?: string;
-                actor_id?: string;
-                user_id?: string;
-              },
-            );
-          }
-        },
-      );
+    notificationOpenedUnsubscribeRef.current = onNotificationOpenedApp(
+      messaging,
+      (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+        console.log('📱 Push: Notification opened app:', remoteMessage);
+        if (remoteMessage.data) {
+          handlePushNotificationNavigation(
+            remoteMessage.data as {
+              notification_type?: string;
+              reference_id?: string;
+              notification_id?: string;
+              actor_id?: string;
+              user_id?: string;
+            },
+          );
+        }
+      },
+    );
 
     // Check if app was opened from a notification (when app was killed)
-    messaging()
-      .getInitialNotification()
-      .then((remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) => {
+    getInitialNotification(messaging).then(
+      (remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) => {
         if (remoteMessage) {
           console.log('📱 Push: App opened from notification:', remoteMessage);
           if (remoteMessage.data) {
@@ -122,7 +127,8 @@ export const PushNotificationProvider: React.FC<
             }, 1000);
           }
         }
-      });
+      },
+    );
 
     // Note: Badge clearing is handled natively in AppDelegate.swift
     // Track app state for potential future use

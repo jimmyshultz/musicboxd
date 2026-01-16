@@ -10,7 +10,10 @@ import { StatusBar, useColorScheme, LogBox } from 'react-native';
 import { Provider as ReduxProvider } from 'react-redux';
 import { PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  setBackgroundMessageHandler,
+} from '@react-native-firebase/messaging';
 import { store } from './src/store';
 import AppNavigator from './src/navigation/AppNavigator';
 import { lightTheme, darkTheme } from './src/utils/theme';
@@ -30,7 +33,7 @@ suppressConsoleForBetaUsers();
 
 // Register background message handler (must be at module level, not inside a component)
 // This handles push notifications when the app is in the background or killed
-messaging().setBackgroundMessageHandler(async remoteMessage => {
+setBackgroundMessageHandler(getMessaging(), async remoteMessage => {
   console.log('📱 Push: Background message received:', remoteMessage);
   // The notification is automatically displayed by the system
   // Any data processing can be done here
