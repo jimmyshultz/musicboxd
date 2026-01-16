@@ -74,7 +74,7 @@
     "@types/react": "^19.2.8",
     "@types/react-test-renderer": "^19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.53.0",
-    "@typescript-eslint/parser": "^8.52.0",
+    "@typescript-eslint/parser": "^8.53.0",
     "baseline-browser-mapping": "^2.9.15",
     "eslint": "^9.39.2",
     "eslint-plugin-ft-flow": "^3.0.11",
