@@ -28,6 +28,7 @@ import {
 import { AlbumService } from '../../services/albumService';
 import { ArtistService } from '../../services/artistService';
 import { userService } from '../../services/userService';
+import { searchCacheService } from '../../services/searchCacheService';
 import { spacing } from '../../utils/theme';
 import BannerAdComponent from '../../components/BannerAd';
 
@@ -99,44 +100,82 @@ export default function SearchScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const performSearch = useCallback(
-    async (query: string) => {
-      if (query.trim()) {
+    async (query: string, forceRefresh: boolean = false) => {
+      if (!query.trim()) return;
+
+      const normalizedQuery = query.toLowerCase().trim();
+
+      // Check cache first (unless force refresh)
+      if (!forceRefresh) {
         if (searchMode === 'albums') {
-          dispatch(searchStart());
-          try {
-            const response = await AlbumService.searchAlbums(query);
-            if (response.success) {
-              dispatch(searchSuccess(response.data));
-            }
-          } catch (error) {
-            console.error('Album search error:', error);
+          const cached = searchCacheService.get<typeof searchResults>(
+            searchMode,
+            normalizedQuery,
+          );
+          if (cached) {
+            dispatch(searchSuccess(cached));
+            return;
           }
         } else if (searchMode === 'artists') {
-          setArtistSearchLoading(true);
-          try {
-            const response = await ArtistService.searchArtists(query, 20);
-            if (response.success) {
-              setArtistSearchResults(response.data);
-            } else {
-              setArtistSearchResults([]);
-            }
-          } catch (error) {
-            console.error('Artist search error:', error);
-            setArtistSearchResults([]);
-          } finally {
-            setArtistSearchLoading(false);
+          const cached = searchCacheService.get<Artist[]>(
+            searchMode,
+            normalizedQuery,
+          );
+          if (cached) {
+            setArtistSearchResults(cached);
+            return;
           }
         } else {
-          setUserSearchLoading(true);
-          try {
-            const users = await userService.searchUsers(query, 20);
-            setUserSearchResults(users);
-          } catch (error) {
-            console.error('User search error:', error);
-            setUserSearchResults([]);
-          } finally {
-            setUserSearchLoading(false);
+          const cached = searchCacheService.get<UserProfile[]>(
+            searchMode,
+            normalizedQuery,
+          );
+          if (cached) {
+            setUserSearchResults(cached);
+            return;
           }
+        }
+      }
+
+      // Cache miss or force refresh - fetch from API
+      if (searchMode === 'albums') {
+        dispatch(searchStart());
+        try {
+          const response = await AlbumService.searchAlbums(query);
+          if (response.success) {
+            dispatch(searchSuccess(response.data));
+            searchCacheService.set(searchMode, normalizedQuery, response.data);
+          }
+        } catch (error) {
+          console.error('Album search error:', error);
+        }
+      } else if (searchMode === 'artists') {
+        setArtistSearchLoading(true);
+        try {
+          const response = await ArtistService.searchArtists(query, 20);
+          if (response.success) {
+            setArtistSearchResults(response.data);
+            searchCacheService.set(searchMode, normalizedQuery, response.data);
+          } else {
+            setArtistSearchResults([]);
+          }
+        } catch (error) {
+          console.error('Artist search error:', error);
+          setArtistSearchResults([]);
+        } finally {
+          setArtistSearchLoading(false);
+        }
+      } else {
+        setUserSearchLoading(true);
+        try {
+          const users = await userService.searchUsers(query, 20);
+          setUserSearchResults(users);
+          searchCacheService.set(searchMode, normalizedQuery, users);
+        } catch (error) {
+          console.error('User search error:', error);
+          setUserSearchResults([]);
+        } finally {
+          setUserSearchLoading(false);
         }
       }
     },
@@ -182,7 +221,7 @@ export default function SearchScreen() {
     setRefreshing(true);
     try {
       if (searchQuery.trim()) {
-        await performSearch(searchQuery);
+        await performSearch(searchQuery, true); // Force refresh bypasses cache
       }
     } finally {
       setRefreshing(false);
