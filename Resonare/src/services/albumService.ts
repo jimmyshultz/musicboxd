@@ -183,38 +183,16 @@ export class AlbumService {
   ];
 
   // Get popular albums based on user activity in our app
-  // TODO: This should show albums that are popular among ALL users in the last week
-  // For now, returns empty until social features and user activity tracking are implemented
+  // Uses server-side aggregation via PostgreSQL function for better performance
   static async getPopularAlbums(): Promise<ApiResponse<Album[]>> {
     try {
       // Import the real service
       const { supabase } = await import('./supabase');
 
-      // Get popular albums based on listen counts from the last 7 days
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-      const { data: popularData, error } = await supabase
-        .from('album_listens')
-        .select(
-          `
-          album_id,
-          albums (
-            id,
-            name,
-            artist_name,
-            release_date,
-            image_url,
-            spotify_url,
-            total_tracks,
-            album_type,
-            genres
-          )
-        `,
-        )
-        .eq('is_listened', true)
-        .gte('first_listened_at', oneWeekAgo.toISOString())
-        .order('first_listened_at', { ascending: false });
+      // Call PostgreSQL function for server-side aggregation
+      const { data, error } = await supabase.rpc('get_popular_albums_weekly', {
+        limit_count: 15,
+      });
 
       if (error) {
         console.error('Error getting popular albums:', error);
@@ -226,27 +204,10 @@ export class AlbumService {
         };
       }
 
-      // Group by album and count listens
-      const albumCounts: Record<string, { album: any; count: number }> = {};
-
-      popularData?.forEach(listen => {
-        if (listen.albums) {
-          const albumId = listen.album_id;
-          if (!albumCounts[albumId]) {
-            albumCounts[albumId] = {
-              album: listen.albums,
-              count: 0,
-            };
-          }
-          albumCounts[albumId].count++;
-        }
-      });
-
-      // Convert to Album[] format and sort by popularity
-      const popularAlbums = Object.values(albumCounts)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 15)
-        .map(item => this.mapDatabaseAlbumToApp(item.album));
+      // Map to Album[] format
+      const popularAlbums = (data || []).map((dbAlbum: any) =>
+        this.mapDatabaseAlbumToApp(dbAlbum),
+      );
 
       // If no real data, return empty array
       if (popularAlbums.length === 0) {
@@ -735,7 +696,7 @@ export class AlbumService {
     const averageRating =
       userReviews.length > 0
         ? userReviews.reduce((sum, review) => sum + review.rating, 0) /
-          userReviews.length
+        userReviews.length
         : 0;
 
     return {
