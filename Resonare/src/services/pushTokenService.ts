@@ -1,4 +1,10 @@
-import messaging from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  requestPermission,
+  getToken as getMessagingToken,
+  onTokenRefresh,
+  AuthorizationStatus,
+} from '@react-native-firebase/messaging';
 import { Platform } from 'react-native';
 import { supabase } from './supabase';
 import { PushPreferences } from '../types/database';
@@ -18,10 +24,11 @@ class PushTokenService {
    */
   async requestPermission(): Promise<boolean> {
     try {
-      const authStatus = await messaging().requestPermission();
+      const messaging = getMessaging();
+      const authStatus = await requestPermission(messaging);
       const enabled =
-        authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-        authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
         console.log('✅ Push notification permission granted');
@@ -42,7 +49,8 @@ class PushTokenService {
    */
   async getToken(): Promise<string | null> {
     try {
-      const token = await messaging().getToken();
+      const messaging = getMessaging();
+      const token = await getMessagingToken(messaging);
       this.currentToken = token;
       console.log('✅ FCM token retrieved');
       return token;
@@ -125,7 +133,8 @@ class PushTokenService {
    * @returns Unsubscribe function
    */
   setupTokenRefreshListener(userId: string): () => void {
-    const unsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
+    const messaging = getMessaging();
+    const unsubscribe = onTokenRefresh(messaging, async (newToken: string) => {
       console.log('🔄 FCM token refreshed');
       try {
         await this.storeToken(userId, newToken);
@@ -152,7 +161,8 @@ class PushTokenService {
       // If we don't have it in memory, try to get it from FCM
       if (!tokenToDeactivate) {
         try {
-          tokenToDeactivate = await messaging().getToken();
+          const messaging = getMessaging();
+          tokenToDeactivate = await getMessagingToken(messaging);
         } catch (fcmError) {
           console.warn(
             '⚠️ Could not get FCM token for deactivation:',

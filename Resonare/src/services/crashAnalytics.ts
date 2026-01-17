@@ -5,13 +5,15 @@
 import { Environment } from '../config/environment';
 
 // Conditional Firebase import to prevent issues in development
-let crashlytics: any = null;
+let crashlyticsInstance: any = null;
+let crashlyticsModule: any = null;
 let isFirebaseAvailable = false;
 
 try {
   if (!Environment.isDevelopment) {
-    const firebaseCrashlytics = require('@react-native-firebase/crashlytics');
-    crashlytics = firebaseCrashlytics.default;
+    crashlyticsModule = require('@react-native-firebase/crashlytics');
+    // Use modular API: getCrashlytics() instead of crashlytics()
+    crashlyticsInstance = crashlyticsModule.getCrashlytics();
     isFirebaseAvailable = true;
   }
 } catch (error) {
@@ -45,18 +47,21 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
       // Enable crash collection for staging/production
       const shouldCollect = Environment.isStaging || Environment.isProduction;
-      await crashlytics().setCrashlyticsCollectionEnabled(shouldCollect);
+      await crashlyticsModule.setCrashlyticsCollectionEnabled(
+        crashlyticsInstance,
+        shouldCollect,
+      );
 
       if (shouldCollect) {
         // Set initial app info for production/staging
-        crashlytics().setAttributes({
+        crashlyticsModule.setAttributes(crashlyticsInstance, {
           environment: Environment.current,
           app_version: '1.0.0', // TODO: Get from package.json or build config
           build_type: Environment.current,
         });
 
         // Log successful initialization
-        crashlytics().log('Crashlytics initialized successfully');
+        crashlyticsModule.log(crashlyticsInstance, 'Crashlytics initialized successfully');
 
         console.log(
           `[CrashAnalytics] Initialized for ${Environment.current} environment`,
@@ -94,12 +99,16 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
       // Add context as custom keys
       if (context) {
         Object.entries(context).forEach(([key, value]) => {
-          crashlytics().setAttribute(key, String(value));
+          crashlyticsModule.setAttribute(
+            crashlyticsInstance,
+            key,
+            String(value),
+          );
         });
       }
 
       // Record the error
-      crashlytics().recordError(error);
+      crashlyticsModule.recordError(crashlyticsInstance, error);
 
       console.log('[CrashAnalytics] Recorded error:', error.message, context);
     } catch (recordingError) {
@@ -125,15 +134,22 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
       // Add context
       if (context) {
         Object.entries(context).forEach(([key, value]) => {
-          crashlytics().setAttribute(key, String(value));
+          crashlyticsModule.setAttribute(
+            crashlyticsInstance,
+            key,
+            String(value),
+          );
         });
       }
 
       // Log the error context
-      crashlytics().log(`Non-fatal error: ${error.message}`);
+      crashlyticsModule.log(
+        crashlyticsInstance,
+        `Non-fatal error: ${error.message}`,
+      );
 
       // Record as non-fatal
-      crashlytics().recordError(error);
+      crashlyticsModule.recordError(crashlyticsInstance, error);
 
       console.log(
         '[CrashAnalytics] Recorded non-fatal error:',
@@ -162,8 +178,8 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
     }
 
     try {
-      crashlytics().setUserId(userId);
-      crashlytics().log(`User ID set: ${userId}`);
+      crashlyticsModule.setUserId(crashlyticsInstance, userId);
+      crashlyticsModule.log(crashlyticsInstance, `User ID set: ${userId}`);
 
       console.log('[CrashAnalytics] Set user ID:', userId);
     } catch (error) {
@@ -185,7 +201,7 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
     }
 
     try {
-      crashlytics().setAttributes(attributes);
+      crashlyticsModule.setAttributes(crashlyticsInstance, attributes);
 
       console.log('[CrashAnalytics] Set user attributes:', attributes);
     } catch (error) {
@@ -203,7 +219,7 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
     }
 
     try {
-      crashlytics().log(message);
+      crashlyticsModule.log(crashlyticsInstance, message);
     } catch (error) {
       console.error('[CrashAnalytics] Failed to log message:', error);
     }
@@ -221,7 +237,7 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
       console.warn(
         '[CrashAnalytics] Triggering test crash - this should only be used for testing!',
       );
-      crashlytics().crash();
+      crashlyticsModule.crash(crashlyticsInstance);
     } else {
       console.warn(
         '[CrashAnalytics] Test crash disabled in non-development environments',
