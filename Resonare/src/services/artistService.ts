@@ -103,31 +103,45 @@ export class ArtistService {
 
   /**
    * Get all albums by an artist
-   * First checks database, then fetches from Spotify if needed
+   * Uses cached data if recently fetched (within 1 hour), otherwise fetches from Spotify
+   * This balances performance with data freshness
    */
   static async getArtistAlbums(
     artistId: string,
-    options?: { includeGroups?: string; limit?: number },
+    options?: { includeGroups?: string; limit?: number; forceRefresh?: boolean },
   ): Promise<ApiResponse<Album[]>> {
     try {
-      // Query database for albums by this artist
-      const { data: dbAlbums, error: dbError } = await supabase
-        .from('albums')
-        .select('*')
-        .eq('artist_id', artistId)
-        .order('release_date', { ascending: false });
+      const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour cache TTL
 
-      // If we have cached albums, return them
-      if (dbAlbums && dbAlbums.length > 0 && !dbError) {
-        const albums = dbAlbums.map(this.mapDatabaseAlbumToApp);
-        return {
-          data: albums,
-          success: true,
-          message: `Found ${albums.length} albums in database`,
-        };
+      // Check database for cached albums first (unless force refresh requested)
+      if (!options?.forceRefresh) {
+        const { data: dbAlbums, error: dbError } = await supabase
+          .from('albums')
+          .select('*')
+          .eq('artist_id', artistId)
+          .order('release_date', { ascending: false });
+
+        if (dbAlbums && dbAlbums.length > 0 && !dbError) {
+          // Check if cache is fresh (any album updated within TTL)
+          const mostRecentUpdate = dbAlbums.reduce((latest, album) => {
+            const updated = new Date(album.updated_at).getTime();
+            return updated > latest ? updated : latest;
+          }, 0);
+
+          const cacheAge = Date.now() - mostRecentUpdate;
+          if (cacheAge < CACHE_TTL_MS) {
+            // Cache is fresh, return cached data
+            const albums = dbAlbums.map(this.mapDatabaseAlbumToApp);
+            return {
+              data: albums,
+              success: true,
+              message: `Found ${albums.length} cached albums`,
+            };
+          }
+        }
       }
 
-      // Fetch from Spotify if no cached albums
+      // Cache is stale or empty - fetch from Spotify
       if (SpotifyService.isConfigured()) {
         try {
           const spotifyResponse = await SpotifyService.getArtistAlbums(
@@ -145,19 +159,18 @@ export class ArtistService {
             const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
             albums.push(album);
 
-            // Store in database
+            // Store/update in database (upsert to ensure artist_id is set)
             const dbFormat = SpotifyMapper.mapAlbumToDatabase(spotifyAlbum);
-            await supabase.from('albums').upsert(dbFormat);
+            await supabase.from('albums').upsert(dbFormat, { onConflict: 'id' });
           }
 
-          // Also store/update the artist info if we're fetching their albums
+          // Also store/update the artist info
           try {
             const spotifyArtist = await SpotifyService.getArtist(artistId);
             const dbArtistFormat =
               SpotifyMapper.mapArtistToDatabase(spotifyArtist);
             await supabase.from('artists').upsert(dbArtistFormat);
           } catch (artistError) {
-            // Don't fail if artist update fails
             console.warn('Could not update artist info:', artistError);
           }
 
@@ -168,6 +181,21 @@ export class ArtistService {
           };
         } catch (spotifyError) {
           console.error('Error fetching albums from Spotify:', spotifyError);
+          // Spotify failed, fall back to any cached data (even if stale)
+          const { data: dbAlbums, error: dbError } = await supabase
+            .from('albums')
+            .select('*')
+            .eq('artist_id', artistId)
+            .order('release_date', { ascending: false });
+
+          if (dbAlbums && dbAlbums.length > 0 && !dbError) {
+            const albums = dbAlbums.map(this.mapDatabaseAlbumToApp);
+            return {
+              data: albums,
+              success: true,
+              message: `Found ${albums.length} cached albums (Spotify unavailable)`,
+            };
+          }
         }
       }
 

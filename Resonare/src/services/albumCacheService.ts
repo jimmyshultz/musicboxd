@@ -45,7 +45,7 @@ class AlbumCacheService {
 
       const { error: insertError } = await supabase
         .from('albums')
-        .insert(dbAlbum);
+        .upsert(dbAlbum, { onConflict: 'id' });
 
       if (insertError) {
         throw insertError;
