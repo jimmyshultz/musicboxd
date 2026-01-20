@@ -292,7 +292,7 @@ Now that Resonare is live on the Apple App Store, the focus shifts to growth, op
 - 📋 **Enhanced Discovery Algorithms** - In planning
 - 📋 **Advanced Social Features** - In planning
 - 📋 **Fix: Stars Populating on Next Viewed Album From Previous** - To do
-- 📋 **Fix: All Albums Not Appearing on Artist Page** - To do
+- ✅ **Fix: All Albums Not Appearing on Artist Page** - Completed
 - 📋 **Feat: Make discover friends section show active users** - To do
 - 📋 **Feat: Click on to user profile from diary entry** - To do
 - 📋 **Feat: Add custom splash screen** - To do
