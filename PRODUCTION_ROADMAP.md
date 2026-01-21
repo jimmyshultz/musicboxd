@@ -291,7 +291,7 @@ Now that Resonare is live on the Apple App Store, the focus shifts to growth, op
 - 🔄 **Android Version** - In development & testing (native config complete, Play Store setup complete, closed testing underway - 12 users for 14 days required for production access to Play Store)
 - 📋 **Enhanced Discovery Algorithms** - In planning
 - 📋 **Advanced Social Features** - In planning
-- 📋 **Fix: Stars Populating on Next Viewed Album From Previous** - To do
+- ✅ **Fix: Stars Populating on Next Viewed Album From Previous** - Completed
 - ✅ **Fix: All Albums Not Appearing on Artist Page** - Completed
 - 📋 **Feat: Make discover friends section show active users** - To do
 - 📋 **Feat: Click on to user profile from diary entry** - To do

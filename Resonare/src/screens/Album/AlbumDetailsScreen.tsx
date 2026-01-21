@@ -175,7 +175,7 @@ export default function AlbumDetailsScreen() {
         Alert.alert(
           'Content Issue',
           reviewValidation.error ||
-            'Your review contains inappropriate content. Please revise it.',
+          'Your review contains inappropriate content. Please revise it.',
         );
         return;
       }
@@ -321,6 +321,9 @@ export default function AlbumDetailsScreen() {
                 commentsCount: 0,
               };
               dispatch(setCurrentAlbumUserReview(reviewData));
+            } else {
+              // Clear any previous album's rating from state
+              dispatch(setCurrentAlbumUserReview(null));
             }
 
             // Update user's diary entries
@@ -525,19 +528,19 @@ export default function AlbumDetailsScreen() {
           </View>
           {(currentAlbumInteraction?.rating ||
             currentAlbumUserReview?.rating) && (
-            <Text variant="bodyMedium" style={styles.ratingText}>
-              You rated this{' '}
-              {(
-                currentAlbumInteraction?.rating ||
-                currentAlbumUserReview?.rating
-              )?.toFixed(1)}{' '}
-              star
-              {(currentAlbumInteraction?.rating ||
-                currentAlbumUserReview?.rating) !== 1
-                ? 's'
-                : ''}
-            </Text>
-          )}
+              <Text variant="bodyMedium" style={styles.ratingText}>
+                You rated this{' '}
+                {(
+                  currentAlbumInteraction?.rating ||
+                  currentAlbumUserReview?.rating
+                )?.toFixed(1)}{' '}
+                star
+                {(currentAlbumInteraction?.rating ||
+                  currentAlbumUserReview?.rating) !== 1
+                  ? 's'
+                  : ''}
+              </Text>
+            )}
           {!user && (
             <Text variant="bodySmall" style={styles.loginPrompt}>
               Sign in to rate this album
