@@ -313,33 +313,57 @@ const artistStats = { total: 0, matchedFromAlbums: 0, matchedByName: 0, unmatche
 
 async function backfillArtists() {
   console.log('Backfilling artists (deezer_id IS NULL)...');
-  const { data, error } = await supabase
-    .from('artists')
-    .select('id, name, deezer_id')
-    .is('deezer_id', null);
-  if (error) {
+
+  // Probe once whether the column exists (preview mode on unmigrated project)
+  const probe = await supabase.from('artists').select('deezer_id').limit(1);
+  if (probe.error) {
     console.warn('  ! skipping artists (deezer_id column not present yet)\n');
     return;
   }
-  const artists = (data || []) as Array<{ id: string; name: string }>;
+
+  // Paginate — a single select is capped at PostgREST's default 1000 rows.
+  const artists: Array<{ id: string; name: string }> = [];
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from('artists')
+      .select('id, name, deezer_id')
+      .is('deezer_id', null)
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    artists.push(...(data as Array<{ id: string; name: string }>));
+    if (data.length < pageSize) break;
+  }
   artistStats.total = artists.length;
 
+  let processed = 0;
   for (const artist of artists) {
     let deezerId: string | null = artistDeezerMap.get(artist.id) || null;
     if (deezerId) {
+      // Harvested from a matched album — exact, trustworthy.
       artistStats.matchedFromAlbums++;
     } else {
-      // Fallback: name search
+      // Fallback: name search. Require EXACT normalized-name equality — for an
+      // artist there is no other signal, so substring matches risk mapping to
+      // the wrong artist. Ambiguous names are safely left unmatched (null).
       try {
         const search = await DeezerService.searchArtists(artist.name, 1);
         const top = search.artists?.items?.[0];
-        if (top && titlesMatch(artist.name, top.name)) {
+        if (top && norm(artist.name) === norm(top.name)) {
           deezerId = DeezerService.toDeezerId(top.id);
           artistStats.matchedByName++;
         }
       } catch {
         /* ignore */
       }
+    }
+
+    processed++;
+    if (processed % 100 === 0) {
+      process.stdout.write(
+        `  ${processed}/${artists.length}  (albums:${artistStats.matchedFromAlbums} name:${artistStats.matchedByName} unmatched:${artistStats.unmatched})\r`,
+      );
     }
 
     if (!deezerId) {
@@ -354,6 +378,7 @@ async function backfillArtists() {
       if (upErr) console.warn(`    artist write failed ${artist.id}:`, upErr.message);
     }
   }
+  console.log('\n');
 }
 
 // ---------------------------------------------------------------------------
