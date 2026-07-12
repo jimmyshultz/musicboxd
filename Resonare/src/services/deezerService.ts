@@ -207,6 +207,12 @@ export class DeezerService {
 
         return data as T;
       } catch (error) {
+        // Definitive Deezer API errors (e.g. code 800 "no data") carry a
+        // deezerCode and are not transient — surface them immediately so
+        // callers like getAlbumByUpc can handle them without wasteful retries.
+        if ((error as any)?.deezerCode !== undefined) {
+          throw error;
+        }
         if (attempt === DEEZER_CONFIG.RATE_LIMIT.RETRY_ATTEMPTS) {
           console.error(
             `Deezer API request failed after ${attempt} attempts:`,

@@ -161,17 +161,36 @@ interface AlbumRow {
 }
 
 async function loadAlbums(): Promise<AlbumRow[]> {
+  // Probe whether the upc/deezer_id columns exist yet (they may not on a
+  // not-yet-migrated project — e.g. a prod dry-run preview before step 10).
+  const probe = await supabase.from('albums').select('deezer_id').limit(1);
+  const migrated = !probe.error;
+  if (!migrated) {
+    console.warn(
+      '  ! upc/deezer_id columns not present on this project yet — running in ' +
+        'preview mode (all rows scanned; a real run needs the migration first).\n',
+    );
+  }
+
   const rows: AlbumRow[] = [];
   const pageSize = 1000;
+  const cols = migrated
+    ? 'id, name, artist_name, artist_id, upc, deezer_id, total_tracks'
+    : 'id, name, artist_name, artist_id, total_tracks';
+
   for (let from = 0; ; from += pageSize) {
-    const { data, error } = await supabase
-      .from('albums')
-      .select('id, name, artist_name, artist_id, upc, deezer_id, total_tracks')
-      .is('deezer_id', null) // resumable: skip already-matched
-      .range(from, from + pageSize - 1);
+    let query = supabase.from('albums').select(cols);
+    if (migrated) query = query.is('deezer_id', null); // resumable: skip done
+    const { data, error } = await query.range(from, from + pageSize - 1);
     if (error) throw error;
     if (!data || data.length === 0) break;
-    rows.push(...(data as AlbumRow[]));
+    rows.push(
+      ...(data as any[]).map(r => ({
+        upc: null,
+        deezer_id: null,
+        ...r,
+      })) as AlbumRow[],
+    );
     if (data.length < pageSize) break;
   }
   return rows;
@@ -298,7 +317,10 @@ async function backfillArtists() {
     .from('artists')
     .select('id, name, deezer_id')
     .is('deezer_id', null);
-  if (error) throw error;
+  if (error) {
+    console.warn('  ! skipping artists (deezer_id column not present yet)\n');
+    return;
+  }
   const artists = (data || []) as Array<{ id: string; name: string }>;
   artistStats.total = artists.length;
 
@@ -363,4 +385,7 @@ async function backfillArtists() {
   }
   console.log(dryRun ? '\n(DRY RUN — no writes performed)\n' : '\nDone.\n');
   process.exit(0);
-})();
+})().catch(err => {
+  console.error('\nBackfill failed:', err?.message || err);
+  process.exit(1);
+});
