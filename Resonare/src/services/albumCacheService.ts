@@ -65,19 +65,15 @@ class AlbumCacheService {
       const dzAlbum = await DeezerService.getAlbum(albumId);
       const upc = dzAlbum.external_ids?.upc;
 
-      // 2. A row with the same UPC (backfilled legacy row that had no Deezer
-      //    match at backfill time) — adopt it and stamp the deezer_id.
+      // 2. A row with the same UPC (a legacy Spotify-keyed row) — reuse it as
+      //    the canonical row. We intentionally do NOT stamp deezer_id here:
+      //    the `albums` table is write-once (no UPDATE RLS policy, by design),
+      //    and the one-time backfill already stamps deezer_id as service-role.
+      //    This path is a rare post-backfill fallback; correctness (no dup) is
+      //    preserved by returning the existing row's id.
       if (upc) {
-        const byUpc = await this.findRow('albums', 'upc', upc, 'id, deezer_id');
-        if (byUpc) {
-          if (!byUpc.deezer_id) {
-            await supabase
-              .from('albums')
-              .update({ deezer_id: deezerId, updated_at: new Date().toISOString() })
-              .eq('id', byUpc.id);
-          }
-          return byUpc.id as string;
-        }
+        const byUpc = await this.findId('albums', 'upc', upc);
+        if (byUpc) return byUpc;
       }
 
       // 3. No existing match — insert a new canonical 'dz:' row.
@@ -220,22 +216,6 @@ class AlbumCacheService {
       .maybeSingle();
     if (error && error.code !== 'PGRST116') throw error;
     return data?.id ?? null;
-  }
-
-  private async findRow(
-    table: 'albums' | 'artists',
-    column: string,
-    value: string,
-    columns: string,
-  ): Promise<Record<string, any> | null> {
-    const { data, error } = await supabase
-      .from(table)
-      .select(columns)
-      .eq(column, value)
-      .limit(1)
-      .maybeSingle();
-    if (error && error.code !== 'PGRST116') throw error;
-    return (data as Record<string, any> | null) ?? null;
   }
 
   /**

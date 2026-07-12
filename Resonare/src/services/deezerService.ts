@@ -198,9 +198,11 @@ export class DeezerService {
             await new Promise<void>(resolve => setTimeout(resolve, delay));
             continue;
           }
-          throw new Error(
+          const apiError = new Error(
             `Deezer API error: ${data.error.code} - ${data.error.message}`,
           );
+          (apiError as any).deezerCode = data.error.code;
+          throw apiError;
         }
 
         return data as T;
@@ -477,8 +479,8 @@ export class DeezerService {
       const dzAlbum = await this.makeRequest<DeezerAlbum>(`/album/upc:${upc}`);
       return this.toSpotifyAlbum(dzAlbum);
     } catch (error) {
-      // Deezer answers "no data" (code 800) for unknown UPCs
-      if (error instanceof Error && error.message.includes('800')) {
+      // Deezer answers with error code 800 ("no data") for unknown UPCs
+      if ((error as any)?.deezerCode === 800) {
         return null;
       }
       throw error;
