@@ -73,8 +73,9 @@ class DiaryEntriesService {
         };
       }
 
-      // First, ensure the album exists in the albums table
-      await albumCacheService.ensureAlbumExists(albumId);
+      // Ensure the album exists and resolve to its canonical id (a Deezer
+      // album may map onto a pre-existing Spotify-keyed row).
+      albumId = await albumCacheService.ensureAlbumExists(albumId);
 
       const { data, error } = await supabase
         .from('diary_entries')

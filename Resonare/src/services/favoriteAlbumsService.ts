@@ -40,8 +40,9 @@ class FavoriteAlbumsService {
         throw new Error('Ranking must be between 1 and 5');
       }
 
-      // First, ensure the album exists in the albums table
-      await albumCacheService.ensureAlbumExists(albumId);
+      // Ensure the album exists and resolve to its canonical id (a Deezer
+      // album may map onto a pre-existing Spotify-keyed row).
+      albumId = await albumCacheService.ensureAlbumExists(albumId);
 
       const { data, error } = await supabase
         .from('favorite_albums')
@@ -123,20 +124,25 @@ class FavoriteAlbumsService {
         throw new Error('Each ranking position (1-5) can only be used once');
       }
 
-      // Ensure all albums exist
-      await Promise.all(
+      // Ensure all albums exist and resolve each to its canonical id (a Deezer
+      // album may map onto a pre-existing Spotify-keyed row).
+      const canonicalIds = await Promise.all(
         favorites.map(fav => albumCacheService.ensureAlbumExists(fav.albumId)),
       );
+      const canonicalFavorites = favorites.map((fav, i) => ({
+        ...fav,
+        albumId: canonicalIds[i],
+      }));
 
       // Delete existing favorites
       await supabase.from('favorite_albums').delete().eq('user_id', userId);
 
       // Insert new favorites if any provided
-      if (favorites.length > 0) {
+      if (canonicalFavorites.length > 0) {
         const { data, error } = await supabase
           .from('favorite_albums')
           .insert(
-            favorites.map(fav => ({
+            canonicalFavorites.map(fav => ({
               user_id: userId,
               album_id: fav.albumId,
               ranking: fav.ranking,

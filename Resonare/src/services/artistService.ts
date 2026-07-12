@@ -1,6 +1,6 @@
 import { Artist, Album, ApiResponse } from '../types';
 import { TableNames } from '../types/database';
-import { SpotifyService } from './spotifyService';
+import { DeezerService } from './deezerService';
 import { SpotifyMapper } from './spotifyMapper';
 import { supabase } from './supabase';
 
@@ -63,9 +63,9 @@ export class ArtistService {
       }
 
       // Fetch from Spotify if not in database
-      if (SpotifyService.isConfigured()) {
+      if (DeezerService.isConfigured()) {
         try {
-          const spotifyArtist = await SpotifyService.getArtist(artistId);
+          const spotifyArtist = await DeezerService.getArtist(artistId);
 
           if (SpotifyMapper.isValidSpotifyArtist(spotifyArtist)) {
             const artist =
@@ -142,9 +142,9 @@ export class ArtistService {
       }
 
       // Cache is stale or empty - fetch from Spotify
-      if (SpotifyService.isConfigured()) {
+      if (DeezerService.isConfigured()) {
         try {
-          const spotifyResponse = await SpotifyService.getArtistAlbums(
+          const spotifyResponse = await DeezerService.getArtistAlbums(
             artistId,
             {
               include_groups: options?.includeGroups || 'album,single',
@@ -166,7 +166,7 @@ export class ArtistService {
 
           // Also store/update the artist info
           try {
-            const spotifyArtist = await SpotifyService.getArtist(artistId);
+            const spotifyArtist = await DeezerService.getArtist(artistId);
             const dbArtistFormat =
               SpotifyMapper.mapArtistToDatabase(spotifyArtist);
             await supabase.from('artists').upsert(dbArtistFormat);
@@ -231,7 +231,7 @@ export class ArtistService {
       }
 
       // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
+      if (!DeezerService.isConfigured()) {
         return {
           data: null,
           success: false,
@@ -240,7 +240,7 @@ export class ArtistService {
       }
 
       // Search Spotify for artists
-      const spotifyResponse = await SpotifyService.searchArtists(name, 1); // Get top result
+      const spotifyResponse = await DeezerService.searchArtists(name, 1); // Get top result
 
       if (
         !spotifyResponse.artists?.items ||
@@ -330,7 +330,7 @@ export class ArtistService {
       }
 
       // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
+      if (!DeezerService.isConfigured()) {
         return {
           data: [],
           success: false,
@@ -339,7 +339,7 @@ export class ArtistService {
       }
 
       // Search Spotify for artists
-      const spotifyResponse = await SpotifyService.searchArtists(query, limit);
+      const spotifyResponse = await DeezerService.searchArtists(query, limit);
 
       if (
         !spotifyResponse.artists?.items ||
