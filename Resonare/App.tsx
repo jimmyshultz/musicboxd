@@ -20,7 +20,6 @@ import { lightTheme, darkTheme } from './src/utils/theme';
 import { AuthProvider } from './src/providers/AuthProvider';
 import { NotificationProvider } from './src/providers/NotificationProvider';
 import { PushNotificationProvider } from './src/providers/PushNotificationProvider';
-import { quickValidation } from './src/utils/spotifyValidation';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { Environment } from './src/config/environment';
 import { suppressConsoleForBetaUsers } from './src/utils/consoleSuppression';
@@ -61,13 +60,6 @@ function AppContent() {
           LogBox.ignoreAllLogs(true);
         }
 
-        // Validate Spotify integration (only logs in development now)
-        const { configured } = quickValidation();
-        if (!configured && Environment.isDevelopment) {
-          console.warn(
-            '⚠️ Spotify API not configured - using fallback data. See SPOTIFY_SETUP.md for setup.',
-          );
-        }
       } catch (error) {
         console.error('Failed to initialize app services:', error);
       }

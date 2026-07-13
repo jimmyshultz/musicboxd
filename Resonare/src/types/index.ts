@@ -53,6 +53,8 @@ export interface Album {
   coverImageUrl: string;
   trackList: Track[];
   description?: string;
+  albumType?: string; // 'album' | 'single' | 'compilation'
+  totalTracks?: number;
   externalIds: {
     spotify?: string;
     appleMusic?: string;

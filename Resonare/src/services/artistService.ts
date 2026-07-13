@@ -1,6 +1,6 @@
 import { Artist, Album, ApiResponse } from '../types';
 import { TableNames } from '../types/database';
-import { SpotifyService } from './spotifyService';
+import { DeezerService } from './deezerService';
 import { SpotifyMapper } from './spotifyMapper';
 import { supabase } from './supabase';
 
@@ -63,9 +63,9 @@ export class ArtistService {
       }
 
       // Fetch from Spotify if not in database
-      if (SpotifyService.isConfigured()) {
+      if (DeezerService.isConfigured()) {
         try {
-          const spotifyArtist = await SpotifyService.getArtist(artistId);
+          const spotifyArtist = await DeezerService.getArtist(artistId);
 
           if (SpotifyMapper.isValidSpotifyArtist(spotifyArtist)) {
             const artist =
@@ -102,9 +102,37 @@ export class ArtistService {
   }
 
   /**
+   * Resolve the Deezer artist id to query with. A 'dz:' id is used directly;
+   * a legacy Spotify-keyed artist is mapped via the deezer_id its row was
+   * stamped with during the one-time backfill. Returns null when the artist
+   * has no known Deezer counterpart (so callers can skip a doomed Deezer call).
+   */
+  private static async resolveDeezerArtistId(
+    artistId: string,
+  ): Promise<string | null> {
+    if (DeezerService.isDeezerId(artistId)) {
+      return artistId;
+    }
+
+    try {
+      const { data: artistRow } = await supabase
+        .from('artists')
+        .select('deezer_id')
+        .eq('id', artistId)
+        .maybeSingle();
+
+      const deezerId = (artistRow as any)?.deezer_id;
+      return deezerId ? DeezerService.toAppId(deezerId) : null;
+    } catch (error) {
+      console.warn('Could not resolve Deezer artist id:', error);
+      return null;
+    }
+  }
+
+  /**
    * Get all albums by an artist
-   * Uses cached data if recently fetched (within 1 hour), otherwise fetches from Spotify
-   * This balances performance with data freshness
+   * Uses cached data if recently fetched (within 1 hour), otherwise fetches
+   * fresh from Deezer. This balances performance with data freshness.
    */
   static async getArtistAlbums(
     artistId: string,
@@ -141,46 +169,56 @@ export class ArtistService {
         }
       }
 
-      // Cache is stale or empty - fetch from Spotify
-      if (SpotifyService.isConfigured()) {
+      // Cache is stale or empty - fetch from Deezer.
+      //
+      // Deezer is keyed by its own ids. A 'dz:' artist id can be queried
+      // directly; a legacy Spotify-keyed artist has no Deezer route unless the
+      // backfill stamped a deezer_id on its row — look that up first, otherwise
+      // Deezer 404s and the cache stays permanently stale.
+      const deezerArtistId = await this.resolveDeezerArtistId(artistId);
+      if (DeezerService.isConfigured() && deezerArtistId) {
         try {
-          const spotifyResponse = await SpotifyService.getArtistAlbums(
-            artistId,
+          const spotifyResponse = await DeezerService.getArtistAlbums(
+            deezerArtistId,
             {
               include_groups: options?.includeGroups || 'album,single',
               limit: options?.limit || 50,
             },
           );
 
+          // Lazily import to avoid a circular import at module load.
+          const { albumCacheService } = await import('./albumCacheService');
+
           const albums: Album[] = [];
 
-          // Process and store each album
+          // Process and store each album. Route inserts through
+          // albumCacheService so cross-provider de-dup applies and a deezer_id
+          // unique-constraint collision skips one album instead of aborting the
+          // whole batch (the old direct upsert threw on the first collision).
           for (const spotifyAlbum of spotifyResponse.items) {
             const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
+            try {
+              const canonicalId =
+                await albumCacheService.ensureAlbumExists(spotifyAlbum.id);
+              // Present the canonical row's id so navigation opens the deduped
+              // album, not a phantom duplicate.
+              album.id = canonicalId;
+            } catch (albumError) {
+              console.warn(
+                `Skipping album ${spotifyAlbum.id} during artist refresh:`,
+                albumError,
+              );
+            }
             albums.push(album);
-
-            // Store/update in database (upsert to ensure artist_id is set)
-            const dbFormat = SpotifyMapper.mapAlbumToDatabase(spotifyAlbum);
-            await supabase.from('albums').upsert(dbFormat, { onConflict: 'id' });
-          }
-
-          // Also store/update the artist info
-          try {
-            const spotifyArtist = await SpotifyService.getArtist(artistId);
-            const dbArtistFormat =
-              SpotifyMapper.mapArtistToDatabase(spotifyArtist);
-            await supabase.from('artists').upsert(dbArtistFormat);
-          } catch (artistError) {
-            console.warn('Could not update artist info:', artistError);
           }
 
           return {
             data: albums,
             success: true,
-            message: `Found ${albums.length} albums on Spotify`,
+            message: `Found ${albums.length} albums on Deezer`,
           };
         } catch (spotifyError) {
-          console.error('Error fetching albums from Spotify:', spotifyError);
+          console.error('Error fetching albums from Deezer:', spotifyError);
           // Spotify failed, fall back to any cached data (even if stale)
           const { data: dbAlbums, error: dbError } = await supabase
             .from('albums')
@@ -197,6 +235,23 @@ export class ArtistService {
             };
           }
         }
+      }
+
+      // No Deezer route (legacy artist without a backfilled deezer_id) or no
+      // provider — return whatever is cached, even if stale, rather than empty.
+      const { data: staleAlbums } = await supabase
+        .from('albums')
+        .select('*')
+        .eq('artist_id', artistId)
+        .order('release_date', { ascending: false });
+
+      if (staleAlbums && staleAlbums.length > 0) {
+        const albums = staleAlbums.map(this.mapDatabaseAlbumToApp);
+        return {
+          data: albums,
+          success: true,
+          message: `Found ${albums.length} cached albums`,
+        };
       }
 
       return {
@@ -231,7 +286,7 @@ export class ArtistService {
       }
 
       // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
+      if (!DeezerService.isConfigured()) {
         return {
           data: null,
           success: false,
@@ -240,7 +295,7 @@ export class ArtistService {
       }
 
       // Search Spotify for artists
-      const spotifyResponse = await SpotifyService.searchArtists(name, 1); // Get top result
+      const spotifyResponse = await DeezerService.searchArtists(name, 1); // Get top result
 
       if (
         !spotifyResponse.artists?.items ||
@@ -330,7 +385,7 @@ export class ArtistService {
       }
 
       // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
+      if (!DeezerService.isConfigured()) {
         return {
           data: [],
           success: false,
@@ -339,7 +394,7 @@ export class ArtistService {
       }
 
       // Search Spotify for artists
-      const spotifyResponse = await SpotifyService.searchArtists(query, limit);
+      const spotifyResponse = await DeezerService.searchArtists(query, limit);
 
       if (
         !spotifyResponse.artists?.items ||

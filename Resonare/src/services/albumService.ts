@@ -1,6 +1,6 @@
 import { Album, SearchResult, ApiResponse, Listen, Review } from '../types';
 import { mockAlbums, popularGenres } from './mockData';
-import { SpotifyService } from './spotifyService';
+import { DeezerService } from './deezerService';
 import { SpotifyMapper } from './spotifyMapper';
 
 // Helper to serialize a review
@@ -257,29 +257,67 @@ export class AlbumService {
   // Get album by ID
   static async getAlbumById(id: string): Promise<ApiResponse<Album | null>> {
     try {
-      // First check if this is a Spotify ID (should be alphanumeric)
-      const isSpotifyId = /^[a-zA-Z0-9]+$/.test(id) && id.length > 10;
+      // 1. Prefer the canonical database row. This covers both legacy
+      //    Spotify-keyed albums and Deezer ('dz:') albums already saved, and
+      //    means album detail keeps working even though the Spotify API is dead.
+      try {
+        const { supabase } = await import('./supabase');
+        const { data: dbAlbum } = await supabase
+          .from('albums')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
 
-      if (isSpotifyId && SpotifyService.isConfigured()) {
+        if (dbAlbum) {
+          const album = this.mapDatabaseAlbumToApp(dbAlbum);
+
+          // The albums table stores no track data, so mapDatabaseAlbumToApp
+          // returns an empty trackList. For any album we can map to a Deezer id
+          // — either a 'dz:' id or a legacy Spotify-keyed row that the backfill
+          // stamped with a deezer_id — fetch the full track list from Deezer so
+          // album detail isn't stuck showing "0 tracks".
+          const deezerId = DeezerService.isDeezerId(id)
+            ? DeezerService.toDeezerId(id)
+            : (dbAlbum as any).deezer_id || null;
+          if (deezerId) {
+            try {
+              const dzAlbum = await DeezerService.getAlbum(deezerId);
+              const mapped = SpotifyMapper.mapSpotifyAlbumToAlbum(dzAlbum);
+              if (mapped.trackList.length > 0) {
+                album.trackList = mapped.trackList;
+              }
+            } catch (trackError) {
+              console.warn(
+                'Failed to fetch Deezer tracks for cached album:',
+                trackError,
+              );
+            }
+          }
+
+          return {
+            data: album,
+            success: true,
+            message: 'Album found in database',
+          };
+        }
+      } catch (dbError) {
+        console.warn('DB lookup for album failed, trying provider:', dbError);
+      }
+
+      // 2. Not cached — fetch from Deezer for a Deezer id. (A legacy Spotify id
+      //    that isn't cached can't be fetched; the Spotify API is gone.)
+      if (DeezerService.isDeezerId(id)) {
         try {
-          // Try to fetch from Spotify API
-          const spotifyAlbum = await SpotifyService.getAlbum(id);
-
-          if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
-            const album = SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum);
-
-            // NOTE: Artist data fetching is deferred for performance
-            // It will be fetched when user navigates to artist details page
-            // This significantly speeds up album loading on home page
-
+          const dzAlbum = await DeezerService.getAlbum(id);
+          if (SpotifyMapper.isValidSpotifyAlbum(dzAlbum)) {
             return {
-              data: album,
+              data: SpotifyMapper.mapSpotifyAlbumToAlbum(dzAlbum),
               success: true,
-              message: 'Album found on Spotify',
+              message: 'Album found on Deezer',
             };
           }
         } catch {
-          // Continue to check mock data if Spotify fails
+          // fall through to mock data
         }
       }
 
@@ -331,23 +369,23 @@ export class AlbumService {
     }
 
     try {
-      // Check if Spotify is configured
-      if (!SpotifyService.isConfigured()) {
+      // Deezer is keyless (always configured); guard kept for parity.
+      if (!DeezerService.isConfigured()) {
         return this.searchMockData(query);
       }
 
-      // Search Spotify API
-      const spotifyResponse = await SpotifyService.searchAlbums(query, 20);
+      // Search Deezer API (returns Spotify-shaped results so the mapper is reused)
+      const searchResponse = await DeezerService.searchAlbums(query, 20);
 
-      if (!spotifyResponse.albums?.items) {
+      if (!searchResponse.albums?.items) {
         return this.searchMockData(query);
       }
 
-      // Convert Spotify results to our format
+      // Convert provider results to our format
       const searchResult =
-        SpotifyMapper.mapSpotifySearchToSearchResult(spotifyResponse);
+        SpotifyMapper.mapSpotifySearchToSearchResult(searchResponse);
 
-      // If no results from Spotify, also search mock data for better coverage
+      // If no results from the provider, also search mock data for coverage
       if (searchResult.albums.length === 0) {
         return this.searchMockData(query);
       }
@@ -355,7 +393,7 @@ export class AlbumService {
       return {
         data: searchResult,
         success: true,
-        message: `Found ${searchResult.totalResults} results from Spotify`,
+        message: `Found ${searchResult.totalResults} results`,
       };
     } catch {
       // Fallback to mock data search on error

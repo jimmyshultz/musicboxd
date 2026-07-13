@@ -6,8 +6,6 @@ export const ENV_CONFIG = {
   BUNDLE_ID: Config.BUNDLE_ID || 'com.jimmyshultz.resonare',
   SUPABASE_URL: Config.SUPABASE_URL!,
   SUPABASE_ANON_KEY: Config.SUPABASE_ANON_KEY!,
-  SPOTIFY_CLIENT_ID: Config.SPOTIFY_CLIENT_ID!,
-  SPOTIFY_CLIENT_SECRET: Config.SPOTIFY_CLIENT_SECRET || 'secret_here',
 };
 
 // Environment checking helpers

@@ -44,8 +44,8 @@ class UserAlbumsService {
     listenedAt?: Date,
   ): Promise<UserAlbumInteraction> {
     try {
-      // Ensure album exists in database
-      await albumCacheService.ensureAlbumExists(albumId);
+      // Ensure the album exists and resolve to its canonical id.
+      albumId = await albumCacheService.ensureAlbumExists(albumId);
 
       const timestamp = listenedAt || new Date();
 
@@ -131,8 +131,8 @@ class UserAlbumsService {
         throw new Error('Rating must be between 0.5 and 5.0 in 0.5 increments');
       }
 
-      // Ensure album exists in database
-      await albumCacheService.ensureAlbumExists(albumId);
+      // Ensure the album exists and resolve to its canonical id.
+      albumId = await albumCacheService.ensureAlbumExists(albumId);
 
       const { data, error } = await supabase
         .from('user_albums')

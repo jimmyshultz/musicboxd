@@ -74,3 +74,6 @@ dist/
 
 # P8
 Resonare/ios/*.p8
+
+# Supabase CLI local state (created by `supabase link`)
+supabase/.temp/

@@ -6,6 +6,15 @@ import {
   SpotifyImage,
   SpotifyArtistFull,
 } from '../types/spotify';
+import { DeezerService } from './deezerService';
+
+/**
+ * Derive the deezer_id column value from an album/artist id.
+ * DeezerService emits 'dz:'-prefixed ids; legacy Spotify ids yield null.
+ */
+function deezerIdColumn(id: string): string | null {
+  return DeezerService.isDeezerId(id) ? DeezerService.toDeezerId(id) : null;
+}
 
 export class SpotifyMapper {
   /**
@@ -100,6 +109,8 @@ export class SpotifyMapper {
       genre: SpotifyMapper.extractGenres(spotifyAlbum),
       coverImageUrl: SpotifyMapper.getBestImageUrl(spotifyAlbum.images),
       trackList,
+      albumType: spotifyAlbum.album_type,
+      totalTracks: spotifyAlbum.total_tracks,
       description: SpotifyMapper.generateAlbumDescription(spotifyAlbum),
       externalIds: {
         spotify: spotifyAlbum.id,
@@ -256,6 +267,9 @@ export class SpotifyMapper {
       total_tracks: spotifyAlbum.total_tracks || null,
       album_type: spotifyAlbum.album_type || 'album',
       genres: this.extractGenres(spotifyAlbum),
+      // Provider-migration alternate keys (used for cross-provider dedup)
+      upc: spotifyAlbum.external_ids?.upc || null,
+      deezer_id: deezerIdColumn(spotifyAlbum.id),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -288,6 +302,8 @@ export class SpotifyMapper {
       genres: spotifyArtist.genres || [],
       follower_count: spotifyArtist.followers?.total || null,
       popularity: spotifyArtist.popularity || null,
+      // Provider-migration alternate key (used for cross-provider dedup)
+      deezer_id: deezerIdColumn(spotifyArtist.id),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
