@@ -86,6 +86,10 @@ updates:
       # 30.3.x until react-native is upgraded (jest-environment moves to 30).
       - dependency-name: "jest"
         versions: [">=30.4.0"]
+      # react-native-screens 4.26+ requires react-native >=0.84 (peer); the app
+      # is on RN 0.83. Hold at 4.19–4.25 until react-native is upgraded.
+      - dependency-name: "react-native-screens"
+        versions: [">=4.26.0"]
     commit-message:
       prefix: "deps"
       include: "scope"
