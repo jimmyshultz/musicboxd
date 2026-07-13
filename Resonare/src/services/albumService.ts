@@ -1,6 +1,5 @@
 import { Album, SearchResult, ApiResponse, Listen, Review } from '../types';
 import { mockAlbums, popularGenres } from './mockData';
-import { SpotifyService } from './spotifyService';
 import { DeezerService } from './deezerService';
 import { SpotifyMapper } from './spotifyMapper';
 
@@ -280,7 +279,8 @@ export class AlbumService {
         console.warn('DB lookup for album failed, trying provider:', dbError);
       }
 
-      // 2. Not cached — fetch from the provider indicated by the id shape.
+      // 2. Not cached — fetch from Deezer for a Deezer id. (A legacy Spotify id
+      //    that isn't cached can't be fetched; the Spotify API is gone.)
       if (DeezerService.isDeezerId(id)) {
         try {
           const dzAlbum = await DeezerService.getAlbum(id);
@@ -293,23 +293,6 @@ export class AlbumService {
           }
         } catch {
           // fall through to mock data
-        }
-      } else {
-        // Legacy Spotify id not in DB — best-effort (works only if API alive).
-        const isSpotifyId = /^[a-zA-Z0-9]+$/.test(id) && id.length > 10;
-        if (isSpotifyId && SpotifyService.isConfigured()) {
-          try {
-            const spotifyAlbum = await SpotifyService.getAlbum(id);
-            if (SpotifyMapper.isValidSpotifyAlbum(spotifyAlbum)) {
-              return {
-                data: SpotifyMapper.mapSpotifyAlbumToAlbum(spotifyAlbum),
-                success: true,
-                message: 'Album found on Spotify',
-              };
-            }
-          } catch {
-            // Continue to check mock data if Spotify fails
-          }
         }
       }
 

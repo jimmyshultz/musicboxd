@@ -1,5 +1,4 @@
 import { supabase } from './supabase';
-import { SpotifyService } from './spotifyService';
 import { DeezerService } from './deezerService';
 import { SpotifyMapper } from './spotifyMapper';
 import { SpotifyArtist } from '../types/spotify';
@@ -95,23 +94,9 @@ class AlbumCacheService {
       return albumId; // dz:<deezerId>
     }
 
-    // Legacy Spotify id not in DB. Post-migration the Spotify API is dead, so
-    // this is best-effort only (kept so nothing regresses during transition).
-    if (SpotifyService.isConfigured()) {
-      try {
-        const spotifyAlbum = await SpotifyService.getAlbum(albumId);
-        const dbAlbum = SpotifyMapper.mapAlbumToDatabase(spotifyAlbum);
-        const { error } = await supabase
-          .from('albums')
-          .upsert(dbAlbum, { onConflict: 'id' });
-        if (error) throw error;
-      } catch (error) {
-        console.warn(
-          'Spotify album fetch failed (expected once Premium lapses):',
-          error,
-        );
-      }
-    }
+    // Legacy Spotify id not in the DB: nothing to fetch (the Spotify API is
+    // gone). It is already cached for any album the user can reach, so just
+    // return it unchanged.
     return albumId;
   }
 
