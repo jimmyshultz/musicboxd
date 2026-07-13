@@ -205,8 +205,23 @@ const stats = {
   matchedByFuzzy: 0,
   unmatched: 0,
   upcOnly: 0, // got a UPC but no Deezer album
+  collisions: 0, // matched a deezer_id another row already owns
 };
 const unmatched: Array<{ id: string; name: string; artist: string | null }> = [];
+const collisions: Array<{
+  id: string;
+  name: string;
+  artist: string | null;
+  claimed_deezer_id: string | null;
+  via: string;
+}> = [];
+
+/** Postgres unique-violation on the deezer_id index. */
+function isDeezerIdCollision(error: { code?: string; message?: string }): boolean {
+  return (
+    error.code === '23505' || /deezer_id_unique/.test(error.message || '')
+  );
+}
 
 async function resolveAlbum(
   album: AlbumRow,
@@ -292,7 +307,24 @@ async function backfillAlbums() {
             updated_at: new Date().toISOString(),
           })
           .eq('id', album.id);
-        if (error) console.warn(`    write failed for ${album.id}:`, error.message);
+        if (error) {
+          if (isDeezerIdCollision(error)) {
+            // Another row already owns this deezer_id: this row is a
+            // pre-existing duplicate album OR a fuzzy false-positive (an
+            // acoustic/live variant that matched the wrong album). The unique
+            // constraint correctly blocks it — leave it unmatched and record it.
+            stats.collisions++;
+            collisions.push({
+              id: album.id,
+              name: album.name,
+              artist: album.artist_name,
+              claimed_deezer_id: deezerId,
+              via,
+            });
+          } else {
+            console.warn(`    write failed for ${album.id}:`, error.message);
+          }
+        }
       }
     }
 
@@ -309,7 +341,13 @@ async function backfillAlbums() {
 // Artist backfill
 // ---------------------------------------------------------------------------
 
-const artistStats = { total: 0, matchedFromAlbums: 0, matchedByName: 0, unmatched: 0 };
+const artistStats = {
+  total: 0,
+  matchedFromAlbums: 0,
+  matchedByName: 0,
+  unmatched: 0,
+  collisions: 0,
+};
 
 async function backfillArtists() {
   console.log('Backfilling artists (deezer_id IS NULL)...');
@@ -375,7 +413,13 @@ async function backfillArtists() {
         .from('artists')
         .update({ deezer_id: deezerId, updated_at: new Date().toISOString() })
         .eq('id', artist.id);
-      if (upErr) console.warn(`    artist write failed ${artist.id}:`, upErr.message);
+      if (upErr) {
+        if (isDeezerIdCollision(upErr)) {
+          artistStats.collisions++; // another artist row already owns this deezer_id
+        } else {
+          console.warn(`    artist write failed ${artist.id}:`, upErr.message);
+        }
+      }
     }
   }
   console.log('\n');
@@ -395,6 +439,7 @@ async function backfillArtists() {
   console.log('  matched by UPC :', stats.matchedByUpc);
   console.log('  matched fuzzy  :', stats.matchedByFuzzy);
   console.log('  unmatched      :', stats.unmatched, `(of which ${stats.upcOnly} had a UPC but no Deezer album)`);
+  console.log('  collisions     :', stats.collisions, '(duplicate row / fuzzy false-positive — deezer_id already taken; left unmatched)');
   const total = stats.matchedByUpc + stats.matchedByFuzzy;
   const pct = stats.albumsTotal ? ((total / stats.albumsTotal) * 100).toFixed(1) : '0';
   console.log(`  match rate     : ${pct}%`);
@@ -402,11 +447,19 @@ async function backfillArtists() {
   console.log('  from albums    :', artistStats.matchedFromAlbums);
   console.log('  by name search :', artistStats.matchedByName);
   console.log('  unmatched      :', artistStats.unmatched);
+  console.log('  collisions     :', artistStats.collisions);
 
   if (unmatched.length) {
     const path = 'scripts/backfill-unmatched.json';
     writeFileSync(path, JSON.stringify(unmatched, null, 2));
     console.log(`\nWrote ${unmatched.length} unmatched albums to ${path} for review.`);
+  }
+  if (collisions.length) {
+    const path = 'scripts/backfill-collisions.json';
+    writeFileSync(path, JSON.stringify(collisions, null, 2));
+    console.log(
+      `Wrote ${collisions.length} colliding albums (duplicates / fuzzy false-positives) to ${path} for review.`,
+    );
   }
   console.log(dryRun ? '\n(DRY RUN — no writes performed)\n' : '\nDone.\n');
   process.exit(0);
