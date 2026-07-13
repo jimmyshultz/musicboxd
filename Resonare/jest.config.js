@@ -10,6 +10,13 @@ module.exports = {
       '|react-native-safe-area-context' +
       '|@react-navigation' +
       '|react-redux' +
+      '|@reduxjs/toolkit' +
+      '|immer' +
+      '|react-native-url-polyfill' +
+      '|react-native-vector-icons' +
+      '|@d11/react-native-fast-image' +
+      '|bad-words' +
+      '|badwords-list' +
       ')/)',
   ],
   setupFiles: ['<rootDir>/jest.setup.js'],
