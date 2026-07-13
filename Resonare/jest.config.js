@@ -20,4 +20,9 @@ module.exports = {
       ')/)',
   ],
   setupFiles: ['<rootDir>/jest.setup.js'],
+  moduleNameMapper: {
+    // src/config/env.ts is gitignored (absent in CI); redirect the imports of
+    // it (`../config/env` and `./env`) to a test stub.
+    '/env$': '<rootDir>/jest/config-env-mock.js',
+  },
 };
