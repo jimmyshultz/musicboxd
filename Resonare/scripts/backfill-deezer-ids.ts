@@ -60,17 +60,57 @@ async function fetchT(url: string, init?: RequestInit, ms = 15000): Promise<Resp
   }
 }
 
-/** Normalize a title/artist for fuzzy comparison. */
+/**
+ * Variant markers that denote a genuinely DIFFERENT recording of a song/album
+ * (not just a reissue). Two titles only match if they carry the same set of
+ * these — so "Holy (Acoustic)" never inherits the studio "Holy"'s deezer_id.
+ */
+const VARIANT_MARKERS = [
+  'acoustic',
+  'live',
+  'remix',
+  'demo',
+  'instrumental',
+  'acapella',
+  'a cappella',
+  'unplugged',
+  'reprise',
+];
+
+/** The set of variant markers present in a title, as a stable comparison key. */
+function variantKey(s: string): string {
+  const lower = (s || '').toLowerCase();
+  return VARIANT_MARKERS.filter(m =>
+    new RegExp(`\\b${m.replace(/ /g, '\\s*')}\\b`).test(lower),
+  )
+    .map(m => m.replace(/\s+/g, ''))
+    .sort()
+    .join(',');
+}
+
+/**
+ * Normalize a title/artist for fuzzy comparison. Strips only edition/reissue
+ * qualifiers (Deluxe, Remaster, Expanded, Edition, Version, ...) — which mark
+ * the SAME recording — while deliberately PRESERVING variant markers like
+ * Acoustic/Live/Remix/Demo/Instrumental (handled by variantKey), which mark a
+ * different recording that must not be conflated with the studio original.
+ */
 function norm(s: string): string {
   return (s || '')
     .toLowerCase()
-    .replace(/\(.*?\)|\[.*?\]/g, '') // drop (Deluxe), [Remaster], ...
-    .replace(/\b(deluxe|remaster(ed)?|expanded|explicit|edition|version)\b/g, '')
+    .replace(
+      /\b(deluxe|remaster(ed)?|expanded|explicit|edition|version|reissue|anniversary|bonus track[s]?|mono|stereo)\b/g,
+      '',
+    )
+    .replace(/\(\s*\)|\[\s*\]/g, '') // drop now-empty () / [] left behind
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 }
 
 function titlesMatch(a: string, b: string): boolean {
+  // A studio track and its acoustic/live/remix variant share a core title but
+  // are different recordings — require the same variant markers on both sides.
+  if (variantKey(a) !== variantKey(b)) return false;
   const na = norm(a);
   const nb = norm(b);
   if (!na || !nb) return false;
