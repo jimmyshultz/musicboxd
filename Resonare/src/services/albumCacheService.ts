@@ -80,7 +80,8 @@ class AlbumCacheService {
       const primaryArtist = dzAlbum.artists[0];
       if (primaryArtist?.id) {
         // Point the album at the canonical artist row (may resolve to a
-        // pre-existing Spotify-keyed artist).
+        // pre-existing Spotify-keyed artist). null means the artist couldn't be
+        // persisted — leave artist_id null rather than dangling the FK.
         dbAlbum.artist_id = await this.ensureArtistExists(
           primaryArtist.id,
           primaryArtist,
@@ -107,7 +108,7 @@ class AlbumCacheService {
   async ensureArtistExists(
     artistId: string,
     artistHint?: SpotifyArtist,
-  ): Promise<string> {
+  ): Promise<string | null> {
     const cached = this.resolvedArtists.get(artistId);
     if (cached && Date.now() - cached.ts < this.CACHE_TTL_MS) {
       return cached.canonicalId;
@@ -115,19 +116,28 @@ class AlbumCacheService {
 
     try {
       const canonicalId = await this.resolveArtist(artistId, artistHint);
-      this.resolvedArtists.set(artistId, { canonicalId, ts: Date.now() });
+      // Only cache (and hand back) an id we actually confirmed a row for.
+      if (canonicalId) {
+        this.resolvedArtists.set(artistId, { canonicalId, ts: Date.now() });
+      }
       return canonicalId;
     } catch (error) {
       console.error('Error ensuring artist exists:', error);
-      // Non-fatal: fall back to the incoming id so album inserts still proceed.
-      return artistId;
+      // Can't guarantee a row exists — return null rather than an id that would
+      // dangle as a foreign key on the album we're about to insert.
+      return null;
     }
   }
 
+  /**
+   * Resolve an artist to a canonical row id, or null when no row can be
+   * guaranteed. Callers must treat null as "leave the album's artist_id unset"
+   * — never persist an id whose row does not exist.
+   */
   private async resolveArtist(
     artistId: string,
     artistHint?: SpotifyArtist,
-  ): Promise<string> {
+  ): Promise<string | null> {
     if (await this.rowExists('artists', 'id', artistId)) {
       return artistId;
     }
@@ -140,13 +150,17 @@ class AlbumCacheService {
 
       // Insert a new artist row. Prefer full detail; fall back to the hint
       // carried on the album's artist object.
+      let insertError: { message?: string } | null = null;
       try {
         const fullArtist = await DeezerService.getArtist(artistId);
         const dbArtist = SpotifyMapper.mapArtistToDatabase(fullArtist);
-        await supabase.from('artists').upsert(dbArtist, { onConflict: 'id' });
+        const res = await supabase
+          .from('artists')
+          .upsert(dbArtist, { onConflict: 'id' });
+        insertError = res.error;
       } catch (error) {
         console.warn('Deezer artist fetch failed, inserting minimal row:', error);
-        await supabase.from('artists').upsert(
+        const res = await supabase.from('artists').upsert(
           {
             id: artistId,
             name: artistHint?.name || 'Unknown Artist',
@@ -161,13 +175,27 @@ class AlbumCacheService {
           },
           { onConflict: 'id' },
         );
+        insertError = res.error;
       }
+
+      if (insertError) {
+        // The insert failed — most likely a deezer_id unique-constraint
+        // collision with a row backfilled between our earlier check and now.
+        // Resolve to whoever owns this deezer_id instead of returning an id
+        // with no row behind it.
+        const owner = await this.findId('artists', 'deezer_id', deezerId);
+        if (owner) return owner;
+        console.warn('Could not persist artist row:', insertError.message);
+        return null;
+      }
+
       return artistId; // dz:<deezerId>
     }
 
-    // Legacy Spotify artist id not in DB: leave as-is. It is typically created
-    // by ArtistService when the artist page is opened.
-    return artistId;
+    // Legacy Spotify artist id not in the DB and not a Deezer id: we can't
+    // create it (the Spotify API is gone) and there's no row to point at, so
+    // signal "unresolved" rather than returning a dangling id.
+    return null;
   }
 
   // ---------------------------------------------------------------------------
