@@ -285,7 +285,10 @@ export class DeezerService {
       type: 'artist',
       href: '',
       uri: '',
-      external_urls: { spotify: dz.link || `https://www.deezer.com/artist/${dz.id}` },
+      // No Spotify URL exists for a Deezer entity. Leave it empty rather than
+      // fabricating a deezer.com link into a `spotify`/`spotify_url` field,
+      // which would be semantically wrong (and is never rendered anyway).
+      external_urls: { spotify: '' },
       images: this.toImages(dz, 'picture'),
       followers:
         dz.nb_fan !== undefined ? { href: null, total: dz.nb_fan } : undefined,
@@ -367,7 +370,8 @@ export class DeezerService {
       genres,
       tracks,
       external_ids: dz.upc ? { upc: dz.upc } : undefined,
-      external_urls: { spotify: dz.link || `https://www.deezer.com/album/${dz.id}` },
+      // See toSpotifyArtist: don't fabricate a deezer.com URL into a spotify field.
+      external_urls: { spotify: '' },
       available_markets: [],
       href: '',
       type: 'album',
