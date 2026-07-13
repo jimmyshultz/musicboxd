@@ -269,8 +269,33 @@ export class AlbumService {
           .maybeSingle();
 
         if (dbAlbum) {
+          const album = this.mapDatabaseAlbumToApp(dbAlbum);
+
+          // The albums table stores no track data, so mapDatabaseAlbumToApp
+          // returns an empty trackList. For any album we can map to a Deezer id
+          // — either a 'dz:' id or a legacy Spotify-keyed row that the backfill
+          // stamped with a deezer_id — fetch the full track list from Deezer so
+          // album detail isn't stuck showing "0 tracks".
+          const deezerId = DeezerService.isDeezerId(id)
+            ? DeezerService.toDeezerId(id)
+            : (dbAlbum as any).deezer_id || null;
+          if (deezerId) {
+            try {
+              const dzAlbum = await DeezerService.getAlbum(deezerId);
+              const mapped = SpotifyMapper.mapSpotifyAlbumToAlbum(dzAlbum);
+              if (mapped.trackList.length > 0) {
+                album.trackList = mapped.trackList;
+              }
+            } catch (trackError) {
+              console.warn(
+                'Failed to fetch Deezer tracks for cached album:',
+                trackError,
+              );
+            }
+          }
+
           return {
-            data: this.mapDatabaseAlbumToApp(dbAlbum),
+            data: album,
             success: true,
             message: 'Album found in database',
           };
