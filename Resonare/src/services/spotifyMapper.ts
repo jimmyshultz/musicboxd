@@ -109,6 +109,8 @@ export class SpotifyMapper {
       genre: SpotifyMapper.extractGenres(spotifyAlbum),
       coverImageUrl: SpotifyMapper.getBestImageUrl(spotifyAlbum.images),
       trackList,
+      albumType: spotifyAlbum.album_type,
+      totalTracks: spotifyAlbum.total_tracks,
       description: SpotifyMapper.generateAlbumDescription(spotifyAlbum),
       externalIds: {
         spotify: spotifyAlbum.id,

@@ -34,6 +34,30 @@ import BannerAdComponent from '../../components/BannerAd';
 
 type SearchScreenNavigationProp = StackNavigationProp<SearchStackParamList>;
 
+/**
+ * Build an album result subtitle from whatever data is available.
+ * DB / album-detail albums have a real release date + genres ("1997 •
+ * Alternative"); Deezer *search* results don't, but do carry album type +
+ * track count, so those are used instead of showing "NaN • Music".
+ */
+const renderAlbumSubtitle = (item: Album): string => {
+  const parts: string[] = [];
+  const year = new Date(item.releaseDate).getFullYear();
+  if (Number.isFinite(year)) parts.push(String(year));
+  if (item.genre && item.genre.length > 0 && item.genre[0] !== 'Music') {
+    parts.push(item.genre.join(', '));
+  }
+  if (parts.length === 0) {
+    if (item.albumType) {
+      parts.push(item.albumType.charAt(0).toUpperCase() + item.albumType.slice(1));
+    }
+    if (item.totalTracks) {
+      parts.push(`${item.totalTracks} track${item.totalTracks === 1 ? '' : 's'}`);
+    }
+  }
+  return parts.join(' • ');
+};
+
 // Custom search input component to replace react-native-paper Searchbar
 const CustomSearchbar = ({
   placeholder,
@@ -249,8 +273,7 @@ export default function SearchScreen() {
           {item.artist}
         </Text>
         <Text variant="bodySmall" style={styles.albumYear}>
-          {AlbumService.getAlbumYear(item.releaseDate)} •{' '}
-          {item.genre.join(', ')}
+          {renderAlbumSubtitle(item)}
         </Text>
       </View>
     </TouchableOpacity>
