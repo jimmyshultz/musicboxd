@@ -51,7 +51,7 @@ const renderAlbumSubtitle = (item: Album): string => {
     if (item.albumType) {
       parts.push(item.albumType.charAt(0).toUpperCase() + item.albumType.slice(1));
     }
-    if (item.totalTracks) {
+    if (typeof item.totalTracks === 'number') {
       parts.push(`${item.totalTracks} track${item.totalTracks === 1 ? '' : 's'}`);
     }
   }
