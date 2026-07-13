@@ -81,6 +81,11 @@ updates:
       # React Native major versions need careful migration
       - dependency-name: "react-native"
         update-types: ["version-update:semver-major"]
+      # jest 30.4+ calls jest-mock APIs (clearMocksOnScope) that RN 0.83's
+      # bundled jest-environment-node@29 preset doesn't provide. Hold jest at
+      # 30.3.x until react-native is upgraded (jest-environment moves to 30).
+      - dependency-name: "jest"
+        versions: [">=30.4.0"]
     commit-message:
       prefix: "deps"
       include: "scope"
