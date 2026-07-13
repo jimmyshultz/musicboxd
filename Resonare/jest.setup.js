@@ -1,6 +1,20 @@
 /* global jest */
 import 'react-native-gesture-handler/jestSetup';
 
+// @supabase/supabase-js (>=2.10x) requires a global WebSocket when the realtime
+// client is created. React Native provides one at runtime, but Node (the test
+// env) does not, so supply an inert stub. Realtime is never exercised in tests;
+// the app's connection probe just times out harmlessly.
+if (typeof global.WebSocket === 'undefined') {
+  global.WebSocket = class {
+    constructor() {}
+    close() {}
+    send() {}
+    addEventListener() {}
+    removeEventListener() {}
+  };
+}
+
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
 
 jest.mock('@react-native-async-storage/async-storage', () =>
