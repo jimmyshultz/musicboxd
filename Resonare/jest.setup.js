@@ -18,7 +18,7 @@ if (typeof global.WebSocket === 'undefined') {
 jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter');
 
 jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+  require('@react-native-async-storage/async-storage/jest'),
 );
 
 // Firebase native modules are unavailable under Jest; mock the modular API

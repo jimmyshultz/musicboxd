@@ -3,6 +3,7 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(react-native' +
       '|@react-native' +
+      '|@react-native-async-storage/async-storage' +
       '|react-native-paper' +
       '|react-native-gesture-handler' +
       '|react-native-reanimated' +
