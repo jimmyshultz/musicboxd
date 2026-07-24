@@ -3000,7 +3000,7 @@ PODS:
     - RNFBApp
     - SocketRocket
     - Yoga
-  - RNGestureHandler (2.30.0):
+  - RNGestureHandler (3.0.2):
     - boost
     - DoubleConversion
     - fast_float
@@ -3951,7 +3951,7 @@ SPEC CHECKSUMS:
   RNFBApp: b094e527070715680bf25d019ac853d1f22d92df
   RNFBCrashlytics: 9855f0e35a60e5c062132a59b790275f54ce5008
   RNFBMessaging: 853b4e8f0a07240e25fea4acc53b600967925b8a
-  RNGestureHandler: cd4be101cfa17ea6bbd438710caa02e286a84381
+  RNGestureHandler: 70d7c8cd6de51cff63c68789b04a1e03f1b9eef3
   RNGoogleMobileAds: 4f4de7299a78165a20bc352e6360a4e9619147ad
   RNGoogleSignin: 4122717989e2544988cb4cec3e917da3ebc969a5
   RNImageCropPicker: 5fd4ceaead64d8c53c787e4e559004f97bc76df7

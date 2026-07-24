@@ -5,7 +5,6 @@ import {
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
-  Animated,
   Alert,
 } from 'react-native';
 import {
@@ -15,7 +14,15 @@ import {
   useTheme,
   Button,
 } from 'react-native-paper';
-import { Swipeable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable, {
+  SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, {
+  interpolate,
+  Extrapolation,
+  useAnimatedStyle,
+  SharedValue,
+} from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -46,6 +53,40 @@ type NotificationsScreenNavigationProp = StackNavigationProp<
   'Notifications'
 >;
 
+// Right swipe action. Extracted into its own component so the reanimated
+// `useAnimatedStyle` hook isn't called inside ReanimatedSwipeable's
+// renderRightActions render callback (rules of hooks).
+const RightAction: React.FC<{
+  translation: SharedValue<number>;
+  onDelete: () => void;
+  styles: any;
+}> = ({ translation, onDelete, styles }) => {
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        scale: interpolate(
+          translation.value,
+          [-100, 0],
+          [1, 0],
+          Extrapolation.CLAMP,
+        ),
+      },
+    ],
+  }));
+
+  return (
+    <TouchableOpacity
+      style={styles.deleteAction}
+      onPress={onDelete}
+      activeOpacity={0.7}
+    >
+      <Reanimated.View style={[styles.deleteActionContent, animatedStyle]}>
+        <Icon name="trash" size={24} color="#fff" />
+      </Reanimated.View>
+    </TouchableOpacity>
+  );
+};
+
 // Separate component for notification item to allow hooks
 interface NotificationItemProps {
   item: AppNotification;
@@ -66,36 +107,22 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
   theme: _theme,
   styles,
 }) => {
-  const swipeableRef = useRef<Swipeable>(null);
+  const swipeableRef = useRef<SwipeableMethods>(null);
   const isUnread = !item.read;
 
   const renderRightActions = (
-    progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>,
-  ) => {
-    const scale = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <TouchableOpacity
-        style={styles.deleteAction}
-        onPress={() => onDelete(item.id)}
-        activeOpacity={0.7}
-      >
-        <Animated.View
-          style={[styles.deleteActionContent, { transform: [{ scale }] }]}
-        >
-          <Icon name="trash" size={24} color="#fff" />
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  };
+    _progress: SharedValue<number>,
+    translation: SharedValue<number>,
+  ) => (
+    <RightAction
+      translation={translation}
+      onDelete={() => onDelete(item.id)}
+      styles={styles}
+    />
+  );
 
   return (
-    <Swipeable
+    <ReanimatedSwipeable
       ref={swipeableRef}
       renderRightActions={renderRightActions}
       rightThreshold={40}
@@ -128,7 +155,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
           </Card.Content>
         </Card>
       </TouchableOpacity>
-    </Swipeable>
+    </ReanimatedSwipeable>
   );
 };
 

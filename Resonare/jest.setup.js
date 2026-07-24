@@ -51,6 +51,13 @@ jest.mock('@react-native-firebase/crashlytics', () => ({
   crash: jest.fn(),
 }));
 
+// reanimated 4's mock loads reanimated's real index, which imports
+// react-native-worklets and hits its native module (absent under Jest).
+// Mock worklets with its own Jest mock so the native init never runs.
+jest.mock('react-native-worklets', () =>
+  require('react-native-worklets/lib/module/mock'),
+);
+
 jest.mock('react-native-reanimated', () =>
   require('react-native-reanimated/mock'),
 );

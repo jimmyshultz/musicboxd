@@ -7,6 +7,7 @@ module.exports = {
       '|react-native-paper' +
       '|react-native-gesture-handler' +
       '|react-native-reanimated' +
+      '|react-native-worklets' +
       '|react-native-screens' +
       '|react-native-safe-area-context' +
       '|@react-navigation' +
