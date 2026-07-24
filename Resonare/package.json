@@ -84,7 +84,7 @@
     "eslint-plugin-react-native": "^5.0.0",
     "jest": "~30.3.0",
     "prettier": "^3.9.5",
-    "react-test-renderer": "^19.2.7",
+    "react-test-renderer": "^19.2.8",
     "typescript": "^6.0.3"
   },
   "engines": {
