@@ -95,16 +95,29 @@ updates:
       # eslint-plugin-ft-flow, eslint-plugin-react and
       # eslint-plugin-react-native all cap at eslint 9 even at latest.
       # Revisit when @react-native/eslint-config supports eslint 10.
+      #
+      # NOTE: these ignores match on package NAME, so holding "eslint" alone
+      # does not hold the rest of the family — @eslint/js@10 declares
+      # peer eslint "^10.0.0" and was proposed separately (#180). Every
+      # package in a held toolchain family needs its own entry.
       - dependency-name: "eslint"
+        versions: [">=10.0.0"]
+      - dependency-name: "@eslint/js"
         versions: [">=10.0.0"]
       # Babel 8 can't be adopted piecemeal: @react-native/babel-preset@0.86 is
       # still entirely Babel 7 (@babel/core ^7.25.2 plus ~29 @babel/* 7.x
       # plugins). Taking @babel/core or @babel/runtime to 8 would create a
       # split-brain toolchain. Revisit when @react-native/babel-preset is
       # Babel 8 capable.
+      #
+      # Same name-matching caveat as eslint above: @babel/preset-env@8
+      # declares peer @babel/core "^8.0.0" and was proposed separately (#176)
+      # despite @babel/core itself being held.
       - dependency-name: "@babel/core"
         versions: [">=8.0.0"]
       - dependency-name: "@babel/runtime"
+        versions: [">=8.0.0"]
+      - dependency-name: "@babel/preset-env"
         versions: [">=8.0.0"]
     commit-message:
       prefix: "deps"
