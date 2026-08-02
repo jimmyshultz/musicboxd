@@ -54,9 +54,11 @@ class FirebaseCrashAnalytics implements CrashAnalyticsService {
 
       if (shouldCollect) {
         // Set initial app info for production/staging
+        // Note: app version/build are reported natively by Crashlytics from the
+        // bundle, so we deliberately do not set a custom app_version attribute —
+        // a hand-maintained copy only ever drifts out of date.
         crashlyticsModule.setAttributes(crashlyticsInstance, {
           environment: Environment.current,
-          app_version: '1.0.0', // TODO: Get from package.json or build config
           build_type: Environment.current,
         });
 

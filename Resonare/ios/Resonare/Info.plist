@@ -43,6 +43,8 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-5443760017915120~2653462969</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>instagram-stories</string>
@@ -57,8 +59,6 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app uses location services to enhance your experience with location-based features.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>This app needs access to save diary entry images to your photo library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
