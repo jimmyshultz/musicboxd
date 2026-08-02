@@ -127,8 +127,8 @@
 				EFAA3C6D8E1D672F6A94D7D4 /* [CP] Embed Pods Frameworks */,
 				85FCE0D2EAC27FAE621F0A26 /* [CP] Copy Pods Resources */,
 				61E6FF5E1685CA1197F74991 /* [CP-User] [RNFB] Core Configuration */,
-				D08BC714BC431E3C2A627960 /* [CP-User] [RNFB] Crashlytics Configuration */,
 				69C6338395A246085F584CB6 /* [CP-User] [RNGoogleMobileAds] Configuration */,
+				FA38D36DC1CECAE98CE4537B /* [RNFB] Crashlytics Configuration */,
 			);
 			buildRules = (
 			);
@@ -247,20 +247,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Resonare/Pods-Resonare-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D08BC714BC431E3C2A627960 /* [CP-User] [RNFB] Crashlytics Configuration */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
-				"$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
-			);
-			name = "[CP-User] [RNFB] Crashlytics Configuration";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#!/usr/bin/env bash\n#\n# Copyright (c) 2016-present Invertase Limited & Contributors\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this library except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#   http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n#\nset -e\n\nif [[ ${PODS_ROOT} ]]; then\n  echo \"info: Exec FirebaseCrashlytics Run from Pods\"\n  \"${PODS_ROOT}/FirebaseCrashlytics/run\"\nelse\n  echo \"info: Exec FirebaseCrashlytics Run from framework\"\n  \"${PROJECT_DIR}/FirebaseCrashlytics.framework/run\"\nfi\n";
-		};
 		EFAA3C6D8E1D672F6A94D7D4 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -297,6 +283,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Set up environment file for React Native Config\nPROJECT_ROOT=\"$SRCROOT/..\"\nif [ \"${CONFIGURATION}\" = \"Release\" ]; then\n  ENV_SOURCE=\"$PROJECT_ROOT/.env.production\"\n  ENV_TARGET=\"$PROJECT_ROOT/.env\"\n  \n  if [ -f \"$ENV_SOURCE\" ]; then\n    echo \"✅ Archive Build: Copying .env.production for Release configuration\"\n    cp \"$ENV_SOURCE\" \"$ENV_TARGET\"\n    echo \"✅ Production environment activated\"\n  else\n    echo \"⚠️  Warning: .env.production not found at $ENV_SOURCE\"\n    echo \"⚠️  Archive build will use default .env file\"\n  fi\n  \n  echo \"✅ Environment setup completed for Release build\"\n  \nelse\n  echo \"ℹ️  Development Build: Using default .env for configuration: $CONFIGURATION\"\nfi\n";
+		};
+		FA38D36DC1CECAE98CE4537B /* [RNFB] Crashlytics Configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+				"$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
+			);
+			name = "[RNFB] Crashlytics Configuration";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/../../node_modules/@react-native-firebase/crashlytics/ios_config.sh\"\n";
 		};
 		FF520A86F93C20B0506F909F /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
