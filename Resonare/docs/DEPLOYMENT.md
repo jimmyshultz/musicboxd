@@ -14,12 +14,11 @@ This guide covers the deployment process for Resonare, including building for pr
 - Supabase account with production project
 - Firebase account for Crashlytics
 - AdMob account for monetization
-- Spotify Developer account
 
 ### Required Tools
 - Xcode (latest version)
 - CocoaPods
-- Node.js >= 18
+- Node.js >= 22.13.0 (see `.nvmrc`)
 - Git
 
 ---
@@ -56,19 +55,51 @@ Required variables (see `.env.production.example`):
 SUPABASE_URL=your_production_supabase_url
 SUPABASE_ANON_KEY=your_production_supabase_anon_key
 
-# Spotify
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-
 # Environment
 ENVIRONMENT=production
 ```
+
+Album and artist metadata comes from the Deezer API, which is keyless — there
+are no music-provider credentials to configure.
+
+**Note**: the Xcode Release build phase copies `.env.production` over `.env`,
+so after any Release build your working tree points at **production** Supabase.
+`scripts/release-ios.sh` restores it automatically; if you archive from Xcode
+directly, restore it yourself before the next `npm run ios`.
 
 **Important**: Never commit `.env.production` to version control. Use `.env.production.example` as a template.
 
 ---
 
 ## iOS Build Process
+
+### Automated: `scripts/release-ios.sh`
+
+The steps below are automated end to end. From `Resonare/`:
+
+```bash
+./scripts/release-ios.sh --preflight        # check signing/creds, build nothing
+./scripts/release-ios.sh --build 2          # set build number, archive, export IPA
+./scripts/release-ios.sh --build 2 --upload # ...and upload to App Store Connect
+```
+
+Uploading is opt-in, so archiving is never an accidental publish. The script
+runs `pod install`, archives the Release configuration, verifies the three
+release-only things a Debug build cannot show you (Hermes JS bundle present,
+`.env.production` actually applied, Crashlytics dSYM phase actually executed),
+exports a signed IPA, and restores `.env` on exit.
+
+**Two one-time prerequisites**, both of which fail preflight with instructions:
+
+1. An **Apple Distribution** certificate in the login keychain — Xcode ▸
+   Settings ▸ Accounts ▸ team ▸ Manage Certificates ▸ + ▸ Apple Distribution.
+   An Apple Development cert cannot sign an App Store build.
+2. For `--upload`, an **App Store Connect API key** (App Manager role) saved to
+   `~/.appstoreconnect/private_keys/AuthKey_<KEYID>.p8`, with `ASC_KEY_ID` and
+   `ASC_ISSUER_ID` exported in your shell.
+
+The manual Xcode Organizer route below still works and is the fallback if
+signing misbehaves.
 
 ### 1. Update Version Numbers
 

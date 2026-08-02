@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- App Store Connect distribution (Xcode 15+ name for the old "app-store"). -->
+	<key>method</key>
+	<string>app-store-connect</string>
+
+	<key>teamID</key>
+	<string>CJ5S2VDGBH</string>
+
+	<!-- Let Xcode pick the Apple Distribution cert + store profile. Requires the
+	     distribution identity to be present in the keychain. -->
+	<key>signingStyle</key>
+	<string>automatic</string>
+
+	<!-- Upload the dSYMs so Crashlytics and App Store Connect can symbolicate
+	     production crashes. The Podfile post_install re-adds the RNFB
+	     Crashlytics phase that uploads to Firebase; this covers Apple's side. -->
+	<key>uploadSymbols</key>
+	<true/>
+
+	<!-- Hermes bytecode is already built; no Bitcode on modern Xcode. -->
+	<key>stripSwiftSymbols</key>
+	<true/>
+
+	<!-- Export to disk; the release script uploads as a separate, explicit step
+	     so that archiving is never accidentally a publish. -->
+	<key>destination</key>
+	<string>export</string>
+
+	<key>manageAppVersionAndBuildNumber</key>
+	<false/>
+</dict>
+</plist>
