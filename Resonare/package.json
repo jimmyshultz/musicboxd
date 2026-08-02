@@ -21,7 +21,7 @@
     "@invertase/react-native-apple-authentication": "^2.5.1",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-native-camera-roll/camera-roll": "^7.10.2",
-    "@react-native-community/datetimepicker": "^8.6.0",
+    "@react-native-community/datetimepicker": "^9.1.0",
     "@react-native-firebase/app": "^26.0.0",
     "@react-native-firebase/crashlytics": "^26.0.0",
     "@react-native-firebase/messaging": "^26.0.0",

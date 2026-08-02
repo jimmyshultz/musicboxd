@@ -2145,7 +2145,7 @@ PODS:
   - ReactNativeDependencies (0.86.2)
   - RNAppleAuthentication (2.5.1):
     - React-Core
-  - RNDateTimePicker (8.6.0):
+  - RNDateTimePicker (9.1.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -3128,7 +3128,7 @@ SPEC CHECKSUMS:
   ReactCommon: 9002f006f571256348994183f7d4387aa7cf84e8
   ReactNativeDependencies: 2bd6854ade79bf1b60586d1ab7813a389df1b6bf
   RNAppleAuthentication: a89c9804592b38ed4ab11f0aee68d05ba12ad432
-  RNDateTimePicker: b9e20c2a3af26f4ab10646359777205bbad1fdac
+  RNDateTimePicker: 7b2738f1e595f83c14580a11c476872755c5befc
   RNFastImage: 5fafd2e70056cf7729b1bdcd558a7f0fea2aff0e
   RNFBApp: 8cff8abd5e4cb59fc00415cb6226a12e19ad5e15
   RNFBCrashlytics: a238c90f07baa259de3f4ea148d4af8667aa1ccd
