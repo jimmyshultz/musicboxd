@@ -2217,7 +2217,7 @@ PODS:
     - SDWebImageSVGCoder (~> 1.7.0)
     - SDWebImageWebPCoder (~> 0.14)
     - Yoga
-  - RNFBApp (25.1.0):
+  - RNFBApp (26.0.0):
     - Firebase/CoreOnly (= 12.15.0)
     - hermes-engine
     - RCTRequired
@@ -2240,7 +2240,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNFBCrashlytics (25.1.0):
+  - RNFBCrashlytics (26.0.0):
     - Firebase/Crashlytics (= 12.15.0)
     - FirebaseCoreExtension
     - hermes-engine
@@ -2265,7 +2265,7 @@ PODS:
     - ReactNativeDependencies
     - RNFBApp
     - Yoga
-  - RNFBMessaging (25.1.0):
+  - RNFBMessaging (26.0.0):
     - Firebase/Messaging (= 12.15.0)
     - FirebaseCoreExtension
     - hermes-engine
@@ -3156,9 +3156,9 @@ SPEC CHECKSUMS:
   RNAppleAuthentication: a89c9804592b38ed4ab11f0aee68d05ba12ad432
   RNDateTimePicker: b9e20c2a3af26f4ab10646359777205bbad1fdac
   RNFastImage: 5fafd2e70056cf7729b1bdcd558a7f0fea2aff0e
-  RNFBApp: 7a4ebe0527993ec03c2e996f01db0fa0da3e20b7
-  RNFBCrashlytics: a5c8828c4c5f7727517db1cf5193fe37f92339f5
-  RNFBMessaging: ad2713f386fa15c77ae0f5dabf42ad35c1dd72de
+  RNFBApp: 8cff8abd5e4cb59fc00415cb6226a12e19ad5e15
+  RNFBCrashlytics: a238c90f07baa259de3f4ea148d4af8667aa1ccd
+  RNFBMessaging: 8dc15a68da7fd2dc53ed73467519278fa78f0074
   RNGestureHandler: a426f18ab9021991fe2cbc8bf1677b740e20e70c
   RNGoogleMobileAds: 10d1a7a38343f18a98f08624c15ced3b0796e603
   RNGoogleSignin: 3877e3613380fab0ca9112c1abbb19d876ec6751
@@ -3176,6 +3176,6 @@ SPEC CHECKSUMS:
   TOCropViewController: 797deaf39c90e6e9ddd848d88817f6b9a8a09888
   Yoga: 9891cfb1c680f64de9c41b09e7453dea33454d2b
 
-PODFILE CHECKSUM: 6ae5ee28a3eb1c9ea879b222878671b85a9718d1
+PODFILE CHECKSUM: 4345b20f2e3fb049981d7c6d9cbca65a7a99e3df
 
 COCOAPODS: 1.16.2

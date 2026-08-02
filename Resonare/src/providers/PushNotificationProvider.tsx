@@ -7,7 +7,7 @@ import {
   onNotificationOpenedApp,
   getInitialNotification,
 } from '@react-native-firebase/messaging';
-import type { FirebaseMessagingTypes } from '@react-native-firebase/messaging';
+import type { RemoteMessage } from '@react-native-firebase/messaging';
 import { RootState } from '../store';
 import { pushTokenService } from '../services/pushTokenService';
 import { handlePushNotificationNavigation } from '../services/navigationService';
@@ -81,7 +81,7 @@ export const PushNotificationProvider: React.FC<
     const messaging = getMessaging();
     foregroundUnsubscribeRef.current = onMessage(
       messaging,
-      async (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      async (remoteMessage: RemoteMessage) => {
         console.log('📱 Push: Foreground message received:', remoteMessage);
         // Foreground notifications are shown automatically by iOS via AppDelegate config
         // The in-app notification system will also update via real-time subscription
@@ -91,7 +91,7 @@ export const PushNotificationProvider: React.FC<
     // Handle notification opened app (when app is in background)
     notificationOpenedUnsubscribeRef.current = onNotificationOpenedApp(
       messaging,
-      (remoteMessage: FirebaseMessagingTypes.RemoteMessage) => {
+      (remoteMessage: RemoteMessage) => {
         console.log('📱 Push: Notification opened app:', remoteMessage);
         if (remoteMessage.data) {
           handlePushNotificationNavigation(
@@ -109,7 +109,7 @@ export const PushNotificationProvider: React.FC<
 
     // Check if app was opened from a notification (when app was killed)
     getInitialNotification(messaging).then(
-      (remoteMessage: FirebaseMessagingTypes.RemoteMessage | null) => {
+      (remoteMessage: RemoteMessage | null) => {
         if (remoteMessage) {
           console.log('📱 Push: App opened from notification:', remoteMessage);
           if (remoteMessage.data) {

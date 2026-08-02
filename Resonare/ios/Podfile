@@ -50,6 +50,49 @@ target 'Resonare' do
       # :ccache_enabled => true
     )
 
+    # Restore the Crashlytics dSYM upload build phase.
+    #
+    # @react-native-firebase/crashlytics v26 dropped the `ios.scriptPhases`
+    # block from its react-native.config.js during the TurboModules migration,
+    # so autolinking no longer injects the "[RNFB] Crashlytics Configuration"
+    # phase and `pod install` strips it from the project. The package still
+    # ships ios_config.sh unchanged, and the sibling @react-native-firebase/app
+    # kept its own scriptPhases block — so this looks like an upstream
+    # oversight rather than an intentional removal (the v26 changelog does not
+    # mention it).
+    #
+    # Without this phase, release builds never run FirebaseCrashlytics/run,
+    # dSYMs are not uploaded, and production crash reports arrive
+    # unsymbolicated. Re-added here so it survives `pod install`.
+    #
+    # REMOVE THIS once upstream restores the scriptPhases block, otherwise the
+    # phase would be added twice (the guard below makes that harmless).
+    crashlytics_phase_name = '[RNFB] Crashlytics Configuration'
+    crashlytics_script = File.join(
+      '${PODS_ROOT}', '..', '..', 'node_modules',
+      '@react-native-firebase', 'crashlytics', 'ios_config.sh'
+    )
+    installer.aggregate_targets.each do |aggregate_target|
+      user_project = aggregate_target.user_project
+      next if user_project.nil?
+      changed = false
+      user_project.targets.each do |target|
+        next unless target.name == 'Resonare'
+        next if target.shell_script_build_phases.any? { |p| p.name == crashlytics_phase_name }
+        phase = target.new_shell_script_build_phase(crashlytics_phase_name)
+        phase.shell_path = '/bin/sh'
+        phase.shell_script = %("#{crashlytics_script}"\n)
+        phase.input_paths = [
+          '${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}',
+          '$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)',
+        ]
+        phase.run_only_for_deployment_postprocessing = '0'
+        changed = true
+        Pod::UI.puts "Re-added #{crashlytics_phase_name} build phase (RNFB v26 workaround)".yellow
+      end
+      user_project.save if changed
+    end
+
     # Configure build configurations for environment switching
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
